@@ -1,0 +1,577 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <Import Condition="Exists('$(BDS)\bin\CodeGear.Deployment.targets')" Project="$(BDS)\bin\CodeGear.Deployment.targets"/>
+    <ProjectExtensions>
+        <ProjectFileVersion>12</ProjectFileVersion>
+    </ProjectExtensions>
+    <PropertyGroup>
+        <DeviceId Condition="'$(Platform)'=='Android'"/>
+        <DeviceId Condition="'$(Platform)'=='Android64'"/>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(Platform)'=='Win32'">
+        <DeployFile Include="..\..\Bin\TestFM.exe" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\</RemoteDir>
+            <RemoteName>TestFM.exe</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+    </ItemGroup>
+    <ItemGroup Condition="'$(Platform)'=='Linux64'">
+        <DeployFile Include="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf_0.50.ind" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Fonts\</RemoteDir>
+            <RemoteName>NotoEmoji-Regular.ttf_0.50.ind</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Fonts\</RemoteDir>
+            <RemoteName>NotoEmoji-Regular.ttf</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Models\Obj\aquafish02n.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Models\Obj\</RemoteDir>
+            <RemoteName>aquafish02n.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\sky.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\Textures\earth\</RemoteDir>
+            <RemoteName>sky.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Models\Obj\aquafish01.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Models\Obj\</RemoteDir>
+            <RemoteName>aquafish01.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\sel_point_mid.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\</RemoteDir>
+            <RemoteName>sel_point_mid.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\NotoSans-Regular.ttf" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Fonts\</RemoteDir>
+            <RemoteName>NotoSans-Regular.ttf</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\controls\TBScrollBar.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\controls\</RemoteDir>
+            <RemoteName>TBScrollBar.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="Linux64\Debug\TestFM" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\</RemoteDir>
+            <RemoteName>TestFM</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on10x10___.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on10x10___.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on12x12_.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on12x12_.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\moonmap1k2.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\Textures\earth\</RemoteDir>
+            <RemoteName>moonmap1k2.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\miku.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\</RemoteDir>
+            <RemoteName>miku.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\cpCyrillicToUTF16.txt" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Fonts\</RemoteDir>
+            <RemoteName>cpCyrillicToUTF16.txt</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\controls\Black Shark2.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\controls\</RemoteDir>
+            <RemoteName>Black Shark2.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\controls\Black Shark 24.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\controls\</RemoteDir>
+            <RemoteName>Black Shark 24.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\NotoSerif-Regular.ttf" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Fonts\</RemoteDir>
+            <RemoteName>NotoSerif-Regular.ttf</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Models\Obj\aquafish01.obj" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Models\Obj\</RemoteDir>
+            <RemoteName>aquafish01.obj</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off6x6_black.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_off6x6_black.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off10x10.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_off10x10.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\Noto-LICENSE_OFL.txt" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Fonts\</RemoteDir>
+            <RemoteName>Noto-LICENSE_OFL.txt</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\moonmap1k.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\Textures\earth\</RemoteDir>
+            <RemoteName>moonmap1k.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on10x10.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on10x10.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on10x10L.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on10x10L.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off2.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_off2.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\TransparentBack.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\</RemoteDir>
+            <RemoteName>TransparentBack.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Models\Obj\aquafish01n.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Models\Obj\</RemoteDir>
+            <RemoteName>aquafish01n.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off10x10_.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_off10x10_.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\DejaVuSans.txt" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Fonts\</RemoteDir>
+            <RemoteName>DejaVuSans.txt</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\2d AABB.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\</RemoteDir>
+            <RemoteName>2d AABB.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off8x8.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_off8x8.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\flame.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\</RemoteDir>
+            <RemoteName>flame.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on10x10__.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on10x10__.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Lang\lang.en" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Lang\</RemoteDir>
+            <RemoteName>lang.en</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off8x8_black.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_off8x8_black.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\point_red_7x7.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\</RemoteDir>
+            <RemoteName>point_red_7x7.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\Textures\block_text.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\Textures\</RemoteDir>
+            <RemoteName>block_text.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\DejaVuSans.ttf" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Fonts\</RemoteDir>
+            <RemoteName>DejaVuSans.ttf</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off6x6.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_off6x6.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on10x10_.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on10x10_.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\snowflake.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\</RemoteDir>
+            <RemoteName>snowflake.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_off.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\DejaVuSans.ttf_0.20.ind" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Fonts\</RemoteDir>
+            <RemoteName>DejaVuSans.ttf_0.20.ind</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\earth.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\Textures\earth\</RemoteDir>
+            <RemoteName>earth.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\sel_point.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\</RemoteDir>
+            <RemoteName>sel_point.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on8x8.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on8x8.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\moonmap2.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\Textures\earth\</RemoteDir>
+            <RemoteName>moonmap2.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\earthmap1k.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\Textures\earth\</RemoteDir>
+            <RemoteName>earthmap1k.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on8x8_.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on8x8_.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\folder_orange_24_ttf.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\</RemoteDir>
+            <RemoteName>folder_orange_24_ttf.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\folder_orange_24_ttf_2.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\</RemoteDir>
+            <RemoteName>folder_orange_24_ttf_2.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\Textures\block_pic_32.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\Textures\</RemoteDir>
+            <RemoteName>block_pic_32.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\earthcloudmapcolortrans.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\Textures\earth\</RemoteDir>
+            <RemoteName>earthcloudmapcolortrans.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\rot_point.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\</RemoteDir>
+            <RemoteName>rot_point.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off12x12.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_off12x12.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on10x10gs.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on10x10gs.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on12x12.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on12x12.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on8x8__.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on8x8__.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\NotoSerif-Regular.ttf_0.50.ind" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Fonts\</RemoteDir>
+            <RemoteName>NotoSerif-Regular.ttf_0.50.ind</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\moonmap1k3.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\Textures\earth\</RemoteDir>
+            <RemoteName>moonmap1k3.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+    </ItemGroup>
+    <ItemGroup Condition="'$(Platform)'=='Win64'"/>
+    <ItemGroup Condition="'$(Platform)'=='Android'"/>
+    <ItemGroup Condition="'$(Platform)'=='Android64'"/>
+</Project>

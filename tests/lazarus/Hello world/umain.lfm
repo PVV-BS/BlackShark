@@ -1,0 +1,29 @@
+object FrmMain: TFrmMain
+  Left = 353
+  Height = 309
+  Top = 147
+  Width = 582
+  Caption = 'Black Shark Graphics Engine: Hello world!'
+  ClientHeight = 309
+  ClientWidth = 582
+  OnClose = FormClose
+  OnShow = FormShow
+  LCLVersion = '2.0.13.0'
+  object PnlTools: TPanel
+    Left = 0
+    Height = 309
+    Top = 0
+    Width = 154
+    Align = alLeft
+    Caption = 'Some LCL/VCL Tools'
+    TabOrder = 0
+  end
+  object PanelScreen: TPanel
+    Left = 154
+    Height = 309
+    Top = 0
+    Width = 428
+    Align = alClient
+    TabOrder = 1
+  end
+end

@@ -1,0 +1,84 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{1D8C4A70-AE1A-4647-AF72-B584FF34900C}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="VCL\AppTestVCL.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="BSApplication\BSApplication.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="FireMonkey\TestFM.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="DUnit\DUnitTests.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="AutoTests\AutoTests.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="AppTestVCL">
+        <MSBuild Projects="VCL\AppTestVCL.dproj"/>
+    </Target>
+    <Target Name="AppTestVCL:Clean">
+        <MSBuild Projects="VCL\AppTestVCL.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="AppTestVCL:Make">
+        <MSBuild Projects="VCL\AppTestVCL.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="BSApplication">
+        <MSBuild Projects="BSApplication\BSApplication.dproj"/>
+    </Target>
+    <Target Name="BSApplication:Clean">
+        <MSBuild Projects="BSApplication\BSApplication.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="BSApplication:Make">
+        <MSBuild Projects="BSApplication\BSApplication.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="TestFM">
+        <MSBuild Projects="FireMonkey\TestFM.dproj"/>
+    </Target>
+    <Target Name="TestFM:Clean">
+        <MSBuild Projects="FireMonkey\TestFM.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TestFM:Make">
+        <MSBuild Projects="FireMonkey\TestFM.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DUnitTests">
+        <MSBuild Projects="DUnit\DUnitTests.dproj"/>
+    </Target>
+    <Target Name="DUnitTests:Clean">
+        <MSBuild Projects="DUnit\DUnitTests.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DUnitTests:Make">
+        <MSBuild Projects="DUnit\DUnitTests.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="AutoTests">
+        <MSBuild Projects="AutoTests\AutoTests.dproj"/>
+    </Target>
+    <Target Name="AutoTests:Clean">
+        <MSBuild Projects="AutoTests\AutoTests.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="AutoTests:Make">
+        <MSBuild Projects="AutoTests\AutoTests.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="AppTestVCL;BSApplication;TestFM;DUnitTests;AutoTests"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="AppTestVCL:Clean;BSApplication:Clean;TestFM:Clean;DUnitTests:Clean;AutoTests:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="AppTestVCL:Make;BSApplication:Make;TestFM:Make;DUnitTests:Make;AutoTests:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
