@@ -1,9 +1,9 @@
 Black Shark Graphics Engine is a simple 2D and 3D engine written in Pascal for developers to produce applications utilising hardware-accelerated graphics. It supports Lazarus (v. >= 2.0) and Delphi (Community Edition 10.3, another versions haven't been tested).
 It's a young, a freely available, project that currently has a vector of development in the 2D area. Beside, if you want, you can create 3D objects (see tests example TBSTestMesh, TBSTestEarth in a unit bs.test.mesh.pas). A main purpose of the project is creating the simplest entities for simple access to OpenGL API abilities within of version >= ES2.
 
-[shark.org](https://bshark.org/)
-[Repository](https://github.com/PVV-BS/BlackShark)
-[Telegram channel](https://t.me/BSharkGE)
+[shark.org](https://bshark.org/)  
+[Repository](https://github.com/PVV-BS/BlackShark)  
+[Telegram channel](https://t.me/BSharkGE)  
 
 ### 06.02.22  
 ###   Version 3.02:  
