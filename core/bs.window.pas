@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -42,6 +42,7 @@ uses
 const
   CLASS_NAME: PWideChar = 'BlackShark Class';
   WINDOW_CAPTION: WideString = 'Black Shark Graphics Engine';
+  MOUSE_DOUBLE_CLICK_DELTA = 300;
 
 type
   BSWindow = class;
@@ -54,16 +55,20 @@ type
   TWindowsList  = TListVec<BSWindow>;
   TMonitorsList = TListVec<TMonitor>;
 
-  { TMonitor - todo }
+  { TMonitor }
 
   TMonitor = class
   private
   public
   end;
 
+  { BSApplicationSystem }
+
   BSApplicationSystem = class abstract
   private
     FOnRemoveWindowEvent: IBEmptyEvent;
+    procedure SetPixelsPerInchX(AValue: int32);
+    procedure SetPixelsPerInchY(AValue: int32);
   protected
     FDisplayWidth: int32;
     FDisplayHeight: int32;
@@ -91,7 +96,9 @@ type
 
     function GetMousePointPos: TVec2i; virtual; abstract;
     //procedure SetShowCursor(const Value: boolean); virtual;
+    { exchange an active window }
     procedure UpdateActiveWindow(AWindow: BSWindow); virtual;
+    procedure OnGLContextLost; virtual;
   public
     constructor Create;
     destructor Destroy; override;
@@ -106,33 +113,38 @@ type
     property MousePointPos: TVec2i read GetMousePointPos;
     property Windows: TWindowsTable read FWindows;
     property WindowsList: TWindowsList read FWindowsList;
-    property DisplayWidth: int32 read FDisplayWidth;
-    property DisplayHeight: int32 read FDisplayHeight;
-    property PixelsPerInchX: int32 read FPixelsPerInchX;
-    property PixelsPerInchY: int32 read FPixelsPerInchY;
+    property DisplayWidth: int32 read FDisplayWidth write FDisplayWidth;
+    property DisplayHeight: int32 read FDisplayHeight write FDisplayHeight;
+    property PixelsPerInchX: int32 read FPixelsPerInchX write SetPixelsPerInchX;
+    property PixelsPerInchY: int32 read FPixelsPerInchY write SetPixelsPerInchY;
     property OnRemoveWindowEvent: IBEmptyEvent read FOnRemoveWindowEvent;
     property ActiveWindow: BSWindow read FActiveWindow;
   end;
+
+  { TBlackSharkApplication }
 
   TBlackSharkApplication = class
   private
     FMainWindow: BSWindow;
     ObserverOnCreateContext: IBEmptyEventObserver;
     ObserverOnRemoveWindow: IBEmptyEventObserver;
-    FContextCreated: boolean;
     FLastUpdate: uint32;
     FApplicationSystem: BSApplicationSystem;
-    FEventOnUdateActiveWindow: IBEmptyEvent;
+    FEventOnUpdateActiveWindow: IBEmptyEvent;
+    function GetContextCreated: boolean;
     procedure OnCreateContextNorify(const AData: BEmpty);
     procedure OnRemoveContextNorify(const AData: BEmpty);
   protected
+    { Important: initialize graphics objects only here or after it event }
     procedure OnCreateGlContext(AWindow: BSWindow); virtual;
+    procedure OnGLContextLost; virtual;
     procedure OnRemoveWindow(AWindow: BSWindow); virtual;
     procedure DoUpdateFps; virtual;
     procedure OnUpdateActiveWindow(AWindow: BSWindow); virtual;
   public
     constructor Create;
     destructor Destroy; override;
+    { main loop; terminated when MainWindow will be closed }
     procedure Run;
     procedure ProcessMessages;
     function CreateWindow(AParent: BSWindow; AOwner: TObject; ALeft, ATop, AWidth, AHeight: int32): BSWindow; overload;
@@ -140,8 +152,8 @@ type
 
     property ApplicationSystem: BSApplicationSystem read FApplicationSystem;
     property MainWindow: BSWindow read FMainWindow;
-    property ContextCreated: boolean read FContextCreated;
-    property EventOnUdateActiveWindow: IBEmptyEvent read FEventOnUdateActiveWindow;
+    property ContextCreated: boolean read GetContextCreated;
+    property EventOnUpdateActiveWindow: IBEmptyEvent read FEventOnUpdateActiveWindow;
   end;
 
   TWindowContext = class
@@ -172,21 +184,25 @@ type
 
   TWindowState = (wsInit, wsShown, wsShownModal, wsClosed, wsMinimazed);
 
+  { BSWindow }
+
   BSWindow = class
   private
+    FCaption: string;
     FGlContext: TBlackSharkContext;
+    FLevel: int32;
+    FMouseIsDown: boolean;
+    ObserverCreateContext: IBEmptyEventObserver;
+    FOnCreateContextEvent: IBEmptyEvent;
     FWindowContext: TWindowContext;
     FParent: BSWindow;
     FChildren: TWindowsList;
     FRenderer: TBlackSharkRenderer;
-    ObserverCreateContext: IBEmptyEventObserver;
-    FOnCreateContextEvent: IBEmptyEvent;
     FOwner: TObject;
     FShowCursor: boolean;
     FFullScreen: boolean;
     FMouseEntered: boolean;
     FIsVisible: boolean;
-    FClientRect: TRect;
     FDefaultHandle: EGLNativeWindowType;
     FDefaultDC: EGLNativeDisplayType;
 
@@ -196,13 +212,16 @@ type
     FOnClose: IWindowEvent;
     FOnDestroy: IWindowEvent;
     FIsEnabled: boolean;
+    FClientRect: TRect;
+    FRectBeforeFullScreen: TRect;
+    FClientRectBeforeFullScreen: TRect;
 
     procedure CheckSizeRendererWindow;
     procedure AddChild(AChild: BSWindow);
     procedure RemoveChild(AChild: BSWindow);
     function GetFullScreen: boolean;
-    function CheckContextIsCreated: boolean;
     procedure OnCreateGlContextEvent(const {%H-}Value: BEmpty);
+    procedure SetCaption(const AValue: string);
     procedure SetClientRect(const AValue: TRect);
     function GetOnChangePosition: IWindowEvent;
     function GetOnClose: IWindowEvent;
@@ -211,6 +230,7 @@ type
     function GetOnDestroy: IWindowEvent;
     function DoShow(InModal: boolean): int32;
     procedure SetIsActive(const Value: boolean);
+    procedure FreeContext;
   protected
     FFromOSEventChanged: boolean;
     FLeft: int32;
@@ -226,10 +246,13 @@ type
     procedure SetShowCursor(const AValue: boolean); virtual;
     procedure SetIsEnabled(const Value: boolean); virtual;
     procedure DoRender; inline;
-    procedure OnCreateGlContext; virtual;
     procedure Render; inline;
-    // todo
     procedure SetFullScreen(const AValue: boolean); virtual;
+    { Important: initialize graphics objects only here or after it event }
+    procedure OnCreateGlContext; virtual;
+    procedure OnGLContextLost; virtual;
+    function CheckContextIsCreated: boolean;
+    property RectBeforeFullScreen: TRect read FRectBeforeFullScreen write FRectBeforeFullScreen;
   public
     constructor Create(AWindowContext: TWindowContext; AOwner: TObject; AParent: BSWindow; APositionX, APositionY, AWidth, AHeight: int32); virtual;
     destructor Destroy; override;
@@ -264,10 +287,13 @@ type
     property WindowContext: TWindowContext read FWindowContext;
     property IsActive: boolean read FIsActive write SetIsActive;
     property ShowCursor: boolean read FShowCursor write SetShowCursor;
+    { it property is not used; use on your discretion }
+    property Caption: string read FCaption write SetCaption;
     property Width: int32 read FWidth;
     property Height: int32 read FHeight;
     property Left: int32 read FLeft;
     property Top: int32 read FTop;
+    property Level: int32 read FLevel;
     property DC: EGLNativeDisplayType read GetDC write SetDC;
     property Handle: EGLNativeWindowType read GetHandle write SetHandle;
     property Parent: BSWindow read FParent;
@@ -279,9 +305,9 @@ type
     property ClientRect: TRect read FClientRect write SetClientRect;
     property FromOSEventChanged: boolean read FFromOSEventChanged;
     property MouseEntered: boolean read FMouseEntered;
+    property MouseIsDown: boolean read FMouseIsDown;
     property IsVisible: boolean read FIsVisible;
     property IsEnabled: boolean read FIsEnabled write SetIsEnabled;
-    // todo
     property FullScreen: boolean read GetFullScreen write SetFullScreen;
 
     // events
@@ -294,6 +320,7 @@ type
 
 var
   ApplicationRun: procedure;
+
   Application: TBlackSharkApplication;
 
 implementation
@@ -303,10 +330,19 @@ uses
   , bs.config
   , bs.events.keyboard
   , bs.thread
+  , bs.math
+  , bs.graphics
+{$ifdef DEBUG_BS}
+  , bs.log
+{$endif}
 {$ifdef X}
   , bs.window.linux
-{$else MSWindows}
+{$endif}
+{$ifdef MSWindows}
   , bs.window.windows
+{$endif}
+{$ifdef ANDROID}
+  , bs.window.android
 {$endif}
   ;
 
@@ -322,14 +358,18 @@ type
   end;
 
 procedure ApplicationRunDefault;
+{$ifndef ANDROID}
 var
   app: TBlackSharkApplication;
+{$endif}
 begin
   if not Assigned(Application) then
   begin
-    app := TBlackSharkApplication.Create;
+    {$ifndef ANDROID}app := {$endif}TBlackSharkApplication.Create;
+    {$ifndef ANDROID}
     app.Run;
     app.Free;
+    {$endif}
   end;
 end;
 
@@ -369,15 +409,27 @@ constructor TBlackSharkApplication.Create;
 begin
   Assert(Application = nil, 'Application was already created!');
   Application := Self;
-  FEventOnUdateActiveWindow := CreateEmptyEvent;
+    //Application.MainWindow.Show;
+
+  FEventOnUpdateActiveWindow := CreateEmptyEvent;
 {$ifdef X}
   FApplicationSystem := BSApplicationLinux.Create;
-{$else MSWindows}
+{$endif}
+{$ifdef MSWindows}
   FApplicationSystem := BSApplicationWindows.Create;
 {$endif}
+{$ifdef ANDROID}
+  FApplicationSystem := BSApplicationAndroid.Create;
+{$endif}
+
+{$ifdef DEBUG_BS}
+  BSWriteMsg('TBlackSharkApplication.Create', '');
+{$endif}
+
   FMainWindow := CreateWindow(nil, Self, 0, 0, 600, 600);
   ObserverOnCreateContext := FMainWindow.OnCreateContextEvent.CreateObserver(OnCreateContextNorify);
   ObserverOnRemoveWindow := FApplicationSystem.OnRemoveWindowEvent.CreateObserver(OnRemoveContextNorify);
+  FLastUpdate := TBTimer.CurrentTime.Low;
 end;
 
 function TBlackSharkApplication.CreateWindow(AParent: BSWindow; AOwner: TObject; ALeft, ATop, AWidth, AHeight: int32): BSWindow;
@@ -411,18 +463,34 @@ end;
 
 procedure TBlackSharkApplication.OnCreateContextNorify(const AData: BEmpty);
 begin
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBlackSharkApplication.OnCreateContextNorify', '');
+  {$endif}
   { vertical synchronization }
   if BSConfig.VerticalSynchronization or not BSConfig.MaxFps then
     eglSwapInterval(TSharedEglContext.SharedDisplay, 1)
   else
     eglSwapInterval(TSharedEglContext.SharedDisplay, 0);
-  FContextCreated := true;
   OnCreateGlContext(BSWindow(AData.Instance));
+end;
+
+function TBlackSharkApplication.GetContextCreated: boolean;
+begin
+  Result := Assigned(Application.MainWindow) and Application.MainWindow.CheckContextIsCreated;
 end;
 
 procedure TBlackSharkApplication.OnCreateGlContext(AWindow: BSWindow);
 begin
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBlackSharkApplication.OnCreateGlContext', '');
+  {$endif}
+end;
 
+procedure TBlackSharkApplication.OnGLContextLost;
+begin
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBlackSharkApplication.OnGLContextLost', '');
+  {$endif}
 end;
 
 procedure TBlackSharkApplication.OnRemoveContextNorify(const AData: BEmpty);
@@ -438,7 +506,7 @@ end;
 
 procedure TBlackSharkApplication.OnUpdateActiveWindow(AWindow: BSWindow);
 begin
-  FEventOnUdateActiveWindow.Send(AWindow);
+  FEventOnUpdateActiveWindow.Send(AWindow);
 end;
 
 procedure TBlackSharkApplication.ProcessMessages;
@@ -464,7 +532,6 @@ end;
 procedure TBlackSharkApplication.Run;
 begin
   FMainWindow.Show;
-  FLastUpdate := TBTimer.CurrentTime.Low;
 
   while (FApplicationSystem.Windows.Count > 0) and FMainWindow.IsVisible do
   begin
@@ -475,10 +542,32 @@ end;
 
 { BSApplicationSystem }
 
+procedure BSApplicationSystem.SetPixelsPerInchX(AValue: int32);
+begin
+  if FPixelsPerInchX = AValue then
+    exit;
+  FPixelsPerInchX := AValue;
+end;
+
+procedure BSApplicationSystem.SetPixelsPerInchY(AValue: int32);
+begin
+  if FPixelsPerInchY = AValue then Exit;
+  FPixelsPerInchY := AValue;
+  bs.graphics.PixelsPerInch := FPixelsPerInchY;
+  bs.graphics.ToHiDpiScale := bs.graphics.PixelsPerInch/96;
+end;
+
 procedure BSApplicationSystem.AddWindow(AWindow: BSWindow);
 begin
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('BSApplicationSystem.AddWindow', '');
+  {$endif}
   FWindowsList.Add(AWindow);
+  {$ifdef ANDROID}
+  FWindows.Items[AWindow] := AWindow;
+  {$else}
   FWindows.Items[AWindow.Handle] := AWindow;
+  {$endif}
   if not Assigned(FMainWindow) then
     FMainWindow := AWindow;
 end;
@@ -490,17 +579,17 @@ begin
   InitMonitors;
 end;
 
+function BSApplicationSystem.CreateWindow(AOwner: TObject; AParent: BSWindow; APositionX, APositionY, AWidth, AHeight: int32): BSWindow;
+begin
+  Result := CreateWindow(BSWindow, AOwner, AParent, APositionX, APositionY, AWidth, AHeight);
+end;
+
 constructor BSApplicationSystem.Create;
 begin
   FWindows := TWindowsTable.Create(@GetHashHandleWindow, @HandleWindowCmpEqual, 32);
   FWindowsList := TWindowsList.Create(@PtrCmp);
   FOnRemoveWindowEvent := CreateEmptyEvent;
   FMonitors := TMonitorsList.Create;
-end;
-
-function BSApplicationSystem.CreateWindow(AOwner: TObject; AParent: BSWindow; APositionX, APositionY, AWidth, AHeight: int32): BSWindow;
-begin
-  Result := CreateWindow(BSWindow, AOwner, AParent, APositionX, APositionY, AWidth, AHeight);
 end;
 
 destructor BSApplicationSystem.Destroy;
@@ -539,7 +628,11 @@ begin
   if FActiveWindow = AWindow then
     FActiveWindow := nil;
 
+  {$ifdef ANDROID}
+  FWindows.Delete(AWindow);
+  {$else}
   FWindows.Delete(AWindow.Handle);
+  {$endif}
   FWindowsList.Remove(AWindow);
   if FMainWindow = AWindow then
   begin
@@ -559,6 +652,16 @@ begin
   Application.OnUpdateActiveWindow(FActiveWindow);
 end;
 
+procedure BSApplicationSystem.OnGLContextLost;
+var
+  i: int32;
+begin
+  for i := FWindowsList.Count - 1 downto 0 do
+    FWindowsList.Items[i].OnGLContextLost;
+  TSharedEglContext.OnContextLost;
+  Application.OnGLContextLost;
+end;
+
 function BSApplicationSystem.GetWindow(AHandle: EGLNativeWindowType): BSWindow;
 begin
   FWindows.Find(AHandle, Result);
@@ -575,6 +678,10 @@ procedure BSWindow.AfterConstruction;
 begin
   inherited;
   FOnCreateContextEvent := CreateEmptyEvent;
+  {$ifdef ANDROID}
+  if Assigned(FParent) and (FParent.Renderer.MouseIsDown) then
+    FParent.MouseUp(FParent.Renderer.MouseButtonKeep, FParent.Renderer.MouseLastPos.x, FParent.Renderer.MouseLastPos.y, FParent.Renderer.ShiftState);
+  {$endif}
 end;
 
 procedure BSWindow.BeforeDestruction;
@@ -590,9 +697,25 @@ begin
 end;
 
 function BSWindow.CheckContextIsCreated: boolean;
+{$ifdef ANDROID}
+var
+  bd: BData;
+{$endif}
 begin
-  if (NativeInt(Handle) = 0) or (NativeInt(DC) = 0) then
+  if ({%H-}NativeInt(Handle) = 0) or ({%H-}NativeInt(DC) = 0) then
     exit(false);
+
+  if Assigned(FGlContext) and FGlContext.ContextCreated then
+    exit(true);
+
+  {$ifdef ANDROID}
+
+  if (Application.MainWindow <> Self) then
+  begin
+    FGlContext := Application.MainWindow.FGlContext;
+  end;
+
+  {$endif}
 
   if not  Assigned(FGlContext) then
   begin
@@ -607,12 +730,32 @@ begin
 
   CheckSizeRendererWindow;
   Result := FGlContext.ContextCreated;
+
+  if FIsVisible and FIsActive and Result then
+    {%H-}DoRender;
+
+  {$ifdef ANDROID}
+  if (Application.MainWindow <> Self) and Result then
+  begin
+    bd.Instance := FGlContext;
+    OnCreateGlContextEvent(bd);
+  end;
+  {$endif}
 end;
 
 procedure BSWindow.CheckSizeRendererWindow;
 begin
-  if Assigned(FRenderer) and (FClientRect.Width > 0) and (FClientRect.Height > 0) and ((FRenderer.WindowWidth <> FClientRect.Width) or (FRenderer.WindowHeight <> FClientRect.Height)) and Assigned(FGlContext) and FGlContext.MakeCurrent then
-    FRenderer.ResizeViewPort(FClientRect.Width, FClientRect.Height);
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('BSWindow.CheckSizeRendererWindow.' + FCaption, 'begin');
+  {$endif}
+  if Assigned(FRenderer) and ((FClientRect.Width > 0) and (FClientRect.Height > 0) and ((FRenderer.WindowWidth <> FClientRect.Width) or (FRenderer.WindowHeight <> FClientRect.Height))
+     and Assigned(FGlContext) and FGlContext.MakeCurrent) then
+  begin
+    {$ifdef ANDROID}
+    if (Application.MainWindow = Self) then
+    {$endif}
+      FRenderer.ResizeViewPort(FClientRect.Width, FClientRect.Height);
+  end;
 end;
 
 procedure BSWindow.Close;
@@ -645,7 +788,10 @@ begin
   FIsEnabled := true;
   FShowCursor := true;
   if Assigned(FParent) then
+  begin
+    inc(FLevel, FParent.Level + 1);
     FParent.AddChild(Self);
+  end;
 end;
 
 destructor BSWindow.Destroy;
@@ -655,8 +801,12 @@ begin
     FParent.RemoveChild(Self);
 
   FreeAndNil(FChildren);
+  {$ifdef ANDROID}
+  if (Application.MainWindow = Self) then
+  {$endif}
   FreeAndNil(FRenderer);
-  FreeAndNil(FGlContext);
+
+  FreeContext;
   FreeAndNil(FWindowContext);
 
   if Assigned(FOnDestroy) then
@@ -666,15 +816,23 @@ end;
 
 procedure BSWindow.DoRender;
 begin
-  if not Assigned(FGlContext) or not FGlContext.MakeCurrent or not IsVisible then
+  if not Assigned(FGlContext) or not IsVisible then
     exit;
-  FRenderer.Render;
-  FGlContext.Swap;
+
+  if FGlContext.MakeCurrent then
+  begin
+    FRenderer.Render;
+    if not FGlContext.Swap and FGlContext.ContextIsLost then
+      Application.ApplicationSystem.OnGLContextLost;
+  end;
 end;
 
 function BSWindow.DoShow(InModal: boolean): int32;
 begin
   Result := 0;
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('BSWindow.DoShow', 'begin, InModal: ' + BoolToStr(InModal));
+  {$endif}
 
   if InModal then
     FWindowState := wsShownModal
@@ -683,14 +841,8 @@ begin
 
   FIsVisible := true;
 
-  //if InModal and Assigned(FParent) then
-  //  FParent.IsEnabled := false;
-
   if not FFromOSEventChanged then
     Application.ApplicationSystem.DoShow(Self, InModal);
-
-  if FullScreen then
-    Application.ApplicationSystem.DoFullScreen(Self);
 
   while not CheckContextIsCreated do
   begin
@@ -699,16 +851,27 @@ begin
   end;
 
   FIsActive := true;
+
+  if FullScreen then
+    Application.ApplicationSystem.DoFullScreen(Self);
+
   Application.ApplicationSystem.UpdateActiveWindow(Self);
 
   if Assigned(FOnShow) then
     FOnShow.Send(Self);
 
+  Render;
+
   if InModal then
   begin
+    {$ifndef ANDROID}
     while FIsVisible do
       Application.ProcessMessages;
+    {$endif}
   end;
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('BSWindow.DoShow', 'end');
+  {$endif}
 end;
 
 function BSWindow.GetDC: EGLNativeDisplayType;
@@ -810,6 +973,9 @@ end;
 
 procedure BSWindow.MouseDblClick(X, Y: int32);
 begin
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('ActiveWindow.MouseDblClick ' + Caption, 'X: ' + IntToStr(X) + '; Y: ' + IntToStr(Y));
+  {$endif}
   if FIsEnabled and Assigned(FRenderer) then
   begin
     FRenderer.MouseDblClick(X, Y);
@@ -819,6 +985,10 @@ end;
 
 procedure BSWindow.MouseDown(MouseButton: TBSMouseButton; X, Y: int32; Shift: TBSShiftState);
 begin
+  FMouseIsDown := true;
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('ActiveWindow.MouseDown ' + Caption, 'X: ' + IntToStr(X) + '; Y: ' + IntToStr(Y));
+  {$endif}
   if FIsEnabled and Assigned(FRenderer) then
   begin
     FRenderer.MouseDown(MouseButton, X, Y, Shift);
@@ -857,6 +1027,10 @@ end;
 
 procedure BSWindow.MouseUp(MouseButton: TBSMouseButton; X, Y: int32; Shift: TBSShiftState);
 begin
+  FMouseIsDown := false;
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('ActiveWindow.MouseUp ' + Caption, 'X: ' + IntToStr(X) + '; Y: ' + IntToStr(Y));
+  {$endif}
   if FIsEnabled and Assigned(FRenderer) then
   begin
     FRenderer.MouseUp(MouseButton, X, Y, Shift);
@@ -864,7 +1038,7 @@ begin
   end;
 end;
 
-procedure BSWindow.MouseWheel(WheelDelta, X, Y: int32; Shift: TBSShiftState);
+procedure BSWindow.MouseWheel(WheelDelta: int32; X, Y: int32; Shift: TBSShiftState);
 begin
   if FIsEnabled and Assigned(FRenderer) then
   begin
@@ -879,11 +1053,47 @@ end;
 
 procedure BSWindow.OnCreateGlContextEvent(const Value: BEmpty);
 begin
-  FRenderer := TBlackSharkRenderer.Create;
-  FRenderer.ExactSelectObjects := true;
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('BSWindow.OnCreateGlContextEvent', Caption);
+  {$endif}
+  if not Assigned(FRenderer) then
+  begin
+    {$ifdef ANDROID} if Application.MainWindow = Self then {$endif}
+    begin
+    //if Application.MainWindow <> Self then
+    //begin
+    //  //FChildPass := FRenderer.AddPass(BSShaderManager.Load('QUAD', TBlackSharkQUADShader), FRenderer.DrawQUAD,
+    //  //  FLeft, Application.MainWindow.Height - FTop - FHeight, FClientRect.Width, FClientRect.Height, false);
+    //end;
+      FRenderer := TBlackSharkRenderer.Create;
+      FRenderer.ExactSelectObjects := true;
+      FRenderer.Caption := Caption;
+    end
+    {$ifdef ANDROID}
+    else
+      FRenderer := Application.MainWindow.Renderer
+    {$endif}
+    ;
+
+    {$ifdef ANDROID}
+
+    {$endif}
+
+  end else
+    FRenderer.Restore;
   CheckSizeRendererWindow;
-  FOnCreateContextEvent.Send(Self);
   OnCreateGlContext;
+  FOnCreateContextEvent.Send(Self);
+end;
+
+procedure BSWindow.SetCaption(const AValue: string);
+begin
+  if FCaption = AValue then Exit;
+
+  FCaption := AValue;
+
+  if Assigned(FRenderer) then
+    FRenderer.Caption := Caption;
 end;
 
 procedure BSWindow.RemoveChild(AChild: BSWindow);
@@ -898,9 +1108,22 @@ begin
 end;
 
 procedure BSWindow.Resize(AWidth, AHeight: int32);
+var
+  w, h: int32;
+  dw, dh: int32;
 begin
-  FWidth := AWidth;
-  FHeight := AHeight;
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('BSWindow.Resize ' + Caption, 'AWidth: ' + IntToStr(AWidth) + '; AHeight: ' + IntToStr(AHeight));
+  {$endif}
+  w := bs.math.clamp(Application.ApplicationSystem.DisplayWidth, 10, AWidth);
+  h := bs.math.clamp(Application.ApplicationSystem.DisplayHeight, 10, AHeight);
+
+  dw := AWidth - w;
+  dh := AHeight - h;
+
+  FClientRect.Inflate(0, 0, dw, dh);
+  FWidth := w;
+  FHeight := h;
   if not FFromOSEventChanged then
     Application.ApplicationSystem.DoResize(Self, FWidth, FHeight);
   CheckSizeRendererWindow;
@@ -922,21 +1145,51 @@ end;
 
 procedure BSWindow.SetFullScreen(const AValue: boolean);
 begin
+  if FFullScreen = AValue then
+    exit;
   FFullScreen := AValue;
+  if FFullScreen then
+  begin
+    FRectBeforeFullScreen := Rect(FLeft, FTop, FLeft + FWidth, FTop + FHeight);
+    FClientRectBeforeFullScreen := FClientRect;
+    FLeft := 0;
+    FTop := 0;
+    FWidth := Application.ApplicationSystem.DisplayWidth;
+    FHeight := Application.ApplicationSystem.DisplayHeight;
+  end else
+  begin
+    FLeft := FRectBeforeFullScreen.Left;
+    FTop := FRectBeforeFullScreen.Top;
+    FWidth := FRectBeforeFullScreen.Width;
+    FHeight := FRectBeforeFullScreen.Height;
+    FClientRect := FClientRectBeforeFullScreen;
+  end;
+
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('BSWindow.SetFullScreen ' + FCaption, 'IsVisible: ' + BoolToStr(FIsVisible) + '; FullScreen: ' + BoolToStr(FFullScreen));
+  {$endif}
+
   if not FFromOSEventChanged and FIsVisible then
     Application.ApplicationSystem.DoFullScreen(Self);
+end;
+
+procedure BSWindow.OnGLContextLost;
+begin
+  FreeContext;
 end;
 
 procedure BSWindow.SetHandle(const AValue: EGLNativeWindowType);
 begin
   if FWindowContext.Handle <> AValue then
-    FreeAndNil(FGlContext);
+    FreeContext;
+
   FWindowContext.Handle := AValue;
   CheckContextIsCreated;
 end;
 
 procedure BSWindow.SetIsActive(const Value: boolean);
 begin
+  CheckContextIsCreated;
   if FIsActive = Value then
     exit;
   FIsActive := Value;
@@ -944,6 +1197,26 @@ begin
     Application.ApplicationSystem.DoActive(Self)
   else
     Application.ApplicationSystem.UpdateActiveWindow(Self);
+
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('BSWindow.SetIsActive ' + FCaption, BoolToStr(FIsActive));
+  {$endif}
+end;
+
+procedure BSWindow.FreeContext;
+begin
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('FreeContext', '');
+  {$endif}
+
+  {$ifdef ANDROID}
+  if (Application.MainWindow = Self) then
+    FreeAndNil(FGlContext)
+  else
+    FGlContext := nil;
+  {$else}
+    FreeAndNil(FGlContext);
+  {$endif}
 end;
 
 procedure BSWindow.SetIsEnabled(const Value: boolean);
@@ -953,8 +1226,22 @@ end;
 
 procedure BSWindow.SetPosition(ALeft, ATop: int32);
 begin
-  FLeft := ALeft;
-  FTop := ATop;
+  {$ifdef ANDROID}
+
+  if (Application.MainWindow = Self) then
+  begin
+    FLeft := 0;
+    FTop := 0;
+  end else
+  begin
+    FLeft := bs.math.clamp(ALeft - FWidth, 0, ALeft);
+    FTop := bs.math.clamp(ATop - FHeight, 0, ATop);
+  end;
+
+  {$else}
+  FLeft := bs.math.clamp(ALeft - 10, 0, ALeft);
+  FTop := bs.math.clamp(ATop - 10, 0, ATop);
+  {$endif}
   if not FFromOSEventChanged then
     Application.ApplicationSystem.DoSetPosition(Self, FLeft, FTop);
   if Assigned(FOnChangePosition) then

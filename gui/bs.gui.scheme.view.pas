@@ -2010,7 +2010,7 @@ begin
     laTop, laBottom: pos_on_parent := vec2(PositionOnParent.x - half_thick, PositionOnParent.y);
   end;
 
-  AddPoint(pos_on_parent);
+  AddPoint(pos_on_parent{%H-});
 
   case AlignTo of
     laLeft: begin
@@ -2117,7 +2117,7 @@ begin
     end;
   end;
 
-  AddPoint(last_p);
+  AddPoint(last_p{%H-});
 
   { for the body separately are adding an area for draw of an arrow }
   FShadow.AddPoint(PositionOnToLink * FRenderer.Scale);

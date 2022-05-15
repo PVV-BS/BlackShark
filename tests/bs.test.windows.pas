@@ -1,5 +1,9 @@
 ﻿unit bs.test.windows;
 
+{$ifdef FPC}
+  {$WARN 5024 off : Parameter "$1" not used}
+{$endif}
+
 {$I BlackSharkCfg.inc}
 
 interface
@@ -23,6 +27,8 @@ uses
 
 
 type
+
+  { TWindowScrollable }
 
   TWindowScrollable = class(BSWindow)
   private
@@ -49,14 +55,18 @@ type
     procedure OnUpdateValue(const Value: BSFloat);
   protected
     procedure OnCreateGlContext; override;
+    procedure SetFullScreen(const AValue: boolean); override;
   public
     //constructor Create;
     procedure AfterConstruction; override;
     destructor Destroy; override;
     procedure Resize(AWidth, AHeight: int32); override;
     procedure Show; override;
+    procedure Close; override;
     property ScrollBox: TBScrollBox read FScrollBox;
   end;
+
+  { TWindowFullScreen }
 
   TWindowFullScreen = class(TWindowScrollable)
   private
@@ -106,6 +116,8 @@ type
     Windows: TListVec<TRectangle>;
     IconSelection: TRectangle;
     OnIconClickNow: boolean;
+    ChildWindowWidth: int32;
+    ChildWindowHeight: int32;
     procedure OnButtonClick(const AData: BMouseData);
     procedure OnButtonHideShowClick(const AData: BMouseData);
     procedure OnButtonHideShowModalClick(const AData: BMouseData);
@@ -126,6 +138,10 @@ implementation
 uses
     bs.align
   , bs.scene
+  , bs.utils
+  {$ifdef DEBUG_BS}
+  , bs.log
+  {$endif}
   ;
 
 { TBSTestWindows }
@@ -140,29 +156,34 @@ begin
   wrapperMainWindow := TWindowWrapper.Create(Application.MainWindow, Self);
   Application.MainWindow.Owner := wrapperMainWindow;
   Application.MainWindow.Renderer.Frustum.OrtogonalProjection := true;
+  Application.MainWindow.Caption := 'Main window';
 
   Button := TBButton.Create(ARenderer);
+  Button.BorderWidth := 3;
   Button.Caption := 'Create scrollable window';
   Button.Width := Button.Text.Width + 220;
-  Button.Canvas.Font.Size := 10;
+  Button.Canvas.Font.Size := 12;
   //Button.Position2d := vec2(200, 280);
   //Button.Position2d := vec2(100.0, 100.0);
-  Button.Position2d := vec2((ARenderer.WindowWidth - Button.Width) * 0.5 - 30.0, (ARenderer.WindowHeight - Button.Height) * 0.5 - (Button.Height+10)*3);
+  Button.Position2d := vec2((ARenderer.WindowWidth - Button.Width) * 0.5 - 30.0, ARenderer.WindowHeight*0.05);
   ButtonClickObsrv := Button.OnClickEvent.CreateObserver(OnButtonClick);
 
   ButtonHideShow := TBButton.Create(Button.Canvas);
+  ButtonHideShow.BorderWidth := 3;
   ButtonHideShow.Caption := 'Hide/Show selected window';
   ButtonHideShow.Width := Button.Width;
   ButtonHideShow.Position2d := vec2(Button.Position2d.left, Button.Position2d.y + Button.Height + 10);
   ButtonHideShowClickObsrv := ButtonHideShow.OnClickEvent.CreateObserver(OnButtonHideShowClick);
 
   ButtonHideShowModal := TBButton.Create(Button.Canvas);
+  ButtonHideShowModal.BorderWidth := 3;
   ButtonHideShowModal.Caption := 'Hide/ShowModal selected window';
   ButtonHideShowModal.Width := Button.Width;
   ButtonHideShowModal.Position2d := vec2(Button.Position2d.left, ButtonHideShow.Position2d.y + ButtonHideShow.Height + 10);
   ButtonHideShowModalClickObsrv := ButtonHideShowModal.OnClickEvent.CreateObserver(OnButtonHideShowModalClick);
 
   ButtonCreateFullScreenW := TBButton.Create(Button.Canvas);
+  ButtonCreateFullScreenW.BorderWidth := 3;
   ButtonCreateFullScreenW.Caption := 'Create/Show on full screen window';
   ButtonCreateFullScreenW.Width := Button.Width;
   ButtonCreateFullScreenW.Position2d := vec2(ButtonHideShowModal.Position2d.left, ButtonHideShowModal.Position2d.y + ButtonHideShowModal.Height + 10);
@@ -180,7 +201,14 @@ begin
 
   IconClickObsrvs := TListVec<IBMouseEventObserver>.Create;
 
-  OnUpdateActiveWindowObsrv := Application.EventOnUdateActiveWindow.CreateObserver(OnUpdateActiveWindow);
+  OnUpdateActiveWindowObsrv := Application.EventOnUpdateActiveWindow.CreateObserver(OnUpdateActiveWindow);
+
+  ChildWindowWidth := round(Application.MainWindow.Width *0.4);
+  ChildWindowHeight := round(Application.MainWindow.Height*0.4);
+  if ChildWindowWidth > ChildWindowHeight then
+    ChildWindowWidth := ChildWindowHeight
+  else
+    ChildWindowHeight := ChildWindowWidth;
 end;
 
 destructor TBSTestWindows.Destroy;
@@ -200,9 +228,15 @@ var
   wrapper: TWindowWrapper;
   r: TRectangle;
   t: TCanvasText;
+  lt, tp: int32;
 begin
 
-  window := TWindowScrollable(Application.CreateWindow(TWindowScrollable, nil, self, 400, 400, 300, 300));
+  lt := 30 + ChildWindowWidth*(Windows.Count mod 2);
+  tp := round(ButtonCreateFullScreenW.Position2d.y + ButtonCreateFullScreenW.Height) + 36 + (10 + ChildWindowHeight)*(Windows.Count div 2)
+    mod (Application.ApplicationSystem.DisplayHeight - (round(ButtonCreateFullScreenW.Position2d.y + ButtonCreateFullScreenW.Height) + 36));
+
+  window := TWindowScrollable(Application.CreateWindow(TWindowScrollable, nil, self, lt, tp, ChildWindowWidth, ChildWindowHeight));
+  window.Caption := IntToStr(Windows.Count);
   wrapper := TWindowWrapper.Create(window, Self);
   window.Owner := wrapper;
 
@@ -237,6 +271,7 @@ begin
   begin
     WindowFullScreen := TWindowFullScreen(Application.CreateWindow(TWindowFullScreen, nil, self, 400, 400, 300, 300));
     wrapper := TWindowWrapper.Create(WindowFullScreen, Self);
+    WindowFullScreen.Caption := 'Fullsceen Window';
     WindowFullScreen.Owner := wrapper;
     WindowFullScreen.FullScreen := true;
   end;
@@ -427,10 +462,24 @@ var
   p: TParticle;
   s: BSFloat;
   pos: TVec2f;
+  staticPrimitive: TRectangle;
 begin
   inherited;
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('bs.test.windows.TWindowFullScreen.OnCreateGlContext', 'Width: ' + IntToStr(Width) + '; Height: ' + IntToStr(Height));
+  {$endif}
+
+  if Assigned(FScrollBox) then
+    exit;
+
   FScrollBox := TBScrollBox.Create(Renderer);
   FScrollBox.Focused := true;
+  FScrollBox.Resize(Width, Height);
+  {$ifdef ANDROID}
+  // it is emulation windows system for android
+  FScrollBox.MainBody.Data.ModalLevel := Level + Application.MainWindow.Children.Count - 1;
+  FScrollBox.Position2d := TVec2f(vec2(Left, Top)); //Application.MainWindow.Height - Top - Height
+  {$endif}
   //FScrollBox.MainBody.Data.Opacity := 0.0;
   co := FPrimitiveConstructors.Items[IndexPrimitiveConstructor]();
   inc(IndexPrimitiveConstructor);
@@ -447,8 +496,8 @@ begin
     while p.Velocity = 0 do
       p.Velocity := Random(6);
     FParticles.Items[i] := p;
-    pos.x := Random(round(Renderer.WindowWidth-co.Width));
-    pos.y := Random(round(Renderer.WindowHeight-co.Height));
+    pos.x := Random(round(Width-co.Width));
+    pos.y := Random(round(Height-co.Height));
     FInstances.Position2d[i] := pos;
     FInstances.Angle[i] := vec3(0.0, 0.0, random(360));
     s := random(100);
@@ -458,7 +507,39 @@ begin
     FInstances.Color[i] := colorEnumerator.GetNextColor;
   end;
   colorEnumerator.Free;
+
+  staticPrimitive := TRectangle.Create(FScrollBox.Canvas, FScrollBox.OwnerInstances);
+  staticPrimitive.Size := vec2(Width*0.4, Height*0.4);
+  staticPrimitive.Fill := true;
+  staticPrimitive.Build;
+  staticPrimitive.Layer2d := 5;
+
+  pos.x := Random(round(Width-staticPrimitive.Width));
+  pos.y := Random(round(Height-staticPrimitive.Height));
+  staticPrimitive.Position2d := pos;
+
+  //with TPicture.Create(FScrollBox.Canvas, FScrollBox.OwnerInstances) do
+  //begin
+  //
+  //  LoadFromFile(GetFilePath('logo.png', 'Pictures'));
+  //end;
+
+
   //FScrollBox.Resize(ClientRect.Width, ClientRect.Height);
+end;
+
+procedure TWindowScrollable.SetFullScreen(const AValue: boolean);
+begin
+  inherited SetFullScreen(AValue);
+  {$ifdef ANDROID}
+  if Assigned(FScrollBox) then
+    FScrollBox.Position2d := TVec2f(vec2(Left, Top));
+  {$endif}
+  if Assigned(FScrollBox) then
+    FScrollBox.Resize(Width, Height);
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('bs.test.windows.TWindowScrollable.SetFullScreen: ', BoolToStr(AValue, true) + '; Width: ' + IntToStr(Width) + '; Height: ' + IntToStr(Height));
+  {$endif}
 end;
 
 procedure TWindowScrollable.OnUpdateValue(const Value: BSFloat);
@@ -485,14 +566,14 @@ begin
         if pos.x < 0 then
           pos.x := 0.0
         else
-          pos.x := Renderer.WindowWidth - TCanvasObject(FInstances.Prototype.Owner).Width;
+          pos.x := Width - TCanvasObject(FInstances.Prototype.Owner).Width;
       end else
       begin
         p.Direction.y := -p.Direction.y;
         if pos.y < 0 then
           pos.y := 0.0
         else
-          pos.y := Renderer.WindowHeight - TCanvasObject(FInstances.Prototype.Owner).Height;
+          pos.y := Height - TCanvasObject(FInstances.Prototype.Owner).Height;
       end;
       FParticles.Items[i] := p;
     end;
@@ -510,9 +591,21 @@ end;
 procedure TWindowScrollable.Show;
 begin
   inherited;
-  FScrollBox.Resize(ClientRect.Width, ClientRect.Height);
+  {$ifdef ANDROID}
+  FScrollBox.Position2d := TVec2f(vec2(Left, Top));
+  FScrollBox.Visible := true;
+  {$endif}
+  FScrollBox.Resize(Width, Height);
   if not AniLaw.IsRun then
     AniLaw.Run;
+end;
+
+procedure TWindowScrollable.Close;
+begin
+  inherited Close;
+  {$ifdef ANDROID}
+  FScrollBox.Visible := false;
+  {$endif}
 end;
 
 { TWindowWrapper }

@@ -42,7 +42,6 @@ type
   TBSTestCanvasLine = class(TBSTestCanvasPrimitive)
   private
     Line: TLine;
-    LineStroke: TLine;
   public
     constructor Create(ARenderer: TBlackSharkRenderer); override;
     class function TestName: string; override;
@@ -102,7 +101,7 @@ type
 
   TBSTestCanvasPathMultiColored = class(TBSTestCanvasPrimitive)
   private
-    Path: TPath;
+    Path: TPathMultiColored;
   public
     constructor Create(ARenderer: TBlackSharkRenderer); override;
     class function TestName: string; override;
@@ -276,10 +275,8 @@ uses
 constructor TBSTestCanvasPrimitive.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Allow3dManipulationByMouse := true;
   //Renderer.Frustum.Angle := vec3(Renderer.Frustum.Angle.x, Renderer.Frustum.Angle.y + 90, Renderer.Frustum.Angle.z);
   FCanvas := TBCanvas.Create(Renderer, Self);
-  FCanvas.StickOnScreen := false;
   //FCanvas.Scalable := true;
 end;
 
@@ -325,21 +322,11 @@ begin
   Line := TLine.Create(Canvas, nil);
   Line.A := vec2(10, 30);
   Line.B := vec2(230, 400);
-  Line.WidthLine := 3;
+  Line.WidthLine := 5;
   if Canvas.Scalable then
     Line.AnchorsReset;
   Line.Build;
   Line.Position2d := vec2(100, 100);
-
-  LineStroke := TLine.Create(Canvas, nil);
-  LineStroke.WidthLine := 5.0;
-  LineStroke.StrokeLength := 10.0;
-  LineStroke.B := vec2(110.0, 300.0);
-  LineStroke.A := vec2(320.0, 60.0);
-  LineStroke.Color := BS_CL_ORANGE;
-  LineStroke.Build;
-  if Canvas.Scalable then
-    LineStroke.AnchorsReset;
 end;
 
 class function TBSTestCanvasLine.TestName: string;
@@ -471,14 +458,10 @@ begin
   Allow3dManipulationByMouse := true;
   Renderer.Frustum.DistanceFarPlane := 200;
   Canvas.StickOnScreen := false;
-  Path := TPath.Create(Canvas, nil);
-  Path.InterpolateSpline := TInterpolateSpline.isNone;
-  //Path.Data.ScaleSimple := 5.0;
+  Path := TPathMultiColored.Create(Canvas, nil);
   //Path.ShowPoints := true;
   Path.InterpolateFactor := 0.4;
   Path.WidthLine := 1.0;
-  Path.StrokeLength := 10;
-  Path.Color := BS_CL_GREEN;
   //Path.AddPoint(vec2(0.0, 0.0));
   //Path.AddPoint(vec2(150.0, 100.0));
   Path.AddFirstArc(vec2(140.0, 150.0), 70.0, 190.0, 30, BS_CL_GREEN);
@@ -489,20 +472,17 @@ begin
   Path.AddArc(120.0, 130.0, BS_CL_AQUA);
   Path.AddArc(100.0, -130.0, BS_CL_PURPLE);
   { adding a small snippet; this trick allows to exclude long interpolates colors between segments }
-  Path.AddPoint(vec2(200.0, 360.0), TGuiColors.Green);
-
-  Path.AddPoint(vec2(250.0, 360.0), TGuiColors.Yellow);
-  Path.AddPoint(vec2(290.0, 200.0));
-  {Path.AddPoint(vec2(290.0, 230.0));
-
-  Path.AddPoint(vec2(310.0, 250.0), TGuiColors.Navy);
-  Path.AddPoint(vec2(340.0, 260.0));  }
+  Path.AddPoint(Path.Points[Path.CountPoints-1] + vec2(1.0, 0.0), BS_CL_WHITE);
+  Path.AddPoint(vec2(200.0, 360.0), BS_CL_WHITE);
+  { again are adding a small snippet }
+  Path.AddPoint(vec2(201.0, 360.0), BS_CL_ORANGE);
+  Path.AddPoint(vec2(250.0, 360.0), BS_CL_ORANGE);
 
   if Canvas.Scalable then
     Path.AnchorsReset;
 
   Path.Build;
-
+  Path.Data.ScaleSimple := 5.0;
 end;
 
 class function TBSTestCanvasPathMultiColored.TestName: string;

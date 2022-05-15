@@ -29,7 +29,7 @@ type
     ViewPort: TBlackSharkViewPort;
     CurrentTest: TBSTest;
     CommandLineParam: string;
-    procedure AfterCreateContextEvent (Sender: TBlackSharkContext);
+    procedure AfterCreateContextEvent(Sender: TObject);
     procedure RunTest(TestClass: TBSTestClass);
   public
 
@@ -73,7 +73,7 @@ begin
   RunTest(TBSTestClass(cbAvailableTests.Items.Objects[cbAvailableTests.ItemIndex]));
 end;
 
-procedure TFrmMain.AfterCreateContextEvent(Sender: TBlackSharkContext);
+procedure TFrmMain.AfterCreateContextEvent(Sender: TObject);
 var
   i: int32;
   ClassTest: TBSTestClass;

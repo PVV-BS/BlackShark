@@ -28,7 +28,7 @@ type
     FCurrentTest: TBSTest;
     FCurrentTestClass: TBSTestClass;
     FOwnTest: boolean;
-    procedure AfterCreateContextEvent (Sender: TBlackSharkContext);
+    procedure AfterCreateContextEvent (Sender: TObject);
     procedure SetCurrentTest(const Value: TBSTest);
     function GetCurrentTest: TBSTest;
     function GetCurrentTestClass: TBSTestClass;
@@ -51,7 +51,7 @@ uses
 
 {$R *.dfm}
 
-procedure TFrmSecondContext.AfterCreateContextEvent(Sender: TBlackSharkContext);
+procedure TFrmSecondContext.AfterCreateContextEvent(Sender: TObject);
 begin
   if Assigned(ViewPort) and Assigned(ViewPort.Renderer) and Assigned(FCurrentTestClass) and not Assigned(FCurrentTest) then
   begin

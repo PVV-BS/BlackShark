@@ -194,6 +194,9 @@ type
   TVec2i64 = record
     x, y: int64;
     class operator Implicit (const v: TVec2i64): TVec2d; inline;
+    class operator Implicit (const v: TVec2i64): TVec2f; inline;
+    class operator Implicit (const v: TVec2f): TVec2i64; inline;
+    class operator Implicit (const v: TVec2d): TVec2i64; inline;
   end;
 
   { TVec2i }
@@ -414,8 +417,6 @@ type
     pXminYminZmin, pXminYmaxZmin, pXmaxYmaxZmin, pXmaxYminZmin
   );
 
-  TTypePrimitive = (tpTriangles, tpTriangleFan, tpTriangleStrip, tpQuad, tpLines, tpLineStrip);
-
   TBoxPlanes = (bpNear, bpFar, bpRight, bpLeft, bpBottom, bpTop);
 
   TBBLimits = (xMin, yMin, zMin, xMax, yMax, zMax, xMid, yMid, zMid);
@@ -501,7 +502,7 @@ type
 
   TGuiColor = uint32;
 
-  TVertexComponent = (vcCoordinate, vcColor, vcNormal, vcTexture1, vcTexture2, vcBones, vcWeights, vcFloat);
+  TVertexComponent = (vcCoordinate, vcColor, vcNormal, vcTexture1, vcTexture2, vcBones, vcWeights, vcIndex);
   TVertexComponents = set of TVertexComponent;
   TVertexKind = (vkP, vkPT, vkPTN);
 
@@ -2765,42 +2766,44 @@ type
     page: array[0..1023] of byte;
   end;
 var
-	i, m, m2: NativeInt;
+  i, m, m2: NativeInt;
   d_l, s_l: pPage8192;
 begin
 
-	if (Count <= 0) or (S = D) or (s = nil) or (d = nil) then
-  	exit;
+  if (Count <= 0) or (S = D) or (s = nil) or (d = nil) then
+    exit;
+
   d_l := pPage8192(D);
   s_l := pPage8192(S);
-	for i := 0 to (Count div SizeOf(TPage8192)) - 1 do //
-  	begin  //копируем страницами по 8192
+  for i := 0 to (Count div SizeOf(TPage8192)) - 1 do //
+  begin  //copy by 8192
     d_l^ := s_l^;
     inc(s_l);
     inc(d_l);
-    end;
+  end;
 
   m := Count mod SizeOf(TPage8192);
-	for i := 0 to m div SizeOf(TPage1024) - 1 do //
-  	begin  //копируем остаток от 8192 по 1024
+  for i := 0 to m div SizeOf(TPage1024) - 1 do //
+  begin  //copy remainder from 8192 by 1024
     pPage1024(d_l)^ := pPage1024(s_l)^;
     inc(pPage1024(s_l));
     inc(pPage1024(d_l));
-    end;
+  end;
+  
   m2 := m mod SizeOf(TPage1024);
-	for i := 0 to m2 div SizeOf(NativeInt) - 1 do //
-  	begin //копируем остаток от 1024 по слову
+  for i := 0 to m2 div SizeOf(NativeInt) - 1 do //
+  begin //copy reamainder from 1024 by word
     PNativeInt(d_l)^ := PNativeInt(s_l)^;
     inc(PNativeInt(s_l));
     inc(PNativeInt(d_l));
-    end;
+  end;
 
-	for i := 0 to m2 mod SizeOf(NativeInt) - 1 do
-  	begin //копируем остаток от слова
+  for i := 0 to m2 mod SizeOf(NativeInt) - 1 do
+  begin //copy remainder from word
     pByte(d_l)^ := pByte(s_l)^;
     inc(pByte(s_l));
     inc(pByte(d_l));
-    end;
+  end;
 
 end;
 
@@ -5187,6 +5190,24 @@ class operator TVec2i64.Implicit(const v: TVec2i64): TVec2d;
 begin
   Result.x := v.x;
   Result.y := v.y;
+end;
+
+class operator TVec2i64.Implicit(const v: TVec2i64): TVec2f;
+begin
+  Result.x := v.x;
+  Result.y := v.y;
+end;
+
+class operator TVec2i64.Implicit (const v: TVec2f): TVec2i64;
+begin
+  Result.x := round(v.x);
+  Result.y := round(v.y);
+end;
+
+class operator TVec2i64.Implicit (const v: TVec2d): TVec2i64;
+begin
+  Result.x := round(v.x);
+  Result.y := round(v.y);
 end;
 
 { TRectBSd }

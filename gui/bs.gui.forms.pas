@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -23,6 +23,10 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 }
 
 unit bs.gui.forms;
+
+{$ifdef FPC}
+  {$WARN 5024 off : Parameter "$1" not used}
+{$endif}
 
 {$I BlackSharkCfg.inc}
 
@@ -85,7 +89,7 @@ type
     //FPaddingRectangle: TRectangle;
     //FPaddingArea: TRectBSF;
     FOwnerInstances: TCanvasObject;
-    FPosition: TVec2d;
+    FPosition: TVec2i64;
     FSpaceTreeClass: TBlackSharkSpaceTreeClass;
     FOnChangePosition: TOnChangePositionNotify;
     FShowBorder: boolean;
@@ -100,9 +104,9 @@ type
     ObsrvOnKeyPress: IBKeyEventObserver;
     FIsMouseDown: boolean;
     WidthScrollBars: BSFloat;
-    function GetScrolledArea: TVec2d;
+    function GetScrolledArea: TVec2i64;
     procedure SetAutoResizeScrollingArea(AValue: boolean);
-    procedure SetPosition(const Value: TVec2d);
+    procedure SetPosition(const Value: TVec2i64);
     procedure ChangeScrollHor({%H-}ScrollBar: TBScrollBar);
     procedure ChangeScrollVer({%H-}ScrollBar: TBScrollBar);
     procedure OnDropInstance({%H-}const Data: BDragDropData);
@@ -139,7 +143,7 @@ type
     procedure DoChangePos; virtual;
     procedure SetVisible(const Value: boolean); override;
     procedure ReloadSpaceTree; virtual;
-    procedure SetScrolledArea(const AValue: TVec2d); virtual;
+    procedure SetScrolledArea(const AValue: TVec2i64); virtual;
     procedure SetEnabled(const Value: boolean); override;
     procedure MouseDown({%H-}const Data: BMouseData); virtual;
     procedure MouseEnter({%H-}const Data: BMouseData); virtual;
@@ -165,7 +169,7 @@ type
     procedure BuildView; override;
     procedure DrawClipArea(Instance: PRendererGraphicInstance);
     { seting a position under data, pixels  }
-    procedure ScrollTo(X, Y: double);
+    procedure ScrollTo(X, Y: Int64);
     procedure Resize(AWidth, AHeight: BSFloat); override;
     procedure DropControl(Control: TBControl; {%H-}Parent: TCanvasObject); overload; override;
     { check size of scrolled area by content and change if need }
@@ -178,9 +182,9 @@ type
       current viewport the space tree }
     procedure DataUpdateRect(Position: PNodeSpaceTree; const NewRect: TRectBSf);
     { Position of viewport (ClipObject) over data (scrolled area), pixels }
-    property Position: TVec2d read FPosition write SetPosition;
+    property Position: TVec2i64 read FPosition write SetPosition;
     { a scrollable area }
-    property ScrolledArea: TVec2d read GetScrolledArea write SetScrolledArea;
+    property ScrolledArea: TVec2i64 read GetScrolledArea write SetScrolledArea;
     { color of background }
     //property ColorBackground: TColor4f read FColorBackground write SetColorBackground;
     { background root window - "viewport" for out containing visible data }
@@ -427,7 +431,7 @@ end;
 
 function TBScrolledWindowCustom.DefaultSize: TVec2f;
 begin
-  Result := vec2(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+  Result := vec2(round(DEFAULT_WIDTH*ToHiDpiScale), round(DEFAULT_HEIGHT*ToHiDpiScale));
 end;
 
 destructor TBScrolledWindowCustom.Destroy;
@@ -466,9 +470,9 @@ begin
   CheckSizeScrollBars;
   if Assigned(Border) then
   begin
-    FBorder.Size := vec2(FClipObject.Width, FClipObject.Height) + 2;
+    FBorder.Size := vec2(FClipObject.Width, FClipObject.Height) + FBorder.WidthLine*2;
     FBorder.Build;
-    FBorder.Position2d := vec2(-1.0, -1.0);
+    FBorder.Position2d := vec2(-round(FBorder.WidthLine), -round(FBorder.WidthLine));
   end;
 
   if not FAllowDragWindowOverData then
@@ -479,7 +483,7 @@ begin
       FPosition.x := 0;
       FScrollBarHor.OnChangePosition := nil;
       try
-        FScrollBarHor.Position := 0.0;
+        FScrollBarHor.Position := 0;
       finally
         FScrollBarHor.OnChangePosition := ChangeScrollHor;
       end;
@@ -490,7 +494,7 @@ begin
       FPosition.y := 0;
       FScrollBarVert.OnChangePosition := nil;
       try
-        FScrollBarVert.Position := 0.0;
+        FScrollBarVert.Position := 0;
       finally
         FScrollBarVert.OnChangePosition := ChangeScrollVer;
       end;
@@ -503,7 +507,7 @@ end;
 procedure TBScrolledWindowCustom.ReloadSpaceTree;
 begin
   if Assigned(FSpaceTree) then
-    FSpaceTree.ViewPort(FPosition.x, FPosition.y, Width, Height); // BSConfig.VoxelSize *
+    FSpaceTree.ViewPort(FPosition.x, FPosition.y, Width, Height);
 end;
 
 procedure TBScrolledWindowCustom.Resize(AWidth, AHeight: BSFloat);
@@ -516,7 +520,7 @@ begin
   inherited;
 end;
 
-procedure TBScrolledWindowCustom.SetPosition(const Value: TVec2d);
+procedure TBScrolledWindowCustom.SetPosition(const Value: TVec2i64);
 begin
   ScrollTo(Value.x, Value.y);
 end;
@@ -552,7 +556,7 @@ begin
   end;
 end;
 
-function TBScrolledWindowCustom.GetScrolledArea: TVec2d;
+function TBScrolledWindowCustom.GetScrolledArea: TVec2i64;
 begin
   Result.x := FScrollBarHor.Size;
   Result.y := FScrollBarVert.Size;
@@ -573,7 +577,7 @@ begin
 
 end;
 
-procedure TBScrolledWindowCustom.ScrollTo(X, Y: double);
+procedure TBScrolledWindowCustom.ScrollTo(X, Y: Int64);
 begin
   { check if will only event about change of position }
   if (X < 0) then
@@ -645,9 +649,9 @@ begin
   inherited DoAfterScale;
   if Assigned(Border) then
   begin
-    Border.Size := vec2(FClipObject.Width+2, FClipObject.Height+2);
+    Border.Size := vec2(FClipObject.Width+FBorder.WidthLine*2, FClipObject.Height+FBorder.WidthLine*2);
     Border.Build;
-    FBorder.Position2d := vec2(-1.0, -1.0);
+    FBorder.Position2d := vec2(-round(FBorder.WidthLine*0.5), -round(FBorder.WidthLine*0.5));
   end;
   //FScrollBarHor.DoScaling;
   //FScrollBarVert.DoScaling;
@@ -744,11 +748,11 @@ begin
     FBorder.Position2d := vec2(-1.0, -1.0);
     FBorder.Color := BS_CL_MED_GRAY;
     FBorder.Data.Interactive := false;
-    FBorder.WidthLine := 1.0;
+    FBorder.WidthLine := round(1.0*ToHiDpiScale);
     //FBorder.FixedWidthLine := true;
     FBorder.BanScalableMode := true;
     FBorder.Layer2d := FScrollBarHor.MainBody.Layer2d + 1;
-    FBorder.Align := TObjectAlign.oaClient;
+    //FBorder.Align := TObjectAlign.oaClient;
   end;
 end;
 
@@ -807,15 +811,15 @@ end;
 procedure TBScrolledWindowCustom.CheckScrollingAreaByList;
 
 var
-  sa: TVec2d;
+  sa: TVec2i64;
 
   procedure CheckObj(co: TCanvasObject);
   var
-    ar: TVec2d;
+    ar: TVec2i64;
     obj: TGraphicObject;
     i: int32;
   begin
-    ar := co.Position2d + vec2(co.Width, co.Height);
+    ar := TVec2i64(co.Position2d + vec2(co.Width, co.Height));
     if ar.x > sa.x then
       sa.x := ar.x;
     if ar.y > sa.y then
@@ -834,7 +838,7 @@ var
   i, j: int32;
   cntrl: TBControl;
 begin
-  sa := vec2(0.0, 0.0);
+  sa := vec2(Int64(0), Int64(0));
   for i := 0 to MainBody.Data.ChildrenCount - 1 do
   begin
     obj := MainBody.Data.Child[i];
@@ -862,7 +866,7 @@ end;
 procedure TBScrolledWindowCustom.CheckScrollingAreaByTree;
 begin
   inherited;
-  ScrolledArea := vec2d(FSpaceTree.Root.BB.x_max, FSpaceTree.Root.BB.y_max);
+  ScrolledArea := TVec2i64(vec2d(FSpaceTree.Root.BB.x_max, FSpaceTree.Root.BB.y_max));
 end;
 
 procedure TBScrolledWindowCustom.CheckSizeScrollBars;
@@ -964,7 +968,7 @@ begin
   BuildView;
 end;
 
-procedure TBScrolledWindowCustom.SetScrolledArea(const AValue: TVec2d);
+procedure TBScrolledWindowCustom.SetScrolledArea(const AValue: TVec2i64);
 begin
   if (FScrollBarHor.Size = AValue.x) and (FScrollBarVert.Size = AValue.y) or (AValue.y < 0) or (AValue.x < 0) then
     exit;
@@ -1279,14 +1283,17 @@ begin
 end;
 
 procedure TBFormCustom.BuildButtonOnHeader;
+var
+  scaledFour: BSFloat;
 begin
+  scaledFour := round(4*ToHiDpiScale);
   FButtonOnHeader.Size := vec2(FFormHeader.Size.Height, FFormHeader.Size.Height);
   FButtonOnHeader.Build;
   FCloseCross.Clear;
-  FCloseCross.AddLine(4, 4, FButtonOnHeader.Size.x - 4, FButtonOnHeader.Size.y - 4);
-  FCloseCross.AddLine(FButtonOnHeader.Size.x - 4, 4, 4, FButtonOnHeader.Size.y - 4);
+  FCloseCross.AddLine(scaledFour, scaledFour, FButtonOnHeader.Size.x - scaledFour, FButtonOnHeader.Size.y - scaledFour);
+  FCloseCross.AddLine(FButtonOnHeader.Size.x - scaledFour, scaledFour, scaledFour, FButtonOnHeader.Size.y - scaledFour);
   FCloseCross.Build;
-  FCloseCross.Position2d := vec2(4, 4);
+  FCloseCross.Position2d := vec2(scaledFour, scaledFour);
 end;
 
 procedure TBFormCustom.BuildCaptionHeader;
@@ -1294,7 +1301,7 @@ begin
   FFormHeader.Size := vec2(Width, FHeaderHeight); // - 2
   FFormHeader.Build;
   FFormHeader.Position2d := vec2(0.0, 0.0);
-  FCaptionHeader.Position2d := vec2((Width - FCaptionHeader.Width) * 0.5 - 1.0, (FHeaderHeight - FCaptionHeader.Height) * 0.5);
+  FCaptionHeader.Position2d := vec2((Width - FCaptionHeader.Width) * 0.5 - round(1.0*ToHiDpiScale), (FHeaderHeight - FCaptionHeader.Height) * 0.5);
 end;
 
 procedure TBFormCustom.BuildView;
@@ -1316,10 +1323,10 @@ end;
 constructor TBFormCustom.Create(ACanvas: TBCanvas);
 begin
   inherited;
-  FHeaderHeight := DEF_CAPTION_HEADER_PLANE_HEIGHT;
+  FHeaderHeight := round(DEF_CAPTION_HEADER_PLANE_HEIGHT*ToHiDpiScale);
   FColorHeader := TGuiColor($FF8E6535);
   FColorCaptionHeader := TGuiColor($FFFFFFFF);
-  Canvas.Font.SizeInPixels := 9;
+  Canvas.Font.SizeInPixels := round(9*ToHiDpiScale);
   FShowHeader := true;
   FShowCloseButtonOnHeader := true;
   if FShowHeader then
@@ -1352,6 +1359,7 @@ begin
   FCloseCross := TLines.Create(Canvas, FButtonOnHeader);
   FCloseCross.Data.Interactive := false;
   FCloseCross.Color := BS_CL_WHITE;
+  FCloseCross.LinesWidth := round(1*ToHiDpiScale);
   //FCloseCross.Color2 := BS_CL_GRAY;
 end;
 
@@ -1362,7 +1370,7 @@ begin
   FFormHeader.Data.DragResolve := false;
   FFormHeader.Color := ColorByteToFloat(FColorHeader);
   FFormHeader.Layer2d := ScrollBarHor.MainBody.Layer2d;
-  FFormHeader.Align := TObjectAlign.oaTop;
+  //FFormHeader.Align := TObjectAlign.oaTop;
 
   FCaptionHeader :=  TCanvasText.Create(FCanvas, FFormHeader);
   FCaptionHeader.Text := 'Form';

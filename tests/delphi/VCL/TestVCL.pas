@@ -76,7 +76,7 @@ type
     ObsrvResizeRequest: IBResizeWindowEventObserver;
     ObsrvRepaintRequest: IBEmptyEventObserver;
     ObsrvMouseDownRequest: IBMouseEventObserver;
-    procedure AfterCreateContextEvent (Sender: TBlackSharkContext);
+    procedure AfterCreateContextEvent (Sender: TObject);
     procedure CheckLeaks;
     procedure RunTest(ATestClass: TBSTestClass);
     procedure OnPaintMainViewport(Sender: TObject);
@@ -111,14 +111,14 @@ begin
   Close;
 end;
 
-procedure TfrmMain.AfterCreateContextEvent(Sender: TBlackSharkContext);
+procedure TfrmMain.AfterCreateContextEvent(Sender: TObject);
 var
   i: int32;
   ClassTest: TBSTestClass;
 begin
   //ViewPort.MaxFPS := cbMaxFPS.Checked;
-  ViewPort.Renderer.SmoothByKernelMSAA := cbMSAAByKernel.Checked;
-  ViewPort.Renderer.SmoothMSAA := cbMSAA.Checked;
+  //ViewPort.Renderer.SmoothByKernelMSAA := cbMSAAByKernel.Checked;
+  //ViewPort.Renderer.SmoothMSAA := cbMSAA.Checked;
   for i := 0 to TestsCount - 1 do
   begin
     ClassTest := GetClassTest(i);
@@ -185,7 +185,7 @@ end;
 
 procedure TfrmMain.cbFXAAClick(Sender: TObject);
 begin
-  ViewPort.Renderer.SmoothFXAA := cbFXAA.Checked;
+//  ViewPort.Renderer.SmoothFXAA := cbFXAA.Checked;
 end;
 
 procedure TfrmMain.cbKernelsChange(Sender: TObject);
@@ -205,12 +205,12 @@ end;
 
 procedure TfrmMain.cbPSSAAClick(Sender: TObject);
 begin
-  ViewPort.Renderer.SmoothSharkSSAA := cbPSSAA.Checked;
+//  ViewPort.Renderer.SmoothSharkSSAA := cbPSSAA.Checked;
 end;
 
 procedure TfrmMain.cbMSAAByKernelClick(Sender: TObject);
 begin
-  ViewPort.Renderer.SmoothByKernelMSAA := cbMSAAByKernel.Checked;
+//  ViewPort.Renderer.SmoothByKernelMSAA := cbMSAAByKernel.Checked;
   lblKernel.Enabled := cbMSAAByKernel.Checked;
   cbKernels.Enabled := cbMSAAByKernel.Checked;
 end;
@@ -297,8 +297,8 @@ begin
   FrmSecondContext.OnShow := OnSecondFormShow;
   if Assigned(ViewPort.Renderer) then
   begin
-    ViewPort.Renderer.SmoothByKernelMSAA := cbMSAAByKernel.Checked;
-    ViewPort.Renderer.SmoothMSAA := cbMSAA.Checked;
+    //ViewPort.Renderer.SmoothByKernelMSAA := cbMSAAByKernel.Checked;
+    //ViewPort.Renderer.SmoothMSAA := cbMSAA.Checked;
   end;
   for sk := Low(TSamplingKernel) to High(TSamplingKernel) do
     cbKernels.Items.Add(TRttiEnumerationType.GetName(sk));

@@ -69,7 +69,7 @@ type
     procedure DoAddVisualData(Data: TDocGraphicItem);
     procedure DoChangePos; override;
     procedure ReloadSpaceTree; override;
-    procedure SetScrolledArea(const AValue: TVec2d); override;
+    procedure SetScrolledArea(const AValue: TVec2i64); override;
   public
     constructor Create(ACanvas: TBCanvas); override;
     destructor Destroy; override;
@@ -169,7 +169,7 @@ begin
 
 end;
 
-procedure TBlackSharkMemo.SetScrolledArea(const AValue: TVec2d);
+procedure TBlackSharkMemo.SetScrolledArea(const AValue: TVec2i64);
 begin
   inherited;
   FDoc.DocSize := vec2(AValue.x, AValue.y);

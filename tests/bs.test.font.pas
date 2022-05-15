@@ -106,7 +106,7 @@ uses
   //, FMX.Clipboard
   {$else}
     {$ifndef FPC}
-      {$ifndef X}
+      {$ifdef MSWINDOWS}
       , Clipbrd
       {$endif}
     {$endif}
@@ -135,7 +135,7 @@ end;
 procedure TBSTestTrueTypeFont.OnMouseDownTri(const Data: BMouseData);
 {$ifndef FMX}
   {$ifndef FPC}
-    {$ifndef X}
+    {$ifdef MSWINDOWS}
 var
   t: string;
     {$endif}
@@ -147,7 +147,7 @@ begin
 
   {$ifndef FMX}
     {$ifndef FPC}
-      {$ifndef X}
+      {$ifdef MSWINDOWS}
   t := Point1.Text + #$0d + #$0a +
     Point2.Text + #$0d + #$0a +
     Point3.Text + #$0d + #$0a;

@@ -989,7 +989,7 @@ begin
   if FDrawedProps.Count * RowHeight > Height then
   begin
     if Height <> FVertScrollBar.Size then
-      FVertScrollBar.Size := Height;
+      FVertScrollBar.Size := round(Height);
     if not FVertScrollBar.Visible then
       FVertScrollBar.Visible := true;
   end else
@@ -1161,7 +1161,7 @@ begin
     index := 0;
 
     r.Left := 0;
-    r.Top := -round(FVertScrollBar.Position);
+    r.Top := -FVertScrollBar.Position;
     if Assigned(Root) then
     begin
       if not FVertScrollBar.Visible then
@@ -1174,7 +1174,7 @@ begin
       begin
         gr := FDrawedProps.Items[FDrawedProps.Count - 1];
         if (gr.Level > 1) then
-          gr.DrawLowerCorners((gr.Level-1)*BORDER_SIZE_LEFT, FDrawedProps.Count*FRowHeight-round(FVertScrollBar.Position), (gr.Level-1)*BORDER_SIZE_LEFT);
+          gr.DrawLowerCorners((gr.Level-1)*BORDER_SIZE_LEFT, FDrawedProps.Count*FRowHeight-FVertScrollBar.Position, (gr.Level-1)*BORDER_SIZE_LEFT);
       end;
     end;
 

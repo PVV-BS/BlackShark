@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -857,7 +857,7 @@ end;
 
 { TGUIThread }
 
-constructor TGUIThread.Create(AAsFiction, ACreateSuspended: Boolean);
+constructor TGUIThread.Create(AAsFiction: boolean; ACreateSuspended: Boolean);
 begin
   inherited Create(true, ACreateSuspended);
   Assert(GUIThread = nil, 'TGUIThread has already been created!');

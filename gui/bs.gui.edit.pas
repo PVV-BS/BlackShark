@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -63,7 +63,6 @@ type
     FColorCursor: TGuiColor;
     FColorText: TGuiColor;
     FTextView: TCanvasText;
-    Frame: TRectangle;
     Cursor: TLine;
     Selector: TRectangle;
     CursorAnimator: IBAnimationLinearFloat;
@@ -124,6 +123,7 @@ type
     function GetEventKeyDown: IBKeyPressEvent;
   protected
     Back: TRectangle;
+    Frame: TRectangle;
     TextRect: TRectangle;
     FTextoutWidth: BSFloat;
     procedure SetFocused(Value: boolean); override;
@@ -301,7 +301,7 @@ begin
   FColorCursor := TGuiColors.Skyblue;
   FColorText := TGuiColors.White;
   if OwnCanvas then
-    FCanvas.Font.SizeInPixels := FONT_SIZE_IN_PIXELS_DEFAULT;
+    FCanvas.Font.SizeInPixels := round(FONT_SIZE_IN_PIXELS_DEFAULT*ToHiDpiScale);
   TextOffsetSymbols := 1;
   FShowCursor := true;
   FTextoutWidth := -1;
@@ -326,6 +326,7 @@ begin
   Frame.Color := ColorByteToFloat(FColorFrame, true);
   Frame.Data.Interactive := false;
   Frame.Layer2d := 5;
+  Frame.WidthLine := round(1*ToHiDpiScale);
   FTextView := TCanvasText.Create(FCanvas, Back);
   FTextView.Anchors[TAnchor.aRight] := false;
   FTextView.Anchors[TAnchor.aTop] := false;
@@ -395,7 +396,7 @@ begin
     exit;
   Cursor := TLine.Create(FCanvas, Back);
   Cursor.Length := Back.Height - (CURSOR_TOP_ALIGN shl 1);
-  Cursor.WidthLine := 2;
+  Cursor.WidthLine := round(2*ToHiDpiScale);
   Cursor.Data.Interactive := false;
   Cursor.Color := TColor4f(FColorCursor);
   Cursor.Data.Caption := 'cursor';
@@ -435,8 +436,12 @@ end;
 
 function TBCustomEdit.DefaultSize: TVec2f;
 begin
-  Result.x := DEFAULT_WIDTH;
-  Result.y := DEFAULT_HEIGHT;
+  Result.x := round(DEFAULT_WIDTH*ToHiDpiScale);
+  Result.y := round(DEFAULT_HEIGHT*ToHiDpiScale);
+  if Result.y + 2 < Canvas.Font.SizeInPixels then
+    Result.y := round(Canvas.Font.SizeInPixels);
+  if Result.x + 2 + FLeftMargin <= FTextView.Width then
+    Result.x := FTextView.Width + 2 + FLeftMargin;
 end;
 
 procedure TBCustomEdit.DeleteSymbol;
@@ -905,6 +910,9 @@ begin
     UpdateCursorPos;
     // for accept key events
     Canvas.Renderer.Scene.InstanceSetSelected(TextRect.Data.BaseInstance, true);
+    {$ifdef ANDROID}
+    ControlEvents.Send(TextRect.Data.BaseInstance, GUI_SHOW_KEYBOARD);
+    {$endif}
   end else
   begin
     Frame.Color := ColorByteToFloat(ColorFrame, true);
@@ -912,6 +920,9 @@ begin
     ObsrvOnKeyDown := nil;
     FreeCursor;
     Canvas.Renderer.Scene.InstanceSetSelected(TextRect.Data.BaseInstance, false);
+    {$ifdef ANDROID}
+    ControlEvents.Send(TextRect.Data.BaseInstance, GUI_HIDE_KEYBOARD);
+    {$endif}
   end;
 end;
 
@@ -1026,23 +1037,26 @@ end;
 { TBSpinEdit }
 
 procedure TBCustomSpinEdit.BuildView;
+var
+  scaledFour: BSFloat;
 begin
   inherited BuildView;
   // new size with align on size of pixel
-  BtnUp.Size := vec2(BTN_WIDTH, round((TextRect.Size.Height - 1.0) * 0.5) - 2.0);
+  BtnUp.Size := vec2(round(BTN_WIDTH*ToHiDpiScale), round((TextRect.Size.Height - Frame.WidthLine) * 0.5) - Frame.WidthLine*2);
   BtnUp.Build;
-  BtnUp.Position2d := vec2(TextRect.Width - BtnUp.Width - 2, 2);
+  BtnUp.Position2d := vec2(TextRect.Width - BtnUp.Width - Frame.WidthLine*2, Frame.WidthLine*2);
   BtnDown.Size := BtnUp.Size;
   BtnDown.Build;
-  BtnDown.Position2d := vec2(TextRect.Width - BtnUp.Width - 2, BtnUp.Position2d.y + BtnUp.Height + 1.0);
+  BtnDown.Position2d := vec2(TextRect.Width - BtnUp.Width - Frame.WidthLine*2, BtnUp.Position2d.y + BtnUp.Height + Frame.WidthLine);
 
-  TriUp.A :=   vec2(0.0, 4.0);
-  TriUp.B :=   vec2(4.0, 0.0);
-  TriUp.C :=   vec2(8.0, 4.0);
+  scaledFour := 4.0*ToHiDpiScale;
+  TriUp.A :=   vec2(0.0, scaledFour);
+  TriUp.B :=   vec2(scaledFour, 0.0);
+  TriUp.C :=   vec2(scaledFour*2.0, scaledFour);
 
   TriDown.A := vec2(0.0, 0.0);
-  TriDown.B := vec2(8.0, 0.0);
-  TriDown.C := vec2(4.0, 4.0);
+  TriDown.B := vec2(scaledFour*2.0, 0.0);
+  TriDown.C := vec2(scaledFour, scaledFour);
   TriUp.Build;
   TriUp.ToParentCenter;
   TriDown.Build;
@@ -1091,7 +1105,7 @@ begin
   TriDown.Color := BS_CL_CREAM;
   ObsrvOnMouseDownBtnDown := CreateMouseObserver(BtnDown.Data.EventMouseDown, OnMouseDownBtnDown);
   ObsrvOnMouseUpBtnDown := CreateMouseObserver(BtnDown.Data.EventMouseUp, OnMouseUpBtnDown);
-  FTextoutWidth := TextRect.Size.Width - BTN_WIDTH - 2;
+  FTextoutWidth := TextRect.Size.Width - BTN_WIDTH*ToHiDpiScale - Frame.WidthLine*2;
   WaitTimer := CreateAniFloatLinear(GUIThread);
   WaitTimer.Duration := 10000;
   WaitTimer.IntervalUpdate := 50;
@@ -1220,7 +1234,7 @@ end;
 
 procedure TBCustomSpinEdit.Resize(AWidth, AHeight: BSFloat);
 begin
-  FTextoutWidth := AWidth - BTN_WIDTH - 2 - LeftMargin;
+  FTextoutWidth := AWidth - BTN_WIDTH*ToHiDpiScale - Frame.WidthLine - LeftMargin;
   inherited;
 end;
 

@@ -143,6 +143,9 @@ uses
   , bs.strings
   , bs.texture
   , bs.align
+  {$ifdef DEBUG_BS}
+  , bs.log
+  {$endif}
   ;
 
 { TBSTestSimple }
@@ -173,14 +176,17 @@ begin
   //Canvas.Pen.Width := 5;
 
   Triangle := TTriangle.Create(Canvas, nil);
-  Triangle.C := vec2(0, 30);
-  Triangle.B := vec2(15, 0);
-  Triangle.A := vec2(30, 30);
-  //Triangle.Fill := True;
+  Triangle.C := vec2(0.0, 300.0);
+  Triangle.B := vec2(150.0, 0.0);
+  Triangle.A := vec2(300.0, 300.0);
+  Triangle.Fill := True;
   Triangle.Color := BS_CL_SKY;
   //Triangle.Data.ScaleSimple := 0.5;
   Triangle.Build;
   Triangle.Position2d := vec2(10, 10);
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBSTestSimple.Create');
+  {$endif}
 
     //Data.Position := vec3(Data.Position.x, Data.Position.y, Data.Position.z - 5);
   {
@@ -467,13 +473,15 @@ begin
   VecText4.Color := BS_CL_AQUA;
 
   ButtonScaleOut := TBButton.Create(ARenderer);
-  ButtonScaleOut.Size := vec2(120.0, 35.0);
+  ButtonScaleOut.Size := vec2(200.0, 50.0);
+  ButtonScaleOut.Canvas.Font.Size := 14;
   ButtonScaleOut.Caption := 'Zoom text out';
-  ButtonScaleOut.Position2d := vec2(450.0, 90.0);
+  ButtonScaleOut.Position2d := vec2(450.0, 125.0);
   OnClickObsrvOut := ButtonScaleOut.OnClickEvent.CreateObserver(GUIThread, OnMouseUpScaleOut);
 
   ButtonScaleIn := TBButton.Create(ARenderer);
-  ButtonScaleIn.Size := vec2(120.0, 35.0);
+  ButtonScaleIn.Size := vec2(200.0, 50.0);
+  ButtonScaleIn.Canvas.Font.Size := 14;
   ButtonScaleIn.Caption := 'Zoom text in';
   ButtonScaleIn.Position2d := vec2(450.0, 45.0);
   OnClickObsrvIn := ButtonScaleIn.OnClickEvent.CreateObserver(GUIThread, OnMouseUpScaleIn);

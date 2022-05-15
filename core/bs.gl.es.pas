@@ -1024,11 +1024,10 @@ var
   function InitGLES(const PathGL: string): boolean;
 
   {$ifdef FPC}
-  function glGetProcAddress(ahlib: System.THandle; ProcName: PAnsiChar; CountParamBytes: int8 = 0): Pointer;
+  function glGetProcAddress(ahlib: TLibHandle; ProcName: PAnsiChar; CountParamBytes: int8 = 0): Pointer;
   {$else}
   function glGetProcAddress(ahlib: System.THandle; ProcName: PWideChar; CountParamBytes: int8 = 0): Pointer;
   {$endif}
-
 
 var
   {$ifdef FPC}
@@ -1039,8 +1038,15 @@ var
 
 implementation
 
+{$ifdef DEBUG_BS}
+uses
+    bs.log
+  ;
+{$endif}
+
+
 {$ifdef FPC}
-function glGetProcAddress(ahlib: System.THandle; ProcName: PAnsiChar; CountParamBytes: int8 = 0): Pointer;
+function glGetProcAddress(ahlib: TLibHandle; ProcName: PAnsiChar; CountParamBytes: int8 = 0): Pointer;
 var
   n: AnsiString;
 begin
@@ -1242,12 +1248,15 @@ function LoadGLESv2(lib: PChar): boolean;
 begin
   if GLESLib <> 0 then
     FreeGLESv2;
-
   GLESLib := LoadLibrary(lib);
   if (GLESLib = 0) then
+  begin
+    {$ifdef DEBUG_BS}
+    BSWriteMsg('LoadGLESv2', 'Could not load library ' + lib);
+    {$endif}
     exit(false);
+  end;
 
-    //raise Exception.Create(format('Could not load library: %s',[lib]));
 
   glActiveTexture := glGetProcAddress(GLESLib, 'glActiveTexture', 4);
   glAttachShader := glGetProcAddress(GLESLib, 'glAttachShader', 8);
@@ -1403,6 +1412,14 @@ begin
   glEndPerfMonitorAMD := glGetProcAddress(GLESLib,'glEndPerfMonitorAMD', 4);
   glGetPerfMonitorCounterDataAMD := glGetProcAddress(GLESLib,'glGetPerfMonitorCounterDataAMD', 20);
   Result := Assigned(glActiveTexture);
+
+  {$ifdef DEBUG_BS}
+  if Result then
+    BSWriteMsg('LoadGLESv2', 'GLES2 initialized successfully')
+  else
+    BSWriteMsg('LoadGLESv2', 'Could not initialize GLES2: ' + lib)
+  {$endif}
+
 end;
 
 {$ifdef GLES30}

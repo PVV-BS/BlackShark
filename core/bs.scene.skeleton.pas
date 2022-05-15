@@ -526,7 +526,7 @@ begin
       end;
 
       bone := FCurrentAnimation.Bones.Items[i];
-      QuaternionToMatrix(m, delta_rot);
+      QuaternionToMatrix(m{%H-}, delta_rot);
 
       if Assigned(bone.Parent) then
       begin

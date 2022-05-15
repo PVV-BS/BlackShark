@@ -973,8 +973,8 @@ begin
   { draw marked areas }
   if (AreaMarker <> nil) and (FCurrentPresent <> nil) then
   begin
-    p.x := round(ScrollBarHor.Position) div round(ScrollBarHor.Step);
-    p.y := round(ScrollBarVert.Position) div round(ScrollBarVert.Step);
+    p.x := ScrollBarHor.Position div ScrollBarHor.Step;
+    p.y := ScrollBarVert.Position div ScrollBarVert.Step;
     AreaMarker.SpaceTree.ViewPort(p.x, p.y, ClipObject.Width / FCurrentPresent.FWidthCol,
       ClipObject.Height / FCurrentPresent.FHeightRow);
   end;
@@ -1293,12 +1293,12 @@ end;
 
 function TBGrid.GetPositionX: int64;
 begin
-  Result := round(ScrollBarHor.Position) div round(ScrollBarHor.Step); // FIntervalReader.IntervalSize;
+  Result := ScrollBarHor.Position div ScrollBarHor.Step; // FIntervalReader.IntervalSize;
 end;
 
 function TBGrid.GetPositionY: int64;
 begin
-  Result := round(ScrollBarVert.Position) div round(ScrollBarVert.Step);
+  Result := ScrollBarVert.Position div ScrollBarVert.Step;
 end;
 
 class function TBGrid.FindPresentation(const Name: string): TGridDataPresentationClass;
@@ -1455,7 +1455,7 @@ end;
 
 procedure TBGrid.SetPositionFirstCell(const Value: TVec2d);
 begin
-  ScrollTo(Value.x*ScrollBarHor.Step, Value.y*ScrollBarVert.Step);
+  ScrollTo(round(Value.x)*ScrollBarHor.Step, round(Value.y)*ScrollBarVert.Step);
 end;
 
 procedure TBGrid.SetPositionX(const Value: int64);
@@ -1652,8 +1652,8 @@ begin
   begin
     CanvasObjectMap.Size := FGrid.ClipObject.Size;
     CanvasObjectMap.Build;
-    m.x := round(FGrid.ScrollBarHor.Position) mod round(FGrid.ScrollBarHor.Step);
-    m.y := round(FGrid.ScrollBarVert.Position) mod round(FGrid.ScrollBarVert.Step);
+    m.x := FGrid.ScrollBarHor.Position mod FGrid.ScrollBarHor.Step;
+    m.y := FGrid.ScrollBarVert.Position mod FGrid.ScrollBarVert.Step;
     CanvasObjectMap.Position2d := -CanvasObjectMap.Size * 0.5 - m;
   end;
 

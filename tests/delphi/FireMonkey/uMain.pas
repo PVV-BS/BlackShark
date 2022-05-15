@@ -21,7 +21,7 @@ type
     ViewPort: TBlackSharkViewPort;
     CurrentTest: TBSTest;
     CommandLineParam: string;
-    procedure AfterCreateContextEvent (Sender: TBlackSharkContext);
+    procedure AfterCreateContextEvent (Sender: TObject);
   public
     { Public declarations }
   end;
@@ -33,7 +33,7 @@ implementation
 
 {$R *.fmx}
 
-procedure TfrmMain.AfterCreateContextEvent(Sender: TBlackSharkContext);
+procedure TfrmMain.AfterCreateContextEvent(Sender: TObject);
 var
   i: int32;
   ClassTest: TBSTestClass;

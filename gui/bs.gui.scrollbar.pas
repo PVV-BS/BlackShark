@@ -70,14 +70,16 @@ type
   private
     FBody: TRectangle;
     FHorizontal: boolean;
-    FPosition: double;
-    FSize: double;
+    FPosition: Int64;
+    FSize: Int64;
     //FCountScrolledPixels: int64;
+
     FOnMouseEnterLeaveBody: TOnMouseColorExchanger;
     FOnMouseEnterLeaveLeftUpBtn: TOnMouseMoveAndClickColorExchanger;
     FOnMouseEnterLeaveRightDownBtn: TOnMouseMoveAndClickColorExchanger;
     FOnMouseEnterLeaveSlider: TOnMouseMoveAndClickColorExchanger;
-    FStep: BSFloat;
+
+    FStep: Int32;
     FOnChangePosition: TChangeScrollBarPosition;
     TriUp: TTriangle;
     TriDown: TTriangle;
@@ -112,11 +114,11 @@ type
     procedure OnSliderMouseDown({%H-}const Data: BMouseData);
     procedure OnSliderMouseUp({%H-}const Data: BMouseData);
 
-    procedure SetPosition(const Value: double);
-    procedure SetSize(const Value: double);
+    procedure SetPosition(const Value: Int64);
+    procedure SetSize(const Value: Int64);
     function GetSliderIsHide: boolean;
 
-    procedure SetStep(const Value: BSFloat);
+    procedure SetStep(const Value: Int32);
     procedure CheckSizeSlider;
     procedure SetPositionSlider;
     procedure FillColors;
@@ -142,11 +144,11 @@ type
     property SliderIsHide: boolean read GetSliderIsHide;
     property Horizontal: boolean read FHorizontal write SetHorizontal;
     { position }
-    property Position: double read FPosition write SetPosition;
+    property Position: Int64 read FPosition write SetPosition;
     { max scrolling area, pixels if Scalable = true otherwise points }
-    property Size: double read FSize write SetSize;
+    property Size: Int64 read FSize write SetSize;
     { step scroll; like Size if Scalable, then Step measured in points, otherwise pixels }
-    property Step: BSFloat read FStep write SetStep;
+    property Step: Int32 read FStep write SetStep;
     property OnChangePosition: TChangeScrollBarPosition read FOnChangePosition write FOnChangePosition;
   published
     property Color;
@@ -252,7 +254,7 @@ end;
 
 procedure TBScrollBar.BtnUpLeftMouseDown(const Data: BMouseData);
 begin
-  if not Slider.Data.Hidden and (FPosition - FStep >= 0) then
+  if not Slider.Data.Hidden and (FPosition > 0) then
   begin
     Position := FPosition - FStep;
     WaitTimerUp := true;
@@ -313,6 +315,8 @@ begin
 end;
 
 constructor TBScrollBar.Create(ACanvas: TBCanvas);
+var
+  scaledFour: BSFloat;
 begin
   inherited Create(ACanvas);
 
@@ -377,12 +381,14 @@ begin
   Slider.BanScalableMode := true;
   Slider.Layer2d := Slider.Layer2d + 3;
 
-  TriUp.A := vec2(0.0, 4.0);
-  TriUp.B := vec2(4.0, 0.0);
-  TriUp.C := vec2(8.0, 4.0);
+  scaledFour := round(4*ToHiDpiScale);
+
+  TriUp.A := vec2(0.0, scaledFour);
+  TriUp.B := vec2(scaledFour, 0.0);
+  TriUp.C := vec2(scaledFour*2, scaledFour);
   TriDown.A := vec2(0.0, 0.0);
-  TriDown.B := vec2(8.0, 0.0);
-  TriDown.C := vec2(4.0, 4.0);
+  TriDown.B := vec2(scaledFour*2, 0.0);
+  TriDown.C := vec2(scaledFour, scaledFour);
   TriUp.Build;
   TriDown.Build;
 
@@ -403,8 +409,8 @@ end;
 
 function TBScrollBar.DefaultSize: TVec2f;
 begin
-  Result.x := DEFAULT_WIDTH;
-  Result.y := DEFAULT_HEIGHT;
+  Result.x := round(DEFAULT_WIDTH*ToHiDpiScale);
+  Result.y := round(DEFAULT_HEIGHT*ToHiDpiScale);
 end;
 
 destructor TBScrollBar.Destroy;
@@ -550,14 +556,14 @@ begin
   FBody.Position2d := vec2(0.0, 0.0);
 end;
 
-procedure TBScrollBar.SetPosition(const Value: double);
+procedure TBScrollBar.SetPosition(const Value: Int64);
 var
-  pos: double;
+  pos: Int64;
 begin
   if (FPosition = Value) then
     exit;
 
-  pos := Clamp(FSize - FBody.Height, 0.0, Value);
+  pos := Clamp(FSize - round(FBody.Height), 0, Value);
 
   if pos < 0 then
     pos := 0;
@@ -597,7 +603,7 @@ begin
     inherited;
 end;
 
-procedure TBScrollBar.SetSize(const Value: double);
+procedure TBScrollBar.SetSize(const Value: Int64);
 begin
   if FSize = Value then
     exit;
@@ -618,7 +624,7 @@ begin
 
 end;
 
-procedure TBScrollBar.SetStep(const Value: BSFloat);
+procedure TBScrollBar.SetStep(const Value: Int32);
 begin
   if FStep = Value then
     exit;
@@ -664,7 +670,7 @@ begin
     w := FBody.Height - FBody.Width*2;
   end;
   FPosition := Round(((Slider.Position2d.y - FBody.Width) / w) * FSize);
-  FPosition := clamp(FSize, 0.0, FPosition);
+  FPosition := clamp(FSize, 0, FPosition);
   DoChangePosition;
 end;
 

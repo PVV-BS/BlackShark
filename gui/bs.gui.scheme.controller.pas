@@ -148,7 +148,7 @@ type
     procedure EndDragOver; virtual;
     { change itself or its child }
     procedure OnChange(ChangeData: PChangeData); virtual;
-    procedure OnMouseDown(X, Y: BSFloat; ShiftState: TShiftState); virtual;
+    procedure OnMouseDown(X, Y: BSFloat; ShiftState: TBSShiftState); virtual;
   public
     constructor Create(ARenderer: ISchemeRenderer; ASchemeData: TSchemeShape); virtual;
     procedure BeforeDestruction; override;
@@ -720,7 +720,7 @@ begin
   Result := false;
 end;
 
-procedure ISchemeItemVisual.OnMouseDown(X, Y: BSFloat; ShiftState: TShiftState);
+procedure ISchemeItemVisual.OnMouseDown(X, Y: BSFloat; ShiftState: TBSShiftState);
 begin
 
 end;

@@ -639,7 +639,7 @@ end;
 {
   TAhoCorasickFSA<T> is the Finite-state automaton (machine) built by the
   Aho–Corasick algorithm: https://en.wikipedia.org/wiki/Aho–Corasick_algorithm.
-  for a right work need calculate all suffexes of words, therefor need invoke
+  For a right work need calculate all suffexes of words, therefor need invoke
   BeginUpdate befor adding, and EndUpdate after adding all words; the container
   suits for saving static data.
   You also can use the container for safe pairs word(the same key-value), and
@@ -782,6 +782,7 @@ public
   function Exists(const Key: K): boolean;
   function Find(const Key: K; out Value: V): boolean; overload;
   function TryAdd(const Key: K; const Value: V): boolean; inline;
+  procedure TryAddOrReplace(const Key: K; const Value: V); inline;
   procedure UpdateValue(const Key: K; const Value: V);
   function GetFirst(out Bucket: TBucket): boolean;
   function GetNext(out Bucket: TBucket): boolean;
@@ -3163,7 +3164,7 @@ end;
 function TListDual<T>.Remove(var Item: PListItem; FreeItem: boolean): PListItem;
 begin
   if (Item = nil) or (FCount = 0) then
-    exit;
+    exit(nil);
   //if Item.Owner <> self then
   //  raise Exception.Create('Do not remove item from other list!');
   dec(FCount);
@@ -3999,6 +4000,7 @@ begin
       break;
   end;
   Data := FDefault;
+  Result := false;
 end;
 
 function TAhoCorasickFSA<T>.WordExists(AWord: pByte; LenWord: int32): boolean;
@@ -4083,9 +4085,15 @@ begin
   if index < 0 then
     DoSetValue(Key, Value)
   else
-    DoSetValue(index, hash, Key, Value);
+    DoSetValue(index, hash{%H-}, Key, Value);
 
   Result := true;
+end;
+
+procedure THashTable<K, V>.TryAddOrReplace(const Key: K; const Value: V);
+begin
+  if not TryAdd(Key, Value) then
+    UpdateValue(Key, Value);
 end;
 
 procedure THashTable<K, V>.UpdateValue(const Key: K; const Value: V);

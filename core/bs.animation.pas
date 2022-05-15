@@ -599,11 +599,10 @@ begin
   Result := TAniValueLawFloat.Create(ThreadContext);
 end;
 
-function CreateAniFloatLinear: IBAnimationLinearFloat;
+function CreateAniFloatLinear: IBAnimationLinearFloat; overload;
 begin
   Result := CreateAniFloatLinear(GUIThread);
 end;
-
 
 function CreateAniFloatLivearObsrv(const Animation: IBAnimationLinearFloat; OnRsvProc: TGenericRecieveProc<BSFloat>;
   ThreadContext: TBThread = nil): IBAnimationLinearFloatObsrv;

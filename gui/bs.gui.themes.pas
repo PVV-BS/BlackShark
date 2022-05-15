@@ -814,8 +814,7 @@ end;
 
 { TPropValueAccessProvider<T> }
 
-class function TPropValueAccessProvider<T>.GetPropValue(Instance: TObject;
-  PropInfo: PPropInfo; Index: int32 = -1): T;
+class function TPropValueAccessProvider<T>.GetPropValue(Instance: TObject; PropInfo: PPropInfo; Index: int32 = -1): T;
 var
   m: TMethod;
 begin
@@ -839,7 +838,8 @@ begin
       else
         Result := TBIdxGetProc(m)(Index);
       {$endif}
-    end;
+    end else
+      FillChar(Result, SizeOf(Result), 0);
   end;
 end;
 

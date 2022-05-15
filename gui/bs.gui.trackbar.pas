@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -97,6 +97,7 @@ uses
   , bs.thread
   , bs.math
   , bs.geometry
+  , bs.graphics
   ;
 
 { TBCustomTrackBar }
@@ -122,12 +123,12 @@ begin
   FHorizontal := true;
   FMainBody := TRectangle.Create(Canvas, nil);
   TRectangle(MainBody).Fill := true;
-  TRectangle(MainBody).Size := vec2(DEFAULT_WIDTH, (DEFAULT_HEIGHT shr 1));
+  TRectangle(MainBody).Size := vec2(DEFAULT_WIDTH*ToHiDpiScale, (DEFAULT_HEIGHT shr 1)*ToHiDpiScale);
   TRectangle(MainBody).Color := BS_CL_MSVS_PANEL;
   TRectangle(MainBody).Data.Interactive := false;
   FSlider := TRectangle.Create(Canvas, MainBody);
   FSlider.Fill := true;
-  FSlider.Size := vec2(MIN_SIZE_SLIDER, DEFAULT_HEIGHT);
+  FSlider.Size := vec2(MIN_SIZE_SLIDER*ToHiDpiScale, DEFAULT_HEIGHT*ToHiDpiScale);
   FSlider.Color := BS_CL_MSVS_EDIT_CURSOR_LINE;
 
   ObsrvSliderChMVP := FSlider.Data.EventChangeMVP.CreateObserver(GUIThread, OnDragSlider);
@@ -137,7 +138,7 @@ end;
 
 function TBCustomTrackBar.DefaultSize: TVec2f;
 begin
-  Result := vec2(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+  Result := vec2(DEFAULT_WIDTH*ToHiDpiScale, DEFAULT_HEIGHT*ToHiDpiScale);
 end;
 
 procedure TBCustomTrackBar.DoChangePosition;

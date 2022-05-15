@@ -331,6 +331,7 @@ type
     procedure BeginUpdate;
     procedure EndUpdate;
     procedure BuildView; override;
+    function DefaultSize: TVec2f; override;
     { add legend linked to a chart or group TY by TX }
     procedure AddLegend(const Name: string; const Color: TColor4f;
       ToLinkedChart: TDataContainerPairXY = nil;
@@ -448,8 +449,7 @@ type
     procedure OnMouseLeave({%H-}const Data: BMouseData);
     procedure OnUpdateValueScale(const Value: BSFloat);
     procedure CalcArcAttrib(var ArcAttrib: TArcAttrib);
-    function SelectSecondPointForLegHint(const Arc: TArcAttrib; const LegFirst: TVec2f;
-      out Rect: TRectBSf): TVec2f;
+    function SelectSecondPointForLegHint(const Arc: TArcAttrib; const LegFirst: TVec2f; out Rect: TRectBSf): TVec2f;
     procedure DrawHint(const Arc: TArcAttrib);
   protected
     FChart: TDataContainer<TX, TY>;
@@ -636,7 +636,11 @@ const
 implementation
 
 uses
-  {$ifdef FPC}System.{$endif}DateUtils
+  {$ifdef FPC}
+    DateUtils
+  {$else}
+    System.DateUtils
+  {$endif}
   , bs.exceptions
   , bs.math
   , bs.texture
@@ -886,9 +890,7 @@ end;
 
 { TBChart<TX, TY> }
 
-procedure TBChart<TX, TY>.AddLegend(const Name: string; const Color: TColor4f;
-  ToLinkedChart: TDataContainerPairXY = nil;
-  ToLinkedGroup: TDataContainerPairXY.PGroupValues = nil);
+procedure TBChart<TX, TY>.AddLegend(const Name: string; const Color: TColor4f; ToLinkedChart: TDataContainerPairXY = nil; ToLinkedGroup: TDataContainerPairXY.PGroupValues = nil);
 var
   t: TCanvasText;
   l: TLegend;
@@ -897,27 +899,25 @@ begin
   begin
     FLegends := TListVec<TLegend>.Create;
     LegendPlane := TRoundRect.Create(FCanvas, Grid);
-    LegendPlane.Size := vec2(50, 50);
+    LegendPlane.Size := vec2(50, 50)*ToHiDpiScale;
     LegendPlane.Fill := true;
-    LegendPlane.RadiusRound := 5;
+    LegendPlane.RadiusRound := 5*ToHiDpiScale;
     LegendPlane.Build;
-    LegendPlane.Position2d := vec2(Grid.Width + 10, 0);
+    LegendPlane.Position2d := vec2(Grid.Width + 10*ToHiDpiScale, 0);
     LegendPlane.Color := BS_CL_MSVS_EDITOR;
     LegendPlane.Data.Opacity := 0.7;
-    //LegendPlane.Data.Interactive := false;
-    //VertexKind := TVertexKind.vkP;
-    //LegendBorder := Factory.Rectangle(self, 50, 50, 0, 0, false, LegendPlane);
     LegendBorder := TRoundRect.Create(FCanvas, LegendPlane);
-    LegendBorder.Size := vec2(50, 50);
-    LegendBorder.RadiusRound := 5;
+    LegendBorder.Size := LegendPlane.Size;
+    LegendBorder.RadiusRound := LegendPlane.RadiusRound;
+    LegendBorder.WidthLine := 1*ToHiDpiScale;
     LegendBorder.Build;
     LegendBorder.Position2d := vec2(0, 0);
-    LegendBorder.Color := vec4(34/255, 118/255, 187/255, 1.0);; //vec4(0.0, 0.7, 0.0, 1.0);
-    //LegendBorder.Data.Opacity := 0.3;
+    LegendBorder.Color := vec4(34/255, 118/255, 187/255, 1.0);
     LegendBorder.Data.Interactive := false;
 
     LegendFont := BSFontManager.CreateDefaultFont;
-    LegendFont.SizeInPixels := 12;
+    if OwnCanvas then
+      LegendFont.SizeInPixels := round(12*ToHiDpiScale);
   end;
 
   t := TCanvasText.Create(FCanvas, LegendPlane);
@@ -929,7 +929,7 @@ begin
   l.Text := t;
   l.Rect := TRectangle.Create(FCanvas, LegendPlane);
   l.Rect.Fill := true;
-  l.Rect.Size := vec2(8, 8);
+  l.Rect.Size := vec2(8, 8)*ToHiDpiScale;
   l.Rect.Build;
   l.Rect.Color := Color;
   l.Rect.Data.Interactive := false;
@@ -973,7 +973,7 @@ begin
   if OpX.Comparator(s_x, DefaultX) <> 0 then
   begin
     if WidthXIsZero then
-      FGridStepX := DEFAULT_SIZE_GRID_CELL * 5
+      FGridStepX := DEFAULT_SIZE_GRID_CELL * 5 * ToHiDpiScale
     else
     begin
       FGridStepX := abs(FAxisXSize / OpX.DivideFloat(WidthX, s_x));
@@ -982,15 +982,15 @@ begin
     end;
 
     if FGridStepX = 0 then
-      FGridStepX := DEFAULT_SIZE_GRID_CELL * 5;
+      FGridStepX := DEFAULT_SIZE_GRID_CELL * 5 * ToHiDpiScale;
   end else
-    FGridStepX := DEFAULT_SIZE_GRID_CELL * 5;
+    FGridStepX := DEFAULT_SIZE_GRID_CELL * 5 * ToHiDpiScale;
 
   s_y := GetGranularY;
   if OpY.Comparator(s_y, DefaultY) <> 0 then
   begin
     if WidthYIsZero then
-      FGridStepY := DEFAULT_SIZE_GRID_CELL * 5
+      FGridStepY := DEFAULT_SIZE_GRID_CELL * 5 * ToHiDpiScale
     else
     begin
       FGridStepY := abs(FAxisYSize / OpY.DivideFloat(HeightY, s_y));
@@ -998,9 +998,9 @@ begin
         FGridStepY := abs(FAxisYSize / OpY.DivideFloat(s_y, HeightY));
     end;
     if FGridStepY = 0 then
-      FGridStepY := DEFAULT_SIZE_GRID_CELL * 5;
+      FGridStepY := DEFAULT_SIZE_GRID_CELL * 5 * ToHiDpiScale;
   end else
-    FGridStepY := DEFAULT_SIZE_GRID_CELL * 5;
+    FGridStepY := DEFAULT_SIZE_GRID_CELL * 5 * ToHiDpiScale;
 end;
 
 procedure TBChart<TX, TY>.CalcLimits;
@@ -1018,11 +1018,11 @@ begin
   FMinY := OpY.High;
   MaxCountValues := 0;
   for i := 0 to FCurves.Count - 1 do
-    begin
+  begin
     Chart := FCurves.Items[i];
-    { if arguments united then need recalc TY limits befor draw; in that case
+    { if arguments united then need to recalc TY limits befor draw; in that case
       also reordered on grow groups united arguments, and in fact, a count added
-      values (contained in Chart.FValues) always even count groups values
+      values (contained in Chart.FValues) always equal count of groups values
       (contained in Chart.FListValues}
     if Chart.UniteArgX then
       Chart.CheckTYLimits;
@@ -1036,7 +1036,7 @@ begin
       FMinY := Chart.MinY;
     if Chart.FTreeValues.Count > MaxCountValues then
       MaxCountValues := Chart.FTreeValues.Count;
-    end;
+  end;
 
   w := OpX.Subtract(FMaxX, FMinX);
   h := OpY.Subtract(FMaxY, FMinY);
@@ -1170,20 +1170,22 @@ begin
 
   FCurves := TListVec<TDataContainerPairXY>.Create;
   AxisText := TListVec<TCanvasText>.Create;
-  FCanvas.Font.Size := 9;
+  if OwnCanvas then
+    FCanvas.Font.Size := 9;
+
   FInterpolateLines := true;
   CurrentColor := TBSColorsSet[bsRed];
   CurrentIndexSets := bsRed;
-  FGridStepX := DEFAULT_SIZE_GRID_CELL * 5;
-  FGridStepY := DEFAULT_SIZE_GRID_CELL * 5;
+  FGridStepX := DEFAULT_SIZE_GRID_CELL * 5 * ToHiDpiScale;
+  FGridStepY := FGridStepX;
   FAxisColor := BS_CL_GREEN;
   FAxisColor2 := BS_CL_GREEN;
   FAxisXTextColor := BS_CL_WHITE;
   FAxisYTextColor := BS_CL_WHITE;
-  FAxisWidth := 2;
+  FAxisWidth := round(2 * ToHiDpiScale);
   FShowContour := false;
   FShowZeroPoint := true;
-  LegendsOffset := 5;
+  LegendsOffset := 5 * ToHiDpiScale;
   FShowGrid := true;
 
   Rect := TRectangleTextured(CreateMainBody(TRectangleTextured));
@@ -1193,7 +1195,7 @@ begin
       gtRadialSquare,
       32
     );
-  Rect.Size := vec2(300, 300);
+  Rect.Size := DefaultSize;
   Rect.Fill := true;
   Rect.Data.Opacity := 0.2;
   Rect.Data.DragResolve := true;
@@ -1202,12 +1204,9 @@ begin
     Rect.Data.Caption := 'main body';
   {$endif}
 
-  //Rect.Build;
-
-  Rect.Position2d := vec2(200.0, 200.0);
+  Rect.Position2d := vec2(200.0 * ToHiDpiScale, 200.0 * ToHiDpiScale);
   LevelAxis := FCanvas.CreateEmptyCanvasObject(Rect);
   LevelAxis.Layer2d := LAYER_AXIS;
-  //LevelAxis.Layer2d := -5;
   FNameAxisX := TCanvasText.Create(FCanvas, LevelAxis);
   FNameAxisX.Text := 'X';
   FNameAxisY := TCanvasText.Create(FCanvas, LevelAxis);
@@ -1216,21 +1215,20 @@ begin
   Grid.VertLines := true;
   Grid.HorLines := true;
   Grid.Closed := true;
-  Grid.Size := vec2(300.0, 300.0);
+  Grid.Size := Rect.Size;
   Grid.Data.Opacity := 0.1;
   Grid.Color := BS_CL_GREEN;
   Grid.Parent := Rect;
   Grid.Data.Interactive := false;
   Grid.Data.Hidden := not FShowGrid;
   Grid.Layer2d := LAYER_GRID;
-  //Grid.Build;
+  Grid.WidthLines := round(1*ToHiDpiScale);
   FNameAxisX.Parent := LevelAxis;
   FNameAxisY.Parent := LevelAxis;
   FNameAxisY.Data.Hidden := not FShowAxisY;
   FNameAxisX.Data.Hidden := not FShowAxisX;
   FAxisXSize := Round(Grid.Size.Width);
   FAxisYSize := Round(Grid.Size.Height);
-  //CurrentIndexColor := 1;
 end;
 
 destructor TBChart<TX, TY>.Destroy;
@@ -1249,14 +1247,12 @@ end;
 procedure TBChart<TX, TY>.SetGridStepX(const Value: BSFloat);
 begin
   FGridStepX := Value;
-  //RecreateAxisX;
   BuildView;
 end;
 
 procedure TBChart<TX, TY>.SetGridStepY(const Value: BSFloat);
 begin
   FGridStepY := Value;
-  //RecreateAxisY;
   BuildView;
 end;
 
@@ -1295,6 +1291,11 @@ begin
     DrawLegends;
 end;
 
+function TBChart<TX, TY>.DefaultSize: TVec2f;
+begin
+  Result := vec2(300 * ToHiDpiScale, 300 * ToHiDpiScale);
+end;
+
 procedure TBChart<TX, TY>.DrawAxis;
 begin
   RecreateAxisX;
@@ -1312,16 +1313,12 @@ end;
 
 function TBChart<TX, TY>.GetArg01(const Argument: TX): BSFloat;
 begin
-  Result := OpX.DivideFloat(
-    OpX.Subtract( Argument, ValidAreaMinX ), ValidAreaMaxX ) * FAxisXSize
-    + (AxisXSizeAligned - FAxisXSize);
+  Result := OpX.DivideFloat(OpX.Subtract(Argument, ValidAreaMinX), ValidAreaMaxX) * FAxisXSize + (AxisXSizeAligned - FAxisXSize);
 end;
 
 function TBChart<TX, TY>.GetArg11(const Argument: TX): BSFloat;
 begin
-  Result := (OpX.DivideFloat(
-    OpX.Subtract( Argument, CondX ), WidthX )) * FAxisXSize +
-     + CondXLeft; //
+  Result := OpX.DivideFloat(OpX.Subtract( Argument, CondX ), WidthX ) * FAxisXSize + CondXLeft;
 end;
 
 function TBChart<TX, TY>.GetFuncPos00(const FuncResult: TY): BSFloat;
@@ -1331,19 +1328,12 @@ end;
 
 function TBChart<TX, TY>.GetFuncPos01(const FuncResult: TY): BSFloat;
 begin
-  Result := (OpY.DivideFloat(
-    OpY.Subtract(CondY, FuncResult ),
-      ValidAreaMaxY )) * FAxisYSize + CondYTop;//;
+  Result := OpY.DivideFloat(OpY.Subtract(CondY, FuncResult), ValidAreaMaxY) * FAxisYSize + CondYTop;
 end;
 
 function TBChart<TX, TY>.GetFuncPos11(const FuncResult: TY): BSFloat;
 begin
-  Result := (OpY.DivideFloat(
-    OpY.Subtract( CondY, FuncResult ),
-      HeightY )) * FAxisYSize + CondYTop; //abs(AxisYAlign) (AxisYSizeAligned - FAxisYSize)
-  //Result := (OpY.DivideFloat(
-  //  OpY.Subtract( ValidAreaMaxY, FuncResult ),
-  //    HeightY )) * Grid.Height + AxisYAlign; //abs(AxisYAlign)
+  Result := OpY.DivideFloat(OpY.Subtract( CondY, FuncResult ), HeightY) * FAxisYSize + CondYTop;
 end;
 
 function TBChart<TX, TY>.GetGranularX: TX;
@@ -1400,15 +1390,16 @@ begin
   try
     //FAxisXSize := round(AWidth);
     //FAxisYSize := round(AHeight);
-    { first need set parent position for correct to get visibility axis in time draw (otherwise
+    { first need to set parent position for correct to get visibility axis in time draw (otherwise
       axis may be not visible at this time) }
     if LevelAxis <> nil then
       LevelAxis.Position2d := LevelAxis.Position2d;
     // now change axis size
     FAxisXSize := 0; // for ban twice redraw
+    Rect.Size := vec2(AWidth, AHeight);
+    Grid.Size := Rect.Size;
     AxisYSize := round(AHeight);
     AxisXSize := round(AWidth);
-    Rect.Position2d := Rect.Position2d;
   finally
     EndUpdate;
   end;
@@ -1581,10 +1572,10 @@ begin
     exit;
   AxisX := TArrow.Create(FCanvas, LevelAxis);
   AxisX.A := vec2(0.0, 0.0);
-  AxisX.B := vec2(round(Rect.Size.Width) + 50, 0.0);
-  AxisX.SizeTip := vec2(DEFAULT_SIZE_TIP_AXIS, 10);
+  AxisX.B := vec2(round(Rect.Size.Width) + round(50 * ToHiDpiScale), 0.0);
+  AxisX.SizeTip := vec2(DEFAULT_SIZE_TIP_AXIS * ToHiDpiScale, 10 * ToHiDpiScale);
   AxisX.Color := FAxisColor;
-  AxisX.LineWidth := 2;
+  AxisX.LineWidth := 2 * ToHiDpiScale;
   AxisX.Build;
   //AxisX.Data.Interactive := false;
   AxisX.Layer2d := LAYER_AXIS;
@@ -1607,10 +1598,10 @@ begin
 
   AxisY := TArrow.Create(FCanvas, LevelAxis);
   AxisY.B := vec2(0.0, 0.0);
-  AxisY.A := vec2(0.0, round(Rect.Size.Height) + 50);
-  AxisY.SizeTip := vec2(DEFAULT_SIZE_TIP_AXIS, 10);
+  AxisY.A := vec2(0.0, round(Rect.Size.Height + 50 * ToHiDpiScale));
+  AxisY.SizeTip := vec2(round(DEFAULT_SIZE_TIP_AXIS * ToHiDpiScale), round(10 * ToHiDpiScale));
   AxisY.Color := FAxisColor2;
-  AxisY.LineWidth := 2;
+  AxisY.LineWidth := 2 * ToHiDpiScale;
   AxisY.Build;
 
   //AxisY.Data.Interactive := false;
@@ -1688,13 +1679,13 @@ var
 begin
   if FLegends = nil then
     exit;
-  fs := FCanvas.Font.SizeInPixels;
+  fs := round(OFFSET_HEIGHT*ToHiDpiScale) + FCanvas.Font.SizeInPixels;
   s.x := 0.0;
   for i := 0 to FLegends.Count - 1 do
     if FLegends.Items[i].Text.Width > s.x then
       s.x := FLegends.Items[i].Text.Width;
-  s.x := s.x + 40;
-  s.y := (fs + OFFSET_HEIGHT) * FLegends.Count + 10;
+  s.x := s.x + round(40 * ToHiDpiScale);
+  s.y := round(fs * FLegends.Count + 10*ToHiDpiScale);
   LegendPlane.Size := s;
   LegendPlane.Build;
   LegendBorder.Size := s;
@@ -1702,11 +1693,11 @@ begin
   LegendBorder.Position2d := vec2(0.0, 0.0);
   LegendPlane.Position2d := vec2(Grid.Width + LegendsOffset, 0);
   for i := 0 to FLegends.Count - 1 do
-    begin
-    FLegends.Items[i].Text.Position2d := vec2(20.0, (fs+OFFSET_HEIGHT)*i + 8);
-    FLegends.Items[i].Rect.Position2d := vec2(8.0, FLegends.Items[i].Text.Position2d.y + FLegends.Items[i].Text.Height/2 -
-      FLegends.Items[i].Rect.Size.Height*0.5);
-    end;
+  begin
+    FLegends.Items[i].Text.Position2d := vec2(20.0 * ToHiDpiScale, fs*i + 8 * ToHiDpiScale);
+    FLegends.Items[i].Rect.Position2d := vec2(8.0 * ToHiDpiScale, FLegends.Items[i].Text.Position2d.y +
+      (FLegends.Items[i].Text.Height - FLegends.Items[i].Rect.Size.Height)*0.5);
+  end;
 end;
 
 procedure TBChart<TX, TY>.EndUpdate;
@@ -1783,7 +1774,6 @@ begin
   FShowAxisX := true;
   FShowGrid := true;
   FShowAxisName := true;
-  //Font.SizeInPixels := 12;
 end;
 
 function TBChartCurves<TX, TY>.CreateChart: TDataContainer<TX, TY>;
@@ -1927,7 +1917,7 @@ begin
         begin
           txt := TCanvasText.Create(FCanvas, LevelAxis);
           txt.Text := zero_s;
-          txt.Position2d := vec2(pos.x + AxisY.Width + 5, pos.y);
+          txt.Position2d := vec2(pos.x + AxisY.Width + 5 * ToHiDpiScale, pos.y);
           txt.Layer2d := LAYER_AXIS;
           txt.Data.Interactive := false;
           txt.Color := FAxisXTextColor;
@@ -2017,12 +2007,12 @@ begin
         { set position in middle over reapeating values an area }
 
         if count = 1 then
-          txt.Position2d := vec2(pos.x , pos.y - FCanvas.Font.SizeInPixels - 2 - FGridStepY)
+          txt.Position2d := vec2(pos.x , pos.y - FCanvas.Font.SizeInPixels - 2 * ToHiDpiScale - FGridStepY)
           else
         if count and 1 = 0 then
-          txt.Position2d := vec2(pos.x , pos.y - FCanvas.Font.SizeInPixels - 2 - ((count shr 1) * FGridStepY))
+          txt.Position2d := vec2(pos.x , pos.y - FCanvas.Font.SizeInPixels - 2 * ToHiDpiScale - ((count shr 1) * FGridStepY))
         else
-          txt.Position2d := vec2(pos.x , pos.y - FCanvas.Font.SizeInPixels - 2 - ((count + 1) shr 1) * FGridStepY);
+          txt.Position2d := vec2(pos.x , pos.y - FCanvas.Font.SizeInPixels - 2 * ToHiDpiScale - ((count + 1) shr 1) * FGridStepY);
       end else
       begin
         pos.y := pos.y + FGridStepY;
@@ -2063,12 +2053,12 @@ begin
         txt.Color := FAxisYTextColor;
         AxisText.Add(txt);
         if count = 1 then
-          txt.Position2d := vec2(pos.x , pos.y - FCanvas.Font.SizeInPixels - 2 + FGridStepY)
+          txt.Position2d := vec2(pos.x , pos.y - FCanvas.Font.SizeInPixels - 2 * ToHiDpiScale + FGridStepY)
         else
         if count and 1 = 0 then
-          txt.Position2d := vec2(pos.x , pos.y - FCanvas.Font.SizeInPixels - 2 + ((count shr 1) * FGridStepY))
+          txt.Position2d := vec2(pos.x , pos.y - FCanvas.Font.SizeInPixels - 2 * ToHiDpiScale + ((count shr 1) * FGridStepY))
         else
-          txt.Position2d := vec2(pos.x , pos.y - FCanvas.Font.SizeInPixels - 2 + ((count + 1) shr 1) * FGridStepY);
+          txt.Position2d := vec2(pos.x , pos.y - FCanvas.Font.SizeInPixels - 2 * ToHiDpiScale + ((count + 1) shr 1) * FGridStepY);
       end else
       begin
         pos.y := pos.y - FGridStepY;
@@ -2115,9 +2105,9 @@ begin
   GroupMouseLeave.Clear;
 
   if FShowContour then
-    Chart.FPath.WidthLine := 1
+    Chart.FPath.WidthLine := 1 * ToHiDpiScale
   else
-    Chart.FPath.WidthLine := 2;
+    Chart.FPath.WidthLine := 2 * ToHiDpiScale;
 
   for i := 0 to Chart.FValues.Count - 1 do
   begin
@@ -2207,14 +2197,14 @@ begin
   if (c > 0) and Assigned(AxisY) and Canvas.Renderer.IsVisible(AxisY.Data) then
   begin
     pos.y := y + GridStepX;
-    pos.x := x - FCanvas.Font.AverageWidth*4 - 5;
+    pos.x := x - FCanvas.Font.AverageWidth*4 - 5 * ToHiDpiScale;
     // negative part Y-axis
     while pos.y < Rect.Size.Height do
     begin
       txt := TCanvasText.Create(FCanvas, LevelAxis);
       txt.Text := OpY.ToString(OpY.MultiplyFloat(HeightY, (y - pos.y)/FAxisYSize));
       txt.Layer2d := LAYER_AXIS;
-      txt.Position2d := vec2(pos.x, pos.y - FCanvas.Font.SizeInPixels - 3);
+      txt.Position2d := vec2(pos.x, pos.y - FCanvas.Font.SizeInPixels - 3 * ToHiDpiScale);
       txt.Data.Interactive := false;
       txt.Color := FAxisYTextColor;
       AxisText.Add(txt);
@@ -2227,7 +2217,7 @@ begin
     begin
       txt := TCanvasText.Create(FCanvas, LevelAxis);
       txt.Text := OpY.ToString(DefaultY);
-      txt.Position2d := vec2(pos.x, pos.y - FCanvas.Font.SizeInPixels - 3);
+      txt.Position2d := vec2(pos.x, pos.y - FCanvas.Font.SizeInPixels - 3 * ToHiDpiScale);
       txt.Layer2d := LAYER_AXIS;
       txt.Data.Interactive := false;
       txt.Color := FAxisYTextColor;
@@ -2236,13 +2226,13 @@ begin
     if Assigned(AxisX) and Canvas.Renderer.IsVisible(AxisX.Data) then
       pos.y := pos.y - FGridStepY;
     // positive part Y-axis
-    c := FCanvas.Font.SizeInPixels - 5 - FAxisWidth*2;
+    c := FCanvas.Font.SizeInPixels - 5 * ToHiDpiScale - FAxisWidth*2;
     while pos.y >= c do
     begin
       txt := TCanvasText.Create(FCanvas, LevelAxis);
       txt.Text := OpY.ToString(OpY.MultiplyFloat(HeightY, (y - pos.y)/FAxisYSize));
       txt.Layer2d := LAYER_AXIS;
-      txt.Position2d := vec2(pos.x, pos.y - FCanvas.Font.SizeInPixels - 3);
+      txt.Position2d := vec2(pos.x, pos.y - FCanvas.Font.SizeInPixels - 3 * ToHiDpiScale);
       txt.Data.Interactive := false;
       txt.Color := FAxisYTextColor;
       AxisText.Add(txt);
@@ -2262,7 +2252,7 @@ var
 begin
   //Pen.DrawBorder := FShowContour;
   //Pen.BoderColor := BS_CL_ORANGE_2;
-  w := FCurves.Count * round(BAR_WIDTH + 2);
+  w := FCurves.Count * round((BAR_WIDTH + 2) * ToHiDpiScale);
   wh := w div 2;
   step := FAxisXSize {%H-}div int32(MaxCountValues);
   steph := step div 2;
@@ -2274,20 +2264,19 @@ begin
 
     pair.Percent := OpY.DivideFloat(pair.ValuesSum, FMaxY);
     pair.GraphIntegral := TRectangle.Create(FCanvas, LevelAxis);
-    TRectangle(pair.GraphIntegral).Size := vec2(BAR_WIDTH, pair.Percent * FAxisYSize);
+    TRectangle(pair.GraphIntegral).Size := vec2(BAR_WIDTH * ToHiDpiScale, pair.Percent * FAxisYSize);
     TRectangle(pair.GraphIntegral).Fill := true;
     TRectangle(pair.GraphIntegral).Data.Interactive := false;
     pair.GraphIntegral.Build;
     x := step * (i + 1) - steph;
-    pair.GraphIntegral.Position2d := vec2(x - wh + (BAR_WIDTH + 2)
+    pair.GraphIntegral.Position2d := vec2(x - wh + (BAR_WIDTH + 2) * ToHiDpiScale
       * Chart.FIndex, Rect.Size.Height - pair.GraphIntegral.Height - 1);
     pair.GraphIntegral.Color := Chart.Color;
     pair.GraphIntegral.Layer2d := Rect.Layer2d + 2;
 
     txt := TCanvasText.Create(FCanvas, LevelAxis);
     txt.Text := OpX.ToString(pair.ValueX);
-    txt.Position2d := vec2(x - txt.Width * 0.5, Rect.Size.Height + FAxisWidth +
-      FCanvas.Font.SizeInPixels + 5);
+    txt.Position2d := vec2(x - txt.Width * 0.5, Rect.Size.Height + FAxisWidth + FCanvas.Font.SizeInPixels + 5 * ToHiDpiScale);
     txt.Data.Interactive := false;
     txt.Layer2d := LAYER_AXIS;
     txt.Color := FAxisXTextColor;
@@ -2302,8 +2291,7 @@ end;
 
 { TBChartCircular<TX, TY> }
 
-function TBChartCircular<TX, TY>.AddPart(const Legend: TX;
-  PartTY: BSFloat; const Color: TColor4f): TDataContainerPairXY.PGroupValues;
+function TBChartCircular<TX, TY>.AddPart(const Legend: TX; PartTY: BSFloat; const Color: TColor4f): TDataContainerPairXY.PGroupValues;
 begin
   if FChart = nil then
     exit(nil);
@@ -2313,9 +2301,9 @@ end;
 procedure TBChartCircular<TX, TY>.AdjustRadius(AWidth, AHeight: BSFloat);
 begin
   if AWidth > AHeight then
-    FRadius := round(AHeight * 0.5) - 10
+    FRadius := round(AHeight * 0.5 - 10*ToHiDpiScale)
   else
-    FRadius := round(AWidth * 0.5) - 10;
+    FRadius := round(AWidth * 0.5 - 10*ToHiDpiScale);
 end;
 
 procedure TBChartCircular<TX, TY>.CalcArcAttrib(var ArcAttrib: TArcAttrib);
@@ -2356,12 +2344,18 @@ begin
   GroupMouseEnter := BObserversGroup<BMouseData>.Create(OnMouseEnter);
   GroupMouseMove := BObserversGroup<BMouseData>.Create(OnMouseMove);
   GroupMouseLeave := BObserversGroup<BMouseData>.Create(OnMouseLeave);
-  if FNameAxisX <> nil then
+
+  if Assigned(FNameAxisX) then
     FNameAxisX.Data.Hidden := true;
-  if FNameAxisY <> nil then
+
+  if Assigned(FNameAxisY) then
     FNameAxisY.Data.Hidden := true;
+
   Stack := TListVec<TArcAttrib>.Create;
-  FCanvas.Font.SizeInPixels := 12;
+
+  if OwnCanvas then
+    FCanvas.Font.SizeInPixels := round(12*ToHiDpiScale);
+
   FShowAxisY := false;
   FShowAxisX := false;
   FShowAxisName := false;
@@ -2372,11 +2366,12 @@ end;
 function TBChartCircular<TX, TY>.CreateChart: TDataContainer<TX, TY>;
 begin
   if FChart <> nil then
-    Result := FChart else
-    begin
+    Result := FChart
+  else
+  begin
     Result := inherited;
     FChart := Result;
-    end;
+  end;
 end;
 
 procedure TBChartCircular<TX, TY>.LoadProperties;
@@ -2482,19 +2477,14 @@ begin
     end;
     current_angle := current_angle + atrib_calc.Angle;
   end;
+
   i := 0;
-  Height_hint_text := (FCanvas.Font.Size + 3);
-  //quad_last_pos[1] := vec2( FRadius + BASE_FOR_HINT , (Quad_spread_smal_arc[1])*Height_hint_text);
-  //quad_last_pos[2] := vec2(- FRadius - BASE_FOR_HINT, (Quad_spread_smal_arc[2])*Height_hint_text);
-  //quad_last_pos[3] := vec2(- FRadius - BASE_FOR_HINT, (Quad_spread_smal_arc[3])*Height_hint_text);
-  //if (Quad_spread_smal_arc[4])*Height_hint_text > SceneRadius then
-  //  quad_last_pos[4] := vec2(  SceneRadius + BASE_FOR_HINT, -((Quad_spread_smal_arc[4])*height_hint_text - SceneRadius)) else
-  //  quad_last_pos[4] := vec2(  FRadius + BASE_FOR_HINT, (Quad_spread_smal_arc[4])*Height_hint_text);
+  Height_hint_text := FCanvas.Font.SizeInPixels + 3*ToHiDpiScale;
   current_angle := 0;
   if (Quad_spread_smal_arc[1] > 0) or (Quad_spread_smal_arc[4] > 0) then
     LegendsOffset := FRadius*0.5
   else //BASE_FOR_HINT + round(Font.AverageWidth * 5.0) else
-    LegendsOffset := BASE_FOR_HINT;
+    LegendsOffset := BASE_FOR_HINT*ToHiDpiScale;
   while i < Chart.FListValues.Count do
   begin
     attrib := all_arcs.Items[i];
@@ -2534,8 +2524,8 @@ begin
     Delta := O - A;
     pos := B + Delta;
     // push segment radial
-    pos.x := pos.x + PUSH_SEGMENT_DISTANCE * attrib.C;
-    pos.y := pos.y - PUSH_SEGMENT_DISTANCE * attrib.S;
+    pos.x := pos.x + PUSH_SEGMENT_DISTANCE * ToHiDpiScale * attrib.C;
+    pos.y := pos.y - PUSH_SEGMENT_DISTANCE * ToHiDpiScale * attrib.S;
     group.GraphIntegral.Position2d := pos;
     group.ForcePosition := pos;
     // calc text position
@@ -2554,16 +2544,15 @@ begin
       pos.y := O.y - pos.y - group.Text.Data.Mesh.FBoundingBox.y_max;
       //pos := FCanvas.Renderer.SceneSizeToScreen(pos);
       group.Text.Data.Interactive := false;
-      if group.Hint <> nil then
-        FreeAndNil(group^.Hint);
+      FreeAndNil(group^.Hint);
       group.Text.Position2d := pos;
     end;
     //break;
   end;
-  UnitedHintRect := RectBS(0, - FRadius*1.5 - (4.0 + Height_hint_text), 0.0, 4.0 + Height_hint_text);
+  UnitedHintRect := RectBS(0, - FRadius*1.5 - (4.0*ToHiDpiScale), 0.0, (4.0*ToHiDpiScale + Height_hint_text));
   for i := 0 to small_left.Count - 1 do
     DrawHint(small_left.Items[i]);
-  UnitedHintRect := RectBS(0, Center.y + FRadius*1.5, 0.0, 4.0 + Height_hint_text);
+  UnitedHintRect := RectBS(0, Center.y + FRadius*1.5, 0.0, (4.0*ToHiDpiScale + Height_hint_text));
   for i := 0 to small_right.Count - 1 do
     DrawHint(small_right.Items[i]);
   all_arcs.Free;
@@ -2594,9 +2583,11 @@ begin
   begin
     group.Hint := TPath.Create(FCanvas, group.GraphIntegral);
     TPath(group.Hint).InterpolateSpline := TInterpolateSpline.isNone;
+    TPath(group.Hint).WidthLine := 1*ToHiDpiScale;
     group.Hint.Color := group.GraphIntegral.Color;
     group.Hint.Data.Interactive := false;
-  end;
+  end else
+    TPath(group.Hint).Clear;
   // shift path to zero
   TPath(group.Hint).AddPoint(vec2(0.0, 0.0));
   TPath(group.Hint).AddPoint(leg_second);
@@ -2618,15 +2609,19 @@ begin
 
   pos_conn_fr_hint := vec2(group.Hint.Data.Mesh.FBoundingBox.x_max + v.x, group.Hint.Data.Mesh.FBoundingBox.y_max - v.y);
   group.GraphIntegral.ConnectChild(pos_connect_to_circ, pos_conn_fr_hint, group.Hint);
-  v := group.Hint.Data.Mesh.ReadPoint(1);
+
+  if TPath(group.Hint).WidthLine > 1.0 then
+    v := group.Hint.Data.Mesh.ReadPoint(2)
+  else
+    v := group.Hint.Data.Mesh.ReadPoint(1);
 
   v.x := group.Hint.Data.Mesh.FBoundingBox.x_max + v.x;
   v.y := group.Hint.Data.Mesh.FBoundingBox.y_max - v.y;
 
   if Arc.SignCos < 0 then
-    leg_second := group.Hint.Position2d + vec2(v.x, v.y) + vec2(1.0 - group.Text.Width, - 3.0 - Height_hint_text)
+    leg_second := group.Hint.Position2d + vec2(v.x, v.y) + vec2(1.0*ToHiDpiScale - group.Text.Width, - 3.0*ToHiDpiScale - Height_hint_text)
   else
-    leg_second := group.Hint.Position2d + vec2(v.x, v.y) + vec2(5.0 * Arc.SignCos, - 3.0 - Height_hint_text);
+    leg_second := group.Hint.Position2d + vec2(v.x, v.y) + vec2(5.0*ToHiDpiScale * Arc.SignCos, - 3.0*ToHiDpiScale - Height_hint_text);
 
   Group.Text.Position2d := leg_second;
 end;
@@ -2704,12 +2699,12 @@ begin
 
   Group := AniLawScale.CurrentSender;
   if not Group.AnimatePos then
-    begin
+  begin
     ReturnBeginParam(Group);
     if Group <> AnimatingGroup then
       ReturnBeginParam(AnimatingGroup);
     exit;
-    end;
+  end;
 
   if (Value = 0) then
     exit;
@@ -2723,8 +2718,7 @@ begin
   Group^.GraphIntegral.Position2d := pos;
 end;
 
-procedure TBChartCircular<TX, TY>.ReturnBeginParam(
-  Group: TDataContainerPairXY.PGroupValues);
+procedure TBChartCircular<TX, TY>.ReturnBeginParam(Group: TDataContainerPairXY.PGroupValues);
 begin
   if Group = nil then
     exit;
@@ -2738,8 +2732,7 @@ begin
   inherited;
 end;
 
-function TBChartCircular<TX, TY>.SelectSecondPointForLegHint(
-  const Arc: TArcAttrib; const LegFirst: TVec2f; out Rect: TRectBSf): TVec2f;
+function TBChartCircular<TX, TY>.SelectSecondPointForLegHint(const Arc: TArcAttrib; const LegFirst: TVec2f; out Rect: TRectBSf): TVec2f;
 var
   off: BSFloat;
   overlap: TRectBSf;
@@ -2748,40 +2741,45 @@ begin
     point is pos_hint }
   Result.x := FRadius *  Arc.C * 0.5;
   Result.y := FRadius * -Arc.S * 0.5;
-  Rect.Size := vec2(Arc.Group.Text.Width * 1.2, 5.0 + Height_hint_text);
+  Rect.Size := vec2(Arc.Group.Text.Width * 1.2, 5.0*ToHiDpiScale + Height_hint_text);
   { ascertain, intersects whether vertical line offseted at LegendsOffset right/left from Rect }
-  off := abs(LegFirst.x) + abs(Result.x) + Rect.Size.x + PUSH_SEGMENT_DISTANCE + 5;
+  off := abs(LegFirst.x) + abs(Result.x) + Rect.Size.x + (PUSH_SEGMENT_DISTANCE + 5)*ToHiDpiScale;
   if (off > LegendsOffset + Center.x) then
     Result.x := Arc.SignCos*(abs(Result.x) - (off - (LegendsOffset + Center.x)));
+
   if LegFirst.x < 0 then
-    Rect.Position := LegFirst + Result - Rect.Size else
+    Rect.Position := LegFirst + Result - Rect.Size
+  else
     Rect.Position := LegFirst + vec2(Result.x, Result.y - Rect.Size.y);
+
   overlap := RectOverlap(Rect, UnitedHintRect);
   if (overlap.Height > 0) and (overlap.Width > 0) then
-    begin
+  begin
     if (Arc.NumQuad = 3) then
-      Result.y := (abs(UnitedHintRect.y + UnitedHintRect.Height + 6.0 + Height_hint_text) - abs(LegFirst.y)) else
+      Result.y := (abs(UnitedHintRect.y + UnitedHintRect.Height + 6.0*ToHiDpiScale + Height_hint_text) - abs(LegFirst.y)) else
     if (Arc.NumQuad = 1) then
-      Result.y := (UnitedHintRect.y - LegFirst.y - 3) else
-      begin
+      Result.y := (UnitedHintRect.y - LegFirst.y - 3*ToHiDpiScale)
+    else
+    begin
       if Arc.NumQuad in [2, 3] then
-        begin
+      begin
         Result.x := (UnitedHintRect.x - LegFirst.x);
-        end else
-        begin
+      end else
+      begin
         Result.x := (UnitedHintRect.x + UnitedHintRect.Size.x - LegFirst.x);
-        end;
-      off := abs(LegFirst.x) + abs(Result.x) + Rect.Size.x + PUSH_SEGMENT_DISTANCE + 5;
-      if (off > LegendsOffset + Center.x) then
-        begin
-        Result.x := Arc.SignCos*(abs(Result.x) - (off - (LegendsOffset + Center.x)));
-        Result.y := (UnitedHintRect.y - LegFirst.y - 3)
-        end;
       end;
-    if LegFirst.x < 0 then
-      Rect.Position := LegFirst + Result - Rect.Size else
-      Rect.Position := LegFirst + vec2(Result.x, Result.y - Rect.Size.y);
+      off := abs(LegFirst.x) + abs(Result.x) + Rect.Size.x + (PUSH_SEGMENT_DISTANCE + 5)*ToHiDpiScale;
+      if (off > LegendsOffset + Center.x) then
+      begin
+        Result.x := Arc.SignCos*(abs(Result.x) - (off - (LegendsOffset + Center.x)));
+        Result.y := (UnitedHintRect.y - LegFirst.y - 3*ToHiDpiScale)
+      end;
     end;
+    if LegFirst.x < 0 then
+      Rect.Position := LegFirst + Result - Rect.Size
+    else
+      Rect.Position := LegFirst + vec2(Result.x, Result.y - Rect.Size.y);
+  end;
 end;
 
 procedure TBChartCircular<TX, TY>.SetIntegralY(const IntegralY: TY);
@@ -3227,7 +3225,6 @@ begin
   {$endif}
   DateFormat.ShortDateFormat := 'dd.MM.yy';
   FShowZeroPoint := false;
-  //Font.SizeInPixels := 10;
 end;
 
 { TBChartCurvesInt }
@@ -3292,7 +3289,6 @@ begin
   {$endif}
   DateFormat.ShortDateFormat := 'dd.MM.yy';
   FShowZeroPoint := false;
-  //Font.SizeInPixels := 10;
 end;
 
 function TCurvesQuantityFloatInDate.GetGranularX: TDate;

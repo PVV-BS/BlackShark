@@ -65,7 +65,7 @@ unit bs.font;
 
 {$I BlackSharkCfg.inc}
 
-{$ifdef DEBUG}
+{$ifdef DEBUG_BS}
   {.$define DEBUG_FONT}
 {$endif}
 
@@ -2281,7 +2281,7 @@ var
     // to calc here angle b/w last and first vectors, but don't do, because collected
     // values enough to know clockwise or not, points of the contour placed
     CalcAngle(angle_old_sum, angle_old, v_befor_befor, v_first - TVec2f(v));
-    CalcAngle(angle_new_sum, angle_new, v_befor_befor_trans, TVec2f(g.Points.items[begin_point]) - TVec2f(v_trans));
+    CalcAngle(angle_new_sum, angle_new, v_befor_befor_trans, TVec2f(g.Points.items[begin_point]) - {%H-}TVec2f(v_trans));
     g.Contours.Items[index_cont].AsClockArr := angle_new_sum < 0;
     // check reflection contour
     if scale and (((angle_old > 0) and (angle_new < 0)) or ((angle_old < 0) and (angle_new > 0))) then
@@ -2410,7 +2410,7 @@ begin
     inc(offset, LoadCommonGlyphArg(offset));
     group_cont := 0;
     // simple glyph ???
-    if (numberOfContours >= 0) then
+    if ({%H-}numberOfContours >= 0) then
     begin
       off_vec.x := 0;
       off_vec.y := 0;
@@ -2803,6 +2803,10 @@ var
   src: TBlackSharkCustomFont;
   res: TBlackSharkCustomFont;
 begin
+  Result := nil;
+  {$ifdef DEBUG_FONT}
+  BSWriteMsg('BSFontManager.GetFont', FileName);
+  {$endif}
   // found raw data font
   sn := ChangeFileExt(ExtractFileName(FileName), '');
   res := GetRawFontData(sn);
@@ -2824,6 +2828,9 @@ begin
   res.Assign(src);
   res.Size := 10;
   Result := res;
+  {$ifdef DEBUG_FONT}
+  BSWriteMsg('BSFontManager.GetFont', FileName + ', success!!!');
+  {$endif}
 end;
 
 class function BSFontManager.GetFonts: TListVec<string>;
@@ -2864,6 +2871,7 @@ var
   f: string;
   res: TBlackSharkCustomFont;
 begin
+  Result := nil;
   FontNames.Find(AnsiUpperCase(Name), res);
   if res = nil then
   begin
@@ -3061,7 +3069,7 @@ begin
   //FSize := SIZE_DESTINATION_CANVAS_DEFAULT;
   FSize := 10;
   //FPixelsPerInch := 96;
-  FPixelsPerInch := GetPixelsPerInch;
+  FPixelsPerInch := bs.graphics.PixelsPerInch;
   FSizeInPixels := round(FSize*FPixelsPerInch/72);
   FCodePage := TCodePage.cpCyrillic;
   if FShortName <> '' then
@@ -4018,11 +4026,11 @@ begin
   if (RawDataFont = nil) and (Key^.Glyph^.Points.Count = 0) then
   begin
     {$ifdef DEBUG_FONT}
-    t := TThreadTimer.CurrentTime.Low;
+    t := TBTimer.CurrentTime.Low;
     {$endif}
     CalculateContour(Key);
     {$ifdef DEBUG_FONT}
-    inc(CountCalcContours, TThreadTimer.CurrentTime.Low - t);
+    inc(CountCalcContours, TBTimer.CurrentTime.Low - t);
     {$endif}
   end;
 
@@ -4030,13 +4038,13 @@ begin
   if (Key^.Indexes.Count = 0) and (Key^.Glyph^.Points.Count > 3) then
   begin
     {$ifdef DEBUG_FONT}
-    t := TThreadTimer.CurrentTime.Low;
+    t := TBTimer.CurrentTime.Low;
     {$endif}
     Tesselator.Triangulate(Key^.Glyph^.Points, Key^.Glyph^.Contours, Key^.Indexes);
     if (Key^.Indexes.Count > 3) then
       inc(FTriangulatedKeys);
     {$ifdef DEBUG_FONT}
-    inc(CountTimeTriangulate, TThreadTimer.CurrentTime.Low - t);
+    inc(CountTimeTriangulate, TBTimer.CurrentTime.Low - t);
     {$endif}
   end;
 

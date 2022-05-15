@@ -53,7 +53,7 @@ const
 
 type
 
-  IColumnPresentor = class;
+  IColumnPresentor      = class;
   IColumnPresentorClass = class of IColumnPresentor;
 
   IColumnCellPresentor = class abstract
@@ -508,9 +508,9 @@ begin
   FShowSplitter := true;
   FOwner := AOwner;
   ListCells := TListVec<IColumnCellPresentor>.Create;
-  FCellHeight := CELL_HEIGHT_DEFAULT;
+  FCellHeight := round(CELL_HEIGHT_DEFAULT*ToHiDpiScale);
   FCellHeightReal := round(FCellHeight * FOwner.Canvas.Scale);
-  FCellLeftOffset := LEFT_OFFCET_DEFAULT;
+  FCellLeftOffset := round(LEFT_OFFCET_DEFAULT*ToHiDpiScale);
   FParent := AParent;
   {FBody := TRectangle.Create(AParent.Canvas, AParent);
   FBody.Fill := true;
@@ -529,14 +529,14 @@ begin
   cl := ColorByteToFloat(FHeader.Color, true)*1.3;
   cl.w := 1;
   FSplitter := TLine.Create(FParent.Canvas, FParent);
-  FSplitter.WidthLine := 1.0;
+  FSplitter.WidthLine := round(1.0*ToHiDpiScale);
   FSplitter.Color := cl;
   FSplitter.Data.Interactive := false;
   FSplitter.Layer2d := COLUMN_LAYER + 3;
   FSplitter.BanScalableMode := true;
 
   FSplitterInvisible := TLine.Create(FParent.Canvas, FSplitter);
-  FSplitterInvisible.WidthLine := 6;
+  FSplitterInvisible.WidthLine := round(6*ToHiDpiScale);
   FSplitterInvisible.Data.DragResolve := false;
   FSplitterInvisible.Data.Opacity := 0.0;
   FSplitterInvisible.BanScalableMode := true;
@@ -1069,7 +1069,7 @@ procedure TColumnHeader.BuildLine;
 begin
   FBottomLine.A := vec2(0.0, 0.0);
   FBottomLine.B := vec2(FHeader.Size.Width, 0.0);
-  FBottomLine.WidthLine := 1.0;
+  FBottomLine.WidthLine := round(1.0*ToHiDpiScale);
   FBottomLine.Build;
   FBottomLine.Position2d := vec2(0.0, FHeader.Height - 1.0);
 end;
@@ -1078,7 +1078,7 @@ constructor TColumnHeader.Create(AOwner: IColumnPresentor; AParent: TCanvasObjec
 begin
   FOwner := AOwner;
   FParent := AParent;
-  FSize := vec2(AParent.Width, round(CELL_HEIGHT_DEFAULT * 1.2));
+  FSize := vec2(AParent.Width, round(CELL_HEIGHT_DEFAULT * 1.2 * ToHiDpiScale));
 
   FCaption := 'Header caption';
   FColor := $756743; // ColorFloatToByte(FParent.Color*0.5).value;
@@ -1341,7 +1341,7 @@ begin
 
     FBorder := TRectangle.Create(FBody.Canvas, FBody);
     FBorder.Fill := false;
-    FBorder.WidthLine := 1.0;
+    FBorder.WidthLine := round(1.0*ToHiDpiScale);
     FBorder.Size := vec2(FBody.Size.Width, FBody.Size.Height);
     FBorder.Color := FBody.Color;
     FBorder.Data.Interactive := false;

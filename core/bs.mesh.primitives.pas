@@ -245,24 +245,24 @@ function GeneratePath2d(Shape: TMesh; Points: PArrayVec3f; Count: int32; Vertica
 const
   eps = EPSILON * 10;
 var
-  i,j, _count: int32;
+  i, _count: int32;
   a, a_befor, d, s, c, a_closed: BSFloat;
   edg: TVec3f;
   edg_path, last_edg_path: TVec3f;
   p1, p2: TVec3f;
   a_bw_edg: BSFloat;
-  widthHalf: BSFloat;
+  crs: TVec3f;
+  crs_befor: BSFloat;
 begin
   if Count < 2 then
     exit(vec3(0.0, 0.0, 0.0));
 
-  widthHalf := VerticalWidth*0.5;
   Shape.FBoundingBox.Max := Points^[0];
   Shape.FBoundingBox.Min := Points^[0];
   _count := Count - 1;
   if IsLines then
   begin
-    Shape.TypePrimitive := tpLineStrip;
+    Shape.DrawingPrimitive := GL_LINE_STRIP;
     for i := 0 to _count do
     begin
       Shape.Indexes.Add(Shape.CountVertex);
@@ -271,17 +271,15 @@ begin
     end;
   end else
   begin
-    Shape.TypePrimitive := tpTriangleStrip;
+    Shape.DrawingPrimitive := GL_TRIANGLE_STRIP;
     if Closed then
     begin
+      crs_befor := -1.0;
       last_edg_path := Points^[0] - Points^[_count];
     end else
     begin
-      i := 0;
-      while (i < _count - 1) and (Points^[i] = Points^[i+1]) do
-        inc(i);
-
-      last_edg_path := Points^[i+1] - Points^[i];
+      last_edg_path := Points^[1] - Points^[0];
+      crs_befor := 1.0;
     end;
     a_befor := -VecDecisionX(last_edg_path);
     a_closed := a_befor;
@@ -289,12 +287,7 @@ begin
     begin
       if i < _count then
       begin
-        j := i;
-        //while (j < _count - 1) and (Points^[j] = Points^[j+1]) do
-        //  inc(j);
-        edg_path := Points^[j+1] - Points^[j];
-        if edg_path = vec3(0.0, 0.0, 0.0) then
-          edg_path := last_edg_path;
+        edg_path := Points^[i+1] - Points^[i];
         a := -VecDecisionX(edg_path);
       end else
       begin
@@ -305,22 +298,37 @@ begin
           a := a_befor;
       end;
 
-      a_bw_edg := abs(a - a_befor);
-      c := BS_Cos(a_bw_edg*0.5);
+      a_bw_edg := (a - a_befor);
+      c := (BS_Cos(abs(a_bw_edg)*0.5));
+
       if abs(c) > eps then
-        d := widthHalf/c
+        d := (VerticalWidth/c)*0.5
       else
-        d := widthHalf;
+        d := VerticalWidth*0.5;
 
       BS_SinCos(abs(a + a_befor)*0.5 - 90, s, c);
+      edg := vec3( d*c, d*s, 0.0);
 
-      edg := vec3(d*c, d*s, 0.0);
+      crs := VecCross(last_edg_path, last_edg_path + edg);
+      if crs.z < -eps then
+        crs.z := -1
+      else
+        crs.z := 1;
+
+      if (crs.z = crs_befor) then
+      begin
+        crs.z := -crs.z;
+        edg.x := -edg.x;
+        edg.y := -edg.y;
+      end;
 
       last_edg_path := edg_path;
 
       p1 := Points^[i] + edg;
       p2 := Points^[i] - edg;
- 
+
+
+      crs_befor := -crs.z;
 
       Shape.AddVertex(p1);
       Shape.AddVertex(p2);
@@ -390,9 +398,8 @@ begin
   Shape.AddVertex(p1);
   Shape.AddVertex(p2);
 
-  Shape.FBoundingBox.Min := p1;
-  Shape.FBoundingBox.Max := p1;
-  Box3CheckBB(Shape.FBoundingBox, p2);
+  //Box3CheckBB(Shape.FBoundingBox, p1);
+  //Box3CheckBB(Shape.FBoundingBox, p2);
 
   p1 := Point2 + edg;
   p2 := Point2 - edg;
@@ -401,19 +408,17 @@ begin
   Shape.AddVertex(p1);
   Shape.AddVertex(p2);
 
-  Box3CheckBB(Shape.FBoundingBox, p1);
-  Box3CheckBB(Shape.FBoundingBox, p2);
+  //Box3CheckBB(Shape.FBoundingBox, p1);
+  //Box3CheckBB(Shape.FBoundingBox, p2);
 
   if AsStrip then
   begin
-    Shape.TypePrimitive := tpTriangleStrip;
     Shape.Indexes.Add(Shape.Indexes.Count);
     Shape.Indexes.Add(Shape.Indexes.Count);
     Shape.Indexes.Add(Shape.Indexes.Count);
     Shape.Indexes.Add(Shape.Indexes.Count);
   end else
   begin
-    Shape.TypePrimitive := tpTriangles;
     Shape.Indexes.Add(Shape.CountVertex-4);
     Shape.Indexes.Add(Shape.CountVertex-3);
     Shape.Indexes.Add(Shape.CountVertex-2);
@@ -435,7 +440,7 @@ begin
     exit(vec3(0.0, 0.0, 0.0));
   Shape.FBoundingBox.Max := Points^[0];
   Shape.FBoundingBox.Min := Points^[0];
-  Shape.TypePrimitive := tpTriangleFan;
+  Shape.DrawingPrimitive := GL_TRIANGLE_FAN;
   Shape.AddVertex(Vec3(0.0, 0.0, 0.0));
   Shape.Indexes.Add(0);
   for i := 0 to Count - 1 do
@@ -731,7 +736,7 @@ begin
   half_w := Width / 2;
   //h_arrow := w_arrow*2;
   //border := (WidthTip - Width) / 2;
-  Shape.TypePrimitive := tpTriangles;
+  Shape.DrawingPrimitive := GL_TRIANGLES;
   // two triangles
   // 1:
   Shape.AddVertex(vec3(-half_w, -half_len, 0));
@@ -1058,7 +1063,7 @@ var
   angleStep, c, s: BSFloat;
   v: TVec3f;
 begin
-  Shape.TypePrimitive := tpTriangleFan;
+  Shape.DrawingPrimitive := GL_TRIANGLE_FAN;
   angleStep := Angle / numSlices;
   Shape.AddVertex(vec3(0.0, 0.0, 0.0));
   Shape.Indexes.Add(0);
@@ -1084,7 +1089,7 @@ var
   //bb: TBox3f;
 begin
   angleStep := Angle / numSlices;
-  Shape.TypePrimitive := tpTriangleStrip;
+  Shape.DrawingPrimitive := GL_TRIANGLE_STRIP;
   r2 := Radius - WidthLine;
   //bb.Min := vec3(0.0, 0.0, 0.0);
   //bb.Max := vec3(0.0, 0.0, 0.0);
@@ -1118,7 +1123,7 @@ var
 begin
   Vertexes := nil;
   bs.mesh.primitives.GenerateBezierCubic(P0, P1, P2, P3, Vertexes, STEP);
-  bs.mesh.primitives.GeneratePath2d(Shape, Vertexes.ShiftData[0], Vertexes.Count, AWidth, false, CalcBB, AWidth = 1.0);
+  bs.mesh.primitives.GeneratePath2d(Shape, Vertexes.ShiftData[0], Vertexes.Count, AWidth, false, CalcBB);
   Vertexes.Free;
 end;
 
@@ -1128,7 +1133,7 @@ var
 begin
   Vertexes := nil;
   bs.mesh.primitives.GenerateBezierLinear(P0, P1, Vertexes, STEP);
-  GeneratePath2d(Shape, Vertexes.ShiftData[0], Vertexes.Count, AWidth, false, CalcBB, AWidth = 1.0);
+  GeneratePath2d(Shape, Vertexes.ShiftData[0], Vertexes.Count, AWidth, false, CalcBB);
   Vertexes.Free;
 end;
 
@@ -1138,7 +1143,7 @@ var
 begin
   Vertexes := nil;
   bs.mesh.primitives.GenerateBezierQuadratic(P0, P1, P2, Vertexes, STEP);
-  GeneratePath2d(Shape, Vertexes.ShiftData[0], Vertexes.Count, AWidth, false, CalcBB, AWidth = 1.0);
+  GeneratePath2d(Shape, Vertexes.ShiftData[0], Vertexes.Count, AWidth, false, CalcBB);
   Vertexes.Free;
 end;
 
@@ -1148,7 +1153,7 @@ var
   angleStep, c, s: BSFloat;
   v: TVec3f;
 begin
-  Shape.TypePrimitive := tpTriangleFan;
+  Shape.DrawingPrimitive := GL_TRIANGLE_FAN;
   angleStep := 360 / numSlices;
   Shape.AddVertex(Vec3(0.0, 0.0, 0.0));
   Shape.Indexes.Add(0);
@@ -1177,7 +1182,7 @@ begin
   angleStep := 360 / numSlices;
   //Result.FVertexes.Add(Vec3(0.0, 0.0, 0.0));
   //Result.FUVCoords.Add(Vec2(0.5, 0.5));
-  Shape.TypePrimitive := tpTriangleStrip;
+  Shape.DrawingPrimitive := GL_TRIANGLE_STRIP;
   r2 := Radius-WidthLine;
   for j := 0 to NumSlices do
   begin
@@ -1259,7 +1264,7 @@ var
   s_half: TVec3f;
   i: int32;
 begin
-  Shape.TypePrimitive := tpTriangles;
+  Shape.DrawingPrimitive := GL_TRIANGLES;
   s_half := Size * 0.5;
   // set Cube to center
   // face
@@ -1441,9 +1446,9 @@ begin
   mid_w := aligned_size.x * 0.5;
   w_half := Width * 0.5;
   if Triangles then
-    Shape.TypePrimitive := tpTriangles
+    Shape.DrawingPrimitive := GL_TRIANGLES
   else
-    Shape.TypePrimitive := tpLines;
+    Shape.DrawingPrimitive := GL_LINES;
 
   if VerticalLines then
   begin
@@ -1562,7 +1567,7 @@ begin
   half_len := ALength * 0.5;
   y := -half_len;
   x := Width * 0.5;
-  Shape.TypePrimitive := tpTriangleStrip;
+  Shape.DrawingPrimitive := GL_TRIANGLE_STRIP;
   for i := 0 to NUM_SLICES do
   begin
     //v := (ALength-(y+half_len))/ALength;
@@ -1577,7 +1582,7 @@ end;
 
 class procedure TBlackSharkFactoryShapesP.GeneratePlane(Shape: TMesh; const P1, P2, P3, P4: TVec3f);
 begin
-  Shape.TypePrimitive := tpTriangleStrip;
+  Shape.DrawingPrimitive := GL_TRIANGLE_STRIP;
   Shape.FBoundingBox.Max := vec3(bs.math.Max(bs.math.Max(bs.math.Max(P1.x, P2.x), P3.x), P4.x),
     bs.math.Max(bs.math.Max(bs.math.Max(P1.y, P2.y), P3.y), P4.y), bs.math.Max(bs.math.Max(bs.math.Max(P1.z, P2.z), P3.z), P4.z));
   Shape.FBoundingBox.Min := vec3(bs.math.Min(bs.math.Min(bs.math.Min(P1.x, P2.x), P3.x), P4.x),
@@ -1601,7 +1606,7 @@ class procedure TBlackSharkFactoryShapesP.GeneratePlane(Shape: TMesh; const Size
 var
   s_half: TVec2f;
 begin
-  Shape.TypePrimitive := tpTriangleStrip;
+  Shape.DrawingPrimitive := GL_TRIANGLE_STRIP;
   s_half.x := SizePlane.x * 0.5;
   s_half.y := SizePlane.y * 0.5;
   // set Image to center
@@ -1627,7 +1632,7 @@ var
   s_half: TVec2f;
   s,c: BSFloat;
 begin
-  Shape.TypePrimitive := tpTriangleStrip;
+  Shape.DrawingPrimitive := GL_TRIANGLE_STRIP;
   s_half.x := Width / 2;
   s_half.y := Height / 2;
   s := WidthLile;
@@ -1737,7 +1742,8 @@ begin
   //Shape.CalcBoundingBox;
 end;
 
-class procedure TBlackSharkFactoryShapesP.GenerateRoundRect(Shape: TMesh; NumSlices: int32; Radius, Width, Height: BSFloat);
+class procedure TBlackSharkFactoryShapesP.GenerateRoundRect(
+  Shape: TMesh; NumSlices: int32; Radius, Width, Height: BSFloat);
 const
   QUARTER_COORD: array[0..3] of TVec2i =
     ((x:1; y:1),(x:-1; y:1), (x:-1; y:-1), (x:1; y:-1));
@@ -1749,7 +1755,7 @@ begin
   if (Width = 0) or (Height = 0) then
     exit;
 
-  Shape.TypePrimitive := tpTriangleFan;
+  Shape.DrawingPrimitive := GL_TRIANGLE_FAN;
 
   if numSlices > 0 then
     angleStep := 90 / numSlices
@@ -1789,7 +1795,7 @@ var
   a, b: BSFloat;
   v: TVec3f;
 begin
-  Shape.TypePrimitive := tpTriangleStrip;
+  Shape.DrawingPrimitive := GL_TRIANGLE_STRIP;
   b := 0;
   while b < 181 do
     begin
@@ -1865,7 +1871,7 @@ begin
   hh := Height * 0.5;
   if Fill then
   begin
-    Shape.TypePrimitive := tpTriangleFan;
+    Shape.DrawingPrimitive := GL_TRIANGLE_FAN;
     Shape.AddVertex(vec3(0.0, 0.0, 0.0));
     Shape.AddVertex(vec3(-ubh, hh, 0.0));
     Shape.AddVertex(vec3(-lbh, -hh, 0.0));
@@ -1879,7 +1885,7 @@ begin
     Shape.Indexes.Add(1);
   end else
   begin
-    Shape.TypePrimitive := tpTriangleStrip;
+    Shape.DrawingPrimitive := GL_TRIANGLE_STRIP;
     c := lbh - ubh;
     //a := sqrt(sqr(c) + sqr(Height));
     alpha := ArcTan2(c, Height);
@@ -1926,8 +1932,7 @@ begin
       GenerateTrapeze(Shape, UpperBase, LowerBase, Height, WidthLine, Fill);
       exit;
     end;
-
-    Shape.TypePrimitive := tpTriangleFan;
+    Shape.DrawingPrimitive := GL_TRIANGLE_FAN;
 
     Shape.AddVertex(Vec3(0.0, 0.0, 0.0));
     wh_top := (UpperBase - Radius*2)*0.5;
@@ -1985,7 +1990,7 @@ begin
       vec3(-lbh, - hh, 0.0), WidthLine, 0.1, false);
     GenerateBezierCubic(Shape, vec3(lbh, - hh, 0.0), vec3( ubh + c, - hh, 0.0), vec3( ubh + c, hh, 0.0),
       vec3( ubh, hh, 0.0), WidthLine, 0.1, false);
-    Shape.TypePrimitive := tpTriangleStrip;
+    Shape.DrawingPrimitive := GL_TRIANGLE_STRIP;
     { close path }
     Shape.Indexes.Add(0);
     Shape.Indexes.Add(1);
@@ -2071,12 +2076,13 @@ begin
   Shape.Write(3, TVertexComponent.vcTexture1, vec2(1.0, 0.0));
 end;
 
-class procedure TBlackSharkFactoryShapesPT.GenerateRectangle(Shape: TMesh; WidthLile, Width, Height: BSFloat);
+class procedure TBlackSharkFactoryShapesPT.GenerateRectangle(Shape: TMesh;
+  WidthLile, Width, Height: BSFloat);
 var
   s_half: TVec2f;
   s,c: BSFloat;
 begin
-  Shape.TypePrimitive := tpTriangleStrip;
+  Shape.DrawingPrimitive := GL_TRIANGLE_STRIP;
   s_half.x := Width / 2;
   s_half.y := Height / 2;
   s := WidthLile;
@@ -2123,7 +2129,7 @@ var
   angleStep, s, c, wh, hh, w, h: BSFloat;
   v: TVec3f;
 begin
-  Shape.TypePrimitive := tpTriangleFan;
+  Shape.DrawingPrimitive := GL_TRIANGLE_FAN;
   angleStep := 90 / numSlices;
   Shape.Write(Shape.AddVertex(Vec3(0.0, 0.0, 0.0)), vcTexture1, Vec2(0.5, 0.5));
   wh := (Width - Radius * 2) / 2;
@@ -2154,7 +2160,7 @@ var
   a, b: BSFloat;
   v: TVec3f;
 begin
-  Shape.TypePrimitive := tpTriangleStrip;
+  Shape.DrawingPrimitive := GL_TRIANGLE_STRIP;
   b := 0;
   while b < 180 do
   begin
@@ -2646,7 +2652,7 @@ var
   angleStep, c, s: BSFloat;
   v: TVec3f;
 begin
-  Shape.TypePrimitive := tpTriangleFan;
+  Shape.DrawingPrimitive := GL_TRIANGLE_FAN;
   angleStep := 360 / numSlices;
   Shape.Write(Shape.AddVertex(Vec3(0.0, 0.0, 0.0)), vcTexture1, Vec2(0.5, 0.5));
   Shape.Indexes.Add(0);
@@ -2665,7 +2671,8 @@ begin
   Shape.CalcBoundingBox;
 end;
 
-class procedure TBlackSharkFactoryShapesPT.GenerateCircle(Shape: TMesh; WidthLine: BSFloat; NumSlices: int32; Radius: BSFloat);
+class procedure TBlackSharkFactoryShapesPT.GenerateCircle(Shape: TMesh;
+  WidthLine: BSFloat; NumSlices: int32; Radius: BSFloat);
 var
   j: int32;
   angleStep, s, c, r2: BSFloat;
@@ -2674,7 +2681,7 @@ begin
   angleStep := 360 / numSlices;
   //Result.FVertexes.Add(Vec3(0.0, 0.0, 0.0));
   //Result.FUVCoords.Add(Vec2(0.5, 0.5));
-  Shape.TypePrimitive := tpTriangleStrip;
+  Shape.DrawingPrimitive := GL_TRIANGLE_STRIP;
   r2 := Radius-WidthLine;
   for j := 0 to NumSlices do
     begin

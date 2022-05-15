@@ -89,6 +89,7 @@ uses
   , bs.config
   , bs.thread
   , bs.math
+  , bs.graphics
   ;
 
 { TBCheckBoxCustom }
@@ -112,6 +113,7 @@ begin
   UncheckedRect.Size := DefaultSize;
   UncheckedRect.Color := TColor4f($DDDDDD);
   UncheckedRect.Data.Interactive := false;
+  UncheckedRect.WidthLine := round(1.0*ToHiDpiScale);
   FText := TCanvasText.Create(FCanvas, body);
   FText.Text := 'Checkbox';
   FText.Data.Interactive := false;
@@ -170,7 +172,7 @@ end;
 
 function TBCheckBoxCustom.DefaultSize: TVec2f;
 begin
-  Result := vec2(14, 14);
+  Result := vec2(round(14 * ToHiDpiScale) , round(14 * ToHiDpiScale));
 end;
 
 procedure TBCheckBoxCustom.DoAfterScale;
@@ -215,12 +217,15 @@ var
   dist: BSFloat;
 begin
   if FCanvas.Renderer.HitTestInstance(Data.X, Data.Y, FMainBody.Data.BaseInstance, dist) then
+  begin
     IsChecked := not IsChecked;
+    if not Focused then
+      Focused := true;
+  end;
 end;
 
 procedure TBCheckBoxCustom.Resize(AWidth, AHeight: BSFloat);
 begin
-  UncheckedRect.WidthLine := 1.0;
   UncheckedRect.Size := vec2(AHeight, AHeight);
   inherited;
 end;

@@ -121,13 +121,13 @@ begin
 
   block1 := CreateBlock('Processor 4', 'Block 1', proc2.Position + vec2(0, proc2.Height + 30));
 
-  proc2.AddOutput(0, block_point1);
+  proc2.AddOutput(0, block_point1{%H-});
 
   proc3 := TSchemeProcessor.Create(reg);
   proc3.Caption := 'Sender 1';
   proc3.Position := vec2(block1.Left, block1.Top + block1.Height + 30);
 
-  block_point3.AddOutput(0, proc3);
+  {%H-}block_point3.AddOutput(0, proc3);
 
   block2 := CreateBlock('Processor 5', 'Block 2', proc2.Position + vec2(proc2.Width + 30, -10));
 

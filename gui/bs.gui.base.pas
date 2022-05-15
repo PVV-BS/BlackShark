@@ -237,6 +237,7 @@ type
     procedure DoAfterScale; virtual;
     procedure SetAlign(const Value: TObjectAlign); virtual;
   public
+    class var ControlEvents: IBOpCodeEvent;
     class procedure ControlRegister(const Group: string; ControlClass: TBControlClass);
     class function ControlGroupsRegistred: int32;
     class function ControlGroupGet(i: int32): TGroupControls;
@@ -603,6 +604,7 @@ class constructor TBControl.Create;
 begin
   RegistredControls := TListVec<TGroupControls>.Create;
   FEventFocusChanged := CreateFocusEvent;
+  ControlEvents := CreateOpCodeEvent;
 end;
 
 class function TBControl.ControlGroupGet(i: int32): TGroupControls;
@@ -631,6 +633,7 @@ var
   i: int32;
 begin
   FEventFocusChanged := nil;
+  ControlEvents := nil;
   for i := 0 to RegistredControls.Count - 1 do
     RegistredControls.Items[i].Free;
   RegistredControls.Free;

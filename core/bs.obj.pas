@@ -217,7 +217,7 @@ type
     procedure Remove(Position: TListGoupedObsrv.PListItem);
     function GetCountObservers: int32;
   public
-    constructor Create(AThreadContext: TBThread; AReciever: TGenericRecieveProc<T>); overload;
+    constructor Create(ATheadContext: TBThread; AReciever: TGenericRecieveProc<T>); overload;
     constructor Create(AReciever: TGenericRecieveProc<T>); overload;
     destructor Destroy; override;
     { unnecessarily remember result; if you want dynamically to create and to
@@ -586,11 +586,11 @@ begin
     Observers.ItemListLast.Item := nil;
 end;
 
-constructor BObserversGroup<T>.Create(AThreadContext: TBThread; AReciever: TGenericRecieveProc<T>);
+constructor BObserversGroup<T>.Create(ATheadContext: TBThread; AReciever: TGenericRecieveProc<T>);
 begin
   Observers := TListGoupedObsrv.Create;
   Reciever := AReciever;
-  Thread := AThreadContext;
+  Thread := ATheadContext;
 end;
 
 constructor BObserversGroup<T>.Create(AReciever: TGenericRecieveProc<T>);

@@ -250,7 +250,7 @@ var
   begin
     if not Assigned(ANode) then
       exit(false);
-    ReadFloatValues(WideToString(ANode.StrData), 16, 1, values_f);
+    {%H-}ReadFloatValues(WideToString(ANode.StrData), 16, 1, values_f);
     move(values_f[0], m{%H-}, 16*SizeOf(BSFloat));
     MatrixTranspose(m);
     Result := true;
@@ -690,6 +690,7 @@ var
     tip, offset: TVec3f;
     go: TGraphicObject;
   begin
+    Result := nil;
     kind := ANode.GetAttribute('type', '');
     if kind = 'JOINT' then
     begin
@@ -701,11 +702,11 @@ var
         skeletons.Items[skeleton.Caption] := skeleton;
         // root node for skeleton; need for a bind of animations to skeleton and its bones
         s := ANode.Parent.GetAttribute('id', '');
-        skeletons_root_node.TryAdd(s, skeleton);
+        {%H-}skeletons_root_node.TryAdd(s, skeleton);
         s := ANode.Parent.GetAttribute('name', '');
         // double registration the same skeleton, because of some models links by id, another by name
         if (s <> '') and (s <> skeleton.Caption) then
-          skeletons_root_node.TryAdd(s, skeleton);
+          {%H-}skeletons_root_node.TryAdd(s, skeleton);
         skeleton.ParentTransforms := ARootTransformationUp;
       end;
 
@@ -763,7 +764,6 @@ var
 
     end else
     begin
-      Result := nil;
       if kind = 'NODE' then
       begin
         if ANode.GetAttribute('id', '') = 'Camera' then
@@ -956,7 +956,7 @@ var
     begin
       while values_i[i] > 0 do
       begin
-        if sk.Bones.Find(values_s[pairs[j]], bone) then
+        if sk.Bones.Find(values_s[{%H-}pairs[j]], bone) then
         begin
           tmp_int_arr := map_vertex_points.Items[i];
           for k := 0 to length(tmp_int_arr)-1 do
@@ -1086,7 +1086,7 @@ var
     else
       sa := sk.CreateAnimation(name);
 
-    for i := 0 to length(t)-1 do
+    for i := 0 to length({%H-}t)-1 do
     begin
       move(values_f[i*16], m{%H-}, SizeOf(m));
       MatrixTranspose(m);

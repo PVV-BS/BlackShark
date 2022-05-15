@@ -49,6 +49,7 @@ type
   end;
 
   TBSShiftState = TShiftState;
+
   TBSMouseButton = (mbBsLeft, mbBsRight, mbBsMiddle, mbBsExtra1, mbBsExtra2);
   TBSMouseButtons = set of TBSMouseButton;
 
@@ -56,12 +57,12 @@ type
     BaseHeader: BData;
     X, Y, DeltaWeel: int32;
     Button: TBSMouseButtons;
-    ShiftState: TShiftState;
+    ShiftState: TBSShiftState;
   end;
 
   IBMouseEventTemplate<T> = interface(IBEvent<T>)
   ['{AE3C328E-6E5E-4C9B-81E4-3F28E53BA128}']
-    procedure Send(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TShiftState);
+    procedure Send(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TBSShiftState);
   end;
 
   IBMouseEvent = IBMouseEventTemplate<BMouseData>;
@@ -77,12 +78,14 @@ type
 
   BOpCode = record
     BaseHeader: BEmpty;
-    OpCode: byte;
+    OpCode: int32;
+    Data: NativeInt;
+    Data2: NativeInt;
   end;
 
   IBOpCodeEvent = interface(IBEvent<BOpCode>)
   ['{D6A7B32D-31C9-48AC-A9F3-F108D56618A3}']
-    procedure Send(Instance: Pointer; OpCode: byte);
+    procedure Send(Instance: Pointer; OpCode: int32; Data: NativeInt = -1; Data2: NativeInt = -1);
   end;
   IBOpCodeEventObserver = IBObserver<BOpCode>;
 
@@ -138,14 +141,16 @@ type
   BKeyData = record
     BaseHeader: BData;
     Key: Word;
-    Shift: TShiftState;
+    Shift: TBSShiftState;
   end;
 
   { TKeyEvent }
 
+  { IBKeyObjectTemplate }
+
   IBKeyObjectTemplate<T> = interface(IBEvent<T>)
   ['{AE87C0D1-8D0F-41B5-8693-4DCFFD1203BD}']
-    procedure Send(Instance: Pointer; Key: Word; Shift: TShiftState);
+    procedure Send(Instance: Pointer; Key: Word; Shift: TBSShiftState);
   end;
 
   IBKeyObject = IBKeyObjectTemplate<BKeyData>;
@@ -190,15 +195,21 @@ type
 
   TEventRealign = IBEmptyEvent;
 
-  function MouseData(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TShiftState): BMouseData; inline;
-  function KeyData(Instance: Pointer; Key: Word; Shift: TShiftState): BKeyData; inline;
+  function MouseData(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TBSShiftState): BMouseData; inline;
+  function KeyData(Instance: Pointer; Key: Word; Shift: TBSShiftState): BKeyData; inline;
 
 const
     { task's opcodes }
-    TASK_UPDATE    = 0;
-    TASK_START     = 1;
-    TASK_STOP      = 2;
-    TASK_AUTO_STOP = 3;
+    TASK_UPDATE               = 0;
+    TASK_START                = 1;
+    TASK_STOP                 = 2;
+    TASK_AUTO_STOP            = 3;
+
+    { gui events }
+    GUI_FOCUS_ACCEPTED        = 4;
+    GUI_FOCUS_LOST            = 5;
+    GUI_SHOW_KEYBOARD         = 6;
+    GUI_HIDE_KEYBOARD         = 7;
 
 type
 
@@ -260,6 +271,7 @@ type
     destructor Destroy; override;
     class function AddTask(const Task: IUnknown; TaskUpdateProc: TUpdateTaskProc; Context: TBThread): PRecTask;
     class procedure RemoveTask(var TaskPos: PRecTask; Context: TBThread);
+    class function HasTasks: boolean;
   public
     property ThreadContext: TBThread read FThreadContext;
   end;
@@ -359,7 +371,12 @@ type
 
 implementation
 
-  uses SysUtils;
+uses
+  SysUtils
+  {$ifdef DEBUG_BS}
+  , bs.log
+  {$endif}
+  ;
 
 type
 
@@ -370,8 +387,10 @@ type
       TMouseDataQ = TQueueTemplate<TMouseItemQ>;
   protected
     class function GetQueueClass: TQueueWrapperClass; override;
-    procedure Send(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TShiftState);
+    procedure Send(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TBSShiftState);
   end;
+
+  { TBKeyEvent }
 
   TBKeyEvent = class(TTemplateBEvent<BKeyData>, IBKeyObject)
   private
@@ -380,8 +399,10 @@ type
       TKeyDataQ = TQueueTemplate<TKeyItemQ>;
   protected
     class function GetQueueClass: TQueueWrapperClass; override;
-    procedure Send(Instance: Pointer; Key: Word; ShiftState: TShiftState);
+    procedure Send(Instance: Pointer; Key: Word; ShiftState: TBSShiftState);
   end;
+
+  { TBWindowResizeEvent }
 
   TBWindowResizeEvent = class(TTemplateBEvent<BResizeEventData>, IBResizeWindowEvent)
   private
@@ -395,6 +416,8 @@ type
       PercentWidthChange, PercentHeightChange: BSFloat);
   end;
 
+  { TBEmptyEvent }
+
   TBEmptyEvent = class(TTemplateBEvent<BEmpty>, IBEmptyEvent)
   private
     type
@@ -405,6 +428,8 @@ type
     procedure Send(Instance: Pointer);
   end;
 
+  { TBMessageEvent }
+
   TBMessageEvent = class(TTemplateBEvent<BMessage>)
   private
     type
@@ -414,6 +439,8 @@ type
     class function GetQueueClass: TQueueWrapperClass; override;
   end;
 
+  { TBOpCodeEvent }
+
   TBOpCodeEvent = class(TTemplateBEvent<BOpCode>, IBOpCodeEvent)
   private
     type
@@ -421,8 +448,10 @@ type
       TOpCodeDataQ = TQueueTemplate<TOpCodeItemQ>;
   protected
     class function GetQueueClass: TQueueWrapperClass; override;
-    procedure Send(Instance: Pointer; OpCode: byte);
+    procedure Send(Instance: Pointer; OpCode: int32; Data: NativeInt = -1; Data2: NativeInt = -1);
   end;
+
+  { TEmptyTask }
 
   TEmptyTask = class(TTemplateBTask<byte>)
   private
@@ -436,6 +465,8 @@ type
     procedure Update; override;
   end;
 
+  { TBFocusEvent }
+
   TBFocusEvent = class(TTemplateBEvent<BFocusEventData>, IBFocusEvent)
   private
     type
@@ -445,6 +476,8 @@ type
     class function GetQueueClass: TQueueWrapperClass; override;
     procedure Send(Instance: Pointer; Control: Pointer; Focused: boolean; ControlLevel: int32);
   end;
+
+  { TBDragDropEvent }
 
   TBDragDropEvent = class(TTemplateBEvent<BDragDropData>, IBDragDropEvent)
   private
@@ -456,6 +489,8 @@ type
     procedure Send(Instance: Pointer; CheckDragParent: boolean);
   end;
 
+  { TBChangeMvpEvent }
+
   TBChangeMvpEvent = class(TTemplateBEvent<BTransformData>, IBChangeMVPEvent)
   private
     type
@@ -466,7 +501,7 @@ type
     procedure Send(Instance: Pointer; MeshTransformed: boolean);
   end;
 
-function MouseData(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TShiftState): BMouseData;
+function MouseData(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TBSShiftState): BMouseData;
 begin
   Result.BaseHeader.Instance := Instance;
   Result.X := X;
@@ -476,7 +511,7 @@ begin
   Result.ShiftState := ShiftState;
 end;
 
-function KeyData(Instance: Pointer; Key: Word; Shift: TShiftState): BKeyData;
+function KeyData(Instance: Pointer; Key: Word; Shift: TBSShiftState): BKeyData;
 begin
   Result.BaseHeader.Instance := Instance;
   Result.Key := Key;
@@ -737,7 +772,7 @@ begin
   Result := TMouseDataQ;
 end;
 
-procedure TBMouseEvent.Send(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TShiftState);
+procedure TBMouseEvent.Send(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TBSShiftState);
 var
   data: BMouseData;
 begin
@@ -779,8 +814,7 @@ begin
   Result := TWindResizeDataQ;
 end;
 
-procedure TBWindowResizeEvent.Send(Instance: Pointer; NewWidth,
-  NewHeight: int32; PercentWidthChange, PercentHeightChange: BSFloat);
+procedure TBWindowResizeEvent.Send(Instance: Pointer; NewWidth, NewHeight: int32; PercentWidthChange, PercentHeightChange: BSFloat);
 var
   data: BResizeEventData;
 begin
@@ -799,7 +833,7 @@ begin
   Result := TKeyDataQ;
 end;
 
-procedure TBKeyEvent.Send(Instance: Pointer; Key: Word; ShiftState: TShiftState);
+procedure TBKeyEvent.Send(Instance: Pointer; Key: Word; ShiftState: TBSShiftState);
 var
   data: BKeyData;
 begin
@@ -816,13 +850,15 @@ begin
   Result := TOpCodeDataQ;
 end;
 
-procedure TBOpCodeEvent.Send(Instance: Pointer; OpCode: byte);
+procedure TBOpCodeEvent.Send(Instance: Pointer; OpCode: int32; Data: NativeInt; Data2: NativeInt);
 var
-  data: BOpCode;
+  d: BOpCode;
 begin
-  data.BaseHeader.Instance := Instance;
-  data.OpCode := OpCode;
-  SendEvent(data);
+  d.BaseHeader.Instance := Instance;
+  d.OpCode := OpCode;
+  d.Data := Data;
+  d.Data2 := Data2;
+  SendEvent(d);
 end;
 
 { TTaskExecutor }
@@ -840,6 +876,9 @@ class function TTaskExecutor.AddTask(const Task: IUnknown; TaskUpdateProc: TUpda
 var
   exec: TTaskExecutor;
 begin
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TTaskExecutor.AddTask', (Task as TObject).ClassName);
+  {$endif}
   {CS.Enter;
   try }
     exec := Executors.Items[Context.Index];
@@ -886,6 +925,19 @@ begin
   FTasks.Free;
 end;
 
+class function TTaskExecutor.HasTasks: boolean;
+var
+  i: int32;
+begin
+  for i := 0 to Executors.Count - 1 do
+  begin
+    if Assigned(Executors.Items[i]) and (Executors.Items[i].FTasks.Count > 0) then
+      exit(true);
+  end;
+
+  Result := false;
+end;
+
 class destructor TTaskExecutor.Destroy;
 var
   i: int32;
@@ -924,6 +976,9 @@ end;
 
 class procedure TTaskExecutor.RemoveTask(var TaskPos: PRecTask; Context: TBThread);
 begin
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TTaskExecutor.RemoveTask', (IUnknown(TaskPos.Task) as TObject).ClassName);
+  {$endif}
   {CS.Enter;
   try   }
     Executors.Items[Context.Index].Remove(TaskPos);
@@ -954,7 +1009,7 @@ begin
   Result := TFocusDataQ;
 end;
 
-procedure TBFocusEvent.Send(Instance, Control: Pointer; Focused: boolean; ControlLevel: int32);
+procedure TBFocusEvent.Send(Instance: Pointer; Control: Pointer; Focused: boolean; ControlLevel: int32);
 var
   data: BFocusEventData;
 begin

@@ -50,8 +50,6 @@ type
   TListVec4f = TListVec<TVec4f>;
   TListVec4b = TListVec<TVec4b>;
 
-  //TMeshType = (mtMeshP, mtMeshPC, mtMeshPT, mtMeshPCrgba, mtMeshPTN);
-
   TListIndexes = class
   private
     FIndexes: TListVec<Byte>;
@@ -94,12 +92,10 @@ type
     FCountVertex: int32;
     FMinSize: TVec3f;
     FDrawingPrimitive: GLint;
-    FTypePrimitive: TTypePrimitive;
     function GetVertexesData: pByte;
     procedure SetCountVertex(const Value: int32); inline;
     function GetCapacityVertex: int32;
     procedure SetCapacityVertex(const Value: int32);
-    procedure SetTypePrimitive(const Value: TTypePrimitive);
   public
     FBoundingBox: TBox3f;
     Components: array of TVertexComponent;
@@ -123,22 +119,18 @@ type
     procedure CalcTextureUV; overload;
     procedure CalcTextureUV(Area: TRectBSf); overload;
     function ReadPoint(index: int32): TVec3f;
-    procedure WritePoint(index: int32; const Point: TVec3f); inline;
+    procedure WritePoint(index: int32; const Point: TVec3f);
     { adds new vertex and returns him index }
-    function AddVertex(const Point: TVec3f): int32; inline;
+    function AddVertex(const Point: TVec3f): int32; overload;
+    { use only if the mesh contains vcIndex component and consists of only vcVertex and vcIndex }
+    function AddVertex(const Point: TVec4f): int32; overload;
 
-    procedure Read(Index: int32; Component: TVertexComponent; out Result: BSFloat);  overload;
-    procedure Read(Index: int32; Component: TVertexComponent; out Result: TVec2f);  overload;
     procedure Read(Index: int32; Component: TVertexComponent; out Result: TVec3f);  overload;
+    procedure Read(Index: int32; Component: TVertexComponent; out Result: TVec2f);  overload;
     procedure Read(Index: int32; Component: TVertexComponent; out Result: TVec4f);  overload;
-    procedure Read(Index: int32; Component: TVertexComponent; out Result: Pointer);  overload;
-
-    procedure Write(Index: int32; Component: TVertexComponent; const Value: BSFloat);overload;
-    procedure Write(Index: int32; Component: TVertexComponent; const Value: TVec2f);overload;
     procedure Write(Index: int32; Component: TVertexComponent; const Value: TVec3f);overload;
+    procedure Write(Index: int32; Component: TVertexComponent; const Value: TVec2f);overload;
     procedure Write(Index: int32; Component: TVertexComponent; const Value: TVec4f);overload;
-    procedure Write(Index: int32; Component: TVertexComponent; const Value: Pointer);overload;
-
     procedure Delete(Index: int32; Count: int32);
     { beware use this methods, so BlackSharkGeometry.RayIntersectBox
       works only whith centered BB }
@@ -156,12 +148,10 @@ type
     procedure Fill(const APoint: TVec3f);
     function Copy: TMesh;
     procedure CopyVertexes(ASource: TMesh);
-    procedure CopyMesh(ASource: TMesh);
   public
     property Indexes: TListIndexes read FIndexes;
-    property TypePrimitive: TTypePrimitive read FTypePrimitive write SetTypePrimitive;
     { a type of a drawn primitive (GL_TRIANGLES, GL_TRIANGLES_STRIP, GL_LINES...) }
-    property DrawingPrimitive: GLint read FDrawingPrimitive;
+    property DrawingPrimitive: GLint read FDrawingPrimitive write FDrawingPrimitive;
     property VertexesData: pByte read GetVertexesData;
     property CountVertex: int32 read FCountVertex write SetCountVertex;
     property CapacityVertex: int32 read GetCapacityVertex write SetCapacityVertex;
@@ -177,6 +167,14 @@ type
     constructor Create; override;
   end;
 
+  { TMeshPI
+    The shape contains vertexes consists of cooridnates (points) and some index }
+
+  TMeshPI = class(TMesh)
+  public
+    constructor Create; override;
+  end;
+
   { TMeshPT
     The shape contains vertexes consists of cooridnates (points) and texture
     coordinates }
@@ -187,28 +185,10 @@ type
   end;
 
   { TMeshPT
-    The shape contains vertexes consists of cooridnates (points) and color (rgb)
+    The shape contains vertexes consists of cooridnates (points) and color
     }
 
   TMeshPC = class(TMesh)
-  public
-    constructor Create; override;
-  end;
-
-  { TMeshLine
-    The shape contains vertexes consists of cooridnates (points) and distance
-    }
-
-  TMeshLine = class(TMesh)
-  public
-    constructor Create; override;
-  end;
-
-  { TMeshLineMultiColored
-    The shape contains vertexes consists of cooridnates (points), color (rgba) and distance
-    }
-
-  TMeshLineMultiColored = class(TMesh)
   public
     constructor Create; override;
   end;
@@ -231,18 +211,18 @@ const
     SizeOf(TVec2f), // vcTexture2
     SizeOf(TVec3f), // vcBones
     SizeOf(TVec3f), // vcWeights
-    SizeOf(BSFloat) // vcFloat
+    SizeOf(BSFloat) // vcIndex
   );
 
   COMPONENTS_VARS: array[TVertexComponent] of int32 = (
     3, // vcCoordinate
-    4, // vcColor
+    4, // vcColor TODO: now in fact used 3, need to translate to 4
     3, // vcNormal
     2, // vcTexture1
     2, // vcTexture2
     3, // vcBones
     3, // vcWeights
-    1  // vcFloat
+    1
   );
 
 implementation
@@ -309,51 +289,30 @@ begin
   FCountVertex := Value;
 end;
 
-procedure TMesh.SetTypePrimitive(const Value: TTypePrimitive);
-begin
-  if FTypePrimitive = Value then
-    exit;
-  FTypePrimitive := Value;
-  case FTypePrimitive of
-    tpTriangles, tpQuad: FDrawingPrimitive := GL_TRIANGLES;
-    tpTriangleFan: FDrawingPrimitive := GL_TRIANGLE_FAN;
-    tpTriangleStrip: FDrawingPrimitive := GL_TRIANGLE_STRIP;
-    tpLines: FDrawingPrimitive := GL_LINES;
-    tpLineStrip: FDrawingPrimitive := GL_LINE_STRIP;
-  end;
-end;
-
 procedure TMesh.Write(Index: int32; Component: TVertexComponent; const Value: TVec4f);
 begin
   if Index >= FCountVertex then
-    CountVertex := Index + 1;
+    CountVertex := index + 1;
   PVec4f(@FVertexes.Data^[Index * SizeOfVertex + OffsetComponent[Component]])^ := Value;
 end;
 
-procedure TMesh.Write(Index: int32; Component: TVertexComponent; const Value: TVec2f);
+procedure TMesh.Write(index: int32; Component: TVertexComponent; const Value: TVec2f);
 begin
-  if Index >= FCountVertex then
-    CountVertex := Index + 1;
+  if index >= FCountVertex then
+    CountVertex := index + 1;
   PVec2f(@FVertexes.Data^[index * SizeOfVertex + OffsetComponent[Component]])^ := Value;
 end;
 
-procedure TMesh.Write(Index: int32; Component: TVertexComponent; const Value: TVec3f);
+procedure TMesh.Write(index: int32; Component: TVertexComponent; const Value: TVec3f);
 begin
-  if Index >= FCountVertex then
-    CountVertex := Index + 1;
+  if index >= FCountVertex then
+    CountVertex := index + 1;
   PVec3f(@FVertexes.Data^[index * SizeOfVertex + OffsetComponent[Component]])^ := Value;
 end;
 
-procedure TMesh.Write(Index: int32; Component: TVertexComponent; const Value: BSFloat);
+procedure TMesh.WritePoint(index: int32; const Point: TVec3f);
 begin
-  if Index >= FCountVertex then
-    CountVertex := Index + 1;
-  PBSFloat(@FVertexes.Data^[index * SizeOfVertex + OffsetComponent[Component]])^ := Value;
-end;
-
-procedure TMesh.WritePoint(Index: int32; const Point: TVec3f);
-begin
-  if Index >= FCountVertex then
+  if index >= FCountVertex then
     CountVertex := index + 1;
   PVec3f(@FVertexes.Data^[index * SizeOfVertex + OffsetComponent[vcCoordinate]])^ := Point;
 end;
@@ -483,6 +442,18 @@ begin
     WritePoint(i, Mesh.ReadPoint(i));
 
   CalcBoundingBox;
+end;
+
+function TMesh.AddVertex(const Point: TVec4f): int32;
+begin
+  {$ifdef DEBUG_BS}
+  if (ComponentsCount < 2) or (Components[1] <> vcIndex) then
+    raise EComponentIsNotValid.Create('This method may use only if second vertex component is vcIndex');
+  {$endif}
+  Result := FCountVertex;
+  FVertexes.Count := FVertexes.Count + SizeOfVertex;
+  PVec4f(@FVertexes.Data^[Result * SizeOfVertex + OffsetComponent[vcCoordinate]])^ := Point;
+  inc(FCountVertex);
 end;
 
 function TMesh.AddVertex(const Point: TVec3f): int32;
@@ -620,42 +591,12 @@ var
 begin
   Result := TMesh(TMeshClass(ClassType).Create);
   Result.MinSize := MinSize;
-  Result.TypePrimitive := TypePrimitive;
+  Result.DrawingPrimitive := DrawingPrimitive;
   for i := 0 to ComponentsCount - 1 do
     Result.AddComponent(Components[i], SizeOfComponent[Components[i]], CountVarComponent[Components[i]]);
   Result.FCountVertex := FCountVertex;
   Result.Indexes.Add(FIndexes.Copy);
   Result.FVertexes.Add(FVertexes.Copy);
-end;
-
-procedure TMesh.CopyMesh(ASource: TMesh);
-var
-  i, j: int32;
-  components: array of TVertexComponent;
-  comp: TVertexComponent;
-  compVal: Pointer;
-begin
-  for comp := Low(TVertexComponent) to High(TVertexComponent) do
-  begin
-    if ASource.HasComponent(comp) and (HasComponent(comp)) then
-    begin
-      SetLength(components, Length(components) + 1);
-      components[Length(components) - 1] := comp;
-    end;
-  end;
-
-  if Length(components) > 0 then
-    for i := 0 to ASource.CountVertex - 1 do
-    begin
-      for j := 0 to Length(components) - 1 do
-      begin
-        ASource.Read(i, components[j], compVal);
-        if Assigned(compVal) then
-          Write(i, components[j], compVal);
-      end;
-    end;
-
-  Indexes.Add(ASource.Indexes.Copy);
 end;
 
 procedure TMesh.CopyVertexes(ASource: TMesh);
@@ -776,27 +717,95 @@ begin
   Result := false;
 end;
 
-procedure TMesh.Read(Index: int32; Component: TVertexComponent; out Result: Pointer);
+{ TMeshP }
+
+constructor TMeshP.Create;
 begin
-  if Index < FCountVertex then
-    Result := @FVertexes.Data^[Index * SizeOfVertex + OffsetComponent[Component]]
-  else
-    Result := nil;
+  inherited;
+  ComponentsCount := 1;
+  SetLength(Components, 1);
+  Components[0] := vcCoordinate;
+  OffsetComponent[vcCoordinate] := 0;
+  SizeOfComponent[vcCoordinate] := SizeOf(TVec3f);
+  SizeOfVertex := SizeOf(TVertexP);
+  CountVarComponent[vcCoordinate] := 3;
 end;
 
-procedure TMesh.Read(Index: int32; Component: TVertexComponent; out Result: BSFloat);
+{ TMeshPI }
+
+constructor TMeshPI.Create;
 begin
-  if Index < FCountVertex then
-    Result := PBSFloat(@FVertexes.Data^[Index * SizeOfVertex + OffsetComponent[Component]])^
-  else
-    Result := 0.0;
+  inherited;
+  ComponentsCount := 2;
+  SetLength(Components, 2);
+  Components[0] := vcCoordinate;
+  Components[1] := vcIndex;
+  OffsetComponent[vcCoordinate] := 0;
+  OffsetComponent[vcIndex] := SizeOf(TVec3f);
+  SizeOfComponent[vcCoordinate] := SizeOf(TVec3f);
+  SizeOfComponent[vcIndex] := SizeOf(BSFloat);
+  SizeOfVertex := SizeOfComponent[vcCoordinate] + SizeOfComponent[vcIndex];
+  CountVarComponent[vcCoordinate] := 3;
+  CountVarComponent[vcIndex] := 1;
 end;
 
-procedure TMesh.Write(Index: int32; Component: TVertexComponent; const Value: Pointer);
+{ TMeshPT }
+
+constructor TMeshPT.Create;
 begin
-  if Index >= FCountVertex then
-    CountVertex := index + 1;
-  move(PByte(Value)^, (@FVertexes.Data^[Index * SizeOfVertex + OffsetComponent[Component]])^, SizeOfComponent[Component]);
+  inherited;
+  ComponentsCount := 2;
+  SetLength(Components, 2);
+  Components[0] := vcCoordinate;
+  Components[1] := vcTexture1;
+  OffsetComponent[vcCoordinate] := 0;
+  OffsetComponent[vcTexture1] := SizeOf(TVec3f);
+  SizeOfComponent[vcCoordinate] := SizeOf(TVec3f);
+  SizeOfComponent[vcTexture1] := SizeOf(TVec2f);
+  CountVarComponent[vcCoordinate] := 3;
+  CountVarComponent[vcTexture1] := 2;
+  SizeOfVertex := SizeOf(TVertexPT);
+end;
+
+{ TMeshPTN }
+
+constructor TMeshPTN.Create;
+begin
+  inherited;
+  ComponentsCount := 3;
+  SetLength(Components, 3);
+  Components[0] := vcCoordinate;
+  Components[1] := vcNormal;
+  Components[2] := vcTexture1;
+  OffsetComponent[vcCoordinate] := 0;
+  OffsetComponent[vcNormal] := SizeOf(TVec3f);
+  OffsetComponent[vcTexture1] := SizeOf(TVec3f)*2;
+  SizeOfComponent[vcCoordinate] := SizeOf(TVec3f);
+  SizeOfComponent[vcNormal] := SizeOf(TVec3f);
+  SizeOfComponent[vcTexture1] := SizeOf(TVec2f);
+  CountVarComponent[vcCoordinate] := 3;
+  CountVarComponent[vcNormal] := 3;
+  CountVarComponent[vcTexture1] := 2;
+  SizeOfVertex := SizeOf(TVertexPTN);
+end;
+
+
+{ TMeshPC }
+
+constructor TMeshPC.Create;
+begin
+  inherited;
+  ComponentsCount := 2;
+  SetLength(Components, 2);
+  Components[0] := vcCoordinate;
+  Components[1] := vcColor;
+  OffsetComponent[vcCoordinate] := 0;
+  OffsetComponent[vcColor] := SizeOf(TVec3f);
+  SizeOfComponent[vcCoordinate] := SizeOf(TVec3f);
+  SizeOfComponent[vcColor] := SizeOf(TVec2f);
+  CountVarComponent[vcCoordinate] := 3;
+  CountVarComponent[vcColor] := 3;
+  SizeOfVertex := SizeOf(TVertexPC);
 end;
 
 { TListIndexes }
@@ -919,127 +928,6 @@ begin
     FIndexSizeOf := 2;
     FKind := GL_UNSIGNED_SHORT;
   end;
-end;
-
-{ TMeshP }
-
-constructor TMeshP.Create;
-begin
-  inherited;
-  ComponentsCount := 1;
-  SetLength(Components, 1);
-  Components[0] := vcCoordinate;
-  OffsetComponent[vcCoordinate] := 0;
-  SizeOfComponent[vcCoordinate] := SizeOf(TVec3f);
-  SizeOfVertex := SizeOf(TVertexP);
-  CountVarComponent[vcCoordinate] := 3;
-end;
-
-{ TMeshPT }
-
-constructor TMeshPT.Create;
-begin
-  inherited;
-  ComponentsCount := 2;
-  SetLength(Components, 2);
-  Components[0] := vcCoordinate;
-  Components[1] := vcTexture1;
-  OffsetComponent[vcCoordinate] := 0;
-  OffsetComponent[vcTexture1] := SizeOf(TVec3f);
-  SizeOfComponent[vcCoordinate] := SizeOf(TVec3f);
-  SizeOfComponent[vcTexture1] := SizeOf(TVec2f);
-  CountVarComponent[vcCoordinate] := 3;
-  CountVarComponent[vcTexture1] := 2;
-  SizeOfVertex := SizeOf(TVertexPT);
-end;
-
-{ TMeshPTN }
-
-constructor TMeshPTN.Create;
-begin
-  inherited;
-  ComponentsCount := 3;
-  SetLength(Components, 3);
-  Components[0] := vcCoordinate;
-  Components[1] := vcNormal;
-  Components[2] := vcTexture1;
-  OffsetComponent[vcCoordinate] := 0;
-  OffsetComponent[vcNormal] := SizeOf(TVec3f);
-  OffsetComponent[vcTexture1] := SizeOf(TVec3f)*2;
-  SizeOfComponent[vcCoordinate] := SizeOf(TVec3f);
-  SizeOfComponent[vcNormal] := SizeOf(TVec3f);
-  SizeOfComponent[vcTexture1] := SizeOf(TVec2f);
-  CountVarComponent[vcCoordinate] := 3;
-  CountVarComponent[vcNormal] := 3;
-  CountVarComponent[vcTexture1] := 2;
-  SizeOfVertex := SizeOf(TVertexPTN);
-end;
-
-
-{ TMeshPC }
-
-constructor TMeshPC.Create;
-begin
-  inherited;
-  ComponentsCount := 2;
-  SetLength(Components, 2);
-  Components[0] := vcCoordinate;
-  Components[1] := vcColor;
-  OffsetComponent[vcCoordinate] := 0;
-  OffsetComponent[vcColor] := SizeOf(TVec3f);
-  SizeOfComponent[vcCoordinate] := SizeOf(TVec3f);
-  SizeOfComponent[vcColor] := SizeOf(TVec3f);
-  CountVarComponent[vcCoordinate] := 3;
-  CountVarComponent[vcColor] := 3;
-  SizeOfVertex := SizeOf(TVertexPC);
-end;
-
-{ TMeshLine }
-
-constructor TMeshLine.Create;
-var
-  i: int32;
-begin
-  inherited;
-  ComponentsCount := 2;
-  SetLength(Components, 2);
-  Components[0] := vcCoordinate;
-  Components[1] := vcFloat;
-  OffsetComponent[vcCoordinate] := 0;
-  OffsetComponent[vcFloat] := SizeOf(TVec3f);
-  SizeOfComponent[vcCoordinate] := SizeOf(TVec3f);
-  SizeOfComponent[vcFloat] := SizeOf(BSFloat);
-  CountVarComponent[vcCoordinate] := 3;
-  CountVarComponent[vcFloat] := 1;
-  SizeOfVertex := 0;
-  for i := 0 to ComponentsCount - 1 do
-    SizeOfVertex := SizeOfVertex + SizeOfComponent[Components[i]];
-end;
-
-{ TMeshLineMultiColored }
-
-constructor TMeshLineMultiColored.Create;
-var
-  i: int32;
-begin
-  inherited;
-  ComponentsCount := 3;
-  SetLength(Components, 3);
-  Components[0] := vcCoordinate;
-  Components[1] := vcColor;
-  Components[2] := vcFloat;
-  SizeOfComponent[vcCoordinate] := SizeOf(TVec3f);
-  SizeOfComponent[vcColor] := SizeOf(TVec4f);
-  SizeOfComponent[vcFloat] := SizeOf(BSFloat);
-  OffsetComponent[vcCoordinate] := 0;
-  OffsetComponent[vcColor] := SizeOfComponent[vcCoordinate];
-  OffsetComponent[vcFloat] := OffsetComponent[vcColor] + SizeOfComponent[vcColor];
-  CountVarComponent[vcCoordinate] := 3;
-  CountVarComponent[vcColor] := 4;
-  CountVarComponent[vcFloat] := 1;
-  SizeOfVertex := 0;
-  for i := 0 to ComponentsCount - 1 do
-    SizeOfVertex := SizeOfVertex + SizeOfComponent[Components[i]];
 end;
 
 end.

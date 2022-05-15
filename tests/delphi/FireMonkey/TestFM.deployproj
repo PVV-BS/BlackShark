@@ -5,7 +5,7 @@
     </ProjectExtensions>
     <PropertyGroup>
         <DeviceId Condition="'$(Platform)'=='Android'"/>
-        <DeviceId Condition="'$(Platform)'=='Android64'"/>
+        <DeviceId Condition="'$(Platform)'=='Android64'">emulator-5554</DeviceId>
     </PropertyGroup>
     <ItemGroup Condition="'$(Platform)'=='Win32'">
         <DeployFile Include="..\..\Bin\TestFM.exe" Condition="'$(Config)'=='Debug'">
@@ -20,18 +20,18 @@
         </DeployFile>
     </ItemGroup>
     <ItemGroup Condition="'$(Platform)'=='Linux64'">
-        <DeployFile Include="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf_0.50.ind" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf" Condition="'$(Config)'=='Debug'">
             <RemoteDir>TestFM\Fonts\</RemoteDir>
-            <RemoteName>NotoEmoji-Regular.ttf_0.50.ind</RemoteName>
+            <RemoteName>NotoEmoji-Regular.ttf</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Fonts\</RemoteDir>
-            <RemoteName>NotoEmoji-Regular.ttf</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\SkeletonTextured.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SkeletonTextured.vsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -47,45 +47,45 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\earth\sky.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\Textures\earth\</RemoteDir>
-            <RemoteName>sky.png</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\Smooth.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>Smooth.fsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Models\Obj\aquafish01.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Models\Obj\</RemoteDir>
-            <RemoteName>aquafish01.png</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\ColoredVertexes.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ColoredVertexes.vsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\sel_point_mid.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\</RemoteDir>
-            <RemoteName>sel_point_mid.png</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\SmoothFXAA2.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SmoothFXAA2.fsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Fonts\NotoSans-Regular.ttf" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Fonts\</RemoteDir>
-            <RemoteName>NotoSans-Regular.ttf</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesPoints2d.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ParticlesPoints2d.vsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\controls\TBScrollBar.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\controls\</RemoteDir>
-            <RemoteName>TBScrollBar.png</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\TexToColor.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>TexToColor.fsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -102,18 +102,9 @@
             <Overwrite>True</Overwrite>
             <Required>True</Required>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on10x10___.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_on10x10___.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on12x12_.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_on12x12_.png</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesPoint2.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ParticlesPoint2.fsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -129,6 +120,24 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\OSingleColor.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>OSingleColor.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SmoothSSAA.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SmoothSSAA.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
             <RemoteName>bit_on.png</RemoteName>
@@ -138,9 +147,9 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\miku.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\</RemoteDir>
-            <RemoteName>miku.png</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad3.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ParticlesQuad3.fsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -156,18 +165,18 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\controls\Black Shark2.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\controls\</RemoteDir>
-            <RemoteName>Black Shark2.png</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\SingleColor.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SingleColor.fsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\controls\Black Shark 24.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="..\..\..\bin\Pictures\controls\Black Shark2.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>TestFM\Pictures\controls\</RemoteDir>
-            <RemoteName>Black Shark 24.png</RemoteName>
+            <RemoteName>Black Shark2.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -201,27 +210,9 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off10x10.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_off10x10.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Fonts\Noto-LICENSE_OFL.txt" Condition="'$(Config)'=='Debug'">
             <RemoteDir>TestFM\Fonts\</RemoteDir>
             <RemoteName>Noto-LICENSE_OFL.txt</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\earth\moonmap1k.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\Textures\earth\</RemoteDir>
-            <RemoteName>moonmap1k.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -246,9 +237,9 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off2.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_off2.png</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\TextureAni.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>TextureAni.fsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -264,9 +255,18 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Models\Obj\aquafish01n.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Models\Obj\</RemoteDir>
-            <RemoteName>aquafish01n.png</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\QUAD.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>QUAD.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\TextureAni.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>TextureAni.vsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -276,15 +276,6 @@
         <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off10x10_.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
             <RemoteName>bit_off10x10_.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Fonts\DejaVuSans.txt" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Fonts\</RemoteDir>
-            <RemoteName>DejaVuSans.txt</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -309,27 +300,27 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\flame.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\</RemoteDir>
-            <RemoteName>flame.png</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\SmoothFXAA.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SmoothFXAA.vsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on10x10__.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_on10x10__.png</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad4.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ParticlesQuad4.vsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Lang\lang.en" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Lang\</RemoteDir>
-            <RemoteName>lang.en</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\LightPointNormalMap.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>LightPointNormalMap.vsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -339,6 +330,24 @@
         <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off8x8_black.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
             <RemoteName>bit_off8x8_black.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ParticlesQuad.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\Instancing.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>Instancing.fsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -399,9 +408,9 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_off.png</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\SimpleSingleColor.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SimpleSingleColor.vsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -417,9 +426,27 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad3.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ParticlesQuad3.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="..\..\..\bin\Pictures\earth\earth.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>TestFM\Pictures\Textures\earth\</RemoteDir>
             <RemoteName>earth.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ParticlesQuad.vsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -435,18 +462,27 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on8x8.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_on8x8.png</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesPoints2d.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ParticlesPoints2d.fsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\earth\moonmap2.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\Textures\earth\</RemoteDir>
-            <RemoteName>moonmap2.png</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\Particles.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>Particles.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\Instancing.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>Instancing.vsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -462,9 +498,18 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on8x8_.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_on8x8_.png</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\DoubleColor.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>DoubleColor.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SimpleWire.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SimpleWire.fsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -474,6 +519,600 @@
         <DeployFile Include="..\..\..\bin\Pictures\folder_orange_24_ttf.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>TestFM\Pictures\</RemoteDir>
             <RemoteName>folder_orange_24_ttf.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\earthcloudmapcolortrans.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\Textures\earth\</RemoteDir>
+            <RemoteName>earthcloudmapcolortrans.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on10x10gs.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on10x10gs.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SmoothByKernelMSAA.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SmoothByKernelMSAA.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\rot_point.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\</RemoteDir>
+            <RemoteName>rot_point.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SmoothFXAA2.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SmoothFXAA2.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\Fog.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>Fog.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\TextureReplaceColor.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>TextureReplaceColor.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\Fog.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>Fog.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\NotoSerif-Regular.ttf_0.50.ind" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Fonts\</RemoteDir>
+            <RemoteName>NotoSerif-Regular.ttf_0.50.ind</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad5.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ParticlesQuad5.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf_0.50.ind" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Fonts\</RemoteDir>
+            <RemoteName>NotoEmoji-Regular.ttf_0.50.ind</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SingleColor.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SingleColor.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SkeletonTextured.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SkeletonTextured.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\sky.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\Textures\earth\</RemoteDir>
+            <RemoteName>sky.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Models\Obj\aquafish01.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Models\Obj\</RemoteDir>
+            <RemoteName>aquafish01.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SmoothByKernelMSAA.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SmoothByKernelMSAA.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\sel_point_mid.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\</RemoteDir>
+            <RemoteName>sel_point_mid.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SmoothSSAA.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SmoothSSAA.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\NotoSans-Regular.ttf" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Fonts\</RemoteDir>
+            <RemoteName>NotoSans-Regular.ttf</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\controls\TBScrollBar.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\controls\</RemoteDir>
+            <RemoteName>TBScrollBar.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SmoothSSAA2.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SmoothSSAA2.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad4_hls_max.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ParticlesQuad4_hls_max.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesPoint.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ParticlesPoint.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\LightPoint.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>LightPoint.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on10x10___.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on10x10___.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on12x12_.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on12x12_.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad4.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ParticlesQuad4.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\Smooth.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>Smooth.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\DepthMap.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>DepthMap.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\controls\Black Shark 24.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\controls\</RemoteDir>
+            <RemoteName>Black Shark 24.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\DoubleColor.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>DoubleColor.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\OSingleColor.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>OSingleColor.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SmoothFXAA.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SmoothFXAA.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off10x10.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_off10x10.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\LightPointNormalMap.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>LightPointNormalMap.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SmoothMSAA.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SmoothMSAA.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad2.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ParticlesQuad2.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\moonmap1k.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\Textures\earth\</RemoteDir>
+            <RemoteName>moonmap1k.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SimpleTexture.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SimpleTexture.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad4_no_hls_max.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ParticlesQuad4_no_hls_max.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\Particles.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>Particles.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off2.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_off2.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SimpleTexture.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SimpleTexture.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Models\Obj\aquafish01n.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Models\Obj\</RemoteDir>
+            <RemoteName>aquafish01n.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SmoothMSAA.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SmoothMSAA.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\TextFromTexture.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>TextFromTexture.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\DejaVuSans.txt" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Fonts\</RemoteDir>
+            <RemoteName>DejaVuSans.txt</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SmoothSSAA2.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SmoothSSAA2.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\Layout.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>Layout.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\flame.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\</RemoteDir>
+            <RemoteName>flame.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on10x10__.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on10x10__.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad2.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ParticlesQuad2.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Lang\lang.en" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Lang\</RemoteDir>
+            <RemoteName>lang.en</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad5.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ParticlesQuad5.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SimpleSingleColor.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SimpleSingleColor.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesPoint.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ParticlesPoint.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_off.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SimpleWire.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>SimpleWire.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\TexToColor.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>TexToColor.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\TextureReplaceColor.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>TextureReplaceColor.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on8x8.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on8x8.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ColoredVertexes.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ColoredVertexes.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\moonmap2.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\Textures\earth\</RemoteDir>
+            <RemoteName>moonmap2.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on8x8_.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on8x8_.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\Layout.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>Layout.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesPoint2.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>ParticlesPoint2.vsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -498,36 +1137,9 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\earth\earthcloudmapcolortrans.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\Textures\earth\</RemoteDir>
-            <RemoteName>earthcloudmapcolortrans.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\rot_point.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\</RemoteDir>
-            <RemoteName>rot_point.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off12x12.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_off12x12.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on10x10gs.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_on10x10gs.png</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\LightPoint.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>LightPoint.fsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -543,6 +1155,24 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off12x12.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_off12x12.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\TextFromTexture.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>TextFromTexture.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on8x8__.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>TestFM\Pictures\bits\</RemoteDir>
             <RemoteName>bit_on8x8__.png</RemoteName>
@@ -552,9 +1182,9 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Fonts\NotoSerif-Regular.ttf_0.50.ind" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>TestFM\Fonts\</RemoteDir>
-            <RemoteName>NotoSerif-Regular.ttf_0.50.ind</RemoteName>
+        <DeployFile Include="..\..\..\bin\Shaders\QUAD.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>TestFM\Shaders\</RemoteDir>
+            <RemoteName>QUAD.fsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>

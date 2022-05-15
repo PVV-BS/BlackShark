@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -261,12 +261,18 @@ begin
 end;
 
 constructor BSApplicationWindows.Create;
+var
+  h: HDC;
 begin
   inherited;
   ApplicationWindows := Self;
   FHandlers := TListVec<TEventWindowsHandler>.Create;
-  FDisplayWidth := GetSystemMetrics(SM_CXSCREEN);
-  FDisplayHeight := GetSystemMetrics(SM_CYSCREEN);
+  DisplayWidth := GetSystemMetrics(SM_CXSCREEN);
+  DisplayHeight := GetSystemMetrics(SM_CYSCREEN);
+  h := GetDC(0);
+  PixelsPerInchX := GetDeviceCaps(h, LOGPIXELSX);
+  PixelsPerInchY := GetDeviceCaps(h, LOGPIXELSY);
+  ReleaseDC(0, h);
 end;
 
 function BSApplicationWindows.CreateHandle(AParent: BSWindow; APositionX, APositionY, AWidth, AHeight: int32): EGLNativeWindowType;
@@ -586,63 +592,12 @@ var
   handler: TEventWindowsHandler;
 begin
   Result := 0;
-  {if (Msg >= WM_MOUSEFIRST) and (Msg <= WM_MOUSELAST) then
-  begin
-
-  end;}
 
   handler := FHandlers.Items[Msg];
   if Assigned(handler) then
     handler(AWindow, wParam, lParam)
   else
     Result := DefWindowProc(AWindow.Handle, Msg, wParam, lParam);
-
-  //if Msg > 0 then
-  //  Writeln(0, Msg);
-    {WM_DISPLAYCHANGE:
-      begin
-        scr_Init();
-        if not wndFullScreen Then
-          wnd_Update();
-      end;
-
-    WM_SETFOCUS:
-      begin
-        if ( wndFullScreen ) and ( not wndFirst ) Then
-          scr_SetOptions( scrWidth, scrHeight, scrRefresh, wndFullScreen, scrVSync );
-      end;
-    WM_NCHITTEST:
-      begin
-        Result := DefWindowProcW( hWnd, Msg, wParam, lParam );
-        if ( not appFocus ) and ( Result = HTCAPTION ) Then
-          Result := HTCLIENT;
-      end;
-    WM_ENTERSIZEMOVE:
-      begin
-        if not appAutoPause Then
-          appTimer := SetTimer( wndHandle, 1, 1, nil );
-      end;
-    WM_EXITSIZEMOVE:
-      begin
-        if appTimer > 0 Then
-          begin
-            KillTimer( wndHandle, appTimer );
-            appTimer := 0;
-          end;
-      end;
-    WM_MOVING:
-      begin
-        wndX := PRect( lParam ).Left;
-        wndY := PRect( lParam ).Top;
-        if appAutoPause Then
-          timer_Reset();
-      end;
-    WM_TIMER:
-      begin
-        timer_MainLoop();
-        app_Draw();
-      end;
- }
 
 end;
 
@@ -697,18 +652,16 @@ var
 begin
   if FWindowsList.Count = 0 then
     exit;
-  //Put window in message loop
+
   if PeekMessageW(msg, 0, 0, 0, PM_REMOVE) then
   begin
     TranslateMessage(msg);
     DispatchMessage(msg);
   end;
-  //until not PeekMessageW(msg, 0, 0, 0, PM_REMOVE)
-  //else
+
   for i := 0 to FWindowsList.Count - 1 do
   begin
     FWindowsList.Items[i].Draw;
-    //DoInvalidate(FWindowsList.Items[i]);
   end;
 
   inherited;

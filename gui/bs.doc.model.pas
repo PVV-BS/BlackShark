@@ -1188,3 +1188,4 @@ finalization
   TBlackSharkCustomDoc.Uninit;
 
 end.
+

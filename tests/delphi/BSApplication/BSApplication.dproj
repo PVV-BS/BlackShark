@@ -5,8 +5,8 @@
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <TargetedPlatforms>32899</TargetedPlatforms>
+        <Platform Condition="'$(Platform)'==''">Linux64</Platform>
+        <TargetedPlatforms>32915</TargetedPlatforms>
         <AppType>Application</AppType>
         <MainSource>BSApplication.dpr</MainSource>
     </PropertyGroup>
@@ -104,6 +104,8 @@
         <Android_NotificationIcon72>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_72x72.png</Android_NotificationIcon72>
         <Android_NotificationIcon96>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_96x96.png</Android_NotificationIcon96>
         <EnabledSysJars>android-support-v4.dex.jar;cloud-messaging.dex.jar;com-google-android-gms.play-services-ads-base.17.2.0.dex.jar;com-google-android-gms.play-services-ads-identifier.16.0.0.dex.jar;com-google-android-gms.play-services-ads-lite.17.2.0.dex.jar;com-google-android-gms.play-services-ads.17.2.0.dex.jar;com-google-android-gms.play-services-analytics-impl.16.0.8.dex.jar;com-google-android-gms.play-services-analytics.16.0.8.dex.jar;com-google-android-gms.play-services-base.16.0.1.dex.jar;com-google-android-gms.play-services-basement.16.2.0.dex.jar;com-google-android-gms.play-services-gass.17.2.0.dex.jar;com-google-android-gms.play-services-identity.16.0.0.dex.jar;com-google-android-gms.play-services-maps.16.1.0.dex.jar;com-google-android-gms.play-services-measurement-base.16.4.0.dex.jar;com-google-android-gms.play-services-measurement-sdk-api.16.4.0.dex.jar;com-google-android-gms.play-services-stats.16.0.1.dex.jar;com-google-android-gms.play-services-tagmanager-v4-impl.16.0.8.dex.jar;com-google-android-gms.play-services-tasks.16.0.1.dex.jar;com-google-android-gms.play-services-wallet.16.0.1.dex.jar;com-google-firebase.firebase-analytics.16.4.0.dex.jar;com-google-firebase.firebase-common.16.1.0.dex.jar;com-google-firebase.firebase-iid-interop.16.0.1.dex.jar;com-google-firebase.firebase-iid.17.1.1.dex.jar;com-google-firebase.firebase-measurement-connector.17.0.1.dex.jar;com-google-firebase.firebase-messaging.17.5.0.dex.jar;fmx.dex.jar;google-play-billing.dex.jar;google-play-licensing.dex.jar</EnabledSysJars>
+        <VerInfo_Keys>package=com.embarcadero.$(MSBuildProjectName);label=$(MSBuildProjectName);versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=auto;largeHeap=False;theme=TitleBar;hardwareAccelerated=true;apiKey=</VerInfo_Keys>
+        <BT_BuildType>Debug</BT_BuildType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android64)'!=''">
         <DCC_UsePackage>DBXSqliteDriver;RESTComponents;DBXInterBaseDriver;emsclientfiredac;tethering;DataSnapFireDAC;bindcompfmx;fmx;FireDACIBDriver;FireDACDBXDriver;dbexpress;IndyCore;dsnap;emsclient;DataSnapCommon;FireDACCommon;RESTBackendComponents;soapserver;bindengine;CloudService;FireDACCommonDriver;DataSnapClient;inet;IndyIPCommon;bindcompdbx;IndyIPServer;IndySystem;fmxFireDAC;FireDAC;FireDACSqliteDriver;soaprtl;DbxCommonDriver;xmlrtl;soapmidas;DataSnapNativeClient;FireDACDSDriver;rtl;DbxClientDriver;CustomIPTransport;bindcomp;IndyIPClient;dbxcds;dsnapxml;DataSnapProviderClient;dbrtl;IndyProtocols;$(DCC_UsePackage)</DCC_UsePackage>
@@ -169,7 +171,7 @@
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Manifest_File>(None)</Manifest_File>
-        <Debugger_RunParams>TBSTestCanvasPathMultiColored</Debugger_RunParams>
+        <Debugger_RunParams>TBSTestWindows</Debugger_RunParams>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
@@ -220,34 +222,6 @@
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_on8x8_3.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
-                        <RemoteName>bit_on8x8_3.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Fonts</RemoteDir>
-                        <RemoteName>NotoEmoji-Regular.ttf</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SkeletonTextured.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SkeletonTextured.vsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_on10x10_3.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
-                        <RemoteName>bit_on10x10_3.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_off12x12.png" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Pictures\bits\orange</RemoteDir>
@@ -255,37 +229,9 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\Smooth.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>Smooth.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\fire_planet.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>fire_planet.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\QUAD.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>QUAD.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_on8x8_8.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
-                        <RemoteName>bit_on8x8_8.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\BSApplication.exe" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Win64">
-                        <RemoteName>BSApplication.exe</RemoteName>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_SplashImage_426x320.png" Configuration="Debug" Class="Android_SplashImage426">
+                    <Platform Name="Android">
+                        <RemoteName>splash_image.png</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -303,13 +249,6 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_off8x8_2.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
-                        <RemoteName>bit_off8x8_2.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Shaders\ColoredVertexes.vsh" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Shaders</RemoteDir>
@@ -324,11 +263,17 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoints2d.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesPoints2d.vsh</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_36x36.png" Configuration="Debug" Class="Android_LauncherIcon36">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_launcher.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Fonts\NotoSerif-Regular.ttf" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>NotoSerif-Regular.ttf</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Shaders\TexToColor.fsh" Configuration="Debug" Class="File">
@@ -338,25 +283,11 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoint2.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesPoint2.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\earth\moonmap1k2.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\earth</RemoteDir>
-                        <RemoteName>moonmap1k2.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_off10x10_4.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
-                        <RemoteName>bit_off10x10_4.png</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="..\..\..\bin\Pictures\sel_point_mid.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>sel_point_mid.png</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Shaders\OSingleColor.vsh" Configuration="Debug" Class="File">
@@ -380,6 +311,11 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\styles.xml" Configuration="Debug" Class="AndroidSplashStyles">
+                    <Platform Name="Android64">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on.png" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Pictures\bits</RemoteDir>
@@ -401,18 +337,10 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad3.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesQuad3.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Fonts\cpCyrillicToUTF16.txt" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Fonts</RemoteDir>
-                        <RemoteName>cpCyrillicToUTF16.txt</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_96x96.png" Configuration="Debug" Class="Android_NotificationIcon96">
+                    <Platform Name="Android">
+                        <RemoteName>ic_notification.png</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="$(BDS)\Redist\iossimulator\libcgunwind.1.0.dylib" Class="DependencyModule">
@@ -434,11 +362,9 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_on8x8_8.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
-                        <RemoteName>bit_on8x8_8.png</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="..\..\..\bin\AndroidManifest.xml" Configuration="Debug" Class="ProjectAndroidManifest">
+                    <Platform Name="Android64">
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Fonts\NotoSerif-Regular.ttf" Configuration="Debug" Class="File">
@@ -453,24 +379,22 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off6x6_black.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_off6x6_black.png</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_48x48.png" Configuration="Debug" Class="Android_NotificationIcon48">
+                    <Platform Name="Android">
+                        <RemoteName>ic_notification.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_192x192.png" Configuration="Debug" Class="Android_LauncherIcon192">
+                    <Platform Name="Android">
+                        <RemoteName>ic_launcher.png</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Fonts\Noto-LICENSE_OFL.txt" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Fonts</RemoteDir>
                         <RemoteName>Noto-LICENSE_OFL.txt</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on10x10.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_on10x10.png</RemoteName>
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -481,20 +405,6 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\TextureAni.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>TextureAni.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\TransparentBack.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures</RemoteDir>
-                        <RemoteName>TransparentBack.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_off8x8.png" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Pictures\bits\blue</RemoteDir>
@@ -502,38 +412,23 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\QUAD.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>QUAD.vsh</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="..\..\..\bin\classes.dex" Configuration="Debug" Class="AndroidClassesDexFile">
+                    <Platform Name="Android64">
+                        <RemoteName>classes.dex</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\black\bit_off6x6_black.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\black</RemoteDir>
-                        <RemoteName>bit_off6x6_black.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_on8x8_7.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
-                        <RemoteName>bit_on8x8_7.png</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="..\..\..\bin\Models\Obj\aquafish01.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Models\Obj</RemoteDir>
+                        <RemoteName>aquafish01.png</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Shaders\TextureAni.vsh" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Shaders</RemoteDir>
                         <RemoteName>TextureAni.vsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off10x10_.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_off10x10_.png</RemoteName>
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -551,13 +446,6 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\2d AABB.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures</RemoteDir>
-                        <RemoteName>2d AABB.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad4.vsh" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Shaders</RemoteDir>
@@ -565,18 +453,17 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_on8x8_2.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
-                        <RemoteName>bit_on8x8_2.png</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="..\..\..\bin\Fonts\DejaVuSans.txt" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>DejaVuSans.txt</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_on8x8.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
-                        <RemoteName>bit_on8x8.png</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_SplashImage_640x480.png" Configuration="Debug" Class="Android_SplashImage640">
+                    <Platform Name="Android">
+                        <RemoteName>splash_image.png</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Shaders\LightPointNormalMap.vsh" Configuration="Debug" Class="File">
@@ -607,13 +494,6 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\Instancing.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>Instancing.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Models\Collada\test_anim.dae" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Models\Collada</RemoteDir>
@@ -635,20 +515,6 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\point_red_7x7.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures</RemoteDir>
-                        <RemoteName>point_red_7x7.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\Textures\block_text.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\Textures</RemoteDir>
-                        <RemoteName>block_text.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off6x6.png" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Pictures\bits</RemoteDir>
@@ -656,18 +522,11 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on10x10_.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_on10x10_.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\snowflake.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures</RemoteDir>
-                        <RemoteName>snowflake.png</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="..\..\..\bin\Models\Obj\aquafish01.obj" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Models\Obj</RemoteDir>
+                        <RemoteName>aquafish01.obj</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Shaders\SimpleSingleColor.vsh" Configuration="Debug" Class="File">
@@ -705,32 +564,11 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_on9x9.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
-                        <RemoteName>bit_on9x9.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\earth\earth.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\earth</RemoteDir>
-                        <RemoteName>earth.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesQuad.vsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_on8x8_3.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
-                        <RemoteName>bit_on8x8_3.png</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="..\..\..\bin\Pictures\rot_point.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>rot_point.png</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Pictures\sel_point.png" Configuration="Debug" Class="File">
@@ -740,18 +578,10 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_off9x9.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
-                        <RemoteName>bit_off9x9.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoints2d.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesPoints2d.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_192x192.png" Configuration="Debug" Class="Android_LauncherIcon192">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_launcher.png</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Shaders\TextureReplaceColor.vsh" Configuration="Debug" Class="File">
@@ -768,10 +598,10 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\earth\earthmap1k.png" Configuration="Debug" Class="File">
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\green\bit_off10x10LG.png" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\earth</RemoteDir>
-                        <RemoteName>earthmap1k.png</RemoteName>
+                        <RemoteDir>.\Pictures\bits\green</RemoteDir>
+                        <RemoteName>bit_off10x10LG.png</RemoteName>
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -782,45 +612,10 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\DoubleColor.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>DoubleColor.vsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\Instancing.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>Instancing.vsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Pictures\folder_orange_24_ttf.png" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Pictures</RemoteDir>
                         <RemoteName>folder_orange_24_ttf.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothByKernelMSAA.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SmoothByKernelMSAA.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleWire.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SimpleWire.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\rot_point.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures</RemoteDir>
-                        <RemoteName>rot_point.png</RemoteName>
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -831,24 +626,17 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\green\bit_off10x10LG.png" Configuration="Debug" Class="File">
+                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothByKernelMSAA.fsh" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\green</RemoteDir>
-                        <RemoteName>bit_off10x10LG.png</RemoteName>
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SmoothByKernelMSAA.fsh</RemoteName>
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on10x10gs.png" Configuration="Debug" Class="File">
+                <DeployFile LocalName="..\..\..\bin\Pictures\rot_point.png" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_on10x10gs.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_on10x10_2.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
-                        <RemoteName>bit_on10x10_2.png</RemoteName>
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>rot_point.png</RemoteName>
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -859,45 +647,16 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\Fog.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>Fog.vsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_off10x10_4.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
-                        <RemoteName>bit_off10x10_4.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad5.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesQuad5.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="..\..\..\bin\styles-v21.xml" Configuration="Debug" Class="AndroidSplashStylesV21">
+                    <Platform Name="Android64">
+                        <RemoteName>styles.xml</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_on6x6.png" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Pictures\bits\orange</RemoteDir>
                         <RemoteName>bit_on6x6.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf_0.50.ind" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Fonts</RemoteDir>
-                        <RemoteName>NotoEmoji-Regular.ttf_0.50.ind</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Fonts\NotoSerif-Regular.ttf_0.50.ind" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Fonts</RemoteDir>
-                        <RemoteName>NotoSerif-Regular.ttf_0.50.ind</RemoteName>
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -908,17 +667,16 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\libBSApplication.so" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Android">
+                        <RemoteName>libBSApplication.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Shaders\SkeletonTextured.fsh" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Shaders</RemoteDir>
                         <RemoteName>SkeletonTextured.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothByKernelMSAA.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SmoothByKernelMSAA.vsh</RemoteName>
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -929,32 +687,17 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\earth\sky.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\earth</RemoteDir>
-                        <RemoteName>sky.png</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_72x72.png" Configuration="Debug" Class="Android_LauncherIcon72">
+                    <Platform Name="Android">
+                        <RemoteName>ic_launcher.png</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\sel_point_mid.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures</RemoteDir>
-                        <RemoteName>sel_point_mid.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\black\bit_on10x10gs.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\black</RemoteDir>
-                        <RemoteName>bit_on10x10gs.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Fonts\NotoSans-Regular.ttf" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
+                <DeployFile LocalName="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
                         <RemoteDir>.\Fonts</RemoteDir>
-                        <RemoteName>NotoSans-Regular.ttf</RemoteName>
-                        <Overwrite>false</Overwrite>
+                        <RemoteName>NotoEmoji-Regular.ttf</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Shaders\SmoothSSAA2.vsh" Configuration="Debug" Class="File">
@@ -964,38 +707,10 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\controls\TBScrollBar.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\controls</RemoteDir>
-                        <RemoteName>TBScrollBar.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad4_hls_max.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesQuad4_hls_max.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoint.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesPoint.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Shaders\LightPoint.vsh" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Shaders</RemoteDir>
                         <RemoteName>LightPoint.vsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_off10x10_2.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
-                        <RemoteName>bit_off10x10_2.png</RemoteName>
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -1020,11 +735,28 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\styles.xml" Configuration="Debug" Class="AndroidSplashStyles">
+                    <Platform Name="Android">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\lib\android\debug\mips\libnative-activity.so" Configuration="Debug" Class="AndroidLibnativeMipsFile">
+                    <Platform Name="Android">
+                        <RemoteName>libBSApplication.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on12x12_.png" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Pictures\bits</RemoteDir>
                         <RemoteName>bit_on12x12_.png</RemoteName>
                         <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_24x24.png" Configuration="Debug" Class="Android_NotificationIcon24">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_notification.png</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_on10x10.png" Configuration="Debug" Class="File">
@@ -1034,38 +766,17 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\BSApplication.exe" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Win32">
-                        <RemoteName>BSApplication.exe</RemoteName>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_144x144.png" Configuration="Debug" Class="Android_LauncherIcon144">
+                    <Platform Name="Android">
+                        <RemoteName>ic_launcher.png</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad4.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesQuad4.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_off8x8_3.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
-                        <RemoteName>bit_off8x8_3.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\Smooth.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>Smooth.vsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_on10x10.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
-                        <RemoteName>bit_on10x10.png</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="..\..\..\bin\Models\Collada\Shark.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Models\Collada</RemoteDir>
+                        <RemoteName>Shark.png</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Shaders\DepthMap.fsh" Configuration="Debug" Class="File">
@@ -1117,73 +828,34 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_off6x6.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
-                        <RemoteName>bit_off6x6.png</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="..\..\..\bin\AndroidManifest.xml" Configuration="Debug" Class="ProjectAndroidManifest">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\OSingleColor.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>OSingleColor.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_96x96.png" Configuration="Debug" Class="Android_LauncherIcon96">
+                    <Platform Name="Android">
+                        <RemoteName>ic_launcher.png</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\DoubleColor.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>DoubleColor.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="..\..\..\bin\Models\Obj\aquafish01n.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Models\Obj</RemoteDir>
+                        <RemoteName>aquafish01n.png</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off10x10.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_off10x10.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\LightPointNormalMap.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>LightPointNormalMap.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad2.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesQuad2.vsh</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="..\..\..\bin\strings.xml" Configuration="Debug" Class="Android_Strings">
+                    <Platform Name="Android64">
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad4_no_hls_max.fsh" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Shaders</RemoteDir>
                         <RemoteName>ParticlesQuad4_no_hls_max.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\earth\moonmap1k.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\earth</RemoteDir>
-                        <RemoteName>moonmap1k.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleTexture.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SimpleTexture.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\green\bit_on10x10LG.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\green</RemoteDir>
-                        <RemoteName>bit_on10x10LG.png</RemoteName>
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -1201,48 +873,6 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\Particles.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>Particles.vsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off2.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_off2.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_on8x8_4.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
-                        <RemoteName>bit_on8x8_4.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\TextFromTexture.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>TextFromTexture.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_on8x8.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
-                        <RemoteName>bit_on8x8.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_off8x8_3.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
-                        <RemoteName>bit_off8x8_3.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Fonts\DejaVuSans.txt" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Fonts</RemoteDir>
@@ -1250,11 +880,10 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothSSAA2.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SmoothSSAA2.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_72x72.png" Configuration="Debug" Class="Android_NotificationIcon72">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_notification.png</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Shaders\Layout.fsh" Configuration="Debug" Class="File">
@@ -1299,6 +928,12 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_SplashImage_960x720.png" Configuration="Debug" Class="Android_SplashImage960">
+                    <Platform Name="Android">
+                        <RemoteName>splash_image.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad5.vsh" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Shaders</RemoteDir>
@@ -1306,18 +941,15 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_on8x8_2.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
-                        <RemoteName>bit_on8x8_2.png</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="$(BDS)\lib\android\debug\mips\libnative-activity.so" Configuration="Debug" Class="AndroidLibnativeMipsFile">
+                    <Platform Name="Android64">
+                        <RemoteName>libBSApplication.so</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleSingleColor.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SimpleSingleColor.fsh</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="..\..\..\bin\colors.xml" Configuration="Debug" Class="Android_Colors">
+                    <Platform Name="Android">
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_off7x7.png" Configuration="Debug" Class="File">
@@ -1327,24 +959,15 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoint.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesPoint.vsh</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="$(NDKBasePath)\prebuilt\android-arm\gdbserver\gdbserver" Configuration="Debug" Class="AndroidGDBServer">
+                    <Platform Name="Android">
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off.png" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Pictures\bits</RemoteDir>
                         <RemoteName>bit_off.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleWire.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SimpleWire.vsh</RemoteName>
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -1359,27 +982,6 @@
                     <Platform Name="Linux64">
                         <RemoteDir>.\Pictures\bits\blue</RemoteDir>
                         <RemoteName>bit_on8x8_7.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\TexToColor.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>TexToColor.vsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_off10x10.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
-                        <RemoteName>bit_off10x10.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_off10x10_3.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
-                        <RemoteName>bit_off10x10_3.png</RemoteName>
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -1415,6 +1017,904 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_SplashImage_470x320.png" Configuration="Debug" Class="Android_SplashImage470">
+                    <Platform Name="Android">
+                        <RemoteName>splash_image.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\Layout.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>Layout.vsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoint2.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesPoint2.vsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\folder_orange_24_ttf_2.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>folder_orange_24_ttf_2.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_off10x10.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
+                        <RemoteName>bit_off10x10.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\sel_point.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>sel_point.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on8x8__.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_on8x8__.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_on8x8_3.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
+                        <RemoteName>bit_on8x8_3.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\QUAD.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>QUAD.fsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_on8x8_8.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
+                        <RemoteName>bit_on8x8_8.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\BSApplication.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win64">
+                        <RemoteName>BSApplication.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>NotoEmoji-Regular.ttf</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SkeletonTextured.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SkeletonTextured.vsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_on10x10_3.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
+                        <RemoteName>bit_on10x10_3.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\Smooth.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>Smooth.fsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\fire_planet.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>fire_planet.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\classes.dex" Configuration="Debug" Class="AndroidClassesDexFile">
+                    <Platform Name="Android">
+                        <RemoteName>classes.dex</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_off8x8_2.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
+                        <RemoteName>bit_off8x8_2.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoints2d.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesPoints2d.vsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_36x36.png" Configuration="Debug" Class="Android_NotificationIcon36">
+                    <Platform Name="Android">
+                        <RemoteName>ic_notification.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\libBSApplication.so" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Android64">
+                        <RemoteName>libBSApplication.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_144x144.png" Configuration="Debug" Class="Android_LauncherIcon144">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_launcher.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoint2.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesPoint2.fsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_off10x10_4.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
+                        <RemoteName>bit_off10x10_4.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\earth\moonmap1k2.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\earth</RemoteDir>
+                        <RemoteName>moonmap1k2.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Models\Collada\Shark.dae" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Models\Collada</RemoteDir>
+                        <RemoteName>Shark.dae</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad3.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesQuad3.fsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Fonts\cpCyrillicToUTF16.txt" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>cpCyrillicToUTF16.txt</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_on8x8_8.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
+                        <RemoteName>bit_on8x8_8.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_24x24.png" Configuration="Debug" Class="Android_NotificationIcon24">
+                    <Platform Name="Android">
+                        <RemoteName>ic_notification.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\flame.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>flame.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off6x6_black.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_off6x6_black.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\colors.xml" Configuration="Debug" Class="Android_Colors">
+                    <Platform Name="Android64">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on10x10.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_on10x10.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\TextureAni.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>TextureAni.fsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\TransparentBack.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>TransparentBack.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\QUAD.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>QUAD.vsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\black\bit_off6x6_black.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\black</RemoteDir>
+                        <RemoteName>bit_off6x6_black.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_on8x8_7.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
+                        <RemoteName>bit_on8x8_7.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_96x96.png" Configuration="Debug" Class="Android_LauncherIcon96">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_launcher.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_72x72.png" Configuration="Debug" Class="Android_NotificationIcon72">
+                    <Platform Name="Android">
+                        <RemoteName>ic_notification.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off10x10_.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_off10x10_.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Fonts\DejaVuSans.ttf_0.20.ind" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>DejaVuSans.ttf_0.20.ind</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\2d AABB.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>2d AABB.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\lib\android\debug\armeabi-v7a\libnative-activity.so" Configuration="Debug" Class="AndroidLibnativeArmeabiv7aFile">
+                    <Platform Name="Android64">
+                        <RemoteName>libBSApplication.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_on8x8_2.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
+                        <RemoteName>bit_on8x8_2.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_on8x8.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
+                        <RemoteName>bit_on8x8.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_SplashImage_470x320.png" Configuration="Debug" Class="Android_SplashImage470">
+                    <Platform Name="Android64">
+                        <RemoteName>splash_image.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\Instancing.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>Instancing.fsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\point_red_7x7.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>point_red_7x7.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\Textures\block_text.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\Textures</RemoteDir>
+                        <RemoteName>block_text.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Fonts\NotoSerif-Regular.ttf_0.50.ind" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>NotoSerif-Regular.ttf_0.50.ind</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_48x48.png" Configuration="Debug" Class="Android_LauncherIcon48">
+                    <Platform Name="Android">
+                        <RemoteName>ic_launcher.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on10x10_.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_on10x10_.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\snowflake.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>snowflake.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Fonts\Noto-LICENSE_OFL.txt" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>Noto-LICENSE_OFL.txt</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_on9x9.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
+                        <RemoteName>bit_on9x9.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\earth\earth.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\earth</RemoteDir>
+                        <RemoteName>earth.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesQuad.vsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_48x48.png" Configuration="Debug" Class="Android_LauncherIcon48">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_launcher.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_on8x8_3.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
+                        <RemoteName>bit_on8x8_3.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_off9x9.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
+                        <RemoteName>bit_off9x9.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoints2d.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesPoints2d.fsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\Instancing.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>Instancing.vsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\earth\earthmap1k.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\earth</RemoteDir>
+                        <RemoteName>earthmap1k.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\DoubleColor.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>DoubleColor.vsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleWire.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SimpleWire.fsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_SplashImage_426x320.png" Configuration="Debug" Class="Android_SplashImage426">
+                    <Platform Name="Android64">
+                        <RemoteName>splash_image.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\styles-v21.xml" Configuration="Debug" Class="AndroidSplashStylesV21">
+                    <Platform Name="Android">
+                        <RemoteName>styles.xml</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on10x10gs.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_on10x10gs.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_on10x10_2.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
+                        <RemoteName>bit_on10x10_2.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\Fog.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>Fog.vsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_off10x10_4.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
+                        <RemoteName>bit_off10x10_4.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad5.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesQuad5.fsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf_0.50.ind" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>NotoEmoji-Regular.ttf_0.50.ind</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Fonts\NotoSerif-Regular.ttf_0.50.ind" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>NotoSerif-Regular.ttf_0.50.ind</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_48x48.png" Configuration="Debug" Class="Android_NotificationIcon48">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_notification.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_36x36.png" Configuration="Debug" Class="Android_LauncherIcon36">
+                    <Platform Name="Android">
+                        <RemoteName>ic_launcher.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_96x96.png" Configuration="Debug" Class="Android_NotificationIcon96">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_notification.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothByKernelMSAA.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SmoothByKernelMSAA.vsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\earth\sky.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\earth</RemoteDir>
+                        <RemoteName>sky.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\sel_point_mid.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>sel_point_mid.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\black\bit_on10x10gs.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\black</RemoteDir>
+                        <RemoteName>bit_on10x10gs.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Fonts\NotoSans-Regular.ttf" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>NotoSans-Regular.ttf</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\controls\TBScrollBar.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\controls</RemoteDir>
+                        <RemoteName>TBScrollBar.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad4_hls_max.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesQuad4_hls_max.fsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\lib\android\debug\armeabi\libnative-activity.so" Configuration="Debug" Class="AndroidLibnativeArmeabiFile">
+                    <Platform Name="Android64">
+                        <RemoteName>libBSApplication.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoint.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesPoint.fsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_off10x10_2.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
+                        <RemoteName>bit_off10x10_2.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Fonts\DejaVuSans.ttf" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>DejaVuSans.ttf</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\BSApplication.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>BSApplication.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad4.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesQuad4.fsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_off8x8_3.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
+                        <RemoteName>bit_off8x8_3.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_36x36.png" Configuration="Debug" Class="Android_NotificationIcon36">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_notification.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\Smooth.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>Smooth.vsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_on10x10.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
+                        <RemoteName>bit_on10x10.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\lib\android\debug\armeabi\libnative-activity.so" Configuration="Debug" Class="AndroidLibnativeArmeabiFile">
+                    <Platform Name="Android">
+                        <RemoteName>libBSApplication.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\logo.ico" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>logo.ico</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_off6x6.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
+                        <RemoteName>bit_off6x6.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\OSingleColor.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>OSingleColor.fsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\DoubleColor.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>DoubleColor.fsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off10x10.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_off10x10.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\LightPointNormalMap.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>LightPointNormalMap.fsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\strings.xml" Configuration="Debug" Class="Android_Strings">
+                    <Platform Name="Android">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\splash_image_def.xml" Configuration="Debug" Class="AndroidSplashImageDef">
+                    <Platform Name="Android64">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad2.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesQuad2.vsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\earth\moonmap1k.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\earth</RemoteDir>
+                        <RemoteName>moonmap1k.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleTexture.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SimpleTexture.fsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\green\bit_on10x10LG.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\green</RemoteDir>
+                        <RemoteName>bit_on10x10LG.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\splash_image_def.xml" Configuration="Debug" Class="AndroidSplashImageDef">
+                    <Platform Name="Android">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\Particles.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>Particles.vsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off2.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_off2.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_on8x8_4.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
+                        <RemoteName>bit_on8x8_4.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\TextFromTexture.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>TextFromTexture.fsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_on8x8.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
+                        <RemoteName>bit_on8x8.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_off8x8_3.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
+                        <RemoteName>bit_off8x8_3.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_SplashImage_960x720.png" Configuration="Debug" Class="Android_SplashImage960">
+                    <Platform Name="Android64">
+                        <RemoteName>splash_image.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Models\Obj\aquafish02n.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Models\Obj</RemoteDir>
+                        <RemoteName>aquafish02n.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_72x72.png" Configuration="Debug" Class="Android_LauncherIcon72">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_launcher.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\snowflake.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>snowflake.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_SplashImage_640x480.png" Configuration="Debug" Class="Android_SplashImage640">
+                    <Platform Name="Android64">
+                        <RemoteName>splash_image.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothSSAA2.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SmoothSSAA2.fsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_on8x8_2.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
+                        <RemoteName>bit_on8x8_2.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleSingleColor.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SimpleSingleColor.fsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoint.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesPoint.vsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf_0.50.ind" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>NotoEmoji-Regular.ttf_0.50.ind</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleWire.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SimpleWire.vsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\TexToColor.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>TexToColor.vsh</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Fonts\cpCyrillicToUTF16.txt" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>cpCyrillicToUTF16.txt</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\logo.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>logo.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_off10x10.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\blue</RemoteDir>
+                        <RemoteName>bit_off10x10.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\folder_orange_24_ttf_2.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>folder_orange_24_ttf_2.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_off10x10_3.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
+                        <RemoteName>bit_off10x10_3.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Shaders\ColoredVertexes.fsh" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Shaders</RemoteDir>
@@ -1429,6 +1929,20 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\folder_orange_24_ttf.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>folder_orange_24_ttf.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\earth\moonmap2.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\earth</RemoteDir>
+                        <RemoteName>moonmap2.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Pictures\bits\blue\bit_off10x10_3.png" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Pictures\bits\blue</RemoteDir>
@@ -1436,10 +1950,17 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\earth\moonmap2.png" Configuration="Debug" Class="File">
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on8x8_.png" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\earth</RemoteDir>
-                        <RemoteName>moonmap2.png</RemoteName>
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_on8x8_.png</RemoteName>
+                        <Overwrite>false</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\TextFromTexture.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>TextFromTexture.vsh</RemoteName>
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -1450,10 +1971,10 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\Layout.vsh" Configuration="Debug" Class="File">
+                <DeployFile LocalName="..\..\..\bin\Pictures\Textures\block_pic_32.png" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>Layout.vsh</RemoteName>
+                        <RemoteDir>.\Pictures\Textures</RemoteDir>
+                        <RemoteName>block_pic_32.png</RemoteName>
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -1461,13 +1982,6 @@
                     <Platform Name="Linux64">
                         <RemoteDir>.\Pictures\bits\blue</RemoteDir>
                         <RemoteName>bit_on8x8_5.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on8x8_.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_on8x8_.png</RemoteName>
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -1492,46 +2006,25 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\orange\bit_off10x10.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits\orange</RemoteDir>
-                        <RemoteName>bit_off10x10.png</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="..\..\..\bin\Fonts\NotoSans-Regular.ttf" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>NotoSans-Regular.ttf</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoint2.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesPoint2.vsh</RemoteName>
-                        <Overwrite>false</Overwrite>
+                <DeployFile LocalName="..\..\..\bin\Lang\lang.en" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\Lang</RemoteDir>
+                        <RemoteName>lang.en</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on8x8__.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_on8x8__.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\Textures\block_pic_32.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\Textures</RemoteDir>
-                        <RemoteName>block_pic_32.png</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\TextFromTexture.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>TextFromTexture.vsh</RemoteName>
-                        <Overwrite>false</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\folder_orange_24_ttf_2.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
+                <DeployFile LocalName="..\..\..\bin\Pictures\point_red_7x7.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
                         <RemoteDir>.\Pictures</RemoteDir>
-                        <RemoteName>folder_orange_24_ttf_2.png</RemoteName>
-                        <Overwrite>false</Overwrite>
+                        <RemoteName>point_red_7x7.png</RemoteName>
+                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Pictures\earth\moonmap1k3.png" Configuration="Debug" Class="File">
@@ -2313,7 +2806,7 @@
                 <ProjectRoot Platform="Android64" Name="$(PROJECTNAME)"/>
             </Deployment>
             <Platforms>
-                <Platform value="Android">False</Platform>
+                <Platform value="Android">True</Platform>
                 <Platform value="Android64">True</Platform>
                 <Platform value="Linux64">True</Platform>
                 <Platform value="Win32">True</Platform>

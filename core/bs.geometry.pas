@@ -560,8 +560,7 @@ begin
   Point.y := v.y;
 end;
 
-function LinesIntersect(const P00, P01, P10, P11: TVec2f; out Point: TVec2f
-  ): boolean;
+function LinesIntersect(const P00, P01, P10, P11: TVec2f; out Point: TVec2f): boolean;
 var
   A0, B0, A1, B1: BSFloat;
   _p00, _p01, _p10, _p11: TVec2f;

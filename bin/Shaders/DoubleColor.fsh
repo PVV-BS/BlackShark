@@ -12,5 +12,6 @@ void main()
   else
     gl_FragColor.xyz = Color2.xyz;
     
-	gl_FragColor.a = Color.a * Opacity;
+  gl_FragColor.a = Color.a * Opacity;
+  
 }

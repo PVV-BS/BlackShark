@@ -39,47 +39,41 @@ type
 
   TBlackSharkContext = class;
 
-  TAfterCreateContextEvent = procedure (Sender: TBlackSharkContext) of object;
   TMakeCurrentFunc = function (Context: Pointer): boolean;
+
+  { TBlackSharkContext }
 
   TBlackSharkContext = class
   private
     EGLWindow: PEGLWindow;
+    FContextIsLost: boolean;
     GLContextES: PESContext;
-    FGreenBits: Cardinal;
+    {FGreenBits: Cardinal;
     FDepthBits: Cardinal;
     FRedBits: Cardinal;
     FAlphaBits: Cardinal;
     FStencilBits: Cardinal;
     FRGBA: boolean;
-    FBlueBits: Cardinal;
+    FBlueBits: Cardinal;}
     FContextCreated: boolean;
     FOnCreateContextEvent: IBEmptyEvent;
-    FMultiSample: Boolean;
-    procedure SetAlphaBits(const Value: Cardinal);
-    procedure SetBlueBits(const Value: Cardinal);
-    procedure SetDepthBits(const Value: Cardinal);
-    procedure SetGreenBits(const Value: Cardinal);
-    procedure SetRedBits(const Value: Cardinal);
-    procedure SetRGBA(const Value: boolean);
-    procedure SetStencilBits(const Value: Cardinal);
   public
     constructor Create(AWindowHandle: EGLNativeWindowType; AWindowDeviceContext: EGLNativeDisplayType);
     destructor Destroy; override;
     function CreateContext: boolean;
     function MakeCurrent: boolean;
-    procedure Swap;
+    function Swap: boolean;
     procedure Render;
     procedure UnInitGLContext;
-    property RGBA: boolean read FRGBA write SetRGBA default true;
+    {property RGBA: boolean read FRGBA write SetRGBA default true;
     property RedBits: Cardinal read FRedBits write SetRedBits default 8;
     property GreenBits: Cardinal read FGreenBits write SetGreenBits default 8;
     property BlueBits: Cardinal read FBlueBits write SetBlueBits default 8;
     property AlphaBits: Cardinal read FAlphaBits write SetAlphaBits default 8;
     property DepthBits: Cardinal read FDepthBits write SetDepthBits default 8;
-    property StencilBits: Cardinal read FStencilBits write SetStencilBits default 8;
-    property MultiSample: Boolean read FMultiSample write FMultiSample;
+    property StencilBits: Cardinal read FStencilBits write SetStencilBits default 8;}
     property ContextCreated: boolean read FContextCreated;
+    property ContextIsLost: boolean read FContextIsLost;
     property OnCreateContextEvent: IBEmptyEvent read FOnCreateContextEvent;
   end;
 
@@ -91,13 +85,13 @@ implementation
 constructor TBlackSharkContext.Create(AWindowHandle: EGLNativeWindowType; AWindowDeviceContext: EGLNativeDisplayType);
 begin
   inherited Create;
-  FRGBA := true;
+  {FRGBA := true;
   FRedBits := 8;
   FGreenBits := 8;
   FBlueBits := 8;
   FDepthBits := 8;
   FAlphaBits := 8;
-  FStencilBits := 8;
+  FStencilBits := 8;}
   FOnCreateContextEvent := CreateEmptyEvent;
   EGLWindow := CreateWindowES(AWindowDeviceContext, AWindowHandle);
 end;
@@ -118,6 +112,7 @@ begin
   FContextCreated := Assigned(GLContextES);
 
   Result := FContextCreated;
+  FContextIsLost := false;
 
   if FContextCreated then
   begin
@@ -145,47 +140,19 @@ procedure TBlackSharkContext.Render;
 begin
 end;
 
-procedure TBlackSharkContext.SetAlphaBits(const Value: Cardinal);
-begin
-  FAlphaBits := Value;
-end;
-
-procedure TBlackSharkContext.SetBlueBits(const Value: Cardinal);
-begin
-  FBlueBits := Value;
-end;
-
-procedure TBlackSharkContext.SetDepthBits(const Value: Cardinal);
-begin
-  FDepthBits := Value;
-end;
-
-procedure TBlackSharkContext.SetGreenBits(const Value: Cardinal);
-begin
-  FGreenBits := Value;
-end;
-
-procedure TBlackSharkContext.SetRedBits(const Value: Cardinal);
-begin
-  FRedBits := Value;
-end;
-
-procedure TBlackSharkContext.SetRGBA(const Value: boolean);
-begin
-  FRGBA := Value;
-end;
-
-procedure TBlackSharkContext.SetStencilBits(const Value: Cardinal);
-begin
-  FStencilBits := Value;
-end;
-
-procedure TBlackSharkContext.Swap;
+function TBlackSharkContext.Swap: boolean;
 begin
   if Assigned(GLContextES) then
   begin
-    eglSwapBuffers(GLContextES^.eglDisplay, GLContextES^.eglSurface);
-  end;
+    if eglSwapBuffers(GLContextES^.eglDisplay, GLContextES^.eglSurface) = EGL_FALSE then
+    begin
+      Result := false;
+      if eglGetError = EGL_CONTEXT_LOST then
+        FContextIsLost := true;
+    end else
+      Result := true;
+  end else
+    Result := false;
 end;
 
 procedure TBlackSharkContext.UnInitGLContext;

@@ -442,6 +442,11 @@ type
   function ColorToString(AColor: TGuiColor): AnsiString;
   function StringToColor(AColor: AnsiString): TGuiColor;
 
+var
+  { This variables is setted from platform-dependency units }
+  PixelsPerInch: single = 96;
+  ToHiDpiScale: single = 1.0;
+
 const
   SAMPLING_KERNELS_SET: array[TSamplingKernel] of TMatrix3f = (
     (V: (         // skIdentity

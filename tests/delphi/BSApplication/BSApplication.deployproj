@@ -4,8 +4,8 @@
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
     <PropertyGroup>
-        <DeviceId Condition="'$(Platform)'=='Android'"/>
-        <DeviceId Condition="'$(Platform)'=='Android64'"/>
+        <DeviceId Condition="'$(Platform)'=='Android'">emulator-5554</DeviceId>
+        <DeviceId Condition="'$(Platform)'=='Android64'">emulator-5554</DeviceId>
     </PropertyGroup>
     <ItemGroup Condition="'$(Platform)'=='Win32'">
         <DeployFile Include="..\..\..\bin\BSApplication.exe" Condition="'$(Config)'=='Debug'">
@@ -20,90 +20,9 @@
         </DeployFile>
     </ItemGroup>
     <ItemGroup Condition="'$(Platform)'=='Linux64'">
-        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_on8x8_6.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
-            <RemoteName>bit_on8x8_6.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Fonts\</RemoteDir>
-            <RemoteName>NotoEmoji-Regular.ttf</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\SkeletonTextured.vsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>SkeletonTextured.vsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_on10x10_3.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
-            <RemoteName>bit_on10x10_3.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_off12x12.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
             <RemoteName>bit_off12x12.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\Smooth.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>Smooth.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\fire_planet.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>fire_planet.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_off10x10.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
-            <RemoteName>bit_off10x10.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\LightPoint.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>LightPoint.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\earth\moonmap1k3.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\earth\</RemoteDir>
-            <RemoteName>moonmap1k3.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -128,15 +47,6 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_off8x8_2.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
-            <RemoteName>bit_off8x8_2.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Shaders\ColoredVertexes.vsh" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Shaders\</RemoteDir>
             <RemoteName>ColoredVertexes.vsh</RemoteName>
@@ -155,45 +65,9 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\ParticlesPoints2d.vsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>ParticlesPoints2d.vsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Shaders\TexToColor.fsh" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Shaders\</RemoteDir>
             <RemoteName>TexToColor.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\ParticlesPoint2.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>ParticlesPoint2.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\earth\moonmap1k2.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\earth\</RemoteDir>
-            <RemoteName>moonmap1k2.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_off10x10_4.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
-            <RemoteName>bit_off10x10_4.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -254,24 +128,6 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad3.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>ParticlesQuad3.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Fonts\cpCyrillicToUTF16.txt" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Fonts\</RemoteDir>
-            <RemoteName>cpCyrillicToUTF16.txt</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Pictures\controls\Black Shark2.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Pictures\controls\</RemoteDir>
             <RemoteName>Black Shark2.png</RemoteName>
@@ -290,27 +146,9 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_on8x8_8.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
-            <RemoteName>bit_on8x8_8.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Fonts\NotoSerif-Regular.ttf" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Fonts\</RemoteDir>
             <RemoteName>NotoSerif-Regular.ttf</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off6x6_black.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_off6x6_black.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -326,36 +164,9 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on10x10.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_on10x10.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on10x10L.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
             <RemoteName>bit_on10x10L.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\TextureAni.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>TextureAni.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\TransparentBack.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\</RemoteDir>
-            <RemoteName>TransparentBack.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -371,45 +182,9 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\QUAD.vsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>QUAD.vsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\black\bit_off6x6_black.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\black\</RemoteDir>
-            <RemoteName>bit_off6x6_black.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_on8x8_7.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
-            <RemoteName>bit_on8x8_7.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Shaders\TextureAni.vsh" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Shaders\</RemoteDir>
             <RemoteName>TextureAni.vsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off10x10_.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_off10x10_.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -434,36 +209,9 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\2d AABB.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\</RemoteDir>
-            <RemoteName>2d AABB.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad4.vsh" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Shaders\</RemoteDir>
             <RemoteName>ParticlesQuad4.vsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_on8x8_2.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
-            <RemoteName>bit_on8x8_2.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_on8x8.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
-            <RemoteName>bit_on8x8.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -506,15 +254,6 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\Instancing.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>Instancing.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Models\Collada\test_anim.dae" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Models\Collada\</RemoteDir>
             <RemoteName>test_anim.dae</RemoteName>
@@ -542,45 +281,9 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\point_red_7x7.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\</RemoteDir>
-            <RemoteName>point_red_7x7.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\Textures\block_text.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\Textures\</RemoteDir>
-            <RemoteName>block_text.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off6x6.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
             <RemoteName>bit_off6x6.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on10x10_.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_on10x10_.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\snowflake.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\</RemoteDir>
-            <RemoteName>snowflake.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -632,63 +335,9 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_on9x9.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
-            <RemoteName>bit_on9x9.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\earth\earth.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\earth\</RemoteDir>
-            <RemoteName>earth.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad.vsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>ParticlesQuad.vsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_on8x8_3.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
-            <RemoteName>bit_on8x8_3.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Pictures\sel_point.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Pictures\</RemoteDir>
             <RemoteName>sel_point.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_off9x9.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
-            <RemoteName>bit_off9x9.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\ParticlesPoints2d.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>ParticlesPoints2d.fsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -713,108 +362,9 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\earth\earthmap1k.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\earth\</RemoteDir>
-            <RemoteName>earthmap1k.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\DoubleColor.vsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>DoubleColor.vsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\Instancing.vsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>Instancing.vsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\folder_orange_24_ttf.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\</RemoteDir>
-            <RemoteName>folder_orange_24_ttf.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\SimpleWire.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>SimpleWire.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\earth\earthcloudmapcolortrans.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\earth\</RemoteDir>
-            <RemoteName>earthcloudmapcolortrans.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Pictures\bits\green\bit_off10x10LG.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Pictures\bits\green\</RemoteDir>
             <RemoteName>bit_off10x10LG.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on10x10gs.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_on10x10gs.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_on10x10_2.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
-            <RemoteName>bit_on10x10_2.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\Fog.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>Fog.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\rot_point.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\</RemoteDir>
-            <RemoteName>rot_point.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\SmoothByKernelMSAA.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>SmoothByKernelMSAA.fsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -830,27 +380,45 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\Fog.vsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>Fog.vsh</RemoteName>
+        <DeployFile Include="..\..\..\bin\Pictures\folder_orange_24_ttf.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\</RemoteDir>
+            <RemoteName>folder_orange_24_ttf.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_off10x10_4.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
-            <RemoteName>bit_off10x10_4.png</RemoteName>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\earthcloudmapcolortrans.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\earth\</RemoteDir>
+            <RemoteName>earthcloudmapcolortrans.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad5.fsh" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="..\..\..\bin\Shaders\SmoothByKernelMSAA.fsh" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>ParticlesQuad5.fsh</RemoteName>
+            <RemoteName>SmoothByKernelMSAA.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\rot_point.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\</RemoteDir>
+            <RemoteName>rot_point.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\Fog.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>Fog.fsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -860,24 +428,6 @@
         <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_on6x6.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
             <RemoteName>bit_on6x6.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf_0.50.ind" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Fonts\</RemoteDir>
-            <RemoteName>NotoEmoji-Regular.ttf_0.50.ind</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Fonts\NotoSerif-Regular.ttf_0.50.ind" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Fonts\</RemoteDir>
-            <RemoteName>NotoSerif-Regular.ttf_0.50.ind</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -902,54 +452,9 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\SmoothByKernelMSAA.vsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>SmoothByKernelMSAA.vsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Shaders\SmoothSSAA.fsh" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Shaders\</RemoteDir>
             <RemoteName>SmoothSSAA.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\earth\sky.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\earth\</RemoteDir>
-            <RemoteName>sky.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\sel_point_mid.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\</RemoteDir>
-            <RemoteName>sel_point_mid.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\black\bit_on10x10gs.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\black\</RemoteDir>
-            <RemoteName>bit_on10x10gs.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Fonts\NotoSans-Regular.ttf" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Fonts\</RemoteDir>
-            <RemoteName>NotoSans-Regular.ttf</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -965,45 +470,9 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\controls\TBScrollBar.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\controls\</RemoteDir>
-            <RemoteName>TBScrollBar.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad4_hls_max.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>ParticlesQuad4_hls_max.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\ParticlesPoint.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>ParticlesPoint.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Shaders\LightPoint.vsh" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Shaders\</RemoteDir>
             <RemoteName>LightPoint.vsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_off10x10_2.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
-            <RemoteName>bit_off10x10_2.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -1048,42 +517,6 @@
         </DeployFile>
         <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_on10x10.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
-            <RemoteName>bit_on10x10.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad4.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>ParticlesQuad4.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_off8x8_3.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
-            <RemoteName>bit_off8x8_3.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\Smooth.vsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>Smooth.vsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_on10x10.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
             <RemoteName>bit_on10x10.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
@@ -1154,90 +587,9 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_off6x6.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
-            <RemoteName>bit_off6x6.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\OSingleColor.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>OSingleColor.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\DoubleColor.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>DoubleColor.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off10x10.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_off10x10.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\LightPointNormalMap.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>LightPointNormalMap.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad2.vsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>ParticlesQuad2.vsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad4_no_hls_max.fsh" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Shaders\</RemoteDir>
             <RemoteName>ParticlesQuad4_no_hls_max.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\earth\moonmap1k.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\earth\</RemoteDir>
-            <RemoteName>moonmap1k.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\SimpleTexture.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>SimpleTexture.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\green\bit_on10x10LG.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\green\</RemoteDir>
-            <RemoteName>bit_on10x10LG.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -1262,90 +614,9 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\12300032_770843793022045_1604421546_n.mp4" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\</RemoteDir>
-            <RemoteName>12300032_770843793022045_1604421546_n.mp4</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\Particles.vsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>Particles.vsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off2.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_off2.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_on8x8_4.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
-            <RemoteName>bit_on8x8_4.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\TextFromTexture.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>TextFromTexture.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_on8x8.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
-            <RemoteName>bit_on8x8.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Fonts\DejaVuSans.txt" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Fonts\</RemoteDir>
             <RemoteName>DejaVuSans.txt</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\zengl.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\</RemoteDir>
-            <RemoteName>zengl.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_off8x8_3.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
-            <RemoteName>bit_off8x8_3.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\SmoothSSAA2.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>SmoothSSAA2.fsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -1415,24 +686,6 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_on8x8_2.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
-            <RemoteName>bit_on8x8_2.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\SimpleSingleColor.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>SimpleSingleColor.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_off7x7.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
             <RemoteName>bit_off7x7.png</RemoteName>
@@ -1442,27 +695,9 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\ParticlesPoint.vsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>ParticlesPoint.vsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
             <RemoteName>bit_off.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\SimpleWire.vsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>SimpleWire.vsh</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -1481,33 +716,6 @@
         <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_on8x8_7.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
             <RemoteName>bit_on8x8_7.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\TexToColor.vsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>TexToColor.vsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_off10x10.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
-            <RemoteName>bit_off10x10.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_off10x10_3.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
-            <RemoteName>bit_off10x10_3.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -1551,63 +759,9 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\ColoredVertexes.fsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>ColoredVertexes.fsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on8x8.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_on8x8.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_off10x10_3.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
-            <RemoteName>bit_off10x10_3.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\earth\moonmap2.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\earth\</RemoteDir>
-            <RemoteName>moonmap2.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Shaders\Layout.vsh" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Shaders\</RemoteDir>
             <RemoteName>Layout.vsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_on8x8_5.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
-            <RemoteName>bit_on8x8_5.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on8x8_.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_on8x8_.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -1623,24 +777,6 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\Textures\block_pic_32.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\Textures\</RemoteDir>
-            <RemoteName>block_pic_32.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Shaders\TextFromTexture.vsh" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Shaders\</RemoteDir>
-            <RemoteName>TextFromTexture.vsh</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\bin\Pictures\folder_orange_24_ttf_2.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>BSApplication\Pictures\</RemoteDir>
             <RemoteName>folder_orange_24_ttf_2.png</RemoteName>
@@ -1650,18 +786,9 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on12x12.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_on12x12.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>False</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off12x12.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
-            <RemoteName>bit_off12x12.png</RemoteName>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_off10x10.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
+            <RemoteName>bit_off10x10.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -1704,6 +831,861 @@
             <RemoteCommand/>
             <Overwrite>False</Overwrite>
         </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Fonts\</RemoteDir>
+            <RemoteName>NotoEmoji-Regular.ttf</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SkeletonTextured.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>SkeletonTextured.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_on10x10_3.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
+            <RemoteName>bit_on10x10_3.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\Smooth.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>Smooth.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\fire_planet.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>fire_planet.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_off8x8_2.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
+            <RemoteName>bit_off8x8_2.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesPoints2d.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>ParticlesPoints2d.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesPoint2.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>ParticlesPoint2.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_off10x10_4.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
+            <RemoteName>bit_off10x10_4.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\moonmap1k2.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\earth\</RemoteDir>
+            <RemoteName>moonmap1k2.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad3.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>ParticlesQuad3.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\cpCyrillicToUTF16.txt" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Fonts\</RemoteDir>
+            <RemoteName>cpCyrillicToUTF16.txt</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_on8x8_8.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
+            <RemoteName>bit_on8x8_8.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off6x6_black.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_off6x6_black.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on10x10.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on10x10.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\TextureAni.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>TextureAni.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\TransparentBack.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\</RemoteDir>
+            <RemoteName>TransparentBack.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\QUAD.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>QUAD.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\black\bit_off6x6_black.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\black\</RemoteDir>
+            <RemoteName>bit_off6x6_black.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_on8x8_7.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
+            <RemoteName>bit_on8x8_7.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off10x10_.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_off10x10_.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\2d AABB.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\</RemoteDir>
+            <RemoteName>2d AABB.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_on8x8_2.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
+            <RemoteName>bit_on8x8_2.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_on8x8.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
+            <RemoteName>bit_on8x8.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\Instancing.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>Instancing.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\point_red_7x7.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\</RemoteDir>
+            <RemoteName>point_red_7x7.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\Textures\block_text.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\Textures\</RemoteDir>
+            <RemoteName>block_text.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on10x10_.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on10x10_.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\snowflake.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\</RemoteDir>
+            <RemoteName>snowflake.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_on9x9.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
+            <RemoteName>bit_on9x9.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\earth.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\earth\</RemoteDir>
+            <RemoteName>earth.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>ParticlesQuad.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_on8x8_3.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
+            <RemoteName>bit_on8x8_3.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_off9x9.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
+            <RemoteName>bit_off9x9.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesPoints2d.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>ParticlesPoints2d.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\Instancing.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>Instancing.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\earthmap1k.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\earth\</RemoteDir>
+            <RemoteName>earthmap1k.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\DoubleColor.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>DoubleColor.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SimpleWire.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>SimpleWire.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on10x10gs.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on10x10gs.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_on10x10_2.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
+            <RemoteName>bit_on10x10_2.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\Fog.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>Fog.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_off10x10_4.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
+            <RemoteName>bit_off10x10_4.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad5.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>ParticlesQuad5.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf_0.50.ind" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Fonts\</RemoteDir>
+            <RemoteName>NotoEmoji-Regular.ttf_0.50.ind</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\NotoSerif-Regular.ttf_0.50.ind" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Fonts\</RemoteDir>
+            <RemoteName>NotoSerif-Regular.ttf_0.50.ind</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SmoothByKernelMSAA.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>SmoothByKernelMSAA.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\sky.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\earth\</RemoteDir>
+            <RemoteName>sky.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\sel_point_mid.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\</RemoteDir>
+            <RemoteName>sel_point_mid.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\black\bit_on10x10gs.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\black\</RemoteDir>
+            <RemoteName>bit_on10x10gs.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\NotoSans-Regular.ttf" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Fonts\</RemoteDir>
+            <RemoteName>NotoSans-Regular.ttf</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\controls\TBScrollBar.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\controls\</RemoteDir>
+            <RemoteName>TBScrollBar.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad4_hls_max.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>ParticlesQuad4_hls_max.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesPoint.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>ParticlesPoint.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_off10x10_2.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
+            <RemoteName>bit_off10x10_2.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad4.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>ParticlesQuad4.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_off8x8_3.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
+            <RemoteName>bit_off8x8_3.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\Smooth.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>Smooth.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_on10x10.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
+            <RemoteName>bit_on10x10.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_off6x6.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
+            <RemoteName>bit_off6x6.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\OSingleColor.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>OSingleColor.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\DoubleColor.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>DoubleColor.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off10x10.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_off10x10.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\LightPointNormalMap.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>LightPointNormalMap.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesQuad2.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>ParticlesQuad2.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\moonmap1k.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\earth\</RemoteDir>
+            <RemoteName>moonmap1k.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SimpleTexture.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>SimpleTexture.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\green\bit_on10x10LG.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\green\</RemoteDir>
+            <RemoteName>bit_on10x10LG.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\Particles.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>Particles.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off2.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_off2.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_on8x8_4.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
+            <RemoteName>bit_on8x8_4.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\TextFromTexture.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>TextFromTexture.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_on8x8.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
+            <RemoteName>bit_on8x8.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_off8x8_3.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
+            <RemoteName>bit_off8x8_3.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SmoothSSAA2.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>SmoothSSAA2.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_on8x8_2.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
+            <RemoteName>bit_on8x8_2.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SimpleSingleColor.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>SimpleSingleColor.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ParticlesPoint.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>ParticlesPoint.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\SimpleWire.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>SimpleWire.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\TexToColor.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>TexToColor.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_off10x10.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
+            <RemoteName>bit_off10x10.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\orange\bit_off10x10_3.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\orange\</RemoteDir>
+            <RemoteName>bit_off10x10_3.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\ColoredVertexes.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>ColoredVertexes.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on8x8.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on8x8.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\moonmap2.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\earth\</RemoteDir>
+            <RemoteName>moonmap2.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_off10x10_3.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
+            <RemoteName>bit_off10x10_3.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on8x8_.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on8x8_.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\TextFromTexture.vsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>TextFromTexture.vsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_on8x8_6.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
+            <RemoteName>bit_on8x8_6.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\Textures\block_pic_32.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\Textures\</RemoteDir>
+            <RemoteName>block_pic_32.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\blue\bit_on8x8_5.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\blue\</RemoteDir>
+            <RemoteName>bit_on8x8_5.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Shaders\LightPoint.fsh" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Shaders\</RemoteDir>
+            <RemoteName>LightPoint.fsh</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_on12x12.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_on12x12.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\bits\bit_off12x12.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\bits\</RemoteDir>
+            <RemoteName>bit_off12x12.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\earth\moonmap1k3.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\earth\</RemoteDir>
+            <RemoteName>moonmap1k3.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>False</Overwrite>
+        </DeployFile>
     </ItemGroup>
     <ItemGroup Condition="'$(Platform)'=='Win64'">
         <DeployFile Include="..\..\..\bin\BSApplication.exe" Condition="'$(Config)'=='Debug'">
@@ -1717,6 +1699,721 @@
             <Required>True</Required>
         </DeployFile>
     </ItemGroup>
-    <ItemGroup Condition="'$(Platform)'=='Android'"/>
-    <ItemGroup Condition="'$(Platform)'=='Android64'"/>
+    <ItemGroup Condition="'$(Platform)'=='Android'">
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_SplashImage_426x320.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-small\</RemoteDir>
+            <RemoteName>splash_image.png</RemoteName>
+            <DeployClass>Android_SplashImage426</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\NotoSerif-Regular.ttf" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Fonts\</RemoteDir>
+            <RemoteName>NotoSerif-Regular.ttf</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\sel_point_mid.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\</RemoteDir>
+            <RemoteName>sel_point_mid.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_96x96.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-xxxhdpi\</RemoteDir>
+            <RemoteName>ic_notification.png</RemoteName>
+            <DeployClass>Android_NotificationIcon96</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_48x48.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-xhdpi\</RemoteDir>
+            <RemoteName>ic_notification.png</RemoteName>
+            <DeployClass>Android_NotificationIcon48</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_192x192.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-xxxhdpi\</RemoteDir>
+            <RemoteName>ic_launcher.png</RemoteName>
+            <DeployClass>Android_LauncherIcon192</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Models\Obj\aquafish01.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Models\Obj\</RemoteDir>
+            <RemoteName>aquafish01.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\DejaVuSans.txt" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Fonts\</RemoteDir>
+            <RemoteName>DejaVuSans.txt</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_SplashImage_640x480.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-large\</RemoteDir>
+            <RemoteName>splash_image.png</RemoteName>
+            <DeployClass>Android_SplashImage640</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Models\Obj\aquafish01.obj" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Models\Obj\</RemoteDir>
+            <RemoteName>aquafish01.obj</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\rot_point.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\</RemoteDir>
+            <RemoteName>rot_point.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\libBSApplication.so" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\library\lib\armeabi-v7a\</RemoteDir>
+            <RemoteName>libBSApplication.so</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_72x72.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-hdpi\</RemoteDir>
+            <RemoteName>ic_launcher.png</RemoteName>
+            <DeployClass>Android_LauncherIcon72</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Fonts\</RemoteDir>
+            <RemoteName>NotoEmoji-Regular.ttf</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\styles.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\values\</RemoteDir>
+            <RemoteName>styles.xml</RemoteName>
+            <DeployClass>AndroidSplashStyles</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\lib\android\debug\mips\libnative-activity.so" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\library\lib\mips\</RemoteDir>
+            <RemoteName>libBSApplication.so</RemoteName>
+            <DeployClass>AndroidLibnativeMipsFile</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_144x144.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-xxhdpi\</RemoteDir>
+            <RemoteName>ic_launcher.png</RemoteName>
+            <DeployClass>Android_LauncherIcon144</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Models\Collada\Shark.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Models\Collada\</RemoteDir>
+            <RemoteName>Shark.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\AndroidManifest.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Fonts\</RemoteDir>
+            <RemoteName>AndroidManifest.xml</RemoteName>
+            <DeployClass>ProjectAndroidManifest</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_96x96.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-xhdpi\</RemoteDir>
+            <RemoteName>ic_launcher.png</RemoteName>
+            <DeployClass>Android_LauncherIcon96</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Models\Obj\aquafish01n.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Models\Obj\</RemoteDir>
+            <RemoteName>aquafish01n.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_SplashImage_960x720.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-xlarge\</RemoteDir>
+            <RemoteName>splash_image.png</RemoteName>
+            <DeployClass>Android_SplashImage960</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\colors.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\values\</RemoteDir>
+            <RemoteName>colors.xml</RemoteName>
+            <DeployClass>Android_Colors</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(NDKBasePath)\prebuilt\android-arm\gdbserver\gdbserver" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\library\lib\armeabi-v7a\</RemoteDir>
+            <RemoteName>gdbserver</RemoteName>
+            <DeployClass>AndroidGDBServer</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_SplashImage_470x320.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-normal\</RemoteDir>
+            <RemoteName>splash_image.png</RemoteName>
+            <DeployClass>Android_SplashImage470</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\sel_point.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\</RemoteDir>
+            <RemoteName>sel_point.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\classes.dex" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\classes\</RemoteDir>
+            <RemoteName>classes.dex</RemoteName>
+            <DeployClass>AndroidClassesDexFile</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_36x36.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-hdpi\</RemoteDir>
+            <RemoteName>ic_notification.png</RemoteName>
+            <DeployClass>Android_NotificationIcon36</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Models\Collada\Shark.dae" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Models\Collada\</RemoteDir>
+            <RemoteName>Shark.dae</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_24x24.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-mdpi\</RemoteDir>
+            <RemoteName>ic_notification.png</RemoteName>
+            <DeployClass>Android_NotificationIcon24</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\flame.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\</RemoteDir>
+            <RemoteName>flame.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_72x72.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-xxhdpi\</RemoteDir>
+            <RemoteName>ic_notification.png</RemoteName>
+            <DeployClass>Android_NotificationIcon72</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\DejaVuSans.ttf_0.20.ind" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Fonts\</RemoteDir>
+            <RemoteName>DejaVuSans.ttf_0.20.ind</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\NotoSerif-Regular.ttf_0.50.ind" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Fonts\</RemoteDir>
+            <RemoteName>NotoSerif-Regular.ttf_0.50.ind</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_48x48.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-mdpi\</RemoteDir>
+            <RemoteName>ic_launcher.png</RemoteName>
+            <DeployClass>Android_LauncherIcon48</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\Noto-LICENSE_OFL.txt" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Fonts\</RemoteDir>
+            <RemoteName>Noto-LICENSE_OFL.txt</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\styles-v21.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\values-v21\</RemoteDir>
+            <RemoteName>styles.xml</RemoteName>
+            <DeployClass>AndroidSplashStylesV21</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_36x36.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-ldpi\</RemoteDir>
+            <RemoteName>ic_launcher.png</RemoteName>
+            <DeployClass>Android_LauncherIcon36</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\DejaVuSans.ttf" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Fonts\</RemoteDir>
+            <RemoteName>DejaVuSans.ttf</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\lib\android\debug\armeabi\libnative-activity.so" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\library\lib\armeabi\</RemoteDir>
+            <RemoteName>libBSApplication.so</RemoteName>
+            <DeployClass>AndroidLibnativeArmeabiFile</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\logo.ico" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\</RemoteDir>
+            <RemoteName>logo.ico</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\strings.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\values\</RemoteDir>
+            <RemoteName>strings.xml</RemoteName>
+            <DeployClass>Android_Strings</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\splash_image_def.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable\</RemoteDir>
+            <RemoteName>splash_image_def.xml</RemoteName>
+            <DeployClass>AndroidSplashImageDef</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Models\Obj\aquafish02n.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Models\Obj\</RemoteDir>
+            <RemoteName>aquafish02n.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\snowflake.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\</RemoteDir>
+            <RemoteName>snowflake.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf_0.50.ind" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Fonts\</RemoteDir>
+            <RemoteName>NotoEmoji-Regular.ttf_0.50.ind</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\cpCyrillicToUTF16.txt" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Fonts\</RemoteDir>
+            <RemoteName>cpCyrillicToUTF16.txt</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\logo.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\</RemoteDir>
+            <RemoteName>logo.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\folder_orange_24_ttf_2.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\</RemoteDir>
+            <RemoteName>folder_orange_24_ttf_2.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\folder_orange_24_ttf.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\</RemoteDir>
+            <RemoteName>folder_orange_24_ttf.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Fonts\NotoSans-Regular.ttf" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Fonts\</RemoteDir>
+            <RemoteName>NotoSans-Regular.ttf</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Lang\lang.en" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Lang\</RemoteDir>
+            <RemoteName>lang.en</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\Pictures\point_red_7x7.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\Pictures\</RemoteDir>
+            <RemoteName>point_red_7x7.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+    </ItemGroup>
+    <ItemGroup Condition="'$(Platform)'=='Android64'">
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_36x36.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-ldpi\</RemoteDir>
+            <RemoteName>ic_launcher.png</RemoteName>
+            <DeployClass>Android_LauncherIcon36</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\styles.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\values\</RemoteDir>
+            <RemoteName>styles.xml</RemoteName>
+            <DeployClass>AndroidSplashStyles</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\AndroidManifest.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\</RemoteDir>
+            <RemoteName>AndroidManifest.xml</RemoteName>
+            <DeployClass>ProjectAndroidManifest</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\classes.dex" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\classes\</RemoteDir>
+            <RemoteName>classes.dex</RemoteName>
+            <DeployClass>AndroidClassesDexFile</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_192x192.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-xxxhdpi\</RemoteDir>
+            <RemoteName>ic_launcher.png</RemoteName>
+            <DeployClass>Android_LauncherIcon192</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\styles-v21.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\values-v21\</RemoteDir>
+            <RemoteName>styles.xml</RemoteName>
+            <DeployClass>AndroidSplashStylesV21</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_24x24.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-mdpi\</RemoteDir>
+            <RemoteName>ic_notification.png</RemoteName>
+            <DeployClass>Android_NotificationIcon24</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\strings.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\values\</RemoteDir>
+            <RemoteName>strings.xml</RemoteName>
+            <DeployClass>Android_Strings</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_72x72.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-xxhdpi\</RemoteDir>
+            <RemoteName>ic_notification.png</RemoteName>
+            <DeployClass>Android_NotificationIcon72</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\lib\android\debug\mips\libnative-activity.so" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\library\lib\mips\</RemoteDir>
+            <RemoteName>libBSApplication.so</RemoteName>
+            <DeployClass>AndroidLibnativeMipsFile</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\libBSApplication.so" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\library\lib\arm64-v8a\</RemoteDir>
+            <RemoteName>libBSApplication.so</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_144x144.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-xxhdpi\</RemoteDir>
+            <RemoteName>ic_launcher.png</RemoteName>
+            <DeployClass>Android_LauncherIcon144</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\colors.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\values\</RemoteDir>
+            <RemoteName>colors.xml</RemoteName>
+            <DeployClass>Android_Colors</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_96x96.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-xhdpi\</RemoteDir>
+            <RemoteName>ic_launcher.png</RemoteName>
+            <DeployClass>Android_LauncherIcon96</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\lib\android\debug\armeabi-v7a\libnative-activity.so" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\library\lib\armeabi-v7a\</RemoteDir>
+            <RemoteName>libBSApplication.so</RemoteName>
+            <DeployClass>AndroidLibnativeArmeabiv7aFile</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_SplashImage_470x320.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-normal\</RemoteDir>
+            <RemoteName>splash_image.png</RemoteName>
+            <DeployClass>Android_SplashImage470</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_48x48.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-mdpi\</RemoteDir>
+            <RemoteName>ic_launcher.png</RemoteName>
+            <DeployClass>Android_LauncherIcon48</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_SplashImage_426x320.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-small\</RemoteDir>
+            <RemoteName>splash_image.png</RemoteName>
+            <DeployClass>Android_SplashImage426</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_48x48.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-xhdpi\</RemoteDir>
+            <RemoteName>ic_notification.png</RemoteName>
+            <DeployClass>Android_NotificationIcon48</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_96x96.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-xxxhdpi\</RemoteDir>
+            <RemoteName>ic_notification.png</RemoteName>
+            <DeployClass>Android_NotificationIcon96</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\lib\android\debug\armeabi\libnative-activity.so" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\library\lib\armeabi\</RemoteDir>
+            <RemoteName>libBSApplication.so</RemoteName>
+            <DeployClass>AndroidLibnativeArmeabiFile</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_36x36.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-hdpi\</RemoteDir>
+            <RemoteName>ic_notification.png</RemoteName>
+            <DeployClass>Android_NotificationIcon36</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\bin\splash_image_def.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable\</RemoteDir>
+            <RemoteName>splash_image_def.xml</RemoteName>
+            <DeployClass>AndroidSplashImageDef</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_SplashImage_960x720.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-xlarge\</RemoteDir>
+            <RemoteName>splash_image.png</RemoteName>
+            <DeployClass>Android_SplashImage960</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_72x72.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-hdpi\</RemoteDir>
+            <RemoteName>ic_launcher.png</RemoteName>
+            <DeployClass>Android_LauncherIcon72</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_SplashImage_640x480.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>BSApplication\res\drawable-large\</RemoteDir>
+            <RemoteName>splash_image.png</RemoteName>
+            <DeployClass>Android_SplashImage640</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+    </ItemGroup>
 </Project>

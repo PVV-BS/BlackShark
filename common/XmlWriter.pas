@@ -1286,7 +1286,7 @@ begin
   level := 0;
   while level < Count do
   begin
-    Result := FindFirstEntryNameNodeFromPath(prnt, (sl_all[level]));
+    Result := FindFirstEntryNameNodeFromPath(prnt, ({%H-}sl_all[level]));
     if Result <> nil then
     begin
       prnt := Result;

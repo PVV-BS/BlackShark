@@ -93,7 +93,7 @@ begin
   inherited Create(ARenderer);
   Obj := TTexturedVertexes.Create(Self, nil , Renderer.Scene);
   MeshLoadObj('Models/Obj/aquafish01.obj', Obj.Mesh, 0.004);
-  Obj.Mesh.TypePrimitive := tpTriangles;
+  Obj.Mesh.DrawingPrimitive := GL_TRIANGLES;
   Obj.Texture := BSTextureManager.LoadTexture('Models/Obj/aquafish01.png');
   //Obj.Texture := Scene.TextureManager.UV(BS_CL_BLUE);
   Obj.Shader := TBlackSharkTextureOutShader(BSShaderManager.Load('SimpleTexture', TBlackSharkTextureOutShader));

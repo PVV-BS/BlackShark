@@ -66,6 +66,7 @@ initialization
   RegisterTest(TBSTestWindows);
 
     { Canvas tests }
+    RegisterTest(TBSTestSimple);
     //RegisterTest(TBSTestVecToRastFont);
     RegisterTest(TBSTestCanvas);
     RegisterTest(TBSTestCanvasFonts);

@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -215,7 +215,7 @@ begin
   FDisplay := XOpenDisplay(nil);
 
   if not Assigned(FDisplay) then
-    raise Exception.Create('[TCDWidgetSet.AppInit] XOpenDisplay failed');
+    raise EBlackShark.Create('[class constructor BSApplicationLinux.Create] XOpenDisplay failed');
 
   // if we have a Display then we should have a Screen too
   FScreen:= XDefaultScreen(FDisplay);
@@ -230,19 +230,19 @@ begin
   // Initialize ScreenInfo
 
   // Screen Metrics
-  FDisplayWidth := XDisplayWidth(FDisplay,FScreen);
-  FDisplayWidthMM := XDisplayWidthMM(FDisplay,FScreen);
-  FPixelsPerInchX := round(FDisplayWidth / (FDisplayWidthMM / 25.4));
-  FDisplayHeight := XDisplayHeight(FDisplay, FScreen);
+  DisplayWidth := XDisplayWidth(FDisplay, FScreen);
+  FDisplayWidthMM := XDisplayWidthMM(FDisplay, FScreen);
+  PixelsPerInchX := round(FDisplayWidth / (FDisplayWidthMM / 25.4));
+  DisplayHeight := XDisplayHeight(FDisplay, FScreen);
   FDisplayHeightMM := XDisplayHeightMM(FDisplay,FScreen);
-  FPixelsPerInchY:= round(FDisplayHeight /(FDisplayHeightMM /25.4));
+  PixelsPerInchY:= round(FDisplayHeight / (FDisplayHeightMM / 25.4));
   // Color Depth
   FColorDepth := XDefaultDepth(FDisplay, FScreen);
 
   // Screen Pixmap Format
   // ScreenFormat is just a hint to tell controls to use the screen format
   // because using the same format as the screen increases the speed of canvas copy operations
-  FVisual := XDefaultVisual(FDisplay,FScreen);
+  FVisual := XDefaultVisual(FDisplay, FScreen);
   {ScreenFormat := clfARGB32; // Standard value with alpha blending support if we don't find a enum which matches the screen format
   if (ScreenInfo.ColorDepth = 16) then
     ScreenFormat:= clfRGB16_R5G6B5
@@ -341,7 +341,7 @@ begin
     @attr);
 
   if AWindow.Handle = 0 then
-    raise EBlackShark.Create('[class constructor BSApplicationLinux.Create] XOpenDisplay failed');
+    raise Exception.Create('[BSApplicationLinux.CreateWindow] Window creation failed');
 
   FillChar(windowHints, SizeOf(windowHints), 0);
   windowHints.flags := StateHint OR WindowGroupHint OR InputHint;//WindowGroupHint; //InputHint or StateHint or
@@ -767,7 +767,7 @@ begin
   else
   begin
     AWindow.MouseUp(mb, AEvent.xbutton.x, AEvent.xbutton.y, ss);
-    if TBTimer.CurrentTime.Low - LastTimeMouseUp < 300 then
+    if TBTimer.CurrentTime.Low - LastTimeMouseUp < MOUSE_DOUBLE_CLICK_DELTA then
       AWindow.MouseDblClick(AEvent.xbutton.x, AEvent.xbutton.y);
   end;
   LastTimeMouseUp := TBTimer.CurrentTime.Low;

@@ -300,7 +300,7 @@ begin
 
   for i := 0 to COUNT_ITEM - 1 do // COUNT_ITEM - 1
   begin
-    CreateItem(vec2(Int32(Random(round(ScrollBox.ScrolledArea.x))), Int32(Random(round(ScrollBox.ScrolledArea.y)))),
+    CreateItem(vec2(Int32(Random(ScrollBox.ScrolledArea.x)), Int32(Random(ScrollBox.ScrolledArea.y))),
       vec2(100, 100), enm_cl.GetNextColor);      //Random(200), Random(200)
   end;
 

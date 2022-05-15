@@ -259,6 +259,7 @@ type
     class function TestName: string; override;
   end;
 
+
   { TBSTestChart }
 
   TBSTestChart = class(TBSTest)
@@ -532,6 +533,7 @@ uses
   , bs.strings
   , bs.thread
   , bs.gl.es
+  , bs.log
   ;
 
 { TBSTestChart }
@@ -616,7 +618,7 @@ begin
   Result.ClipObject.Data.DragResolve := true;
   Result.AutoResizeScrollingArea := true;
 
-  Result.Resize(200, 300);
+  Result.Resize(200*ToHiDpiScale, 200*ToHiDpiScale);
   with TCircle.Create(Result.Canvas, Result.OwnerInstances) do
   begin
     Radius := 150;
@@ -897,6 +899,7 @@ begin
   inherited;
   ColorEnumerator := TColorEnumerator.Create([]);
   Chart := TBChartCircularStr.Create(ARenderer);
+  Chart.Resize(ARenderer.WindowWidth div 2, ARenderer.WindowHeight div 2);
   Chart.SortOnGrowY := false;
   Chart.BeginUpdate;
   Chart.ShowLegend := true;
@@ -930,7 +933,8 @@ begin
 
   ObsrvResize := Renderer.EventResize.CreateObserver(GUIThread, OnResizeWindow);
   Chart.EndUpdate;
-  Chart.Position2d := Renderer.Screen2dCentre / 2;
+  Chart.MainBody.ToParentCenter;
+  //Chart.MainBody.Data.ScaleSimple := 0.5;
   ColorEnumerator.Free;
 
 end;
@@ -969,6 +973,20 @@ constructor TBSTestFloatChart.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
   Chart := TBChartCurvesFloat.Create(ARenderer);
+  //BSWriteMsg('TBSTestFloatChart.Create', 'Chart.Width: ' + IntToStr(Round(Chart.Width)));
+
+//  if Chart.Width > ARenderer.WindowWidth then
+//  begin
+//  //  BSWriteMsg('TBSTestFloatChart.Create', 'width: ' + IntToStr(ARenderer.WindowWidth));
+//    if Chart.Height > ARenderer.WindowHeight then
+//      Chart.Resize((ARenderer.WindowWidth div round(Chart.GridStepX))*round(Chart.GridStepX), (ARenderer.WindowHeight div round(Chart.GridStepY))*round(Chart.GridStepY))
+//    else
+//      Chart.Resize((ARenderer.WindowWidth div round(Chart.GridStepX))*round(Chart.GridStepX), Chart.Height);
+//  end else
+//  if Chart.Height > ARenderer.WindowHeight then
+//    Chart.Resize(Chart.Width, (ARenderer.WindowHeight div round(Chart.GridStepY))*round(Chart.GridStepY));
+
+  Chart.Resize(ARenderer.WindowWidth div 2, ARenderer.WindowHeight div 2);
   Curve := Chart.CreateChart;
   //Chart.InterpolateSpline := isNone;
   Curve.AddPair(-2.7, -1.5);
@@ -1002,7 +1020,7 @@ function TBSTestFloatChart.Run: boolean;
 begin
   Result := true;
   Chart.BuildView;
-  Chart.Position2d := vec2(50.0, 50.0);
+  Chart.MainBody.ToParentCenter;
   //Chart.Resize(487.0, 690.0);
   //Chart.Resize(Renderer.WindowWidth * 0.5, Renderer.WindowHeight * 0.5);
 end;
@@ -1223,7 +1241,7 @@ begin
 
   Obj3d := TTexturedVertexes.Create(Self, nil , ARenderer.Scene);
   MeshLoadObj('Models/Obj/aquafish01.obj', Obj3d.Mesh, 0.004);
-  Obj3d.Mesh.TypePrimitive := tpTriangles;
+  Obj3d.Mesh.DrawingPrimitive := GL_TRIANGLES;
   Obj3d.Texture := BSTextureManager.LoadTexture('Models/Obj/aquafish01.png');
   Obj3d.Shader := TBlackSharkTextureOutShader(BSShaderManager.Load('SimpleTexture', TBlackSharkTextureOutShader));
   Obj3d.Position := vec3(0.0, 0.0, -1.0);
@@ -1307,15 +1325,10 @@ constructor TBSTestForm.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
   Form := TBForm.Create(ARenderer);
-  Form.Resize(300, 300);
+  Form.Resize(Renderer.WindowWidth*0.6, Renderer.WindowHeight*0.6);
   Form.Position2d := vec2(50, 50);
   Form.MainBody.Data.AngleZ := 30;
-  ObsrvClickClose := Form.ClipObject.Data.EventMouseDown.CreateObserver(GUIThread, OnMouseClickBtn);
-  {btn := TBButton.Create(ARenderer);
-  Form.DropControl(btn);
-  btn.Position2d := vec2(70.0, 70.0);
-  btn.SubscribeOnEvent(BS_EVENT_MOUSE_DOWN, Form.PipeEvents, OnMouseClickBtn);
-  btn.Caption := 'Show Form2';}
+  ObsrvClickClose := Form.ClipObject.Data.EventMouseDown.CreateObserver(OnMouseClickBtn);
   Form.ShowModal;
 end;
 
@@ -1336,12 +1349,11 @@ begin
   begin
     Form2 := TBForm.Create(Renderer);
     Form2.CaptionHeader := 'Form2';
-    Form2.Resize(300, 300);
-    //Form2.ScrolledArea := Vec2d(250.0, 250.0 - Form2.HeaderHeight);
+    Form2.Resize(Renderer.WindowWidth*0.6, Renderer.WindowHeight*0.6);
     btn := TBButton.Create(Renderer);
     Form2.DropControl(btn, Form2.OwnerInstances);
-    btn.Position2d := vec2(70.0, 70.0);
-    ObsrvClickBtn := btn.OnClickEvent.CreateObserver(GUIThread, OnMouseClickCloseBtn);
+    btn.Position2d := vec2((Form2.Width - btn.Width)*0.5, (Form2.Height - btn.Height)*0.5);
+    ObsrvClickBtn := btn.OnClickEvent.CreateObserver(OnMouseClickCloseBtn);
     btn.Caption := 'Close';
   end;
   Form2.ShowModal;
@@ -1373,10 +1385,10 @@ begin
   ButtonScal.Canvas.Font.Size := 7;
   ButtonScal.Scalable := true;
   ButtonScal.RoundRadius := 0.0;
-  ButtonScal.Resize(170, 40);
-  ButtonScal.Position2d := vec2(300.0, 80.0);
+  ButtonScal.Resize(170*ToHiDpiScale, 40*ToHiDpiScale);
+  ButtonScal.Position2d := vec2((ARenderer.WindowWidth - ButtonScal.Width) * 0.5, ARenderer.WindowHeight*0.1);
   ButtonScal.Caption := 'Create scalable button';
-  ObsrvScalClick := ButtonScal.OnClickEvent.CreateObserver(GUIThread, OnClickScalButton);
+  ObsrvScalClick := ButtonScal.OnClickEvent.CreateObserver(OnClickScalButton);
 
   {Button := TBButton.Create(ARenderer);
   //Button.Resize(170, 35);
@@ -1579,11 +1591,6 @@ begin
   inherited;
 end;
 
-{procedure TBSTestDateChart.OnResizeWindow(Data: PEventBaseRec);
-begin
-
-end;}
-
 function TBSTestDateChart.Run: boolean;
 begin
   Result := true;
@@ -1697,11 +1704,6 @@ begin
   inherited;
 end;
 
-{procedure TBSTestBadDateChart.OnResizeWindow(Data: PEventBaseRec);
-begin
-
-end;}
-
 function TBSTestBadDateChart.Run: boolean;
 begin
   Result := true;
@@ -1749,21 +1751,21 @@ begin
   Rectangle.Color := BS_CL_BLUE;
   Rectangle.Data.Opacity := 0.3;
   Rectangle.Fill := true;
-  Rectangle.Size := vec2(500, 400);
+  Rectangle.Size := vec2(Renderer.WindowWidth*0.8, Renderer.WindowHeight*0.8);
   Rectangle.Build;
   Rectangle.Data.Interactive := false;
 
   CaptionArea := TCanvasText.Create(Canvas, Rectangle);
-  CaptionArea.Text := 'Scrolled area: ' + IntToStr(round(Rectangle.Size.x)) + 'x' + IntToStr(round(Rectangle.Size.x));
+  CaptionArea.Text := 'Scrolled area: ' + IntToStr(round(Rectangle.Size.x)) + 'x' + IntToStr(round(Rectangle.Size.y));
   CaptionArea.ToParentCenter;
 
-  ScrollBarVert.Size := Rectangle.Size.y;
-  ScrollBarHor.Size := Rectangle.Size.x;
+  ScrollBarVert.Size := round(Rectangle.Size.y);
+  ScrollBarHor.Size := round(Rectangle.Size.x);
   ScrollBarVert.Position2d := vec2(ScrollBarHor.Width + 20, 20.0);
   ScrollBarHor.Position2d := vec2(20.0, ScrollBarVert.Height + 20);
 
-  LabelPosVert.Position2d := vec2(ScrollBarVert.Position2d.x + 20, ScrollBarVert.Position2d.y + ScrollBarVert.Height * 0.5);
-  LabelPosHor.Position2d := vec2(ScrollBarHor.Position2d.x + (ScrollBarHor.Width - LabelPosHor.Width) * 0.5, ScrollBarHor.Position2d.y + 20);
+  LabelPosVert.Position2d := vec2(ScrollBarVert.Position2d.x + 20 + ScrollBarVert.Width, ScrollBarVert.Position2d.y + ScrollBarVert.Height * 0.5);
+  LabelPosHor.Position2d := vec2(ScrollBarHor.Position2d.x + (ScrollBarHor.Width - LabelPosHor.Width) * 0.5, ScrollBarHor.Position2d.y + 20 + ScrollBarHor.Height);
 
   Rectangle.Position2d := vec2(ScrollBarHor.Position2d.x, ScrollBarVert.Position2d.y);
 
@@ -1779,21 +1781,21 @@ end;
 
 procedure TBSTestScrollBar.OnAfterRealign(const BData: BData);
 begin
-  CaptionArea.Text := 'Scrolled area: ' + IntToStr(round(Rectangle.Width)) + 'x' + IntToStr(round(Rectangle.Height));
+  CaptionArea.Text := 'Scrolled area: ' + IntToStr(round(Rectangle.Size.x)) + 'x' + IntToStr(round(Rectangle.Size.y));
   CaptionArea.ToParentCenter;
-  ScrollBarHor.Size := Rectangle.Width;
-  ScrollBarVert.Size := Rectangle.Height;
+  ScrollBarHor.Size := round(Rectangle.Width);
+  ScrollBarVert.Size := round(Rectangle.Height);
 end;
 
 procedure TBSTestScrollBar.OnChangeHor(ASender: TBScrollBar);
 begin
-  LabelPosHor.Text := 'Position: ' + IntToStr(Round(ASender.Position));
+  LabelPosHor.Text := 'Position: ' + IntToStr(ASender.Position);
   Rectangle.Position2d := vec2(ScrollBarHor.Position2d.x - ScrollBarHor.Position, ScrollBarVert.Position2d.y - ScrollBarVert.Position);
 end;
 
 procedure TBSTestScrollBar.OnChangeVert(ASender: TBScrollBar);
 begin
-  LabelPosVert.Text := 'Position: ' + IntToStr(Round(ASender.Position));
+  LabelPosVert.Text := 'Position: ' + IntToStr(ASender.Position);
   Rectangle.Position2d := vec2(ScrollBarHor.Position2d.x - ScrollBarHor.Position, ScrollBarVert.Position2d.y - ScrollBarVert.Position);
 end;
 
@@ -1948,10 +1950,10 @@ begin
   Edit2.Canvas.Font.SizeInPixels := 20; }
 
   Edit3 := TBSpinEdit.Create(ARenderer);
-  Edit3.Position2d := vec2(100, 300);
+  Edit3.Position2d := vec2(Edit1.Position2d.x, Edit1.Position2d.y + Edit1.Height + 50);
   Edit3.Scalable := true;
   Edit4 := TBSpinEdit.Create(ARenderer);
-  Edit4.Position2d := vec2(200, 300);
+  Edit4.Position2d := vec2(Edit3.Position2d.x + Edit3.Width + 50, Edit3.Position2d.y);
   Edit4.MinValue := -100;
   Edit4.MaxValue := 0;
   Edit4.Scalable := true;
@@ -2178,11 +2180,8 @@ begin
 end;
 
 function TBSTestTable.Run: boolean;
-const
-  LINE_BREAK = #13#10;
 begin
-  CreateTable(true, vec2(0, 0), vec2(400, 400), 'Column');
-  //CreateTable(false, vec2(10, 20), vec2(400, 400), 'Column');
+  CreateTable(true, vec2(0, 0), vec2(round(Renderer.WindowWidth * 0.8), round(Renderer.WindowHeight * 0.8)), 'Column');
   Result := true;
 end;
 
@@ -2294,7 +2293,7 @@ var
 begin
   inherited;
   ComboBox := TBComboBox.Create(ARenderer);
-  ComboBox.Resize(120, ComboBox.Height);
+  ComboBox.Resize(120*ToHiDpiScale, ComboBox.Height);
   for i := 0 to 10 do
     ComboBox.AddItem('I ' + IntToStr(i));
   //Renderer.Frustum.Angle := vec3(Renderer.Frustum.Angle.x, Renderer.Frustum.Angle.y + 90, Renderer.Frustum.Angle.z);
@@ -2308,7 +2307,7 @@ end;
 
 function TBSTestComboBox.Run: boolean;
 begin
-  ComboBox.Position2d := vec2(300, 300);
+  ComboBox.MainBody.ToParentCenter;
   Result := true;
 end;
 
@@ -2324,7 +2323,6 @@ begin
   inherited;
   Renderer.Frustum.OrtogonalProjection := true;
   ColorBox := TBColorBox.Create(ARenderer);
-  ColorBox.Resize(120, ColorBox.Height);
 end;
 
 destructor TBSTestColorBox.Destroy;
@@ -2336,7 +2334,7 @@ end;
 function TBSTestColorBox.Run: boolean;
 begin
   Result := True;
-  ColorBox.Position2d := vec2(300, 300);
+  ColorBox.MainBody.ToParentCenter;
 end;
 
 class function TBSTestColorBox.TestName: string;
@@ -2350,7 +2348,9 @@ constructor TBSTestColorDialog.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
   ColorDialog := TBColorDialog.Create(ARenderer);
-  ColorDialog.Position2d := vec2(00, 00);
+  if ColorDialog.Width > ARenderer.WindowWidth then
+    ColorDialog.Resize(ARenderer.WindowWidth, ColorDialog.Height);
+  ColorDialog.Position2d := vec2((ARenderer.WindowWidth - ColorDialog.Width)*0.5, 0);
 end;
 
 destructor TBSTestColorDialog.Destroy;
@@ -2377,7 +2377,8 @@ constructor TBSTestTrackBar.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
   TrackBar := TBTrackBar.Create(ARenderer);
-  TrackBar.Position2d := vec2(100, 100);
+  TrackBar.Resize(ARenderer.WindowWidth div 2, TrackBar.Height);
+  TrackBar.MainBody.ToParentCenter;
   TrackBar.Scalable := true;
 end;
 

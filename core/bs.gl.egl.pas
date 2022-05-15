@@ -548,6 +548,8 @@ type
 
   TContextAttributes = array of EGLint;
 
+  { TSharedEglContext }
+
   TSharedEglContext = class
   private
     class var FSharedContext: EGLContext;
@@ -564,6 +566,7 @@ type
     class property SharedDisplay: EGLDisplay read GetSharedDisplay;
     class property SharedContext: EGLContext read GetSharedContext;
     class function GetEglFlags(MultiSample: Boolean): int32;
+    class procedure OnContextLost;
   end;
 
 procedure InitEGL;
@@ -586,9 +589,42 @@ implementation
 
 uses
     SysUtils
+  {$ifdef FPC}
+    {$ifdef X}
+    , cwstring // include the unit otherwise get excepion on LoadLibrary(X11)
+    {$endif}
+  , math
+  {$endif}
+
+  {$ifdef DEBUG_BS}
+  , bs.log
+  {$endif}
   , bs.strings
   , bs.config
   ;
+
+procedure DeleteEglAttribute(AAttribute: GLInt; var AAttribs: TContextAttributes);
+var
+  i, j: int32;
+  ind: int32;
+begin
+  for i := 0 to length(AAttribs) div 2 - 1 do
+  begin
+    if AAttribs[i shl 1] = AAttribute then
+    begin
+      {$ifdef DEBUG_BS}
+      writeln('DeleteEglAttribute: ', AAttribute);
+      {$endif}
+      for j := i to length(AAttribs) div 2 - 2 do
+      begin
+        ind := i shl 1;
+        AAttribs[ind] := AAttribs[ind + 2];
+        AAttribs[ind+1] := AAttribs[ind + 3];
+      end;
+      break;
+    end;
+  end;
+end;
 
 class procedure TSharedEglContext.CreateSharedContext;
 var
@@ -598,7 +634,7 @@ var
   attribValue: EGLint;
   contextAttribs: array[0..4] of EGLint;
   attributes: TContextAttributes;
-  i, j, k: int32;
+  i, j: int32;
 begin
 
   if not Assigned(FSharedContext) then
@@ -610,11 +646,24 @@ begin
       exit;
 
     SharedConfigSelected := nil;
+    if not Assigned(eglGetDisplay) then
+    begin
+      InitEGL;
+      if not Assigned(eglGetDisplay) then
+        exit;
+    end;
+
     eglBindAPI(EGL_OPENGL_ES_API);
+
     FSharedDisplay := eglGetDisplay(EGL_DEFAULT_DISPLAY);
 
     if eglInitialize(FSharedDisplay, @majorVersion, @minorVersion) = 0 then
+    begin
+      {$ifdef DEBUG_BS}
+      BSWriteMsg('TSharedEglContext.CreateSharedContext', 'Could not to initialize egl');
+      {$endif}
       exit;
+    end;
 
     CreateEglAttributes(GetEglFlags(BSConfig.MultiSampling), SharedAttrib);
 
@@ -625,11 +674,22 @@ begin
     numConfigs := 0;
 
     if (eglGetConfigs(FSharedDisplay, nil, 0, @numConfigs) = EGL_FALSE) or (numConfigs = 0) then
+    begin
+      {$ifdef DEBUG_BS}
+      BSWriteMsg('TSharedEglContext.CreateSharedContext.eglGetConfigs', 'Could not to initialize egl');
+      {$endif}
       exit;
+    end;
 
     SetLength(SharedConfig, numConfigs);
     if (eglGetConfigs(FSharedDisplay, @SharedConfig[0], numConfigs, @numConfigs) = EGL_FALSE) then
+    begin
+      {$ifdef DEBUG_BS}
+      BSWriteMsg('TSharedEglContext.CreateSharedContext.eglGetConfigs', 'Could not to initialize egl');
+      {$endif}
       exit;
+    end;
+
     SharedConfigSelected := SharedConfig[0];
     for i := 0 to numConfigs - 1 do
     begin
@@ -639,24 +699,19 @@ begin
       begin
          if eglGetConfigAttrib(FSharedDisplay, SharedConfigSelected, attributes[j], @attribValue) = EGL_FALSE then
          begin
-           k := j;
-           while attributes[j] <> EGL_NONE do
-           begin
-              attributes[j] := attributes[j+2];
-              attributes[j+1] := attributes[j+3];
-              inc(j, 2);
-           end;
-           j := k;
-           continue;
+          {$ifdef DEBUG_BS}
+           BSWriteMsg('TSharedEglContext.CreateSharedContext', ' - eglGetConfigAttrib = EGL_FALSE, attribute: ' + IntToStr(attributes[j]));
+          {$endif}
+          DeleteEglAttribute(attributes[j], attributes);
+          continue;
          end;
-         //attributes[j+1] := attribValue;
          inc(j, 2);
       end;
 
       if (attributes[0] = EGL_NONE) then
       begin
         SharedConfigSelected := nil;
-        move(SharedAttrib[0], attributes[0], SizeOf(EGLint)*length(SharedAttrib));
+        //move(SharedAttrib[0], attributes[0], SizeOf(EGLint)*length(SharedAttrib));
       end else
         break;
     end;
@@ -664,11 +719,23 @@ begin
     if not Assigned(SharedConfigSelected) then
        exit;
 
-    //if ( eglChooseConfig(SharedDisplay, @SharedAttrib[0], nil, 1, @numConfigs) = EGL_FALSE ) then
-    //  exit;
-
     if (eglChooseConfig(FSharedDisplay, @attributes[0], @SharedConfigSelected, 1, @numConfigs) = EGL_FALSE) then
-      exit;
+    begin
+      if BSConfig.MultiSampling then
+      begin
+        {$ifdef DEBUG_BS}
+        BSWriteMsg('TSharedEglContext.CreateSharedContext', 'trying to remove an option of multisampling');
+        {$endif}
+        DeleteEglAttribute(EGL_SAMPLES, attributes);
+        DeleteEglAttribute(EGL_SAMPLE_BUFFERS, attributes);
+        if (eglChooseConfig(FSharedDisplay, @attributes[0], @SharedConfigSelected, 1, @numConfigs) = EGL_FALSE) then
+          exit;
+        {$ifdef DEBUG_BS}
+        BSWriteMsg('TSharedEglContext.CreateSharedContext', 'AFTER remove the multisampling option - SUCSESS');
+        {$endif}
+      end else
+        exit;
+    end;
 
     contextAttribs[0] := EGL_CONTEXT_CLIENT_VERSION;
     contextAttribs[1] := 2;
@@ -695,6 +762,9 @@ begin
       raise Exception.Create('eglMakeCurrent:' + IntToStr(eglGetError()));
     end;  }
 
+    {$ifdef DEBUG_BS}
+    BSWriteMsg('TSharedEglContext.CreateSharedContext', 'SUCSESS!!!');
+    {$endif}
   end;
 end;
 
@@ -703,6 +773,14 @@ begin
   Result := ES_WINDOW_RGB or ES_WINDOW_ALPHA or ES_WINDOW_DEPTH or ES_WINDOW_STENCIL;
   if MultiSample then
     Result := Result or ES_WINDOW_MULTISAMPLE;
+end;
+
+class procedure TSharedEglContext.OnContextLost;
+begin
+  //eglDestroySurface(FSharedDisplay, SharedSurface);
+  eglDestroyContext(FSharedDisplay, FSharedContext);
+  FillChar(FSharedContext, SizeOf(FSharedContext), 0);
+  FillChar(FSharedDisplay, SizeOf(FSharedContext), 0);
 end;
 
 class function TSharedEglContext.GetSharedContext: EGLContext;
@@ -721,8 +799,7 @@ end;
 
 class destructor TSharedEglContext.Destroy;
 begin
-  eglDestroySurface(SharedDisplay, SharedSurface);
-  eglDestroyContext(SharedDisplay, SharedContext);
+  OnContextLost;
 end;
 
 function GetPathGL: string;
@@ -838,7 +915,20 @@ end;
 
 procedure LoadEGL(const lib: string);
 begin
+  {$IFDEF FPC}
+    { according to bug 7570, this is necessary on all x86 platforms,
+      maybe we've to fix the sse control word as well }
+    { Yes, at least for darwin/x86_64 (JM) }
+    {$IF DEFINED(cpui386) or DEFINED(cpux86_64)}
+    SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
+    {$IFEND}
+  {$ENDIF}
+
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('LoadEGL', lib);
+  {$endif}
   FreeEGL;
+
   EGLLib := LoadLibrary(PChar(lib));
   if EGLLib = 0 then
     raise Exception.Create(format('Could not load library: %s',[lib]));
@@ -847,7 +937,12 @@ begin
 
   eglGetError := glGetProcAddress(EGLLib,'eglGetError');
   if not Assigned(eglGetError) then
+  begin
+    {$ifdef DEBUG_BS}
+    BSWriteMsg('LoadEGL', 'glGetProcAddress returned nil');
+    {$endif}
     exit;
+  end;
 
   eglGetDisplay := glGetProcAddress(EGLLib,'eglGetDisplay');
   eglGetPlatformDisplay := glGetProcAddress(EGLLib,'eglGetPlatformDisplay');
@@ -976,47 +1071,44 @@ begin
   contextAttribs[2] := EGL_NONE;
   contextAttribs[3] := EGL_NONE;
 
-  {// Get Display
-  display := eglGetDisplay(EGL_DEFAULT_DISPLAY); //
-  if ( display = EGL_NO_DISPLAY ) then
-    exit(nil);
-
-  // Initialize EGL
-  if (eglInitialize(display, @majorVersion, @minorVersion) = EGL_FALSE ) then
-    exit(nil);
-
-  if ( eglChooseConfig(display, @attribList[0], nil, 1, @numConfigs) = EGL_FALSE ) then
-    exit(nil);
-  // Choose config
-  if ( eglChooseConfig(display, @attribList[0], @config, 1, @numConfigs) = EGL_FALSE ) then
-    exit(nil);   }
 
   // Create a surface
-  surface := eglCreateWindowSurface(TSharedEglContext.SharedDisplay, TSharedEglContext.SharedConfigSelected, EGLWindow^.hWnd, nil); //@TSharedEglContext.SharedAttrib[0]
-  if ( surface = EGL_NO_SURFACE ) then
+  surface := eglCreateWindowSurface(TSharedEglContext.SharedDisplay, TSharedEglContext.SharedConfigSelected, EGLWindow^.hWnd, nil); // @TSharedEglContext.SharedAttrib[0]
+  if (surface = EGL_NO_SURFACE) then
+  begin
+    {$ifdef DEBUG_BS}
+    BSWriteMsg('CreateEGLContext.eglCreateWindowSurface', 'FAILED!!!');
+    {$endif}
     exit(nil);
+  end;
 
-
-  //if BSConfig.MultiSampling then
-  //  if (eglSurfaceAttrib(TSharedEglContext.SharedDisplay, surface, EGL_MULTISAMPLE_RESOLVE, EGL_MULTISAMPLE_RESOLVE_DEFAULT) = EGL_FALSE) then
-  //    exit(nil);
-  // Create a GL context
-  //if gl_SharedContext <> nil then
-  //  context := eglCreateContext(display, config, gl_SharedContext, @contextAttribs[0] ) else
   context := eglCreateContext(TSharedEglContext.SharedDisplay, TSharedEglContext.SharedConfigSelected, TSharedEglContext.SharedContext, @contextAttribs[0] );
 
-  if ( context = EGL_NO_CONTEXT ) then
+  if (context = EGL_NO_CONTEXT) then
+  begin
+    {$ifdef DEBUG_BS}
+    BSWriteMsg('CreateEGLContext.eglCreateContext', 'FAILED!!!');
+    {$endif}
     exit(nil);
+  end;
 
   // Make the context current
-  if ( eglMakeCurrent(TSharedEglContext.SharedDisplay, surface, surface, context) = EGL_FALSE ) then
+  if (eglMakeCurrent(TSharedEglContext.SharedDisplay, surface, surface, context) = EGL_FALSE) then
+  begin
+    {$ifdef DEBUG_BS}
+    BSWriteMsg('CreateEGLContext.eglMakeCurrent', 'FAILED!!!');
+    {$endif}
     exit(nil);
+  end;
 
   new(Result);
   Result^.eglDisplay := TSharedEglContext.SharedDisplay;
   Result^.eglSurface := surface;
   Result^.eglContext := context;
   Result^.eglWindow := EGLWindow;
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('CreateEGLContext', 'SUCSESS!!!');
+  {$endif}
 end;
 
 function GLMakeCurrent(Context: Pointer): boolean;
@@ -1043,8 +1135,6 @@ end;
 
 procedure FreeEGLWindow(var EGLWindow: PEGLWindow);
 begin
-  //if (EGLWindow^.window <> 0) then
-  //  glutDestroyWindow(EGLWindow^.window);
   dispose(EGLWindow);
   EGLWindow := nil;
 end;
