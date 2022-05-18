@@ -64,9 +64,9 @@ uses
   {$endif}
   , math
   , bs.config
-  , bs.gl.es
   , bs.collections
   , bs.thread
+  , bs.graphics
   ;
 
 { TBSTestCollada }
@@ -81,44 +81,44 @@ begin
   //Renderer.Frustum.Position := vec3(7.0, 0.0, 0.0);
   Renderer.Frustum.Angle := vec3(0.0, 20.0, 0.0);
   Canvas := TBCanvas.Create(ARenderer, nil);
-  Canvas.Font.SizeInPixels := 10;
+  Canvas.Font.Size := 6;
   AnimationsCombo := TBComboBox.Create(Canvas);
   AnimationsCombo.OnSelectComboBoxItem := OnSelectAnimation;
-  AnimationsCombo.Resize(150, 25);
-  AnimationsCombo.Position2d := vec2(30.0, 30.0);
+  AnimationsCombo.Resize(100*ToHiDpiScale, 25*ToHiDpiScale);
+  AnimationsCombo.Position2d := vec2(10.0*ToHiDpiScale, 20.0*ToHiDpiScale);
   AnimationsCombo.Text := '';
   AnimationsCombo.ReadOnly := true;
   AnimationsCombo.ShowCursor := false;
   BtnPause := TBButton.Create(Canvas);
-  BtnPause.Resize(AnimationsCombo.Width, 25);
+  BtnPause.Resize(AnimationsCombo.Width, 25*ToHiDpiScale);
   BtnPause.Caption := 'Run';
-  BtnPause.Position2d := vec2(AnimationsCombo.Position2d.x + AnimationsCombo.Width + 10, AnimationsCombo.Position2d.y);
-  BtnClickObsrver := BtnPause.OnClickEvent.CreateObserver(GuiThread, PauseResume);
+  BtnPause.Position2d := vec2(AnimationsCombo.Position2d.x + AnimationsCombo.Width + 10*ToHiDpiScale, AnimationsCombo.Position2d.y);
+  BtnClickObsrver := BtnPause.OnClickEvent.CreateObserver(PauseResume);
   AnimLabel := TCanvasText.Create(Canvas, nil);
   AnimLabel.Text := 'Animations:';
   AnimLabel.Position2d := vec2(AnimationsCombo.Position2d.x, AnimationsCombo.Position2d.y-AnimLabel.Height-3);
   ARenderer.Frustum.DistanceFarPlane := 500;
 
-  ObsrvInstanceSelect := Renderer.Scene.EventInstanceSelect.CreateObserver(GuiThread, EventInstanceSelect);
+  ObsrvInstanceSelect := Renderer.Scene.EventInstanceSelect.CreateObserver(EventInstanceSelect);
 
   cbShowBones := TBCheckBox.Create(Canvas);
   cbShowBones.Text := 'Show skeleton';
   cbShowBones.OnCheck := OnCheckShowBones;
-  cbShowBones.Position2d := vec2(AnimationsCombo.Left, AnimationsCombo.Top + AnimationsCombo.Height + 5.0);
+  cbShowBones.Position2d := vec2(AnimationsCombo.Left, AnimationsCombo.Top + AnimationsCombo.Height + 5.0*ToHiDpiScale);
 
   cbHideMesh := TBCheckBox.Create(Canvas);
   cbHideMesh.Text := 'Hide mesh';
   cbHideMesh.OnCheck := OnCheckHideMesh;
-  cbHideMesh.Position2d := vec2(cbShowBones.Left, cbShowBones.Top + cbShowBones.Height + 5.0);
+  cbHideMesh.Position2d := vec2(cbShowBones.Left, cbShowBones.Top + cbShowBones.Height + 5.0*ToHiDpiScale);
 
   TxtPosition := TCanvasText.Create(Canvas, nil);
-  TxtPosition.Position2d := vec2(cbHideMesh.Left, cbHideMesh.Top + cbHideMesh.Height + 5.0);
+  TxtPosition.Position2d := vec2(cbHideMesh.Left, cbHideMesh.Top + cbHideMesh.Height + 5.0*ToHiDpiScale);
   TxtPosition.Text := 'Position: (0.0, 0.0, 0.0)';
   TxtTail := TCanvasText.Create(Canvas, nil);
-  TxtTail.Position2d := vec2(TxtPosition.Position2d.x, TxtPosition.Position2d.y + TxtPosition.Height + 5.0);
+  TxtTail.Position2d := vec2(TxtPosition.Position2d.x, TxtPosition.Position2d.y + TxtPosition.Height + 5.0*ToHiDpiScale);
   TxtTail.Text := 'Tip: (0.0, 0.0, 0.0)';
   TxtName := TCanvasText.Create(Canvas, nil);
-  TxtName.Position2d := vec2(TxtTail.Position2d.x, TxtTail.Position2d.y + TxtTail.Height + 5.0);
+  TxtName.Position2d := vec2(TxtTail.Position2d.x, TxtTail.Position2d.y + TxtTail.Height + 5.0*ToHiDpiScale);
   TxtName.Text := 'Name: ';
   TxtName.Data.Hidden := true;
   TxtPoint := TCanvasText.Create(Canvas, nil);
@@ -155,7 +155,7 @@ begin
     TxtTail.Text := 'Tip: ' + VecToStr(TBone(PGraphicInstance(AData.Instance).Owner.Owner).Tip);
     TxtName.Data.Hidden := false;
     TxtName.Text := 'Name: ' + TBone(PGraphicInstance(AData.Instance).Owner.Owner).Caption;
-    TxtPoint.Position2d := vec2(TxtName.Position2d.x, TxtName.Position2d.y + TxtName.Height + 5.0);
+    TxtPoint.Position2d := vec2(TxtName.Position2d.x, TxtName.Position2d.y + TxtName.Height + 5.0*ToHiDpiScale);
   end else
   if PGraphicInstance(AData.Instance).Owner.Owner is TSkeleton then
   begin

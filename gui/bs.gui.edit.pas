@@ -911,7 +911,8 @@ begin
     // for accept key events
     Canvas.Renderer.Scene.InstanceSetSelected(TextRect.Data.BaseInstance, true);
     {$ifdef ANDROID}
-    ControlEvents.Send(TextRect.Data.BaseInstance, GUI_SHOW_KEYBOARD);
+    if not ReadOnly then
+       ControlEvents.Send(TextRect.Data.BaseInstance, GUI_SHOW_KEYBOARD);
     {$endif}
   end else
   begin

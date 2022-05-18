@@ -76,6 +76,7 @@ type
 
     function OnTouch(ActionID: int32; PointerID: int32; X, Y: int32; Pressure: single): int32;
     function ProcsessOnKey(IsDown: boolean; keyChar: JChar; keyCode: JInt; shiftState: JInt): int32;
+    function Draw: int32;
     function GetWindow(X, Y: int32): BSWindow;
     function GetNextAction: int32;
   end;
@@ -86,7 +87,7 @@ procedure JNI_OnUnload(VM: PJavaVM; {%H-}reserved: pointer); cdecl;
 function bsNativeInit({%H-}PEnv: PJNIEnv; this: JObject; AAppDir, AFilesDir: jstring): JInt; cdecl;
 procedure bsNativeOnViewCreated(PEnv: PJNIEnv; this: JObject; nativeHandle: JObject; displayWidthPixels: jfloat; displayHeightPixels: jfloat; dpiX: jfloat; dpiY: jfloat); cdecl;
 procedure bsNativeOnViewChanged(PEnv: PJNIEnv; this: JObject; Width, Height: JInt); cdecl;
-procedure bsNativeOnDraw(PEnv: PJNIEnv; this: JObject); cdecl;
+function bsNativeOnDraw(PEnv: PJNIEnv; this: JObject): JInt; cdecl;
 procedure bsNativeOnChangeFocus(PEnv: PJNIEnv; this: JObject; nativeHandle: JObject; IsFocused: JBoolean);  cdecl;
 function bsNativeOnTouch(PEnv: PJNIEnv; this: jobject; ActionID: int32; PointerID: jint; X, Y, Pressure: jfloat): JInt; cdecl;
 function bsNativeOnKeyDown(PEnv: PJNIEnv; this: JObject; keyChar: JChar; keyCode: JInt; shiftState: JInt): JInt; cdecl;
@@ -320,6 +321,12 @@ begin
   Result := BuildCommonResult;
 end;
 
+function BSApplicationAndroid.Draw: int32;
+begin
+  Application.ProcessMessages;
+  Result := BuildCommonResult;
+end;
+
 procedure BSApplicationAndroid.UpdateClientRect(AWindow: BSWindow);
 begin
   {$ifdef DEBUG_BS}
@@ -517,9 +524,9 @@ procedure bsNativeOnActivityResult(PEnv: PJNIEnv; this: JObject; requestCode: JI
 begin
 end;
 
-procedure bsNativeOnDraw(PEnv: PJNIEnv; this: JObject); cdecl;
+function bsNativeOnDraw(PEnv: PJNIEnv; this: JObject): JInt; cdecl;
 begin
-  Application.ProcessMessages;
+  Result := ApplicationAndroid.Draw;
 end;
 
 procedure bsNativeOnChangeFocus(PEnv: PJNIEnv; this: JObject; nativeHandle: JObject; IsFocused: JBoolean); cdecl;

@@ -777,10 +777,13 @@ end;
 
 class procedure TSharedEglContext.OnContextLost;
 begin
-  //eglDestroySurface(FSharedDisplay, SharedSurface);
+  eglMakeCurrent(FSharedDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+  eglDestroySurface(FSharedDisplay, SharedSurface);
   eglDestroyContext(FSharedDisplay, FSharedContext);
+  eglTerminate(FSharedDisplay);
+  FillChar(FSharedDisplay, SizeOf(FSharedDisplay), 0);
   FillChar(FSharedContext, SizeOf(FSharedContext), 0);
-  FillChar(FSharedDisplay, SizeOf(FSharedContext), 0);
+  FillChar(SharedSurface, SizeOf(SharedSurface), 0);
 end;
 
 class function TSharedEglContext.GetSharedContext: EGLContext;
@@ -1125,9 +1128,11 @@ end;
 
 procedure FreeEGLContext(var ESContext: PESContext; FreeWindow: boolean);
 begin
-  //dec(gl_CountContexts);
+  eglMakeCurrent(ESContext.eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+  FreeEGLSurface(ESContext);
   if FreeWindow then
-    FreeEGLWindow(ESContext^.eglWindow);
+    FreeEGLWindow(ESContext.eglWindow);
+  eglDestroyContext(ESContext.eglDisplay, ESContext.eglContext);
   dispose(ESContext);
   ESContext := nil;
 end;

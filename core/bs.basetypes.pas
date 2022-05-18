@@ -1067,22 +1067,6 @@ const
   function FloatToInt64(AValue: BSFloat): int64; inline;
 
 
-type
-  TEnumChars = record
-  private
-    Data: string;
-    {$ifdef FPC}
-    ch_a: string;
-    u: WideString;
-    len_ch: int8;
-    {$endif}
-    ptr_str: PChar;
-    len_str: int32;
-  public
-    procedure BeginRead(const Text: string); inline;
-    function Next(out Ch: WideChar): boolean; inline;
-  end;
-
 const
   IDENTITY_MAT: TMatrix4f = (V: (
     1, 0, 0, 0,
@@ -1116,9 +1100,6 @@ const
 implementation
 
 uses
-  {$ifdef FPC}
-    LazUTF8,
-  {$endif}
     Math
   , DateUtils
   ;
@@ -5025,38 +5006,6 @@ begin
   FExceptColors := ExceptCols;
   FDefaultColor := bsBlack;
   SetToColor(FDefaultColor);
-end;
-
-{ TEnumChars }
-
-procedure TEnumChars.BeginRead(const Text: string);
-begin
-  Data := Text;
-  len_str := Length(Data);
-  if len_str = 0 then
-    exit;
-  ptr_str := @Data[1];
-end;
-
-function TEnumChars.Next(out Ch: WideChar): boolean;
-begin
-  if len_str <= 0 then
-    exit(false);
-  {$ifdef FPC}
-  //len_ch := UTF8CharacterLength(ptr_str);
-  len_ch := UTF8CodepointSize(ptr_str);
-  SetLength(ch_a, len_ch);
-  move(ptr_str^, ch_a[1], len_ch);
-  inc(ptr_str, len_ch);
-  dec(len_str, len_ch);
-  u := UTF8Decode(ch_a);
-  Ch := u[1];
-  {$else}
-  Ch := ptr_str^;
-  dec(len_str);
-  inc(ptr_str);
-  {$endif}
-  Result := true;
 end;
 
 { TOperatorsDateTime }

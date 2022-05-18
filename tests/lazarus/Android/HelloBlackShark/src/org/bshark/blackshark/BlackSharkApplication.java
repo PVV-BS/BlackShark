@@ -54,7 +54,7 @@ public class BlackSharkApplication extends Activity {
     public native int bsNativeInit(String appPath, String filesPath);
     public native void bsNativeOnViewCreated(Object nativeHandle, float displayWidthPixels, float displayHeightPixels, float dpiX, float dpiY);
     public native void bsNativeOnViewChanged(int Width, int Height);
-    public native void bsNativeOnDraw();
+    public native int bsNativeOnDraw();
     public native void bsNativeOnChangeFocus(Object nativeHandle, boolean isFocused);
     private native int bsNativeOnTouch(int ActionId, int PointerID, float X, float Y, float Pressure);
     public native int bsNativeGetIntAttribute(String Name, int Default);
@@ -147,7 +147,9 @@ public class BlackSharkApplication extends Activity {
         
         @Override
         protected void onDraw(Canvas canvas) {
-            bsNativeOnDraw();
+            int opCode = bsNativeOnDraw();
+            if (opCode > 0)
+                processOpCode(opCode);
         }
 
         @Override
@@ -594,6 +596,9 @@ public class BlackSharkApplication extends Activity {
                 processOpCodeDo(opCode);
                 opCode = bsNativeNextAction();
             }
+        } else if (OpCode == OPCODE_ANIMATION_STOP) { // most often opcode process here
+            if ((!maxFps) && (updateTask != null))
+                stopLoop();
         } else
             processOpCodeDo(OpCode);
     }
@@ -618,11 +623,6 @@ public class BlackSharkApplication extends Activity {
                 break;
             }
 
-            case OPCODE_ANIMATION_STOP:{
-                if ((!maxFps) && (updateTask != null))
-                    stopLoop();
-                break;
-            }
         }
 
     }

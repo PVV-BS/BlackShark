@@ -510,14 +510,16 @@ begin
 end;
 
 procedure TBlackSharkApplication.ProcessMessages;
+const
+  TIME_MAX_FPS = 3000;
 var
   t, delta: uint32;
 begin
   t := TBTimer.CurrentTime.Low;
-  if not BSConfig.MaxFps and (t - TTimeProcessEvent.TimeProcessEvent.Counter > 3000) then
-    FApplicationSystem.UpdateWait
+  if (BSConfig.MaxFps or TTaskExecutor.HasTasks) and (t - TTimeProcessEvent.TimeProcessEvent.Counter < TIME_MAX_FPS) then
+    FApplicationSystem.Update
   else
-    FApplicationSystem.Update;
+    FApplicationSystem.UpdateWait;
 
   GUIThread.OnIdleApplication;
 

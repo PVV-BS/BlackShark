@@ -37,6 +37,7 @@ uses
   , bs.renderer
   , bs.mesh
   , bs.math
+  , bs.animation
   ;
 
 type
@@ -181,12 +182,14 @@ type
     FCurrentTrasforms: TListBoneMatrixes;
     CurrentTransformsUniform: PShaderParametr;
     FParentTransforms: TMatrix4f;
+    FAniUpdater: IBAnimationLinearFloat;
+    FAniUpdaterObserver: IBAnimationLinearFloatObsrv;
     procedure SetAnimation(const Value: string);
     procedure FindRoots;
     procedure DoStartAnimation;
     procedure DoStopAnimation;
     procedure SetSkin(const Value: TGraphicObject);
-    procedure BeforeDrawObject(Item: TGraphicObject);
+    procedure BeforeDrawObject({%H-}Item: TGraphicObject);
     procedure LinkBonesToVertexes;
     procedure DoRecalcAnimation; inline;
     procedure RecalcAnimation; inline;
@@ -200,6 +203,7 @@ type
     procedure SetPosition(const Value: TVec3f);
     procedure UpdateBonesTransform;
     procedure SetParentTransforms(const Value: TMatrix4f);
+    procedure OnUpdate(const {%H-}AValue: BSFloat);
   public
     constructor Create(AOwner: TObject; ARenderer: TBlackSharkRenderer);
     destructor Destroy; override;
@@ -352,12 +356,12 @@ begin
     FCurrentFrame := 0;
   end;
 
-
   RecalcAnimation;
   if FCalculateOnGPU and Assigned(CurrentTransformsUniform) then
     glUniformMatrix4fv(CurrentTransformsUniform.Location, FCurrentTrasforms.Count, GL_FALSE, FCurrentTrasforms.ShiftData[0]);
   { enforce to update the timer in order to off an application idle }
-  TBTimer.UpdateTimer(TTimeProcessEvent.TimeProcessEvent);
+  if not BSConfig.MaxFps then
+     TBTimer.UpdateTimer(TTimeProcessEvent.TimeProcessEvent);
 end;
 
 procedure TSkeleton.CheckAnimation;
@@ -469,7 +473,17 @@ begin
   end;
 
   FStartTime := TBTimer.CurrentTime.Low;
-  TBTimer.UpdateTimer(TTimeProcessEvent.TimeProcessEvent);
+  if not BSConfig.MaxFps then
+  begin
+    // the animation need only as task in order to indicate that need to redraw with max FPS
+    FAniUpdater := CreateAniFloatLinear;
+    FAniUpdater.IntervalUpdate := 1000;
+    FAniUpdater.Duration := 1000;
+    FAniUpdater.Loop := true;
+    FAniUpdaterObserver := FAniUpdater.CreateObserver(OnUpdate);
+    FAniUpdater.Run;
+  end else
+    TBTimer.UpdateTimer(TTimeProcessEvent.TimeProcessEvent);
 end;
 
 procedure TSkeleton.DoHideBones;
@@ -585,6 +599,13 @@ begin
     FreeAndNil(FSkinMeshCopy);
   end;
   UpdateBonesTransform;
+
+  if Assigned(FAniUpdater) then
+    FAniUpdater.Stop;
+
+  FAniUpdaterObserver := nil;
+  FAniUpdater := nil;
+
 end;
 
 procedure TSkeleton.FindRoots;
@@ -604,6 +625,11 @@ begin
   FParentTransforms := Value;
   // this is center of the skeleton
   Position := TVec3f(ParentTransforms.M3);
+end;
+
+procedure TSkeleton.OnUpdate(const AValue: BSFloat);
+begin
+  //RecalcAnimation;
 end;
 
 procedure TSkeleton.SetPauseAnimation(const Value: boolean);
