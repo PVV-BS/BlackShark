@@ -121,7 +121,6 @@ object frmMain: TfrmMain
       Height = 123
       Caption = 'Full screen anti-aliasing'
       TabOrder = 2
-      Visible = False
       object lblKernel: TLabel
         Left = 28
         Top = 90
@@ -146,7 +145,6 @@ object frmMain: TfrmMain
         Width = 131
         Height = 17
         Caption = 'Multi Sampling (MSAA)'
-        Enabled = False
         TabOrder = 1
         OnClick = cbMSAAClick
       end

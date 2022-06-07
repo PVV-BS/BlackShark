@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -441,6 +441,11 @@ type
 
   function ColorToString(AColor: TGuiColor): AnsiString;
   function StringToColor(AColor: AnsiString): TGuiColor;
+
+var
+  { This variables is setted from platform-dependency units }
+  PixelsPerInch: single = 96;
+  ToHiDpiScale: single = 1.0;
 
 const
   SAMPLING_KERNELS_SET: array[TSamplingKernel] of TMatrix3f = (

@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -31,12 +31,18 @@ interface
 
 procedure BSWriteMsg(const Source: string; const Msg: string; Unical: boolean = false); overload;
 procedure BSWriteMsg(const Source: string; Msg: int32; Unical: boolean = false); overload;
+procedure BSWriteMsg(const Source: string; Unical: boolean = false); overload;
 
 type
   TLogEventNotify = procedure (Source: string; Msg: string);
 
+const
+    MESSAGE_INFO  = 0;
+    MESSAGE_WARN  = 1;
+    MESSAGE_ERROR = 2;
+
 var
-  // if true - begin new log evry time after run
+  // if true - begin new log every time after run
   g_RewriteLog: boolean = false;
   LogEventNotify: TLogEventNotify = nil;
 
@@ -44,76 +50,91 @@ implementation
 
 uses
     Classes
+  , SysUtils
   , bs.strings
   , bs.collections
   , bs.utils
-  , SysUtils
+  , bs.config
   ;
 
 var
-  g_WriteToLog: boolean = {$ifdef DEBUG_BS} true {$else} false {$endif};
   Log: TFileStream = nil;
-  UnicMsg: TBinTree<Pointer>;
+  UnicMsg: THashTable<string, int32>;
 
 procedure InitLog;
 begin
-  if not g_WriteToLog then
-    exit;
 
+  {$ifndef DBG_IO}
   SetCurrentDir(GetApplicationPath);
   if g_RewriteLog or not FileExists('BlackSharkLog.txt') then
     Log := TFileStream.Create('BlackSharkLog.txt', fmCreate)
   else
     Log := TFileStream.Create('BlackSharkLog.txt', fmOpenWrite);
-  UnicMsg := TBinTree<Pointer>.Create;
+  {$endif}
+
+  UnicMsg := THashTable<string, int32>.Create(@GetHashBlackSharkS, @StrCmpBool);
 end;
 
 procedure WriteToLog(Data: pByte; Len: int32);
 begin
-  if not g_WriteToLog then
+  if not BSConfig.WriteLog then
     exit;
   Log.WriteBuffer(Data^, Len);
 end;
 
-function CheckUnic(Msg: pByte; Len: int32): boolean;
-var
-  v: Pointer;
+function CheckUnic(const Msg: string): boolean;
 begin
-  if UnicMsg.Find(Msg, Len, v) then
-    exit(false)
-  else
-    UnicMsg.Add(Msg, Len, Pointer($FFFFFFFF));
-  Result := true;
+  Result := UnicMsg.TryAdd(Msg, 0);
 end;
 
 procedure BSWriteMsg(const Source: string; const Msg: string; Unical: boolean = false);
+{$ifndef DBG_IO}
 var
   add_m: AnsiString;
+{$endif}
 begin
-  if not (g_WriteToLog) or Unical and not CheckUnic(@Msg[1], Length(Msg)) then
+  if not BSConfig.WriteLog then
     exit;
+
+  if not Assigned(Log) then
+    InitLog;
+
+  if (Unical and not CheckUnic(Msg)) then
+    exit;
+
   if Assigned(LogEventNotify) then
     LogEventNotify(Source, Msg);
+  {$ifdef DBG_IO}
+  writeln(Source, ' ', Msg);
+  {$else}
   add_m := StringToAnsi((FormatDateTime('dd.MM.yy hh:mm:ss', now)) + #$09 + Source + #$09 + Msg + #$0d+#$0a);
   WriteToLog(@(add_m)[1], length(add_m));
+  {$endif}
 end;
 
 procedure BSWriteMsg(const Source: string; Msg: int32; Unical: boolean = false);
 begin
-  BSWriteMsg(Source, IntToStr(Msg), Unical);
+  case Msg of
+      MESSAGE_INFO: BSWriteMsg(Source, 'Info', Unical);
+      MESSAGE_WARN: BSWriteMsg(Source, 'Warr', Unical);
+      MESSAGE_ERROR: BSWriteMsg(Source, 'Error', Unical)
+    else
+      BSWriteMsg(Source, IntToStr(Msg), Unical);
+  end;
+end;
+
+procedure BSWriteMsg(const Source: string; Unical: boolean);
+begin
+  BSWriteMsg(Source, 'Info', Unical);
 end;
 
 
 initialization
-  {$ifdef DEBUG}
-    InitLog();
-  {$endif}
+
 
 finalization
-  if Assigned(Log) then
-  begin
     Log.Free;
     UnicMsg.Free;
-  end;
+
 end.
 

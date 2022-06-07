@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -38,18 +38,6 @@ uses
   {$endif}
     bs.gl.es
   ;
-
-const
-  /// esCreateWindow flag - RGB color buffer
-  ES_WINDOW_RGB = 0;
-  /// esCreateWindow flag - ALPHA color buffer
-  ES_WINDOW_ALPHA = 1;
-  /// esCreateWindow flag - depth buffer
-  ES_WINDOW_DEPTH = 2;
-  /// esCreateWindow flag - stencil buffer
-  ES_WINDOW_STENCIL = 4;
-  /// esCreateWindow flat - multi-sample buffer
-  ES_WINDOW_MULTISAMPLE = 8;
 
 type
 
@@ -504,226 +492,57 @@ type
     m: array[0..3, 0..3] of GLfloat;
   end;
 
-  PESContext = ^TESContext;
-
-  TEGLDrawFunc = procedure (ESContext: PESContext);
-  TEGLKeyFunc = procedure (ESContext: PESContext; Key: PAnsiChar; int1: int32; int2: int32);
-  TEGLUpdateFunc = procedure (ESContext: PESContext; deltaTime: GLfloat);
-
-  PEGLWindow = ^TEGLWindow;
-  TEGLWindow = record
-    window: int32;
-
-    /// Window width
-    width: GLint;
-
-    /// Window height
-    height: GLint;
-
-    /// Window handle
-    hWnd: EGLNativeWindowType;
-    DC: EGLNativeDisplayType;
-  end;
-
-  TESContext = record
-     /// Put your user data here...
-     userData: Pointer;
-
-     eglWindow: PEGLWindow;
-
-     /// EGL display
-     eglDisplay: EGLDisplay;
-
-     /// EGL context
-     eglContext: EGLContext;
-
-     /// EGL surface
-     eglSurface: EGLSurface;
-
-     /// Callbacks
-     EGLDrawFunc: TEGLDrawFunc;
-     EGLKeyFunc: TEGLKeyFunc;
-     EGLUpdateFunc: TEGLUpdateFunc;
-  end;
-
-  TContextAttributes = array of EGLint;
-
-  TSharedEglContext = class
-  private
-    class var FSharedContext: EGLContext;
-    class var FSharedDisplay: EGLDisplay;
-    class procedure CreateSharedContext;
-    class function GetSharedContext: EGLContext; static;
-    class function GetSharedDisplay: EGLDisplay; static;
-    class destructor Destroy;
-  public
-    class var SharedSurface: EGLSurface;
-    class var SharedAttrib: TContextAttributes;
-    class var SharedConfig: array of EGLConfig;
-    class var SharedConfigSelected: EGLConfig;
-    class property SharedDisplay: EGLDisplay read GetSharedDisplay;
-    class property SharedContext: EGLContext read GetSharedContext;
-    class function GetEglFlags(MultiSample: Boolean): int32;
-  end;
+  //PESContext = ^TESContext;
+  //
+  //TEGLDrawFunc = procedure (ESContext: PESContext);
+  //TEGLKeyFunc = procedure (ESContext: PESContext; Key: PAnsiChar; int1: int32; int2: int32);
+  //TEGLUpdateFunc = procedure (ESContext: PESContext; deltaTime: GLfloat);
+  //
+  //PEGLWindow = ^TEGLWindow;
+  //TEGLWindow = record
+  //  window: int32;
+  //
+  //  /// Window width
+  //  width: GLint;
+  //
+  //  /// Window height
+  //  height: GLint;
+  //
+  //  /// Window handle
+  //end;
+  //
+  //TESContext = record
+  //   /// Put your user data here...
+  //   userData: Pointer;
+  //
+  //
+  //   /// Callbacks
+  //   EGLDrawFunc: TEGLDrawFunc;
+  //   EGLKeyFunc: TEGLKeyFunc;
+  //   EGLUpdateFunc: TEGLUpdateFunc;
+  //end;
 
 procedure InitEGL;
 
-function CreateWindowES (DC: EGLNativeDisplayType; hWnd: EGLNativeWindowType): PEGLWindow;
-
-
-procedure CreateEglAttributes(Flags: GLuint; var AAttribs: TContextAttributes);
-// Creates an EGL rendering context and all associated elements
-function CreateEGLContext (EGLWindow: PEGLWindow): PESContext;
-
-function GLMakeCurrent(Context: Pointer): boolean;
 function GetPathGL: string;
-
-procedure FreeEGLContext(var ESContext: PESContext; FreeWindow: boolean = true);
-procedure FreeEGLSurface(ESContext: PESContext);
-procedure FreeEGLWindow(var EGLWindow: PEGLWindow);
 
 implementation
 
 uses
     SysUtils
+  {$ifdef FPC}
+    {$ifdef X}
+    , cwstring // include the unit otherwise get excepion on LoadLibrary(X11)
+    {$endif}
+  , math
+  {$endif}
+
+  {$ifdef DEBUG_BS}
+  , bs.log
+  {$endif}
   , bs.strings
   , bs.config
   ;
-
-class procedure TSharedEglContext.CreateSharedContext;
-var
-  numConfigs: EGLint;
-  majorVersion: EGLint;
-  minorVersion: EGLint;
-  attribValue: EGLint;
-  contextAttribs: array[0..4] of EGLint;
-  attributes: TContextAttributes;
-  i, j, k: int32;
-begin
-
-  if not Assigned(FSharedContext) then
-  begin
-    if GLESLib = 0 then
-      bs.gl.es.InitGLES(bs.gl.egl.GetPathGL);
-
-    if GLESLib = 0 then
-      exit;
-
-    SharedConfigSelected := nil;
-    eglBindAPI(EGL_OPENGL_ES_API);
-    FSharedDisplay := eglGetDisplay(EGL_DEFAULT_DISPLAY);
-
-    if eglInitialize(FSharedDisplay, @majorVersion, @minorVersion) = 0 then
-      exit;
-
-    CreateEglAttributes(GetEglFlags(BSConfig.MultiSampling), SharedAttrib);
-
-    attributes := nil;
-    SetLength(attributes, length(SharedAttrib));
-    move(SharedAttrib[0], attributes[0], SizeOf(EGLint)*length(SharedAttrib));
-
-    numConfigs := 0;
-
-    if (eglGetConfigs(FSharedDisplay, nil, 0, @numConfigs) = EGL_FALSE) or (numConfigs = 0) then
-      exit;
-
-    SetLength(SharedConfig, numConfigs);
-    if (eglGetConfigs(FSharedDisplay, @SharedConfig[0], numConfigs, @numConfigs) = EGL_FALSE) then
-      exit;
-    SharedConfigSelected := SharedConfig[0];
-    for i := 0 to numConfigs - 1 do
-    begin
-      j := 0;
-      SharedConfigSelected := SharedConfig[i];
-      while attributes[j] <> EGL_NONE do
-      begin
-         if eglGetConfigAttrib(FSharedDisplay, SharedConfigSelected, attributes[j], @attribValue) = EGL_FALSE then
-         begin
-           k := j;
-           while attributes[j] <> EGL_NONE do
-           begin
-              attributes[j] := attributes[j+2];
-              attributes[j+1] := attributes[j+3];
-              inc(j, 2);
-           end;
-           j := k;
-           continue;
-         end;
-         //attributes[j+1] := attribValue;
-         inc(j, 2);
-      end;
-
-      if (attributes[0] = EGL_NONE) then
-      begin
-        SharedConfigSelected := nil;
-        move(SharedAttrib[0], attributes[0], SizeOf(EGLint)*length(SharedAttrib));
-      end else
-        break;
-    end;
-
-    if not Assigned(SharedConfigSelected) then
-       exit;
-
-    //if ( eglChooseConfig(SharedDisplay, @SharedAttrib[0], nil, 1, @numConfigs) = EGL_FALSE ) then
-    //  exit;
-
-    if (eglChooseConfig(FSharedDisplay, @attributes[0], @SharedConfigSelected, 1, @numConfigs) = EGL_FALSE) then
-      exit;
-
-    contextAttribs[0] := EGL_CONTEXT_CLIENT_VERSION;
-    contextAttribs[1] := 2;
-    contextAttribs[2] := EGL_NONE;
-    FSharedContext := eglCreateContext(FSharedDisplay, SharedConfigSelected, EGL_NO_CONTEXT, @contextAttribs[0]);
-    if SharedContext = EGL_NO_CONTEXT then
-      raise Exception.Create('eglCreateContext:' + IntToStr(eglGetError()));
-
-    move(attributes[0], SharedAttrib[0], SizeOf(EGLint)*length(SharedAttrib));
-
-    {contextAttribs[0] := EGL_WIDTH;
-    contextAttribs[1] := 1;
-    contextAttribs[2] := EGL_HEIGHT;
-    contextAttribs[3] := 1;
-    contextAttribs[4] := EGL_NONE;
-    SharedSurface := eglCreatePbufferSurface(SharedDisplay, SharedConfigSelected, @contextAttribs[0]);
-    if SharedSurface = EGL_NO_SURFACE then
-      raise Exception.Create('eglCreatePbufferSurface:' + IntToStr(eglGetError()));
-
-    if eglMakeCurrent(SharedDisplay, SharedSurface, SharedSurface, SharedContext) = 0 then
-    begin
-      eglDestroyContext(SharedDisplay, SharedContext);
-      eglDestroySurface(SharedDisplay, SharedSurface);
-      raise Exception.Create('eglMakeCurrent:' + IntToStr(eglGetError()));
-    end;  }
-
-  end;
-end;
-
-class function TSharedEglContext.GetEglFlags(MultiSample: Boolean): int32;
-begin
-  Result := ES_WINDOW_RGB or ES_WINDOW_ALPHA or ES_WINDOW_DEPTH or ES_WINDOW_STENCIL;
-  if MultiSample then
-    Result := Result or ES_WINDOW_MULTISAMPLE;
-end;
-
-class function TSharedEglContext.GetSharedContext: EGLContext;
-begin
-  if not Assigned(FSharedContext) then
-    CreateSharedContext;
-  Result := FSharedContext;
-end;
-
-class function TSharedEglContext.GetSharedDisplay: EGLDisplay;
-begin
-  if not Assigned(FSharedContext) then
-    CreateSharedContext;
-  Result := FSharedDisplay;
-end;
-
-class destructor TSharedEglContext.Destroy;
-begin
-  eglDestroySurface(SharedDisplay, SharedSurface);
-  eglDestroyContext(SharedDisplay, SharedContext);
-end;
 
 function GetPathGL: string;
 begin
@@ -838,7 +657,20 @@ end;
 
 procedure LoadEGL(const lib: string);
 begin
+  {$IFDEF FPC}
+    { according to bug 7570, this is necessary on all x86 platforms,
+      maybe we've to fix the sse control word as well }
+    { Yes, at least for darwin/x86_64 (JM) }
+    {$IF DEFINED(cpui386) or DEFINED(cpux86_64)}
+    SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
+    {$IFEND}
+  {$ENDIF}
+
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('LoadEGL', lib);
+  {$endif}
   FreeEGL;
+
   EGLLib := LoadLibrary(PChar(lib));
   if EGLLib = 0 then
     raise Exception.Create(format('Could not load library: %s',[lib]));
@@ -847,7 +679,12 @@ begin
 
   eglGetError := glGetProcAddress(EGLLib,'eglGetError');
   if not Assigned(eglGetError) then
+  begin
+    {$ifdef DEBUG_BS}
+    BSWriteMsg('LoadEGL', 'glGetProcAddress returned nil');
+    {$endif}
     exit;
+  end;
 
   eglGetDisplay := glGetProcAddress(EGLLib,'eglGetDisplay');
   eglGetPlatformDisplay := glGetProcAddress(EGLLib,'eglGetPlatformDisplay');
@@ -898,159 +735,11 @@ begin
   glFramebufferTexture3DOES := glGetProcAddress(GLESLib,'glFramebufferTexture3DOES');
 end;
 
-function CreateWindowES(DC: EGLNativeDisplayType; hWnd: EGLNativeWindowType): PEGLWindow;
-begin
-  new(Result);
-  Result^.window := 0;
-  Result^.hWnd := hWnd;
-  Result^.DC := DC;
-
-  Result^.width := 0;
-  Result^.height := 0;
-end;
-
-//    Creates an EGL rendering context and all associated elements
-//
-//      flags  - bitwise or of window creation flags
-//          ES_WINDOW_ALPHA       - specifies that the framebuffer should have alpha
-//          ES_WINDOW_DEPTH       - specifies that a depth buffer should be created
-//          ES_WINDOW_STENCIL     - specifies that a stencil buffer should be created
-//          ES_WINDOW_MULTISAMPLE - specifies that a multi-sample buffer should be created
-//
-
-procedure CreateEglAttributes(Flags: GLuint; var AAttribs: TContextAttributes);
-
-  procedure AddAttrib(AType: GLInt; AValue: GLInt);
-  begin
-    SetLength(AAttribs, Length(AAttribs)+2);
-    AAttribs[Length(AAttribs)-2] := AType;
-    AAttribs[Length(AAttribs)-1] := AValue;
-  end;
-
-begin
-  //AddAttrib(EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER);
-  AddAttrib(EGL_RED_SIZE, 8);
-  AddAttrib(EGL_GREEN_SIZE, 8);
-  AddAttrib(EGL_BLUE_SIZE, 8);
-
-  if (Flags and ES_WINDOW_ALPHA) > 0 then
-    AddAttrib(EGL_ALPHA_SIZE, 8)
-  else
-    AddAttrib(EGL_ALPHA_SIZE, EGL_DONT_CARE);
-
-  if (Flags and ES_WINDOW_DEPTH) > 0 then
-    AddAttrib(EGL_DEPTH_SIZE, 8)
-  else
-    AddAttrib(EGL_DEPTH_SIZE, EGL_DONT_CARE);
-
-  if (Flags and ES_WINDOW_STENCIL) > 0 then
-    AddAttrib(EGL_STENCIL_SIZE, 8)
-  else
-    AddAttrib(EGL_STENCIL_SIZE, EGL_DONT_CARE);
-
-  //AddAttrib(EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT);
-  //AddAttrib(EGL_SURFACE_TYPE, EGL_WINDOW_BIT);
-  //AddAttrib(EGL_SURFACE_TYPE, EGL_PBUFFER_BIT);
-
-  if (Flags and ES_WINDOW_MULTISAMPLE) > 0 then
-  begin
-    AddAttrib(EGL_SAMPLE_BUFFERS, 1);
-    AddAttrib(EGL_SAMPLES, BSConfig.MultiSamplingSamples);
-  end;
-
-  AddAttrib(EGL_NONE, EGL_NONE);
-end;
-
-//
-// CreateEGLContext()
-//
-function CreateEGLContext(EGLWindow: PEGLWindow): PESContext;
-var
-   context: EGLContext;
-   surface: EGLSurface;
-   contextAttribs: array[0..3] of EGLint;
-begin
-
-  contextAttribs[0] := EGL_CONTEXT_CLIENT_VERSION;
-  contextAttribs[1] := 2;
-  contextAttribs[2] := EGL_NONE;
-  contextAttribs[3] := EGL_NONE;
-
-  {// Get Display
-  display := eglGetDisplay(EGL_DEFAULT_DISPLAY); //
-  if ( display = EGL_NO_DISPLAY ) then
-    exit(nil);
-
-  // Initialize EGL
-  if (eglInitialize(display, @majorVersion, @minorVersion) = EGL_FALSE ) then
-    exit(nil);
-
-  if ( eglChooseConfig(display, @attribList[0], nil, 1, @numConfigs) = EGL_FALSE ) then
-    exit(nil);
-  // Choose config
-  if ( eglChooseConfig(display, @attribList[0], @config, 1, @numConfigs) = EGL_FALSE ) then
-    exit(nil);   }
-
-  // Create a surface
-  surface := eglCreateWindowSurface(TSharedEglContext.SharedDisplay, TSharedEglContext.SharedConfigSelected, EGLWindow^.hWnd, nil); //@TSharedEglContext.SharedAttrib[0]
-  if ( surface = EGL_NO_SURFACE ) then
-    exit(nil);
-
-
-  //if BSConfig.MultiSampling then
-  //  if (eglSurfaceAttrib(TSharedEglContext.SharedDisplay, surface, EGL_MULTISAMPLE_RESOLVE, EGL_MULTISAMPLE_RESOLVE_DEFAULT) = EGL_FALSE) then
-  //    exit(nil);
-  // Create a GL context
-  //if gl_SharedContext <> nil then
-  //  context := eglCreateContext(display, config, gl_SharedContext, @contextAttribs[0] ) else
-  context := eglCreateContext(TSharedEglContext.SharedDisplay, TSharedEglContext.SharedConfigSelected, TSharedEglContext.SharedContext, @contextAttribs[0] );
-
-  if ( context = EGL_NO_CONTEXT ) then
-    exit(nil);
-
-  // Make the context current
-  if ( eglMakeCurrent(TSharedEglContext.SharedDisplay, surface, surface, context) = EGL_FALSE ) then
-    exit(nil);
-
-  new(Result);
-  Result^.eglDisplay := TSharedEglContext.SharedDisplay;
-  Result^.eglSurface := surface;
-  Result^.eglContext := context;
-  Result^.eglWindow := EGLWindow;
-end;
-
-function GLMakeCurrent(Context: Pointer): boolean;
-begin
-  Result := eglMakeCurrent(PESContext(Context)^.eglDisplay, PESContext(Context)^.eglSurface,
-    PESContext(Context)^.eglSurface, PESContext(Context)^.eglContext) = EGL_TRUE;
-end;
-
-procedure FreeEGLSurface(ESContext: PESContext);
-begin
-  eglDestroySurface(ESContext^.eglDisplay, ESContext^.eglSurface);
-  ESContext^.eglSurface := nil;
-end;
-
-procedure FreeEGLContext(var ESContext: PESContext; FreeWindow: boolean);
-begin
-  //dec(gl_CountContexts);
-  if FreeWindow then
-    FreeEGLWindow(ESContext^.eglWindow);
-  dispose(ESContext);
-  ESContext := nil;
-end;
-
-
-procedure FreeEGLWindow(var EGLWindow: PEGLWindow);
-begin
-  //if (EGLWindow^.window <> 0) then
-  //  glutDestroyWindow(EGLWindow^.window);
-  dispose(EGLWindow);
-  EGLWindow := nil;
-end;
-
 procedure InitEGL;
 begin
+  if GLESLib = 0 then
+    bs.gl.es.InitGLES(bs.gl.egl.GetPathGL);
+
   LoadEGL(
   {$ifdef MSWINDOWS}
     {$ifdef Win32}

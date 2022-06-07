@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -49,19 +49,21 @@ type
   end;
 
   TBSShiftState = TShiftState;
+
   TBSMouseButton = (mbBsLeft, mbBsRight, mbBsMiddle, mbBsExtra1, mbBsExtra2);
   TBSMouseButtons = set of TBSMouseButton;
 
+  PMouseData = ^BMouseData;
   BMouseData = record
     BaseHeader: BData;
     X, Y, DeltaWeel: int32;
     Button: TBSMouseButtons;
-    ShiftState: TShiftState;
+    ShiftState: TBSShiftState;
   end;
 
   IBMouseEventTemplate<T> = interface(IBEvent<T>)
   ['{AE3C328E-6E5E-4C9B-81E4-3F28E53BA128}']
-    procedure Send(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TShiftState);
+    procedure Send(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TBSShiftState);
   end;
 
   IBMouseEvent = IBMouseEventTemplate<BMouseData>;
@@ -77,12 +79,14 @@ type
 
   BOpCode = record
     BaseHeader: BEmpty;
-    OpCode: byte;
+    OpCode: int32;
+    Data: NativeInt;
+    Data2: NativeInt;
   end;
 
   IBOpCodeEvent = interface(IBEvent<BOpCode>)
   ['{D6A7B32D-31C9-48AC-A9F3-F108D56618A3}']
-    procedure Send(Instance: Pointer; OpCode: byte);
+    procedure Send(Instance: Pointer; OpCode: int32; Data: NativeInt = -1; Data2: NativeInt = -1);
   end;
   IBOpCodeEventObserver = IBObserver<BOpCode>;
 
@@ -138,14 +142,16 @@ type
   BKeyData = record
     BaseHeader: BData;
     Key: Word;
-    Shift: TShiftState;
+    Shift: TBSShiftState;
   end;
 
   { TKeyEvent }
 
+  { IBKeyObjectTemplate }
+
   IBKeyObjectTemplate<T> = interface(IBEvent<T>)
   ['{AE87C0D1-8D0F-41B5-8693-4DCFFD1203BD}']
-    procedure Send(Instance: Pointer; Key: Word; Shift: TShiftState);
+    procedure Send(Instance: Pointer; Key: Word; Shift: TBSShiftState);
   end;
 
   IBKeyObject = IBKeyObjectTemplate<BKeyData>;
@@ -190,15 +196,21 @@ type
 
   TEventRealign = IBEmptyEvent;
 
-  function MouseData(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TShiftState): BMouseData; inline;
-  function KeyData(Instance: Pointer; Key: Word; Shift: TShiftState): BKeyData; inline;
+  function MouseData(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TBSShiftState): BMouseData; inline;
+  function KeyData(Instance: Pointer; Key: Word; Shift: TBSShiftState): BKeyData; inline;
 
 const
     { task's opcodes }
-    TASK_UPDATE    = 0;
-    TASK_START     = 1;
-    TASK_STOP      = 2;
-    TASK_AUTO_STOP = 3;
+    TASK_UPDATE               = 0;
+    TASK_START                = 1;
+    TASK_STOP                 = 2;
+    TASK_AUTO_STOP            = 3;
+
+    { gui events }
+    GUI_FOCUS_ACCEPTED        = 4;
+    GUI_FOCUS_LOST            = 5;
+    GUI_SHOW_KEYBOARD         = 6;
+    GUI_HIDE_KEYBOARD         = 7;
 
 type
 
@@ -240,31 +252,52 @@ type
     function  CreateObserver(ThreadCntx: TBThread; OnRsvProc: TGenericRecieveProc<T>): IBObserver<T>;
   end;
 
+  TAwaitTaskProc = procedure(AData: Pointer) of object;
+
   TTaskExecutor = class
   private
+    type
+      PAwaitTask = ^TAwaitTask;
+      TListAwaitTasks = TListDual<PAwaitTask>;
+      TAwaitTask = record
+        Position: TListAwaitTasks.PListItem;
+        TimeAwait: Cardinal;
+        TimeStart: Cardinal;
+        TaskProc: TAwaitTaskProc;
+        Data: Pointer;
+      end;
+  private
+    class var FCountTasks: int32;
+  private
     FTasks: TListTasks;
+    FAwaitTasks: TListAwaitTasks;
     FThreadContext: TBThread;
     function ProcessEvents: boolean;
     function Add(const Task: IUnknown; TaskUpdateProc: TUpdateTaskProc): PRecTask; inline;
+    procedure AddAwaitTask(AAwaitTaskProc: TAwaitTaskProc; ATimeAwait: Cardinal;  AData: Pointer); inline;
     procedure Remove(var TaskPos: PRecTask); inline;
     procedure ClearFromTasks;
+    class function GetExecuter(AContext: TBThread): TTaskExecutor;
   private
     class var Executors: TListVec<TTaskExecutor>;
-    { we not necessarily cs, because all ask for add/del task accept in self
-      thread context }
-    //class var CS: TCriticalSection;
+    class var CS: TCriticalSection;
     class constructor Create;
     class destructor Destroy;
   public
     constructor Create(AThreadContext: TBThread);
     destructor Destroy; override;
-    class function AddTask(const Task: IUnknown; TaskUpdateProc: TUpdateTaskProc; Context: TBThread): PRecTask;
+    class function AddTask(const ATask: IUnknown; ATaskUpdateProc: TUpdateTaskProc; AContext: TBThread): PRecTask;
+    class procedure AwaitExecuteTask(AAwaitTaskProc: TAwaitTaskProc; ATimeAwait: Cardinal; AContext: TBThread; AData: Pointer); overload;
+    class procedure AwaitExecuteTask(AAwaitTaskProc: TAwaitTaskProc; AData: Pointer; ATimeAwait: Cardinal); overload;
+    class procedure AwaitExecuteTask(AAwaitTaskProc: TAwaitTaskProc; AData: Pointer); overload;
+    class procedure AwaitExecuteTask(AAwaitTaskProc: TAwaitTaskProc); overload;
     class procedure RemoveTask(var TaskPos: PRecTask; Context: TBThread);
   public
     property ThreadContext: TBThread read FThreadContext;
+    class property CountTasks: Int32 read FCountTasks;
   end;
 
-  { the task also as IBEvent<T> for return result of work demands observers }
+  { the task also as IBEvent<T> for work result return demands observers }
 
   TTemplateBTask<T> = class(TTemplateBEvent<T>, IBTaskObservable<T>)
   private
@@ -294,7 +327,6 @@ type
     destructor Destroy; override;
     procedure Run; virtual;
     procedure Stop; virtual;
-    //property Runned: boolean read GetRunned;
     property IsRun: boolean read GetIsRun;
     property IntervalUpdate: int32 read GetIntervalUpdate write SetIntervalUpdate;
   end;
@@ -359,7 +391,12 @@ type
 
 implementation
 
-  uses SysUtils;
+uses
+  SysUtils
+  {$ifdef DEBUG_BS}
+  , bs.log
+  {$endif}
+  ;
 
 type
 
@@ -370,8 +407,10 @@ type
       TMouseDataQ = TQueueTemplate<TMouseItemQ>;
   protected
     class function GetQueueClass: TQueueWrapperClass; override;
-    procedure Send(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TShiftState);
+    procedure Send(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TBSShiftState);
   end;
+
+  { TBKeyEvent }
 
   TBKeyEvent = class(TTemplateBEvent<BKeyData>, IBKeyObject)
   private
@@ -380,8 +419,10 @@ type
       TKeyDataQ = TQueueTemplate<TKeyItemQ>;
   protected
     class function GetQueueClass: TQueueWrapperClass; override;
-    procedure Send(Instance: Pointer; Key: Word; ShiftState: TShiftState);
+    procedure Send(Instance: Pointer; Key: Word; ShiftState: TBSShiftState);
   end;
+
+  { TBWindowResizeEvent }
 
   TBWindowResizeEvent = class(TTemplateBEvent<BResizeEventData>, IBResizeWindowEvent)
   private
@@ -395,6 +436,8 @@ type
       PercentWidthChange, PercentHeightChange: BSFloat);
   end;
 
+  { TBEmptyEvent }
+
   TBEmptyEvent = class(TTemplateBEvent<BEmpty>, IBEmptyEvent)
   private
     type
@@ -405,6 +448,8 @@ type
     procedure Send(Instance: Pointer);
   end;
 
+  { TBMessageEvent }
+
   TBMessageEvent = class(TTemplateBEvent<BMessage>)
   private
     type
@@ -414,6 +459,8 @@ type
     class function GetQueueClass: TQueueWrapperClass; override;
   end;
 
+  { TBOpCodeEvent }
+
   TBOpCodeEvent = class(TTemplateBEvent<BOpCode>, IBOpCodeEvent)
   private
     type
@@ -421,8 +468,10 @@ type
       TOpCodeDataQ = TQueueTemplate<TOpCodeItemQ>;
   protected
     class function GetQueueClass: TQueueWrapperClass; override;
-    procedure Send(Instance: Pointer; OpCode: byte);
+    procedure Send(Instance: Pointer; OpCode: int32; Data: NativeInt = -1; Data2: NativeInt = -1);
   end;
+
+  { TEmptyTask }
 
   TEmptyTask = class(TTemplateBTask<byte>)
   private
@@ -436,6 +485,8 @@ type
     procedure Update; override;
   end;
 
+  { TBFocusEvent }
+
   TBFocusEvent = class(TTemplateBEvent<BFocusEventData>, IBFocusEvent)
   private
     type
@@ -445,6 +496,8 @@ type
     class function GetQueueClass: TQueueWrapperClass; override;
     procedure Send(Instance: Pointer; Control: Pointer; Focused: boolean; ControlLevel: int32);
   end;
+
+  { TBDragDropEvent }
 
   TBDragDropEvent = class(TTemplateBEvent<BDragDropData>, IBDragDropEvent)
   private
@@ -456,6 +509,8 @@ type
     procedure Send(Instance: Pointer; CheckDragParent: boolean);
   end;
 
+  { TBChangeMvpEvent }
+
   TBChangeMvpEvent = class(TTemplateBEvent<BTransformData>, IBChangeMVPEvent)
   private
     type
@@ -466,7 +521,7 @@ type
     procedure Send(Instance: Pointer; MeshTransformed: boolean);
   end;
 
-function MouseData(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TShiftState): BMouseData;
+function MouseData(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TBSShiftState): BMouseData;
 begin
   Result.BaseHeader.Instance := Instance;
   Result.X := X;
@@ -476,7 +531,7 @@ begin
   Result.ShiftState := ShiftState;
 end;
 
-function KeyData(Instance: Pointer; Key: Word; Shift: TShiftState): BKeyData;
+function KeyData(Instance: Pointer; Key: Word; Shift: TBSShiftState): BKeyData;
 begin
   Result.BaseHeader.Instance := Instance;
   Result.Key := Key;
@@ -737,7 +792,7 @@ begin
   Result := TMouseDataQ;
 end;
 
-procedure TBMouseEvent.Send(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TShiftState);
+procedure TBMouseEvent.Send(Instance: Pointer; X, Y, DeltaWeel: int32; Button: TBSMouseButtons; ShiftState: TBSShiftState);
 var
   data: BMouseData;
 begin
@@ -779,8 +834,7 @@ begin
   Result := TWindResizeDataQ;
 end;
 
-procedure TBWindowResizeEvent.Send(Instance: Pointer; NewWidth,
-  NewHeight: int32; PercentWidthChange, PercentHeightChange: BSFloat);
+procedure TBWindowResizeEvent.Send(Instance: Pointer; NewWidth, NewHeight: int32; PercentWidthChange, PercentHeightChange: BSFloat);
 var
   data: BResizeEventData;
 begin
@@ -799,7 +853,7 @@ begin
   Result := TKeyDataQ;
 end;
 
-procedure TBKeyEvent.Send(Instance: Pointer; Key: Word; ShiftState: TShiftState);
+procedure TBKeyEvent.Send(Instance: Pointer; Key: Word; ShiftState: TBSShiftState);
 var
   data: BKeyData;
 begin
@@ -816,13 +870,15 @@ begin
   Result := TOpCodeDataQ;
 end;
 
-procedure TBOpCodeEvent.Send(Instance: Pointer; OpCode: byte);
+procedure TBOpCodeEvent.Send(Instance: Pointer; OpCode: int32; Data: NativeInt; Data2: NativeInt);
 var
-  data: BOpCode;
+  d: BOpCode;
 begin
-  data.BaseHeader.Instance := Instance;
-  data.OpCode := OpCode;
-  SendEvent(data);
+  d.BaseHeader.Instance := Instance;
+  d.OpCode := OpCode;
+  d.Data := Data;
+  d.Data2 := Data2;
+  SendEvent(d);
 end;
 
 { TTaskExecutor }
@@ -836,35 +892,88 @@ begin
   Result.Deleted := false;
 end;
 
-class function TTaskExecutor.AddTask(const Task: IUnknown; TaskUpdateProc: TUpdateTaskProc; Context: TBThread): PRecTask;
+procedure TTaskExecutor.AddAwaitTask(AAwaitTaskProc: TAwaitTaskProc; ATimeAwait: Cardinal; AData: Pointer);
+var
+  awaitTask: PAwaitTask;
+begin
+  new(awaitTask);
+  awaitTask.Position := FAwaitTasks.PushToEnd(awaitTask);
+  awaitTask.TimeAwait := ATimeAwait;
+  awaitTask.TaskProc := AAwaitTaskProc;
+  awaitTask.Data := AData;
+  awaitTask.TimeStart := TBTimer.CurrentTime.Low;
+end;
+
+class function TTaskExecutor.AddTask(const ATask: IUnknown; ATaskUpdateProc: TUpdateTaskProc; AContext: TBThread): PRecTask;
 var
   exec: TTaskExecutor;
 begin
-  {CS.Enter;
-  try }
-    exec := Executors.Items[Context.Index];
-    if not Assigned(exec) then
-      exec := TTaskExecutor.Create(Context);
-    Result := exec.Add(Task, TaskUpdateProc);
-  {finally
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TTaskExecutor.AddTask', (ATask as TObject).ClassName);
+  {$endif}
+  CS.Enter;
+  try
+    inc(FCountTasks);
+    exec := GetExecuter(AContext);
+    Result := exec.Add(ATask, ATaskUpdateProc);
+  finally
     CS.Leave;
-  end;}
+  end;
+end;
+
+class procedure TTaskExecutor.AwaitExecuteTask(AAwaitTaskProc: TAwaitTaskProc; AData: Pointer; ATimeAwait: Cardinal);
+begin
+  AwaitExecuteTask(AAwaitTaskProc, ATimeAwait, GUIThread, AData);
+end;
+
+class procedure TTaskExecutor.AwaitExecuteTask(AAwaitTaskProc: TAwaitTaskProc; AData: Pointer);
+begin
+  AwaitExecuteTask(AAwaitTaskProc, 0, GUIThread, AData);
+end;
+
+class procedure TTaskExecutor.AwaitExecuteTask(AAwaitTaskProc: TAwaitTaskProc);
+begin
+  AwaitExecuteTask(AAwaitTaskProc, 0, GUIThread, nil);
+end;
+
+class procedure TTaskExecutor.AwaitExecuteTask(AAwaitTaskProc: TAwaitTaskProc; ATimeAwait: Cardinal; AContext: TBThread; AData: Pointer);
+var
+  exec: TTaskExecutor;
+begin
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TTaskExecutor.AwaitExecuteTask', '');
+  {$endif}
+  CS.Enter;
+  try
+    inc(FCountTasks);
+    exec := GetExecuter(AContext);
+    exec.AddAwaitTask(AAwaitTaskProc, ATimeAwait, AData);
+  finally
+    CS.Leave;
+  end;
 end;
 
 class constructor TTaskExecutor.Create;
 begin
   Executors := TListVec<TTaskExecutor>.Create;
-  //CS := TCriticalSection.Create;
+  CS := TCriticalSection.Create;
 end;
 
 procedure TTaskExecutor.ClearFromTasks;
 var
   it: PRecTask;
+  awaitTask: PAwaitTask;
 begin
   while FTasks.Count > 0 do
   begin
     it := FTasks.Pop;
     dispose(it);
+  end;
+
+  while FAwaitTasks.Count > 0 do
+  begin
+    awaitTask := FAwaitTasks.Pop;
+    dispose(awaitTask);
   end;
 end;
 
@@ -872,10 +981,9 @@ constructor TTaskExecutor.Create(AThreadContext: TBThread);
 begin
   FThreadContext := AThreadContext;
   Executors.Items[AThreadContext.Index] := Self;
-  { task adds only in self thread context, there for adds synchronly
-    the method of update }
   AThreadContext.AddUpdateMethod(ProcessEvents);
   FTasks := TListTasks.Create;
+  FAwaitTasks := TListAwaitTasks.Create;
 end;
 
 destructor TTaskExecutor.Destroy;
@@ -884,6 +992,21 @@ begin
   FThreadContext.RemoveUpdateMethod(ProcessEvents);
   Executors.Items[FThreadContext.Index] := nil;
   FTasks.Free;
+  FAwaitTasks.Free;
+end;
+
+class function TTaskExecutor.GetExecuter(AContext: TBThread): TTaskExecutor;
+var
+  context: TBThread;
+begin
+  if Assigned(AContext) then
+    context := AContext
+  else
+    context := GUIThread;
+
+  Result := Executors.Items[context.Index];
+  if not Assigned(Result) then
+    Result := TTaskExecutor.Create(context);
 end;
 
 class destructor TTaskExecutor.Destroy;
@@ -894,16 +1017,19 @@ begin
     if Assigned(Executors.Items[i]) then
       Executors.Items[i].Free;
   Executors.Free;
+  CS.Free;
 end;
 
 function TTaskExecutor.ProcessEvents: boolean;
 var
   it: TListTasks.PListItem;
   pit: PRecTask;
+  awaitTaskIt: TListAwaitTasks.PListItem;
+  awaitTask: PAwaitTask;
 begin
   Result := FTasks.Count > 0;
   it := FTasks.ItemListFirst;
-  while it <> nil do
+  while Assigned(it) do
   begin
     pit := it.Item;
     it := it.Next;
@@ -913,6 +1039,22 @@ begin
       dispose(pit);
     end else
       pit.Proc();
+  end;
+
+  if not Result then
+    Result := FAwaitTasks.Count > 0;
+
+  awaitTaskIt := FAwaitTasks.ItemListFirst;
+  while Assigned(awaitTaskIt) do
+  begin
+    awaitTask := awaitTaskIt.Item;
+    awaitTaskIt := awaitTaskIt.Next;
+    if TBTimer.CurrentTime.Low - awaitTask.TimeStart >= awaitTask.TimeAwait then
+    begin
+      FAwaitTasks.Remove(awaitTask.Position);
+      awaitTask.TaskProc(awaitTask.Data);
+      dispose(awaitTask);
+    end;
   end;
 end;
 
@@ -924,12 +1066,16 @@ end;
 
 class procedure TTaskExecutor.RemoveTask(var TaskPos: PRecTask; Context: TBThread);
 begin
-  {CS.Enter;
-  try   }
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TTaskExecutor.RemoveTask', (IUnknown(TaskPos.Task) as TObject).ClassName);
+  {$endif}
+  CS.Enter;
+  try
+    dec(FCountTasks);
     Executors.Items[Context.Index].Remove(TaskPos);
-  {finally
+  finally
     CS.Leave;
-  end;}
+  end;
 end;
 
 { TEmptyTask }
@@ -954,7 +1100,7 @@ begin
   Result := TFocusDataQ;
 end;
 
-procedure TBFocusEvent.Send(Instance, Control: Pointer; Focused: boolean; ControlLevel: int32);
+procedure TBFocusEvent.Send(Instance: Pointer; Control: Pointer; Focused: boolean; ControlLevel: int32);
 var
   data: BFocusEventData;
 begin

@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -135,9 +135,14 @@ implementation
 
 uses
     SysUtils
+  {$ifdef ultibo}
+  , gles20
+  {$else}
+  , bs.gl.es
+  {$endif}
+  , bs.graphics
   , bs.config
   , bs.thread
-  , bs.gl.es
   , bs.scene.objects
   ;
 
@@ -155,7 +160,7 @@ procedure TBCustomComboBox.BuildView;
 begin
   inherited;
   ButtonRight.Build;
-  ButtonRight.Position2d := vec2(Width - ButtonRight.Size.Width - 1.0, 1.0);
+  ButtonRight.Position2d := vec2(Width - ButtonRight.Size.Width - Frame.WidthLine, Frame.WidthLine);
   BtnTri.Build;
   BtnTri.Position2d := vec2((ButtonRight.Size.Width - BtnTri.C.x)*0.5, (ButtonRight.Size.Height - BtnTri.B.y)*0.5);
 end;
@@ -181,22 +186,22 @@ begin
   FData := TListVec<TListPointers>.Create;
 
   ButtonRight := TRectangle.Create(Canvas, MainBody);
-  ButtonRight.Size := vec2(DefaultSize.Height - 2, DefaultSize.Height - 2);
+  ButtonRight.Size := vec2(DefaultSize.Height - Frame.WidthLine*2, DefaultSize.Height - Frame.WidthLine*2);
   ButtonRight.Color := MainBody.Color;
   ButtonRight.Fill := true;
   ButtonRight.Data.DragResolve := false;
   ObsrvOnMouseDownBtnRight := ButtonRight.Data.EventMouseDown.CreateObserver(GUIThread, OnMouseDownBtnRight);
   BtnTri := TTriangle.Create(Canvas, ButtonRight);
   BtnTri.A := vec2(0.0, 0.0);
-  BtnTri.B := vec2(5.0, 5.0);
-  BtnTri.C := vec2(10.0, 0.0);
+  BtnTri.B := vec2(round(5.0*ToHiDpiScale), round(5.0*ToHiDpiScale));
+  BtnTri.C := vec2(round(10.0*ToHiDpiScale), 0.0);
   BtnTri.Fill := true;
   BtnTri.Color := BS_CL_WHITE;
   BtnTri.Data.Interactive := false;
   TriAnimator := CreateAniFloatLinear(GUIThread);
   TriAnimator.Duration := 200;
   ObsrvTriAnimation := CreateAniFloatLivearObsrv(TriAnimator, OnTriAnimate, GUIThread);
-  FListHeight := DEFAULT_LIST_HEIGHT;
+  FListHeight := round(DEFAULT_LIST_HEIGHT*ToHiDpiScale);
   UpdateTextOutWidth;
 
   ShowHideListAnimator := CreateAniFloatLinear(GUIThread);

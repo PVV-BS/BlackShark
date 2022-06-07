@@ -1,4 +1,4 @@
-﻿{
+{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -650,6 +650,8 @@ type
     property D: TVec2f read GetD write SetD;
   end;
 
+  { TTriangle }
+
   TTriangle = class(TCanvasObjectP)
   private
     FA: TVec2f;
@@ -657,6 +659,7 @@ type
     FC: TVec2f;
     FFill: boolean;
     FWidthLine: BSFloat;
+    procedure SetWidthLine(AValue: BSFloat);
   protected
     procedure DoBuild; override;
   public
@@ -666,7 +669,7 @@ type
     property B: TVec2f read FB write FB;
     property C: TVec2f read FC write FC;
     property Fill: boolean read FFill write FFill;
-    property WidthLine: BSFloat read FWidthLine write FWidthLine;
+    property WidthLine: BSFloat read FWidthLine write SetWidthLine;
   end;
 
   TTriangleTextured = class(TTriangle)
@@ -675,12 +678,15 @@ type
     procedure DoBuild; override;
   end;
 
+  { TArrow }
+
   TArrow = class(TCanvasObjectP)
   private
     FB: TVec2f;
     FA: TVec2f;
     FSizeTip: TVec2f;
     FLineWidth: BSFloat;
+    procedure SetLineWidth(AValue: BSFloat);
   protected
     procedure DoBuild; override;
   public
@@ -688,8 +694,10 @@ type
     property A: TVec2f read FA write FA;
     property B: TVec2f read FB write FB;
     property SizeTip: TVec2f read FSizeTip write FSizeTip;
-    property LineWidth: BSFloat read FLineWidth write FLineWidth;
+    property LineWidth: BSFloat read FLineWidth write SetLineWidth;
   end;
+
+  { TArc }
 
   TArc = class(TCanvasObject)
   private
@@ -700,6 +708,7 @@ type
     FLineWidth: BSFloat;
     FPosition2dCenter: TVec2f;
     FInterpolateFactor: BSFloat;
+    procedure SetLineWidth(AValue: BSFloat);
     procedure SetPosition2dCenter(const Value: TVec2f);
     procedure SetInterpolateFactor(const Value: BSFloat);
   protected
@@ -713,7 +722,7 @@ type
     property StartAngle: BSFloat read FStartAngle write FStartAngle;
     property Angle: BSFloat read FAngle write FAngle;
     property Fill: boolean read FFill write FFill;
-    property LineWidth: BSFloat read FLineWidth write FLineWidth;
+    property LineWidth: BSFloat read FLineWidth write SetLineWidth;
     property Position2dCenter: TVec2f read FPosition2dCenter write SetPosition2dCenter;
     { smoothing depend on InterpolateFactor - the less, the better }
     property InterpolateFactor: BSFloat read FInterpolateFactor write SetInterpolateFactor;
@@ -1087,7 +1096,11 @@ function CreateCanvasEventObserver(const ACanvasEvent: TCanvasEvent; ObserverPro
 implementation
 
 uses
+  {$ifdef ultibo}
+    gles20
+  {$else}
     bs.gl.es
+  {$endif}
   , bs.exceptions
   , bs.config
   , bs.math
@@ -2919,9 +2932,11 @@ end;
 
 procedure TLinesSequence.SetWidthLine(const Value: BSFloat);
 begin
+  if FWidthLine = Value then
+    exit;
+  FWidthLine := round(Value);
   if FWidthLine < 1 then
     FWidthLine := 1;
-  FWidthLine := Value;
   FRadiusPoints := FWidthLine * 2;
 end;
 
@@ -3048,13 +3063,13 @@ begin
       if isLineGL then
       begin
         Data.Mesh.Write(i, vcColor, currentColor);
-        Data.Mesh.Write(i, vcFloat, distance);
+        Data.Mesh.Write(i, vcIndex, distance);
       end else
       begin
         Data.Mesh.Write(i shl 1, vcColor, currentColor);
         Data.Mesh.Write((i shl 1)+1, vcColor, currentColor);
-        Data.Mesh.Write(i shl 1, vcFloat, distance);
-        Data.Mesh.Write((i shl 1)+1, vcFloat, distance);
+        Data.Mesh.Write(i shl 1, vcIndex, distance);
+        Data.Mesh.Write((i shl 1)+1, vcIndex, distance);
       end;
     end;
 
@@ -3319,7 +3334,7 @@ begin
     AddPoint(FOrigins.Items[FOrigins.Count - 1]);
   if not TComplexCurveObject(Data).MultiColor then
     TComplexCurveObject(Data).MultiColor := true;
-  FColors.Add(AColor);
+    FColors.Add(AColor);
 end;
 
 procedure TPath.AddFirstArc(const APositionCenter: TVec2f; ARadius, AAngle, AStartAngle: BSFloat; const AColor: TGuiColor);
@@ -3364,6 +3379,14 @@ end;
 
 { TTriangle }
 
+procedure TTriangle.SetWidthLine(AValue: BSFloat);
+begin
+  if FWidthLine = AValue then Exit;
+  FWidthLine := round(AValue);
+  if FWidthLine < 1.0 then
+    FWidthLine := 1.0;
+end;
+
 procedure TTriangle.DoBuild;
 var
   vert: array [0 .. 2] of TVec3f;
@@ -3386,7 +3409,6 @@ begin
     vert[2] := vec3(round(FC.x), round(FCanvas.Renderer.WindowHeight-FC.y), 0.0);
     GeneratePath2d(Data.Mesh, @vert[0], 3, FWidthLine, true, true);
   end;
-
 end;
 
 procedure TTriangle.Build;
@@ -3418,6 +3440,14 @@ begin
 end;
 
 { TArrow }
+
+procedure TArrow.SetLineWidth(AValue: BSFloat);
+begin
+  if FLineWidth = AValue then Exit;
+  FLineWidth := round(AValue);
+  if FLineWidth < 1.0 then
+    FLineWidth := 1.0;
+end;
 
 procedure TArrow.DoBuild;
 var
@@ -3544,6 +3574,16 @@ procedure TArc.SetPosition2dCenter(const Value: TVec2f);
 begin
   FPosition2dCenter := Value;
   ConnectChild(FPosition2dCenter, vec2(Data.Mesh.FBoundingBox.x_max + LocalPosition2dCenter.x, Data.Mesh.FBoundingBox.y_max - LocalPosition2dCenter.y), Self);
+end;
+
+procedure TArc.SetLineWidth(AValue: BSFloat);
+begin
+  if FLineWidth = AValue then
+    exit;
+
+  FLineWidth := round(AValue);
+  if FLineWidth < 1.0 then
+    FLineWidth := 1.0;
 end;
 
 constructor TArc.Create(ACanvas: TBCanvas; AParent: TCanvasObject);
@@ -4209,11 +4249,11 @@ begin
   Cross := TLines.Create(ACanvas, Rect);
   Cross.Data.Interactive := false;
   Cross.BeginUpdate;
-  Cross.LinesWidth := 2.0;
-  Cross.AddLine(5.0, 0.0, 5.0, 4.0);
-  Cross.AddLine(0.0, 5.0, 4.0, 5.0);
-  Cross.AddLine(6.0, 5.0, 10.0, 5.0);
-  Cross.AddLine(5.0, 6.0, 5.0, 10.0);
+  Cross.LinesWidth := round(2.0*ToHiDpiScale);
+  Cross.AddLine(round(5.0*ToHiDpiScale), 0.0, round(5.0*ToHiDpiScale), round(4.0*ToHiDpiScale));
+  Cross.AddLine(0.0, round(5.0*ToHiDpiScale), round(4.0*ToHiDpiScale), 5.0*ToHiDpiScale);
+  Cross.AddLine(round(6.0*ToHiDpiScale), round(5.0*ToHiDpiScale), round(10.0*ToHiDpiScale), round(5.0*ToHiDpiScale));
+  Cross.AddLine(round(5.0*ToHiDpiScale), round(6.0*ToHiDpiScale), round(5.0*ToHiDpiScale), round(10.0*ToHiDpiScale));
   Cross.EndUpdate;
   Cross.Color := BS_CL_BLACK;
   ObsrvMouseDown := CreateMouseObserver(Rect.Data.EventMouseDown, OnMouseDown);
@@ -4743,8 +4783,8 @@ var
   contour: TContour;
 begin
   out_values := nil;
-  TBlackSharkTesselator.TListPoints.Create(out_points, 64);
-  TBlackSharkTesselator.TListContours.Create(out_contours, FContours.Count);
+  TBlackSharkTesselator.TListPoints.Create(out_points{%H-}, 64);
+  TBlackSharkTesselator.TListContours.Create(out_contours{%H-}, FContours.Count);
   for i := 0 to FContours.Count - 1 do
   begin
     contour.PointIndexBegin := out_points.Count;
@@ -4757,7 +4797,7 @@ begin
     out_values.Count := 0;
   end;
   out_values.Free;
-  TBlackSharkTesselator.TListIndexes.Create(indexes, 64);
+  TBlackSharkTesselator.TListIndexes.Create(indexes{%H-}, 64);
   Tesselator.Triangulate(out_points, out_contours, indexes);
   for i := 0 to out_points.Count - 1 do
   begin

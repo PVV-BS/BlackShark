@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -34,9 +34,13 @@ uses
     Windows,
   {$endif}
 
+  {$ifdef X}
+    bs.linux,
+  {$endif}
+
   Classes, SysUtils,
   {$ifndef FPC}
-    Types,  {$ifndef X}Messages,{$endif}
+    Types,  {$ifdef MSWindows}Messages,{$endif}
   {$endif}
 
   {$ifdef FMX}
@@ -61,11 +65,27 @@ uses
 
 type
 
+  TAfterCreateContextEvent = procedure (Sender: TObject) of object;
+
   { TBlackSharkViewPort }
 
   TBlackSharkViewPort = class({$ifdef FMX}TControl{$else}TCustomControl{$endif})
+  {$ifdef FMXX}
   private
-    FLastDeviceContext: EGLNativeDisplayType;
+    class var
+      FWindows: THashTable<TWindow, TBlackSharkViewPort>;
+    class var
+      FDisplay: PDisplay;
+    class var
+      FScreen: int32;
+    class var
+      FRootWindow: TWindow;
+
+  {$endif}
+  private
+  {$ifdef FMXX}
+    FWindow: TWindow;
+  {$endif}
     FRenderer: TBlackSharkRenderer;
     FOnMouseMove: TMouseMoveEvent;
     FOnPaint: TNotifyEvent;
@@ -78,6 +98,7 @@ type
     FOnDblClick: TNotifyEvent;
     FOnMouseUp: TMouseEvent;
     FContext: TBlackSharkContext;
+    FLastDeviceContext: EGLNativeDisplayType;
     FCaption: string;
     ObserverCreateContext: IBEmptyEventObserver;
     {$ifndef FPC}
@@ -85,20 +106,27 @@ type
       cast to common behavior by the variable }
     IsMouseDblClick: boolean;
     {$endif}
+    FBlackSharkMSAA: boolean;
     procedure SetOnAfterCreateContext(AValue: TAfterCreateContextEvent);
     procedure SetCurrentScene(AValue: TBScene);
     procedure OnUpdateTimerAfterResize(Sender: TObject);
     function CheckSizeRendererWindow: boolean;
-    procedure OnCreateContextE(const {%H-}Value: BEmpty);
     procedure OnTimer(Sender: TObject);
     procedure CheckFPS; inline;
     procedure DoDblClick;
     function GetCurrentScene: TBScene;
-    function GetNativeHandle: EGLNativeWindowType;
-    function GetNativeDeviceContext: EGLNativeDisplayType;
+    procedure DoOnCreateContext;
     //procedure FreeNativeDeviceContext;
     procedure TryCreateContext;
+    procedure OnCreateContextE(const {%H-}Value: BEmpty);
+    function GetNativeHandle: EGLNativeWindowType;
+    function GetNativeDeviceContext: EGLNativeDisplayType;
     procedure DoDraw; inline;
+    procedure SetBlackSharkMSAA(const Value: boolean);
+  {$ifdef FMXX}
+    class constructor Create;
+    class destructor Destroy;
+  {$endif}
   protected
     procedure Resize; override;
     {$ifdef FPC}
@@ -160,6 +188,7 @@ type
     property Renderer: TBlackSharkRenderer read FRenderer;
     property Caption: string read FCaption write FCaption;
     property Context: TBlackSharkContext read FContext;
+    property BlackSharkMSAA: boolean read FBlackSharkMSAA write SetBlackSharkMSAA;
   published
     property OnPaint: TNotifyEvent read FOnPaint write FOnPaint;
     property OnAfterCreateContext: TAfterCreateContextEvent read FOnAfterCreateContext write SetOnAfterCreateContext;
@@ -191,7 +220,6 @@ implementation
 
 uses
   {$ifdef X}
-    bs.linux,
     {$ifdef FPC}
       Gtk2, Gtk2Extra,
     {$endif}
@@ -200,12 +228,24 @@ uses
     {$endif}
   {$else}
     {$ifdef FMX}
+      {$ifdef MSWINDOWS}
       FMX.Platform.Win,
     {$endif}
+
+
+    {$endif}
   {$endif}
+
+  {$ifdef FMXX}
+    bs.gl.es,
+  {$endif}
+
     bs.obj
-  , bs.log
+  , bs.constants
+  , bs.graphics
+  , bs.exceptions
   , bs.config
+  , bs.utils
   ;
 
 procedure Register;
@@ -229,7 +269,7 @@ begin
   {$ifdef MSWINDOWS}
     Result := GetDC(GetNativeHandle);
   {$else}
-    Result := XOpenDisplay(nil);
+    Result := FDisplay; //XOpenDisplay(nil);
   {$endif}
 {$else}
   {$ifdef FPC}
@@ -251,20 +291,13 @@ function TBlackSharkViewPort.GetNativeHandle: EGLNativeWindowType;
   {$ifdef FPC}
 var
   Widget: PGtkWidget;
-  {$else}
-//var
-  //GtkWindow: PGdkDrawable;
   {$endif}
 {$endif}
 begin
 {$ifdef FMX}
   {$ifdef X}
+    Result := 0;
       {$Message error 'For FMXLinux use pure Black Shark application instead it (see example in ".tests\delphi\BSApplication\")'}
-      Result := 0;
-      //GtkWindow := FormToHandle(Application.MainForm).NativeHandle;
-      //if (GtkWindow = nil) or (GtkWindow.bin.container.widget.window = nil) then
-      //  exit(0);
-      //Result := gdk_window_xwindow(PGdkDrawable(GtkWindow.bin.container.widget.window));
   {$else}
     Result := WindowHandleToPlatform(Application.MainForm.Handle).Wnd;
   {$endif}
@@ -292,8 +325,22 @@ begin
   {$endif}
 end;
 
+procedure TBlackSharkViewPort.SetBlackSharkMSAA(const Value: boolean);
+begin
+  if FBlackSharkMSAA = Value then
+    exit;
+  FBlackSharkMSAA := Value;
+  while (FBlackSharkMSAA <> FRenderer.SmoothMSAA) do
+  begin
+    if not FContext.MakeCurrent then
+      continue;
+    FRenderer.SmoothMSAA := FBlackSharkMSAA;
+  end;
+end;
+
 procedure TBlackSharkViewPort.SetCurrentScene(AValue: TBScene);
 begin
+  if Assigned(FRenderer) then
   FRenderer.Scene := AValue;
 end;
 
@@ -349,7 +396,7 @@ begin
   if Enabled and not {$ifdef FMX}IsFocused{$else}Focused{$endif} then
     SetFocus;
 
-  if Assigned(FContext) then
+  if Assigned(FRenderer) then
   begin
     FRenderer.MouseDown(MOUSE_BUTTONS_CONVERTOR[Button], Round(X), Round(Y), Shift);
     Draw;
@@ -362,7 +409,7 @@ end;
 procedure TBlackSharkViewPort.MouseMove(Shift: TShiftState; X, Y: {$ifdef FMX}single{$else}Integer{$endif});
 begin
   //inherited;
-  if Assigned(FContext) then
+  if Assigned(FRenderer) then
   begin
     {$ifdef FMX}
     MouseLastPos.X := Round(X);
@@ -383,7 +430,7 @@ procedure TBlackSharkViewPort.MouseUp(Button: TMouseButton; Shift: TShiftState;
   X, Y: {$ifdef FMX}single{$else}Integer{$endif});
 begin
   inherited;
-  if Assigned(FContext) then
+  if Assigned(FRenderer) then
   begin
     {$ifdef FMX}
       FRenderer.MouseUp(MOUSE_BUTTONS_CONVERTOR[Button], Round(X), Round(Y), Shift);
@@ -403,6 +450,32 @@ begin
   {$endif}
 end;
 
+procedure TBlackSharkViewPort.DoOnCreateContext;
+var
+  renderer: TBlackSharkRenderer;
+begin
+  if Assigned(FRenderer) then
+  begin
+    renderer := TBlackSharkRenderer.Create;
+    renderer.Scene := FRenderer.Scene;
+    renderer.OwnScene := true;
+    renderer.ExactSelectObjects := FRenderer.ExactSelectObjects;
+
+    FRenderer.Free;
+    FRenderer := renderer;
+  end else
+  begin
+    FRenderer := TBlackSharkRenderer.Create;
+    FRenderer.ExactSelectObjects := true;
+  end;
+
+  CheckSizeRendererWindow;
+  if Assigned(FOnAfterCreateContext) then
+    FOnAfterCreateContext(Self);
+
+  CheckFPS;
+end;
+
 {$ifdef FPC}
 
 procedure TBlackSharkViewPort.MouseEnter;
@@ -410,7 +483,7 @@ var
   p: TPoint;
 begin
   inherited;
-  if Assigned(FContext) then
+  if Assigned(FRenderer) then
   begin
     p := Mouse.CursorPos;
     p := ScreenToClient(p);
@@ -422,7 +495,7 @@ end;
 procedure TBlackSharkViewPort.MouseLeave;
 begin
   inherited;
-  if Assigned(FContext) then
+  if Assigned(FRenderer) then
   begin
     FRenderer.MouseLeave;
     Draw;
@@ -444,7 +517,7 @@ begin
   {$else}
   p := MouseLastPos; 
   {$endif}
-  if Assigned(FContext) then
+  if Assigned(FRenderer) then
   begin
     FRenderer.MouseEnter(p.X, p.Y);
     Draw;
@@ -454,7 +527,7 @@ end;
 procedure TBlackSharkViewPort.DoMouseLeave;
 begin
   inherited;
-  if Assigned(FContext) then
+  if Assigned(FRenderer) then
   begin
     FRenderer.MouseLeave;
     Draw;
@@ -464,7 +537,7 @@ end;
 procedure TBlackSharkViewPort.MouseWheel(Shift: TShiftState; WheelDelta: Integer; var Handled: Boolean);
 begin
   inherited;
-  if Assigned(FContext) then
+  if Assigned(FRenderer) then
   begin
     FRenderer.MouseWheel(WheelDelta, MouseLastPos.X, MouseLastPos.Y, Shift);
     Draw;
@@ -478,7 +551,7 @@ var
   p: TPoint;
 begin
   inherited;
-  if Assigned(FContext) then
+  if Assigned(FRenderer) then
   begin
     p := Mouse.CursorPos;
     p := ScreenToClient(p);
@@ -491,7 +564,7 @@ end;
 procedure TBlackSharkViewPort.CMMouseLeave;
 begin
   inherited;
-  if Assigned(FContext) then
+  if Assigned(FRenderer) then
   begin
     FRenderer.MouseLeave;
     Draw;
@@ -500,7 +573,7 @@ end;
 
 procedure TBlackSharkViewPort.CNKeyDown(var Message: TWMKeyDown);
 begin
-  if Assigned(FContext) then
+  if Assigned(FRenderer) then
   begin
     FRenderer.KeyDown(Message.CharCode, KeyboardStateToShiftState);
     {$ifdef FMX}
@@ -526,7 +599,7 @@ end;
 
 procedure TBlackSharkViewPort.DoDblClick;
 begin
-  if Assigned(FContext) then
+  if Assigned(FRenderer) then
   begin
     FRenderer.MouseDblClick(MouseLastPos.X, MouseLastPos.Y);
     Draw;
@@ -546,7 +619,10 @@ begin
        exit;
   end;
 
-  if not FContext.MakeCurrent or not Assigned(FRenderer) then
+  if not FContext.MakeCurrent then
+    exit;
+
+  if not Assigned(FRenderer) then
     exit;
 
   FRenderer.Render;
@@ -558,11 +634,10 @@ begin
 end;
 
 {$ifndef FMX}
-function TBlackSharkViewPort.DoMouseWheel(Shift: TShiftState;
-  WheelDelta: Integer; MousePos: TPoint): Boolean;
+function TBlackSharkViewPort.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean;
 begin
   Result := true;
-  if Assigned(FContext) then
+  if Assigned(FRenderer) then
   begin
     FRenderer.MouseWheel(WheelDelta, MouseLastPos.X, MouseLastPos.Y, Shift);
     Draw;
@@ -577,7 +652,9 @@ begin
   if (Width < 5) or (Height < 5) or not Assigned(FContext) or not FContext.ContextCreated or not FContext.MakeCurrent then
     exit;
 
+  {$ifndef FMXX}
   FContext.Swap;
+  {$endif}
   if CheckSizeRendererWindow then
     DoDraw;
 end;
@@ -587,7 +664,7 @@ end;
 procedure TBlackSharkViewPort.KeyDown(var Key: Word; Shift: TShiftState);
 begin
   inherited KeyDown(Key, Shift);
-  if Assigned(FContext) then
+  if Assigned(FRenderer) then
   begin
     FRenderer.KeyDown(Key, Shift);
     Draw;
@@ -597,7 +674,7 @@ end;
 procedure TBlackSharkViewPort.KeyUp(var Key: Word; Shift: TShiftState);
 begin
   inherited KeyUp(Key, Shift);
-  if Assigned(FContext) then
+  if Assigned(FRenderer) then
   begin
     FRenderer.KeyUp(Key, Shift);
     Draw;
@@ -609,7 +686,7 @@ var
   w: WideString;
 begin
   inherited UTF8KeyPress(UTF8Key);
-  if Assigned(FContext) then
+  if Assigned(FRenderer) then
   begin
     w := UTF8Decode(UTF8Key);
     if (w <> '') then
@@ -623,7 +700,7 @@ end;
   procedure TBlackSharkViewPort.KeyDown(var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
   begin
     inherited;
-    if Assigned(FContext) then
+    if Assigned(FRenderer) then
     begin
       FRenderer.KeyDown(Key, Shift);
       FRenderer.KeyPress(KeyChar, Shift);
@@ -634,7 +711,7 @@ end;
   procedure TBlackSharkViewPort.KeyUp(var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
   begin
     inherited;
-    if Assigned(FContext) then
+    if Assigned(FRenderer) then
     begin
       FRenderer.KeyUp(Key, Shift);
       Draw;
@@ -645,7 +722,7 @@ end;
   procedure TBlackSharkViewPort.KeyPress(var Key: char);
   begin
     inherited KeyPress(Key);
-    if Assigned(FContext) then
+    if Assigned(FRenderer) then
     begin
       FRenderer.KeyPress(Key, []);
       Draw;
@@ -662,7 +739,7 @@ end;
 
 procedure TBlackSharkViewPort.CheckFPS;
 begin
-  if (TBTimer.CurrentTime.Counter - TTimeProcessEvent.TimeProcessEvent.Counter > 3000) then
+  if (TBTimer.CurrentTime.Counter - TTimeProcessEvent.TimeProcessEvent.Counter > TIMEOUT_MAX_FPS) then
   begin
     if Timer.Enabled then
       Timer.Enabled := false;
@@ -682,6 +759,20 @@ begin
   end else
     Result := false;
 end;
+
+{$ifdef FMXX}
+class constructor TBlackSharkViewPort.Create;
+begin
+  FDisplay := XOpenDisplay(nil);
+
+  if not Assigned(FDisplay) then
+    raise EBlackShark.Create('[class constructor TBlackSharkViewPort.Create] XOpenDisplay failed');
+  // if we have a Display then we should have a Screen too
+  FScreen:= XDefaultScreen(FDisplay);
+  FRootWindow := XDefaultRootWindow(FDisplay);
+  //FLeaderWindow := XCreateSimpleWindow(FDisplay, FRootWindow, 0, 0, 1, 1, 0, 0, 0);
+end;
+{$endif}
 
 constructor TBlackSharkViewPort.Create(TheOwner: TComponent);
 begin
@@ -708,16 +799,18 @@ begin
   Timer.Enabled := false;
   Timer.Interval := 1;
   Timer.OnTimer := OnTimer;
-
 end;
 
 procedure TBlackSharkViewPort.RestoreContext;
 begin
+  {$ifndef FMXX}
   if not Assigned(FContext) then
     exit;
   FContext.UnInitGLContext;
   FContext.CreateContext;
   if FContext.MakeCurrent then
+  {$endif}
+    if Assigned(FRenderer) then
     FRenderer.Restore;
 end;
 
@@ -731,6 +824,13 @@ begin
   {$endif}
 end;
 
+{$ifdef FMXX}
+class destructor TBlackSharkViewPort.Destroy;
+begin
+  XCloseDisplay(FDisplay);
+end;
+{$endif}
+
 destructor TBlackSharkViewPort.Destroy;
 begin
   ObserverCreateContext := nil;
@@ -740,29 +840,8 @@ begin
 end;
 
 procedure TBlackSharkViewPort.OnCreateContextE(const Value: BEmpty);
-var
-  renderer: TBlackSharkRenderer;
 begin
-  if Assigned(FRenderer) then
-  begin
-    renderer := TBlackSharkRenderer.Create;
-    renderer.Scene := FRenderer.Scene;
-    renderer.OwnScene := true;
-    renderer.ExactSelectObjects := FRenderer.ExactSelectObjects;
-
-    FRenderer.Free;
-    FRenderer := renderer;
-  end else
-  begin
-    FRenderer := TBlackSharkRenderer.Create;
-    FRenderer.ExactSelectObjects := true;
-  end;
-
-  CheckSizeRendererWindow;
-  if Assigned(FOnAfterCreateContext) then
-    FOnAfterCreateContext(FContext);
-
-  CheckFPS;
+  DoOnCreateContext;
 end;
 
 procedure TBlackSharkViewPort.OnTimer(Sender: TObject);
@@ -775,8 +854,8 @@ begin
   if @FOnAfterCreateContext = @AValue then
       exit;
   FOnAfterCreateContext := AValue;
-  if Assigned(FRenderer) and (Assigned(FOnAfterCreateContext)) and (FContext.ContextCreated) then
-    FOnAfterCreateContext(FContext);
+  if Assigned(FRenderer) and (Assigned(FOnAfterCreateContext)) {$ifndef FMXX} and (FContext.ContextCreated) {$endif} then
+    FOnAfterCreateContext(Self);
 end;
 
 procedure TBlackSharkViewPort.TestKeyDown(var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
@@ -857,5 +936,18 @@ begin
       Height := AHeight;
   end;
 end;
+
+initialization
+  {$ifdef FMX}
+  FMX.Types.GlobalUseGPUCanvas := True;
+  {$endif}
+
+  {$ifdef FMX}
+  bs.graphics.PixelsPerInch := TDeviceDisplayMetrics.Default.PixelsPerInch;
+  {$else}
+  bs.graphics.PixelsPerInch := Screen.PixelsPerInch;
+  {$endif}
+  bs.graphics.ToHiDpiScale := bs.graphics.PixelsPerInch/96;
+
 
 end.

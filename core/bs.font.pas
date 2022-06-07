@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -65,7 +65,7 @@ unit bs.font;
 
 {$I BlackSharkCfg.inc}
 
-{$ifdef DEBUG}
+{$ifdef DEBUG_BS}
   {.$define DEBUG_FONT}
 {$endif}
 
@@ -416,10 +416,10 @@ type
     function GetSize: BSFloat; stdcall;
     procedure SetSize(const Value: BSFloat); stdcall;
     function GetCountKeys: int32; stdcall;
-    procedure GetTextSize(const Text: string; out CountChars: int32;
-      out TextWidth: BSFloat; out TextHeight: BSFloat;
-      out MaxLenWordInChars: int32; out MaxLenWordInPixels: BSFloat;
-      DistanceBWChars: BSFloat); stdcall;
+//    procedure GetTextSize(const Text: string; out CountChars: int32;
+//      out TextWidth: BSFloat; out TextHeight: BSFloat;
+//      out MaxLenWordInChars: int32; out MaxLenWordInPixels: BSFloat;
+//      DistanceBWChars: BSFloat); stdcall;
     { raw data (do not triangulated) from font file }
     function GetRawKey(CodeUTF16: uint16): PKeyInfo; stdcall;
     function GetCodePage: TCodePage; stdcall;
@@ -456,10 +456,9 @@ type
     FCodePage: TCodePage;
     FRefCount: int32;
     FPixelsPerInch: BSFloat;
+    FPixelsPerMm: BSFloat;
     FFontStyle: TBSFontStyleSet;
     FID: uint32;
-    //CalculatingCountours: boolean;
-    FUsers: int32;
     procedure SetPixelsPerInch(const Value: BSFloat);
     procedure DoCreateTexture(FontSize: int32);
   protected
@@ -550,9 +549,9 @@ type
         - DistanceBWChars - count missed pixels between chars used in a text
       processor in a time build words; this number take into account when
       calculeted TextWidth; }
-    procedure GetTextSize(const Text: string; out CountChars: int32; out TextWidth: BSFloat;
-      out TextHeight: BSFloat; out MaxLenWordInChars: int32;
-      out MaxLenWordInPixels: BSFloat; DistanceBWChars: BSFloat); stdcall;
+//    procedure GetTextSize(const Text: string; out CountChars: int32; out TextWidth: BSFloat;
+//      out TextHeight: BSFloat; out MaxLenWordInChars: int32;
+//      out MaxLenWordInPixels: BSFloat; DistanceBWChars: BSFloat); stdcall;
     { Recalculate for evry Key relative texture Width and Height UV coordinates }
     procedure UpdateUV;
     property Key[CodeUTF16: uint16]: PKeyInfo read GetKey;
@@ -573,7 +572,6 @@ type
     property ID: uint32 read FID;
     { TODO: FontStyle }
     property FontStyle: TBSFontStyleSet read FFontStyle write FFontStyle;
-    property Users: int32 read FUsers;
     { for debug only }
     property RawData: TBlackSharkCustomFont read RawDataFont;
     property OnChangeEvent: IBEmptyEvent read GetOnChangeEvent;
@@ -890,7 +888,7 @@ uses
 {$endif}
 
 {$ifdef FPC}
-    LazUTF8,
+    //LazUTF8,
 {$endif}
 
 {$ifdef DEBUG_FONT}
@@ -2281,7 +2279,7 @@ var
     // to calc here angle b/w last and first vectors, but don't do, because collected
     // values enough to know clockwise or not, points of the contour placed
     CalcAngle(angle_old_sum, angle_old, v_befor_befor, v_first - TVec2f(v));
-    CalcAngle(angle_new_sum, angle_new, v_befor_befor_trans, TVec2f(g.Points.items[begin_point]) - TVec2f(v_trans));
+    CalcAngle(angle_new_sum, angle_new, v_befor_befor_trans, TVec2f(g.Points.items[begin_point]) - {%H-}TVec2f(v_trans));
     g.Contours.Items[index_cont].AsClockArr := angle_new_sum < 0;
     // check reflection contour
     if scale and (((angle_old > 0) and (angle_new < 0)) or ((angle_old < 0) and (angle_new > 0))) then
@@ -2410,7 +2408,7 @@ begin
     inc(offset, LoadCommonGlyphArg(offset));
     group_cont := 0;
     // simple glyph ???
-    if (numberOfContours >= 0) then
+    if ({%H-}numberOfContours >= 0) then
     begin
       off_vec.x := 0;
       off_vec.y := 0;
@@ -2803,6 +2801,10 @@ var
   src: TBlackSharkCustomFont;
   res: TBlackSharkCustomFont;
 begin
+  Result := nil;
+  {$ifdef DEBUG_FONT}
+  BSWriteMsg('BSFontManager.GetFont', FileName);
+  {$endif}
   // found raw data font
   sn := ChangeFileExt(ExtractFileName(FileName), '');
   res := GetRawFontData(sn);
@@ -2824,6 +2826,9 @@ begin
   res.Assign(src);
   res.Size := 10;
   Result := res;
+  {$ifdef DEBUG_FONT}
+  BSWriteMsg('BSFontManager.GetFont', FileName + ', success!!!');
+  {$endif}
 end;
 
 class function BSFontManager.GetFonts: TListVec<string>;
@@ -2864,6 +2869,7 @@ var
   f: string;
   res: TBlackSharkCustomFont;
 begin
+  Result := nil;
   FontNames.Find(AnsiUpperCase(Name), res);
   if res = nil then
   begin
@@ -3040,12 +3046,9 @@ end;
 
 class function BSFontManager.CreateDefaultFont: IBlackSharkFont;
 begin
-  //Result := GetFont('Base.bsf', TBlackSharkRasterFont);   // DejaVuSans.ttf TTrueTypeRasterFont
   Result := GetFont(DEFAULT_FONT, TTrueTypeRasterFont);
   if FDefaultFont = nil then
     FDefaultFont := Result;
-  //Result := GetFont('DejaVuSans.ttf', TTrueTypeRasterFont); // times
-  //TTrueTypeRasterFont(FDefaultFont).Rasterizator.SamplerFilter.InterpolationMode := imLanczos;
 end;
 
 { TBlackSharkCustomFont }
@@ -3053,21 +3056,20 @@ end;
 constructor TBlackSharkCustomFont.Create(const AName: string);
 begin
   inherited Create;
-  //FKeys := TListVec<PKeyInfo>.Create;
-  FUsers := 0;
   FGlyphs := TListGlyphs.Create;
   FShortName := AName;
   FScale := 1.0;
-  //FSize := SIZE_DESTINATION_CANVAS_DEFAULT;
   FSize := 10;
-  //FPixelsPerInch := 96;
-  FPixelsPerInch := GetPixelsPerInch;
-  FSizeInPixels := round(FSize*FPixelsPerInch/72);
+  FPixelsPerInch := bs.graphics.PixelsPerInch;
+  FPixelsPerMm := FPixelsPerInch/25.4;
+  FSizeInPixels := round(FSize*TYPOGRAPHY_POINT_EURO*FPixelsPerMm);
+
   FCodePage := TCodePage.cpCyrillic;
   if FShortName <> '' then
     FID := GetHashBlackSharkS(FShortName)
   else
     FID := high(uint32);
+
   FOnChangeEvent := CreateEmptyEvent;
   RawDataFont := BSFontManager.GetRawFontData(AName);
   BSFontManager.OnCreateFont(Self);
@@ -3267,92 +3269,92 @@ begin
   Result := FSizeInPixels;
 end;
 
-procedure TBlackSharkCustomFont.GetTextSize(const Text: string; out CountChars: int32;
-  out TextWidth, TextHeight: BSFloat; out MaxLenWordInChars: int32;
-  out MaxLenWordInPixels: BSFloat;
-  DistanceBWChars: BSFloat);
-var
-  ch: WideChar;
-  KeyInfo: PKeyInfo;
-  {$ifdef FPC}
-  ch_a: string;
-  u: WideString;
-  len_ch: int8;
-  {$endif}
-  ptr_str: PChar;
-  len_str: int32;
-  avw: BSFloat;
-  l_word: int32;
-  l_word_pix: BSFloat;
-begin
-  TextWidth := 0;
-  TextHeight := 0;
-  MaxLenWordInChars := 0;
-  MaxLenWordInPixels := 0;
-  CountChars := 0;
-  len_str := length(Text);
-  if len_str = 0 then
-    exit;
-  //avh := FAverageHeight;
-  avw := FAverageWidth + DistanceBWChars;
-  BeginSelectChars;
-  try
-    ptr_str := @Text[1];
-    l_word := 0;
-    l_word_pix := 0;
-    while len_str > 0 do
-    begin
-      {$ifdef FPC}
-      len_ch := UTF8CodepointSize(ptr_str);
-      //len_ch := UTF8CharacterLength(ptr_str);
-      SetLength(ch_a, len_ch);
-      move(ptr_str^, ch_a[1], len_ch);
-      inc(ptr_str, len_ch);
-      dec(len_str, len_ch);
-      if (ch_a = '') then
-        continue;
-      u := UTF8Decode(ch_a);
-      ch := u[1];
-      {$else}
-      ch := ptr_str^;
-      dec(len_str);
-      inc(ptr_str);
-      {$endif}
-      inc(CountChars);
-      if (ch < #$21) or (ch = #$A0) then
-      begin
-        TextWidth := TextWidth + avw;
-        if l_word > MaxLenWordInChars then
-          MaxLenWordInChars := l_word;
-        if l_word_pix > MaxLenWordInPixels then
-          MaxLenWordInPixels := l_word_pix;
-        l_word := 0;
-        l_word_pix := 0;
-      end else
-      begin
-        KeyInfo := KeyByWideChar[ch];
-        if KeyInfo <> nil then
-        begin
-          inc(l_word);
-          l_word_pix := l_word_pix + KeyInfo^.Rect.Width + DistanceBWChars;
-          TextWidth := TextWidth + KeyInfo^.Rect.Width + DistanceBWChars;
-          if TextHeight < KeyInfo^.Rect.Height then
-            TextHeight := KeyInfo^.Rect.Height;
-        end else
-        begin
-          TextWidth := TextWidth + avw;
-        end;
-      end;
-    end;
-    if l_word > MaxLenWordInChars then
-      MaxLenWordInChars := l_word;
-    if l_word_pix > MaxLenWordInPixels then
-      MaxLenWordInPixels := l_word_pix;
-  finally
-    EndSelectChars;
-  end;
-end;
-
+//procedure TBlackSharkCustomFont.GetTextSize(const Text: string; out CountChars: int32;
+//  out TextWidth, TextHeight: BSFloat; out MaxLenWordInChars: int32;
+//  out MaxLenWordInPixels: BSFloat;
+//  DistanceBWChars: BSFloat);
+//var
+//  ch: WideChar;
+//  KeyInfo: PKeyInfo;
+//  {$ifdef FPC}
+//  ch_a: string;
+//  u: WideString;
+//  len_ch: int8;
+//  {$endif}
+//  ptr_str: PChar;
+//  len_str: int32;
+//  avw: BSFloat;
+//  l_word: int32;
+//  l_word_pix: BSFloat;
+//begin
+//  TextWidth := 0;
+//  TextHeight := 0;
+//  MaxLenWordInChars := 0;
+//  MaxLenWordInPixels := 0;
+//  CountChars := 0;
+//  len_str := length(Text);
+//  if len_str = 0 then
+//    exit;
+//  //avh := FAverageHeight;
+//  avw := FAverageWidth + DistanceBWChars;
+//  BeginSelectChars;
+//  try
+//    ptr_str := @Text[1];
+//    l_word := 0;
+//    l_word_pix := 0;
+//    while len_str > 0 do
+//    begin
+//      {$ifdef FPC}
+//      len_ch := UTF8CodepointSize(ptr_str);
+//      //len_ch := UTF8CharacterLength(ptr_str);
+//      SetLength(ch_a, len_ch);
+//      move(ptr_str^, ch_a[1], len_ch);
+//      inc(ptr_str, len_ch);
+//      dec(len_str, len_ch);
+//      if (ch_a = '') then
+//        continue;
+//      u := UTF8Decode(ch_a);
+//      ch := u[1];
+//      {$else}
+//      ch := ptr_str^;
+//      dec(len_str);
+//      inc(ptr_str);
+//      {$endif}
+//      inc(CountChars);
+//      if (ch < #$21) or (ch = #$A0) then
+//      begin
+//        TextWidth := TextWidth + avw;
+//        if l_word > MaxLenWordInChars then
+//          MaxLenWordInChars := l_word;
+//        if l_word_pix > MaxLenWordInPixels then
+//          MaxLenWordInPixels := l_word_pix;
+//        l_word := 0;
+//        l_word_pix := 0;
+//      end else
+//      begin
+//        KeyInfo := KeyByWideChar[ch];
+//        if KeyInfo <> nil then
+//        begin
+//          inc(l_word);
+//          l_word_pix := l_word_pix + KeyInfo^.Rect.Width + DistanceBWChars;
+//          TextWidth := TextWidth + KeyInfo^.Rect.Width + DistanceBWChars;
+//          if TextHeight < KeyInfo^.Rect.Height then
+//            TextHeight := KeyInfo^.Rect.Height;
+//        end else
+//        begin
+//          TextWidth := TextWidth + avw;
+//        end;
+//      end;
+//    end;
+//    if l_word > MaxLenWordInChars then
+//      MaxLenWordInChars := l_word;
+//    if l_word_pix > MaxLenWordInPixels then
+//      MaxLenWordInPixels := l_word_pix;
+//  finally
+//    EndSelectChars;
+//  end;
+//end;
+//
 function TBlackSharkCustomFont.GetTexture: IFontTexture;
 begin
   if not FIsVectoral and not Assigned(FTexture) then
@@ -3476,7 +3478,10 @@ begin
   FPixelsPerInch := Value;
   if FPixelsPerInch < 72 then
     FPixelsPerInch := 72;
-  FSizeInPixels := round(FSize*FPixelsPerInch/72);
+
+  FPixelsPerMm := FPixelsPerInch/25.4;
+  FSizeInPixels := round(FSize*TYPOGRAPHY_POINT_EURO*FPixelsPerMm);
+
   CalcScale;
   CalcContours;
 end;
@@ -3522,10 +3527,12 @@ procedure TBlackSharkCustomFont.SetSize(const Value: BSFloat);
 begin
   if FSize = Value then
     exit;
-  FSize := Value;
-  if FSize < 6 then
-    FSize := 6;
-  FSizeInPixels := round(FSize*FPixelsPerInch/72);
+  FSize := round(Value);
+  if FSize < 1 then
+    FSize := 1;
+  FSizeInPixels := round(FSize*TYPOGRAPHY_POINT_EURO*FPixelsPerMm);
+  if FSizeInPixels < 5 then
+    FSizeInPixels := 5;
   CalcScale;
   CalcContours;
 end;
@@ -3535,9 +3542,9 @@ begin
   if FSizeInPixels = Value then
     exit;
   FSizeInPixels := Value;
-  if FSizeInPixels < 6 then
-    FSizeInPixels := 6;
-  Size := FSizeInPixels*72/FPixelsPerInch;
+  if FSizeInPixels < 5 then
+    FSizeInPixels := 5;
+  Size := FSizeInPixels/(TYPOGRAPHY_POINT_EURO*FPixelsPerMm);
 end;
 
 procedure TBlackSharkCustomFont.Clear;
@@ -4018,11 +4025,11 @@ begin
   if (RawDataFont = nil) and (Key^.Glyph^.Points.Count = 0) then
   begin
     {$ifdef DEBUG_FONT}
-    t := TThreadTimer.CurrentTime.Low;
+    t := TBTimer.CurrentTime.Low;
     {$endif}
     CalculateContour(Key);
     {$ifdef DEBUG_FONT}
-    inc(CountCalcContours, TThreadTimer.CurrentTime.Low - t);
+    inc(CountCalcContours, TBTimer.CurrentTime.Low - t);
     {$endif}
   end;
 
@@ -4030,13 +4037,13 @@ begin
   if (Key^.Indexes.Count = 0) and (Key^.Glyph^.Points.Count > 3) then
   begin
     {$ifdef DEBUG_FONT}
-    t := TThreadTimer.CurrentTime.Low;
+    t := TBTimer.CurrentTime.Low;
     {$endif}
     Tesselator.Triangulate(Key^.Glyph^.Points, Key^.Glyph^.Contours, Key^.Indexes);
     if (Key^.Indexes.Count > 3) then
       inc(FTriangulatedKeys);
     {$ifdef DEBUG_FONT}
-    inc(CountTimeTriangulate, TThreadTimer.CurrentTime.Low - t);
+    inc(CountTimeTriangulate, TBTimer.CurrentTime.Low - t);
     {$endif}
   end;
 
@@ -4220,7 +4227,7 @@ begin
   if FSizeInPixels < Rect.Height then
   begin
     FSizeInPixels := Rect.Height;
-    FSize := round(FSizeInPixels/(FPixelsPerInch/72));
+    FSize := round(FSizeInPixels/(TYPOGRAPHY_POINT_EURO*FPixelsPerMm));
   end;
   //KeyInfo^.IndexToGlyph := IndexToGlyph;
   if (FTexture <> nil) then

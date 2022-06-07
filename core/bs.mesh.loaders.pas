@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -30,10 +30,10 @@ interface
 
 uses
     SysUtils
+  , XmlWriter
   , bs.basetypes
   , bs.mesh
   , bs.collections
-  , XmlWriter
   , bs.scene
   , bs.renderer
   , bs.scene.skeleton
@@ -58,6 +58,9 @@ implementation
     , bs.exceptions
     , bs.scene.objects
     , bs.texture
+    {$ifdef DEBUG_BS}
+    , bs.log
+    {$endif}
     ;
 
 const
@@ -250,7 +253,7 @@ var
   begin
     if not Assigned(ANode) then
       exit(false);
-    ReadFloatValues(WideToString(ANode.StrData), 16, 1, values_f);
+    {%H-}ReadFloatValues(WideToString(ANode.StrData), 16, 1, values_f);
     move(values_f[0], m{%H-}, 16*SizeOf(BSFloat));
     MatrixTranspose(m);
     Result := true;
@@ -690,6 +693,7 @@ var
     tip, offset: TVec3f;
     go: TGraphicObject;
   begin
+    Result := nil;
     kind := ANode.GetAttribute('type', '');
     if kind = 'JOINT' then
     begin
@@ -701,11 +705,11 @@ var
         skeletons.Items[skeleton.Caption] := skeleton;
         // root node for skeleton; need for a bind of animations to skeleton and its bones
         s := ANode.Parent.GetAttribute('id', '');
-        skeletons_root_node.TryAdd(s, skeleton);
+        {%H-}skeletons_root_node.TryAdd(s, skeleton);
         s := ANode.Parent.GetAttribute('name', '');
         // double registration the same skeleton, because of some models links by id, another by name
         if (s <> '') and (s <> skeleton.Caption) then
-          skeletons_root_node.TryAdd(s, skeleton);
+          {%H-}skeletons_root_node.TryAdd(s, skeleton);
         skeleton.ParentTransforms := ARootTransformationUp;
       end;
 
@@ -763,7 +767,6 @@ var
 
     end else
     begin
-      Result := nil;
       if kind = 'NODE' then
       begin
         if ANode.GetAttribute('id', '') = 'Camera' then
@@ -956,7 +959,7 @@ var
     begin
       while values_i[i] > 0 do
       begin
-        if sk.Bones.Find(values_s[pairs[j]], bone) then
+        if sk.Bones.Find(values_s[{%H-}pairs[j]], bone) then
         begin
           tmp_int_arr := map_vertex_points.Items[i];
           for k := 0 to length(tmp_int_arr)-1 do
@@ -1086,7 +1089,7 @@ var
     else
       sa := sk.CreateAnimation(name);
 
-    for i := 0 to length(t)-1 do
+    for i := 0 to length({%H-}t)-1 do
     begin
       move(values_f[i*16], m{%H-}, SizeOf(m));
       MatrixTranspose(m);
@@ -1105,13 +1108,29 @@ var
   bucket: THashTable<string, TSkeleton>.TBucket;
   bucket_go: THashTable<string, TGraphicObject>.TBucket;
   bucket_eff: THashTable<string, PEffect>.TBucket;
-
+  filePath: string;
 begin
   Result := nil;
-  xml := TheXmlWriter.Create(GetFilePath(FileName), true);
+  filePath := GetFilePath(FileName);
+  if not FileExists(filePath) then
+  begin
+    {$ifdef DEBUG_BS}
+    BSWriteMsg('MeshLoadCollada', 'File "' + FileName + '" doesn''''t exists!');
+    {$endif}
+    exit;
+  end;
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('MeshLoadCollada', '...loading collada model: ' + filePath);
+  {$endif}
+  xml := TheXmlWriter.Create(filePath, true);
   try
     if not Assigned(xml.Root) then
+    begin
+      {$ifdef DEBUG_BS}
+      BSWriteMsg('MeshLoadCollada', 'if not Assigned(xml.Root) then');
+      {$endif}
       exit;
+    end;
 
     upCorrection := IDENTITY_MAT;
     node := xml.Root.FindChildNode('asset');
@@ -1126,6 +1145,7 @@ begin
         end;
       end;
     end;
+
     upCorrectionInv := upCorrection;
     MatrixInvert(upCorrectionInv);
 

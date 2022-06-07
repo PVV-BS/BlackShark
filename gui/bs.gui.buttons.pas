@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -52,19 +52,22 @@ type
       DEFAULT_WIDTH = 120;
       DEFAULT_HEIGHT = 35;
   private
-    FTexOnMouseEnter: PTextureArea;
-    FTexOnMouseDown: PTextureArea;
+    {$ifndef ANDROID}
     AniLawScale: IBAnimationLinearFloat;
     AniLawTransparent: IBAnimationLinearFloat;
     ObsrvScale: IBAnimationLinearFloatObsrv;
     ObsrvTransparent: IBAnimationLinearFloatObsrv;
+    {$endif}
 
     InvisibleBody: TRectangle;
     FCaption: TCanvasText;
 
     ObsrvMD: IBMouseDownEventObserver;
     ObsrvMU: IBMouseUpEventObserver;
+    ObsrvMDbl: IBMouseUpEventObserver;
+    {$ifndef ANDROID}
     ObsrvME: IBMouseEnterEventObserver;
+    {$endif}
     ObsrvML: IBMouseLeaveEventObserver;
 
     FOnClickEvent: IBMouseUpEvent;
@@ -77,15 +80,16 @@ type
     FOpacity: BSFloat;
     FBorderColor: TGuiColor;
     FCaptionColor: TGuiColor;
+    FMouseDataDblClick: BMouseData;
 
     function GetCaption: string;
 
+    {$ifndef ANDROID}
     procedure OnChangeValueScale(const Value: BSFloat);
     procedure OnChangeValueTransparent(const Value: BSFloat);
+    {$endif}
 
     procedure SetCaption(AValue: string);
-    procedure SetTexOnMouseDown(const Value: PTextureArea);
-    procedure SetTexOnMouseEnter(const Value: PTextureArea);
     procedure SetOpacity(const Value: BSFloat);
     procedure SetWidthBorder(const Value: BSFloat);
     function GetSize: TVec2f;
@@ -95,10 +99,14 @@ type
     procedure SetRoundRadius(const Value: BSFloat);
     procedure CreateBorder;
     procedure SetShowBorder(const Value: Boolean);
+    procedure AwaitDblClick(AData: Pointer);
   protected
     procedure OnMouseDown(const {%H-}Value: BMouseData); virtual;
     procedure OnMouseUp(const {%H-}Value: BMouseData); virtual;
+    procedure OnMouseDblClick(const {%H-}Value: BMouseData); virtual;
+    {$ifndef ANDROID}
     procedure OnMouseEnter(const {%H-}Value: BMouseData); virtual;
+    {$endif}
     procedure OnMouseLeave(const {%H-}Value: BMouseData); virtual;
 
     procedure SetColor(const Value: TGuiColor); override;
@@ -114,8 +122,6 @@ type
     function DefaultSize: TVec2f; override;
     procedure BuildView; override;
     procedure Resize(AWidth, AHeight: BSFloat); override;
-    property TexOnMouseEnter: PTextureArea read FTexOnMouseEnter write SetTexOnMouseEnter;
-    property TexOnMouseDown: PTextureArea read FTexOnMouseDown write SetTexOnMouseDown;
     property Size: TVec2f read GetSize write SetSize;
     property Border: TRoundRect read FBorder;
     property Text: TCanvasText read FCaption;
@@ -138,6 +144,9 @@ implementation
 
 uses
     SysUtils
+  {$ifdef DEBUG_BS}
+  , bs.log
+  {$endif}
   , bs.thread
   , bs.graphics
   , bs.math
@@ -150,6 +159,7 @@ uses
 
   { TBButton }
 
+{$ifndef ANDROID}
 procedure TBButton.OnChangeValueScale(const Value: BSFloat);
 begin
   if not AniLawScale.IsRun then
@@ -164,9 +174,13 @@ begin
     exit;
   FBackground.Data.Opacity := Value;
 end;
+{$endif}
 
 procedure TBButton.Resize(AWidth, AHeight: BSFloat);
 begin
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBButton.Resize', 'AWidth, AHeight: ' + IntToStr(round(AWidth)) + ', ' + IntToStr(round(AHeight)));
+  {$endif}
   InvisibleBody.Size := vec2(AWidth, AHeight);
   if Assigned(FBorder) then
   begin
@@ -202,18 +216,33 @@ begin
     Result := DefaultSize.Width;
 end;
 
+procedure TBButton.OnMouseDblClick(const Value: BMouseData);
+begin
+  FMouseDataDblClick := Value;
+  OnMouseDown(Value);
+  TTaskExecutor.AwaitExecuteTask(AwaitDblClick, @FMouseDataDblClick);
+end;
+
 procedure TBButton.OnMouseDown(const Value: BMouseData);
 begin
-  FHolderGUI.Position2d := FHolderGUI.Position2d + 1.0;
+  FHolderGUI.Position2d := FHolderGUI.Position2d + vec2(1.0, 1.0);
   FCaption.Position2d := FCaption.Position2d + 1.0;
+  {$ifdef DEBUG_BS }
+  BSWriteMsg('TBButton.OnMouseDown', Caption);
+  {$endif}
 end;
 
 procedure TBButton.OnMouseUp(const Value: BMouseData);
 begin
-  FHolderGUI.Position2d := FHolderGUI.Position2d - 1.0;
+  FHolderGUI.Position2d := FHolderGUI.Position2d - vec2(1.0, 1.0);
   FCaption.ToParentCenter;
+  FOnClickEvent.SendEvent(Value);
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBButton.OnMouseUp', Caption);
+  {$endif}
 end;
 
+{$ifndef ANDROID}
 procedure TBButton.OnMouseEnter(const Value: BMouseData);
 begin
   if AniLawScale.IsRun then
@@ -231,9 +260,11 @@ begin
   end;
   AniLawScale.Run;
 end;
+{$endif}
 
 procedure TBButton.OnMouseLeave(const Value: BMouseData);
 begin
+  {$ifndef ANDROID}
   if FOpacity < 1.0 then
   begin
     AniLawTransparent.StartValue := FBackground.Data.Opacity;
@@ -241,6 +272,7 @@ begin
     AniLawTransparent.Run;
   end;
   AniLawScale.Stop;
+  {$endif ANDROID}
   FHolderGUI.Data.Scale := vec3(1.0, 1.0, 1.0);
   FHolderGUI.Position2d := vec2(0.0, 0.0);
 end;
@@ -323,16 +355,6 @@ begin
   Resize(Value.x, Value.y);
 end;
 
-procedure TBButton.SetTexOnMouseDown(const Value: PTextureArea);
-begin
-  FTexOnMouseDown := Value;
-end;
-
-procedure TBButton.SetTexOnMouseEnter(const Value: PTextureArea);
-begin
-  FTexOnMouseEnter := Value;
-end;
-
 procedure TBButton.SetWidthBorder(const Value: BSFloat);
 begin
   if FWidthBorder = Value then
@@ -341,7 +363,7 @@ begin
   FWidthBorder := Value;
   if Assigned(FBorder) then
   begin
-    FBorder.WidthLine := FWidthBorder;
+    FBorder.WidthLine := round(FWidthBorder*ToHiDpiScale);
     FBorder.Build;
   end;
 end;
@@ -350,7 +372,10 @@ constructor TBButton.Create(ACanvas: TBCanvas);
 begin
   inherited Create(ACanvas);
   if OwnCanvas then
-    FCanvas.Font.SizeInPixels := 10;
+    FCanvas.Font.Size := 8;
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBButton.Create', 'FCanvas.Font.SizeInPixels: ' + IntToStr(FCanvas.Font.SizeInPixels));
+  {$endif}
   FShowBorder := true;
   FOpacity := 0.5;
   FBorderColor := $FF00FF00;
@@ -369,7 +394,7 @@ begin
   FBackground.Size := InvisibleBody.Size;
   //FMainBody := FBackground;
 
-  FOnClickEvent := InvisibleBody.Data.EventMouseUp;
+  FOnClickEvent := CreateMouseEvent;
 
   InvisibleBody.Data.DrawAsTransparent := false;
   InvisibleBody.Data.Interactive := true;
@@ -379,23 +404,26 @@ begin
 
   ObsrvMD := CreateMouseObserver(InvisibleBody.Data.EventMouseDown, OnMouseDown);
   ObsrvMU := CreateMouseObserver(InvisibleBody.Data.EventMouseUp, OnMouseUp);
+  ObsrvMDbl := CreateMouseObserver(InvisibleBody.Data.EventMouseDblClick, OnMouseDblClick);
+  {$ifndef ANDROID}
   ObsrvME := CreateMouseObserver(InvisibleBody.Data.EventMouseEnter, OnMouseEnter);
+  {$endif}
   ObsrvML := CreateMouseObserver(InvisibleBody.Data.EventMouseLeave, OnMouseLeave);
 
-  FRoundRadius := Round(sqrt(InvisibleBody.Size.Width * InvisibleBody.Size.Height) * 0.1);
+  FRoundRadius := 8;
   FWidthBorder := 1.0;
   if FShowBorder then
     CreateBorder;
 
   FCaption := TCanvasText.Create(FCanvas, InvisibleBody);
   FCaption.Data.Interactive := false;
-  //FCaption.CreateCustomFont;
   FCaption.Layer2d := 3;
   //FCaption.Align := TObjectAlign.oaCenter;
   FCaption.Text := 'Button';
   FCaption.Anchors[aLeft] := false;
   FCaption.Anchors[aTop] := false;
 
+  {$ifndef ANDROID}
   AniLawScale := CreateAniFloatLinear(GUIThread);
   ObsrvScale := CreateAniFloatLivearObsrv(AniLawScale, OnChangeValueScale, GUIThread);
   AniLawScale.Duration := 150;
@@ -403,6 +431,7 @@ begin
   AniLawTransparent := CreateAniFloatLinear(GUIThread);
   ObsrvTransparent := CreateAniFloatLivearObsrv(AniLawTransparent, OnChangeValueTransparent, GUIThread);
   AniLawTransparent.Duration := 200;
+  {$endif}
 
   FMainBody.Data.SetDragResolveRecursive(false);
 
@@ -418,7 +447,7 @@ begin
   FBorder.Fill := false;
   FBorder.Data.Interactive := false;
   FBorder.Layer2d := 5;
-  FBorder.WidthLine := FWidthBorder;
+  FBorder.WidthLine := round(FWidthBorder*ToHiDpiScale);
   FBorder.Size := FBackground.Size;
   FBorder.RadiusRound := FRoundRadius;
   FBorder.Color := ColorByteToFloat(FBorderColor, true);
@@ -426,20 +455,22 @@ end;
 
 function TBButton.DefaultSize: TVec2f;
 begin
-  Result.x := DEFAULT_WIDTH;
-  Result.y := DEFAULT_HEIGHT;
+  Result.x := round(DEFAULT_WIDTH*ToHiDpiScale);
+  Result.y := round(DEFAULT_HEIGHT*ToHiDpiScale);
 end;
 
 destructor TBButton.Destroy;
 begin
   ObsrvMD := nil;
   ObsrvMU := nil;
-  ObsrvME := nil;
   ObsrvML := nil;
+  {$ifndef ANDROID}
+  ObsrvME := nil;
   ObsrvScale := nil;
   ObsrvTransparent := nil;
   AniLawScale := nil;
   AniLawTransparent := nil;
+  {$endif}
   inherited;
 end;
 
@@ -449,14 +480,15 @@ begin
   FCaption.ToParentCenter;
 end;
 
+procedure TBButton.AwaitDblClick(AData: Pointer);
+begin
+  OnMouseUp(PMouseData(AData)^);
+end;
+
 procedure TBButton.BuildView;
 begin
 
   InvisibleBody.Build;
-  {if Canvas.Scalable then
-    FHolderGUI.Position2d := vec2(50.0, 50.0)
-  else
-    FHolderGUI.Position2d := vec2(InvisibleBody.Size.Width*0.5, InvisibleBody.Size.Height*0.5); }
 
   FBackGround.RadiusRound := FRoundRadius;
   FHolderGUI.Position2d := vec2(0.0, 0.0);
@@ -465,14 +497,11 @@ begin
   FBackGround.Position2d := vec2(0.0, 0.0);
   if Assigned(FBorder) then
   begin
-    FBorder.WidthLine := FWidthBorder;
+    FBorder.WidthLine := round(FWidthBorder*ToHiDpiScale);
     FBorder.Build;
-    FBorder.Position2d := vec2(0.0, 0.0); //vec2(-FCanvas.PixelSize, -FCanvas.PixelSize);
+    FBorder.Position2d := vec2(0.0, 0.0);
   end;
-  {if Canvas.Scalable then
-    FBackGround.Position2d := vec2(-50.0, -50.0)
-  else
-    FBackGround.Position2d := vec2(-InvisibleBody.Size.Width*0.5, -InvisibleBody.Size.Height*0.5);}
+
   FCaption.ToParentCenter;
 end;
 

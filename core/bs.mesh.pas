@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -35,7 +35,11 @@ uses
   {$endif}
     bs.basetypes
   , bs.collections
+  {$ifdef ultibo}
+  , gles20
+  {$else}
   , bs.gl.es
+  {$endif}
   ;
 
 type
@@ -87,9 +91,8 @@ type
   { TMesh }
 
   TMesh = class
-  strict private
-    FVertexes: TListVec<Byte>;
   private
+    FVertexes: TListVec<Byte>;
     FIndexes: TListIndexes;
     FCountVertex: int32;
     FMinSize: TVec3f;
@@ -123,9 +126,11 @@ type
     procedure CalcTextureUV; overload;
     procedure CalcTextureUV(Area: TRectBSf); overload;
     function ReadPoint(index: int32): TVec3f;
-    procedure WritePoint(index: int32; const Point: TVec3f); inline;
+    procedure WritePoint(index: int32; const Point: TVec3f);
     { adds new vertex and returns him index }
-    function AddVertex(const Point: TVec3f): int32; inline;
+    function AddVertex(const Point: TVec3f): int32; overload;
+    { use only if the mesh contains vcIndex component and consists of only vcVertex and vcIndex }
+    function AddVertex(const Point: TVec4f): int32; overload;
 
     procedure Read(Index: int32; Component: TVertexComponent; out Result: BSFloat);  overload;
     procedure Read(Index: int32; Component: TVertexComponent; out Result: TVec2f);  overload;
@@ -173,6 +178,14 @@ type
     The shape contains vertexes consists only of cooridnates (points) }
 
   TMeshP = class(TMesh)
+  public
+    constructor Create; override;
+  end;
+
+  { TMeshPI
+    The shape contains vertexes consists of cooridnates (points) and some index }
+
+  TMeshPI = class(TMesh)
   public
     constructor Create; override;
   end;
@@ -231,7 +244,7 @@ const
     SizeOf(TVec2f), // vcTexture2
     SizeOf(TVec3f), // vcBones
     SizeOf(TVec3f), // vcWeights
-    SizeOf(BSFloat) // vcFloat
+    SizeOf(BSFloat) // vcIndex
   );
 
   COMPONENTS_VARS: array[TVertexComponent] of int32 = (
@@ -242,7 +255,7 @@ const
     2, // vcTexture2
     3, // vcBones
     3, // vcWeights
-    1  // vcFloat
+    1  // vcIndex
   );
 
 implementation
@@ -485,6 +498,18 @@ begin
   CalcBoundingBox;
 end;
 
+function TMesh.AddVertex(const Point: TVec4f): int32;
+begin
+  {$ifdef DEBUG_BS}
+  if (ComponentsCount < 2) or (Components[1] <> vcIndex) then
+    raise EComponentIsNotValid.Create('This method may use only if second vertex component is vcIndex');
+  {$endif}
+  Result := FCountVertex;
+  FVertexes.Count := FVertexes.Count + SizeOfVertex;
+  PVec4f(@FVertexes.Data^[Result * SizeOfVertex + OffsetComponent[vcCoordinate]])^ := Point;
+  inc(FCountVertex);
+end;
+
 function TMesh.AddVertex(const Point: TVec3f): int32;
 begin
   Result := FCountVertex;
@@ -693,24 +718,32 @@ var
   i, j: int32;
   newSizeOf: int32;
   comp: TVertexComponent;
+  ptrSrc, ptrDst: PByte;
 begin
   if not HasComponent(AComponent) then
     exit;
   newSizeOf := (SizeOfVertex - SizeOfComponent[AComponent]);
   vertexes := TListVec<Byte>.Create;
   vertexes.Count := newSizeOf*CountVertex;
+  ptrSrc := FVertexes.ShiftData[0];
+  ptrDst := vertexes.ShiftData[0];
+
   if (OffsetComponent[AComponent] > 0) and (CountVertex > 0) then
-    move(pByte(FVertexes.ShiftData[0])^, pByte(vertexes.ShiftData[0])^, OffsetComponent[AComponent]);
+    move(ptrSrc^, ptrDst^, OffsetComponent[AComponent]);
+
   for i := 0 to CountVertex - 2 do
   begin
-    move(pByte(FVertexes.ShiftData[i*SizeOfVertex + OffsetComponent[AComponent] + SizeOfComponent[AComponent]])^,
-      pByte(vertexes.ShiftData[i*newSizeOf+OffsetComponent[AComponent]])^, newSizeOf);
+    move(ptrSrc[i*SizeOfVertex + OffsetComponent[AComponent] + SizeOfComponent[AComponent]],
+      ptrDst[i*newSizeOf + OffsetComponent[AComponent]], newSizeOf);
   end;
+
   // remainder in last vertex
   if (CountVertex > 0) and (Components[ComponentsCount-1] <> AComponent) then
-    move(pByte(FVertexes.ShiftData[(CountVertex-1)*SizeOfVertex + OffsetComponent[AComponent] + SizeOfComponent[AComponent]])^,
-      pByte(vertexes.ShiftData[(CountVertex-1)*newSizeOf+OffsetComponent[AComponent]])^, SizeOfVertex-OffsetComponent[AComponent]-SizeOfComponent[AComponent]);
+    move(ptrSrc[(CountVertex-1)*SizeOfVertex + OffsetComponent[AComponent] + SizeOfComponent[AComponent]],
+      ptrDst[(CountVertex-1)*newSizeOf+OffsetComponent[AComponent]], SizeOfVertex-OffsetComponent[AComponent]-SizeOfComponent[AComponent]);
+
   SizeOfVertex := newSizeOf;
+
   for i := 0 to ComponentsCount - 2 do
   begin
     if Components[ComponentsCount] = AComponent then
@@ -935,6 +968,24 @@ begin
   CountVarComponent[vcCoordinate] := 3;
 end;
 
+{ TMeshPI }
+
+constructor TMeshPI.Create;
+begin
+  inherited;
+  ComponentsCount := 2;
+  SetLength(Components, 2);
+  Components[0] := vcCoordinate;
+  Components[1] := vcIndex;
+  OffsetComponent[vcCoordinate] := 0;
+  OffsetComponent[vcIndex] := SizeOf(TVec3f);
+  SizeOfComponent[vcCoordinate] := SizeOf(TVec3f);
+  SizeOfComponent[vcIndex] := SizeOf(BSFloat);
+  SizeOfVertex := SizeOfComponent[vcCoordinate] + SizeOfComponent[vcIndex];
+  CountVarComponent[vcCoordinate] := 3;
+  CountVarComponent[vcIndex] := 1;
+end;
+
 { TMeshPT }
 
 constructor TMeshPT.Create;
@@ -1004,13 +1055,13 @@ begin
   ComponentsCount := 2;
   SetLength(Components, 2);
   Components[0] := vcCoordinate;
-  Components[1] := vcFloat;
+  Components[1] := vcIndex;
   OffsetComponent[vcCoordinate] := 0;
-  OffsetComponent[vcFloat] := SizeOf(TVec3f);
+  OffsetComponent[vcIndex] := SizeOf(TVec3f);
   SizeOfComponent[vcCoordinate] := SizeOf(TVec3f);
-  SizeOfComponent[vcFloat] := SizeOf(BSFloat);
+  SizeOfComponent[vcIndex] := SizeOf(BSFloat);
   CountVarComponent[vcCoordinate] := 3;
-  CountVarComponent[vcFloat] := 1;
+  CountVarComponent[vcIndex] := 1;
   SizeOfVertex := 0;
   for i := 0 to ComponentsCount - 1 do
     SizeOfVertex := SizeOfVertex + SizeOfComponent[Components[i]];
@@ -1027,16 +1078,16 @@ begin
   SetLength(Components, 3);
   Components[0] := vcCoordinate;
   Components[1] := vcColor;
-  Components[2] := vcFloat;
+  Components[2] := vcIndex;
   SizeOfComponent[vcCoordinate] := SizeOf(TVec3f);
   SizeOfComponent[vcColor] := SizeOf(TVec4f);
-  SizeOfComponent[vcFloat] := SizeOf(BSFloat);
+  SizeOfComponent[vcIndex] := SizeOf(BSFloat);
   OffsetComponent[vcCoordinate] := 0;
   OffsetComponent[vcColor] := SizeOfComponent[vcCoordinate];
-  OffsetComponent[vcFloat] := OffsetComponent[vcColor] + SizeOfComponent[vcColor];
+  OffsetComponent[vcIndex] := OffsetComponent[vcColor] + SizeOfComponent[vcColor];
   CountVarComponent[vcCoordinate] := 3;
   CountVarComponent[vcColor] := 4;
-  CountVarComponent[vcFloat] := 1;
+  CountVarComponent[vcIndex] := 1;
   SizeOfVertex := 0;
   for i := 0 to ComponentsCount - 1 do
     SizeOfVertex := SizeOfVertex + SizeOfComponent[Components[i]];

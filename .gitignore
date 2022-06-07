@@ -124,9 +124,7 @@
 /gui/bs.colormap.pas
 /gui/bs.gui.dialogs.pas
 /gui/bs.objectinspector.pas
-/tests/lazarus/Hello world/backup/HelloWorld.lpi
-/tests/lazarus/Hello world/backup/HelloWorld.lpr
-/tests/lazarus/Hello world/backup/HelloWorld.lps
+/tests/lazarus/Hello world/backup/
 /tools/reseditor/images/fill_back.bmp
 /tools/reseditor/images/fill_back.PNG
 /tools/StyleEditor/uMain.pas
@@ -144,3 +142,20 @@
 /tests/lazarus/BSApplication/backup/
 /tests/lazarus/BSApplication/lib/
 /tests/lazarus/lib/
+/bin/*.properties
+/tests/lazarus/Android/HelloBlackShark/.gradle
+/tests/lazarus/Android/HelloBlackShark/.idea
+/tests/lazarus/Android/HelloBlackShark/build
+/bin/BSAppAndroid/classes/classes.dex
+/bin/BSAppAndroid/debug
+/tests/lazarus/Android/HelloBlackShark/assets/
+/**/backup/*
+/**/*.local
+/tests/lazarus/Android/HelloBlackShark/libs/
+/tests/lazarus/Android/HelloBlackShark/trash/
+*.keystore
+/tests/lazarus/Ultibo/BSApplication/3BPlus/
+*.local
+/tests/lazarus/Ultibo/BSApplication/**.elf
+/tests/lazarus/Ultibo/BSApplication/**.img
+/tests/lazarus/Ultibo/BSApplication/**.qimg

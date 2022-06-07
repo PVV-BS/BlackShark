@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -50,7 +50,7 @@ type
     function CharsUnsafeW(Index: int32): WideChar; inline;
     procedure SetText(const Value: string);
     function GetText: string;
-    function Len: int32; inline;
+    function Len: int32; //inline;
   public
     class operator Implicit (const v: string): TString; inline;
     //class operator Implicit (const v: AnsiString): TString; inline;
@@ -69,16 +69,9 @@ function StringToAnsi(const Str: string): AnsiString; inline;
 function WideToAnsi(const Unicode: WideString): AnsiString; inline;
 function WideToString(const Unicode: WideString): string; inline;
 function StringToWide(const Str: string): WideString; inline;
-{ length of string, symbols }
-function StrLength(const Value: string): int32; inline; overload;
-function StrLength(Value: PChar): int32; inline; overload;
 { length of string, bytes }
 function StrLengthInBytes(Value: PChar): int32; inline; overload;
 function StrLengthInBytes(const Value: string): int32; inline; overload;
-{ decodes Value to WideChar and shifts Value to next char; SizeValue retuns in bytes }
-function CharToWideChar(var Value: PChar; out SizeValue: int8): WideChar; inline; overload;
-function LenChar(Value: PChar): int8; inline;
-
 function AnsiUp(const Ansi: AnsiString): AnsiString; inline;
 
 var
@@ -88,7 +81,9 @@ implementation
 
 uses
   {$ifdef FPC}
-    LazUTF8,
+    {$ifndef ultibo}
+      LazUTF8,
+    {$endif}
   {$endif}
     SysUtils
   ;
@@ -111,37 +106,6 @@ begin
     Result[i] := g_UpChars[Ansi[i]];
 end;
 
-function CharToWideChar(var Value: PChar; out SizeValue: int8): WideChar;
-begin
-  {$ifdef FPC}
-  SizeValue := UTF8LengthFast(Value); //  UTF8CharacterLengthFast
-  UTF8ToUnicode(@Result, 1, Value, SizeValue);
-  inc(PByte(Value), SizeValue);
-  {$else}
-  Result := Value^;
-  inc(Value);
-  SizeValue := SizeOf(Char);
-  {$endif}
-end;
-
-function StrLength(const Value: string): int32;
-begin
-  {$ifdef FPC}
-  Result := UTF8LengthFast(PChar(Value));
-  {$else}
-  Result := Length(Value);
-  {$endif}
-end;
-
-function StrLength(Value: PChar): int32;
-begin
-  {$ifdef FPC}
-  Result := UTF8LengthFast(Value);
-  {$else}
-  Result := Length(Value);
-  {$endif}
-end;
-
 function StrLengthInBytes(Value: PChar): int32;
 begin
   {$ifdef FPC}
@@ -157,15 +121,6 @@ begin
   Result := Length(Value);
   {$else}
   Result := Length(Value) * SizeOf(Char);
-  {$endif}
-end;
-
-function LenChar(Value: PChar): int8;
-begin
-  {$ifdef FPC}
-  Result := UTF8LengthFast(Value);  // UTF8CharacterLengthFast
-  {$else}
-  Result := SizeOf(Char);
   {$endif}
 end;
 
@@ -323,11 +278,12 @@ begin
     Index := 1;
   if Index - 1 > Len then
     Index := Len;
-  ch_count := StrLength(Value);
+
+  w_str := StringToWide(Value);
+  ch_count := Length(w_str);
   SetLength(FText, Len + ch_count);
   if Index <= Len then
     Move(FText[Index], FText[Index + ch_count], (Len - Index + 1) * SizeOf(WideChar));
-  w_str := StringToWide(Value);
   move(w_str[1], FText[Index], ch_count * SizeOf(WideChar));
 end;
 

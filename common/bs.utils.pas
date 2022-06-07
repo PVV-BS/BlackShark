@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -31,7 +31,11 @@ interface
 
 uses
     SysUtils
+  {$ifdef ultibo}
+  , gles20
+  {$else}
   , bs.gl.es
+  {$endif}
   ;
 
 type
@@ -54,29 +58,18 @@ function GetRelativeFromFullPath(RootPath, FullPath: string): string;
 function GetFullFromRelativePath(RootPath, RelatePath: string): string;
 
 function GetApplicationPath: string;
-
-function GetPixelsPerInch: single;
+procedure SetApplicationPath(const APath: string);
 
 var
-  AppPathA: AnsiString;
-  AppPathW: WideString;
   AppPath: string;
-  g_PixelsPerInch: single;
+  AppName: string = 'BlackShark';
 
 
 implementation
 
 uses
-  {$ifdef MSWindows}
-    Windows,
-  {$else}
-    bs.linux,
-  {$endif}
-  {$ifdef FMX}
-    FMX.Types,
-  {$endif}
   {$ifdef FPC}
-    LazUTF8,
+  //  LazUTF8,
   {$endif}
     bs.log
   , bs.strings
@@ -197,34 +190,11 @@ begin
   {$endif}
 end;
 
-function GetPixelsPerInch: single;
-{$ifdef MSWindows}
-  {$ifndef FMX}
-var
-  dc: HDC;
-  {$endif}
-{$else}
-var
-  dispWidth: int32;
-  dispWidthMM: int32;
-  display: PDisplay;
-  screen: int32;
-{$endif}
+procedure SetApplicationPath(const APath: string);
 begin
-  {$ifdef FMX}
-    Result := TDeviceDisplayMetrics.Default.PixelsPerInch;
-  {$else}
-    {$ifdef MSWindows}
-      dc := GetDC(0);
-      Result := GetDeviceCaps(dc, LOGPIXELSX);
-      ReleaseDC(0, dc);
-    {$else}
-      display := XOpenDisplay(nil);
-      screen:= XDefaultScreen(display);
-      dispWidth := XDisplayWidth(display, screen);
-      dispWidthMM := XDisplayWidthMM(display, screen);
-      Result := round(dispWidth / (dispWidthMM / 25.4));
-    {$endif}
+  AppPath := APath;
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('SetApplicationPath:', AppPath);
   {$endif}
 end;
 
@@ -266,7 +236,11 @@ begin
   {$IFDEF MSWINDOWS}
     tmp_str := StringReplace(FileName, '/', '\', [rfReplaceAll]);
   {$ELSE}
-    tmp_str := StringReplace(FileName, '\', '/', [rfReplaceAll]);
+    {$IFDEF ultibo}
+      tmp_str := StringReplace(FileName, '/', '\', [rfReplaceAll]);
+    {$ELSE}
+      tmp_str := StringReplace(FileName, '\', '/', [rfReplaceAll]);
+    {$ENDIF}
   {$ENDIF}
 
   if FileExists(tmp_str) or (tmp_str[2] = ':') or (tmp_str[2] = '/') or (tmp_str[2] = '\') or (tmp_str[1] = '/') then // contain full path ?
@@ -281,15 +255,11 @@ end;
 initialization
   {$ifdef FPC}
     AppPath := ExtractFilePath(ParamStr(0));
-    AppPathA := AppPath;
-    AppPathW := UTF8Decode(AppPathA);
+    AppName := ChangeFileExt(ExtractFileName(ParamStr(0)), '');
   {$else}
     AppPath := ExtractFilePath(GetModuleName(0));
-    AppPathW := AppPath;
-    AppPathA := AnsiString(AppPathW);
+    AppName := ChangeFileExt(ExtractFileName(GetModuleName(0)), '');
   {$endif}
-
-  g_PixelsPerInch := GetPixelsPerInch;
 
 end.
 

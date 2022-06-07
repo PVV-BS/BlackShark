@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -70,14 +70,16 @@ type
   private
     FBody: TRectangle;
     FHorizontal: boolean;
-    FPosition: double;
-    FSize: double;
+    FPosition: Int64;
+    FSize: Int64;
     //FCountScrolledPixels: int64;
+
     FOnMouseEnterLeaveBody: TOnMouseColorExchanger;
     FOnMouseEnterLeaveLeftUpBtn: TOnMouseMoveAndClickColorExchanger;
     FOnMouseEnterLeaveRightDownBtn: TOnMouseMoveAndClickColorExchanger;
     FOnMouseEnterLeaveSlider: TOnMouseMoveAndClickColorExchanger;
-    FStep: BSFloat;
+
+    FStep: Int32;
     FOnChangePosition: TChangeScrollBarPosition;
     TriUp: TTriangle;
     TriDown: TTriangle;
@@ -112,15 +114,14 @@ type
     procedure OnSliderMouseDown({%H-}const Data: BMouseData);
     procedure OnSliderMouseUp({%H-}const Data: BMouseData);
 
-    procedure SetPosition(const Value: double);
-    procedure SetSize(const Value: double);
+    procedure SetPosition(const Value: Int64);
+    procedure SetSize(const Value: Int64);
     function GetSliderIsHide: boolean;
 
-    procedure SetStep(const Value: BSFloat);
+    procedure SetStep(const Value: Int32);
     procedure CheckSizeSlider;
     procedure SetPositionSlider;
     procedure FillColors;
-    //procedure SliderPositionCorrect;
     procedure UpdatePostion;
     procedure OnWaitTime(const AValue: BSFloat);
     procedure DoChangePosition; inline;
@@ -142,11 +143,11 @@ type
     property SliderIsHide: boolean read GetSliderIsHide;
     property Horizontal: boolean read FHorizontal write SetHorizontal;
     { position }
-    property Position: double read FPosition write SetPosition;
+    property Position: Int64 read FPosition write SetPosition;
     { max scrolling area, pixels if Scalable = true otherwise points }
-    property Size: double read FSize write SetSize;
+    property Size: Int64 read FSize write SetSize;
     { step scroll; like Size if Scalable, then Step measured in points, otherwise pixels }
-    property Step: BSFloat read FStep write SetStep;
+    property Step: Int32 read FStep write SetStep;
     property OnChangePosition: TChangeScrollBarPosition read FOnChangePosition write FOnChangePosition;
   published
     property Color;
@@ -252,7 +253,7 @@ end;
 
 procedure TBScrollBar.BtnUpLeftMouseDown(const Data: BMouseData);
 begin
-  if not Slider.Data.Hidden and (FPosition - FStep >= 0) then
+  if not Slider.Data.Hidden and (FPosition > 0) then
   begin
     Position := FPosition - FStep;
     WaitTimerUp := true;
@@ -313,6 +314,8 @@ begin
 end;
 
 constructor TBScrollBar.Create(ACanvas: TBCanvas);
+var
+  scaledFour: BSFloat;
 begin
   inherited Create(ACanvas);
 
@@ -377,12 +380,14 @@ begin
   Slider.BanScalableMode := true;
   Slider.Layer2d := Slider.Layer2d + 3;
 
-  TriUp.A := vec2(0.0, 4.0);
-  TriUp.B := vec2(4.0, 0.0);
-  TriUp.C := vec2(8.0, 4.0);
+  scaledFour := round(4*ToHiDpiScale);
+
+  TriUp.A := vec2(0.0, scaledFour);
+  TriUp.B := vec2(scaledFour, 0.0);
+  TriUp.C := vec2(scaledFour*2, scaledFour);
   TriDown.A := vec2(0.0, 0.0);
-  TriDown.B := vec2(8.0, 0.0);
-  TriDown.C := vec2(4.0, 4.0);
+  TriDown.B := vec2(scaledFour*2, 0.0);
+  TriDown.C := vec2(scaledFour, scaledFour);
   TriUp.Build;
   TriDown.Build;
 
@@ -403,8 +408,8 @@ end;
 
 function TBScrollBar.DefaultSize: TVec2f;
 begin
-  Result.x := DEFAULT_WIDTH;
-  Result.y := DEFAULT_HEIGHT;
+  Result.x := round(DEFAULT_WIDTH*ToHiDpiScale);
+  Result.y := round(DEFAULT_HEIGHT*ToHiDpiScale);
 end;
 
 destructor TBScrollBar.Destroy;
@@ -550,14 +555,14 @@ begin
   FBody.Position2d := vec2(0.0, 0.0);
 end;
 
-procedure TBScrollBar.SetPosition(const Value: double);
+procedure TBScrollBar.SetPosition(const Value: Int64);
 var
-  pos: double;
+  pos: Int64;
 begin
   if (FPosition = Value) then
     exit;
 
-  pos := Clamp(FSize - FBody.Height, 0.0, Value);
+  pos := Clamp(FSize - round(FBody.Height), 0, Value);
 
   if pos < 0 then
     pos := 0;
@@ -597,7 +602,7 @@ begin
     inherited;
 end;
 
-procedure TBScrollBar.SetSize(const Value: double);
+procedure TBScrollBar.SetSize(const Value: Int64);
 begin
   if FSize = Value then
     exit;
@@ -618,38 +623,13 @@ begin
 
 end;
 
-procedure TBScrollBar.SetStep(const Value: BSFloat);
+procedure TBScrollBar.SetStep(const Value: Int32);
 begin
   if FStep = Value then
     exit;
   FStep := Value;
   CheckSizeSlider;
 end;
-
-{procedure TBScrollBar.SliderPositionCorrect;
-var
-  p_top: BSFloat;
-  w_btn_up_down, Len: BSFloat;
-  value: TVec3f;
-begin
-  value := Slider.Data.Position;
-  // buttons width
-  w_btn_up_down := BtnUpLeft.Data.Mesh.FBoundingBox.y_max*2;
-  // self size
-  Len := Slider.Data.Mesh.FBoundingBox.y_max;
-  // define position limits
-  p_top := BtnUpLeft.Data.ServiceScale*(FMainBody.Data.Mesh.FBoundingBox.y_max - w_btn_up_down) - Len*BSConfig.VoxelSize;
-  if value.y > p_top then
-    value.y := p_top
-  else
-  if value.y < -p_top then
-    value.y := -p_top;
-
-  value.x := 0.0;
-
-  if value <> Slider.Data.Position then
-    Slider.Data.Position := value;
-end;   }
 
 procedure TBScrollBar.UpdatePostion;
 var
@@ -664,7 +644,7 @@ begin
     w := FBody.Height - FBody.Width*2;
   end;
   FPosition := Round(((Slider.Position2d.y - FBody.Width) / w) * FSize);
-  FPosition := clamp(FSize, 0.0, FPosition);
+  FPosition := clamp(FSize, 0, FPosition);
   DoChangePosition;
 end;
 

@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -99,6 +99,7 @@ type
     procedure DoSetPosition(AWindow: BSWindow; ALeft, ATop: int32); override;
     procedure DoFullScreen(AWindow: BSWindow); override;
     procedure DoActive(AWindow: BSWindow); override;
+    procedure DoShowCursor(AWindow: BSWindow); override;
     function GetMousePointPos: TVec2i; override;
     procedure ChangeDisplayResolution(NewWidth, NewHeight: int32); // overload;
   public
@@ -261,12 +262,18 @@ begin
 end;
 
 constructor BSApplicationWindows.Create;
+var
+  h: HDC;
 begin
   inherited;
   ApplicationWindows := Self;
   FHandlers := TListVec<TEventWindowsHandler>.Create;
-  FDisplayWidth := GetSystemMetrics(SM_CXSCREEN);
-  FDisplayHeight := GetSystemMetrics(SM_CYSCREEN);
+  DisplayWidth := GetSystemMetrics(SM_CXSCREEN);
+  DisplayHeight := GetSystemMetrics(SM_CYSCREEN);
+  h := GetDC(0);
+  PixelsPerInchX := GetDeviceCaps(h, LOGPIXELSX);
+  PixelsPerInchY := GetDeviceCaps(h, LOGPIXELSY);
+  ReleaseDC(0, h);
 end;
 
 function BSApplicationWindows.CreateHandle(AParent: BSWindow; APositionX, APositionY, AWidth, AHeight: int32): EGLNativeWindowType;
@@ -586,63 +593,12 @@ var
   handler: TEventWindowsHandler;
 begin
   Result := 0;
-  {if (Msg >= WM_MOUSEFIRST) and (Msg <= WM_MOUSELAST) then
-  begin
-
-  end;}
 
   handler := FHandlers.Items[Msg];
   if Assigned(handler) then
     handler(AWindow, wParam, lParam)
   else
     Result := DefWindowProc(AWindow.Handle, Msg, wParam, lParam);
-
-  //if Msg > 0 then
-  //  Writeln(0, Msg);
-    {WM_DISPLAYCHANGE:
-      begin
-        scr_Init();
-        if not wndFullScreen Then
-          wnd_Update();
-      end;
-
-    WM_SETFOCUS:
-      begin
-        if ( wndFullScreen ) and ( not wndFirst ) Then
-          scr_SetOptions( scrWidth, scrHeight, scrRefresh, wndFullScreen, scrVSync );
-      end;
-    WM_NCHITTEST:
-      begin
-        Result := DefWindowProcW( hWnd, Msg, wParam, lParam );
-        if ( not appFocus ) and ( Result = HTCAPTION ) Then
-          Result := HTCLIENT;
-      end;
-    WM_ENTERSIZEMOVE:
-      begin
-        if not appAutoPause Then
-          appTimer := SetTimer( wndHandle, 1, 1, nil );
-      end;
-    WM_EXITSIZEMOVE:
-      begin
-        if appTimer > 0 Then
-          begin
-            KillTimer( wndHandle, appTimer );
-            appTimer := 0;
-          end;
-      end;
-    WM_MOVING:
-      begin
-        wndX := PRect( lParam ).Left;
-        wndY := PRect( lParam ).Top;
-        if appAutoPause Then
-          timer_Reset();
-      end;
-    WM_TIMER:
-      begin
-        timer_MainLoop();
-        app_Draw();
-      end;
- }
 
 end;
 
@@ -655,6 +611,11 @@ begin
   UpdateWindow(AWindow.Handle);
   if AInModalMode and Assigned(AWindow.Parent) then
     EnableWindow(AWindow.Parent.Handle, FALSE);
+end;
+
+procedure BSApplicationWindows.DoShowCursor(AWindow: BSWindow);
+begin
+  // todo
 end;
 
 function BSApplicationWindows.FullScreenStyle: uint32;
@@ -697,18 +658,16 @@ var
 begin
   if FWindowsList.Count = 0 then
     exit;
-  //Put window in message loop
+
   if PeekMessageW(msg, 0, 0, 0, PM_REMOVE) then
   begin
     TranslateMessage(msg);
     DispatchMessage(msg);
   end;
-  //until not PeekMessageW(msg, 0, 0, 0, PM_REMOVE)
-  //else
+
   for i := 0 to FWindowsList.Count - 1 do
   begin
     FWindowsList.Items[i].Draw;
-    //DoInvalidate(FWindowsList.Items[i]);
   end;
 
   inherited;
@@ -725,6 +684,7 @@ end;
 procedure BSApplicationWindows.UpdateWait;
 var
   msg: tagMSG;
+  i: int32;
 begin
   if FWindowsList.Count = 0 then
     exit;
@@ -733,6 +693,10 @@ begin
   begin
     TranslateMessage(msg);
     DispatchMessage(msg);
+  end;
+  for i := 0 to FWindowsList.Count - 1 do
+  begin
+    FWindowsList.Items[i].Draw;
   end;
   inherited;
 end;

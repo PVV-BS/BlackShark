@@ -9,17 +9,13 @@ uses
   Classes,
   { you can add units after this }
   bs.test.switcher,
+  bs.window,
   BSApplicationExample;
 
-
-var
-  Application: TBSApplicationExample;
 
 {$R *.res}
 
 begin
-  Application := TBSApplicationExample.Create;
-  Application.Run;
-  Application.Free;
+  ApplicationRun;
 end.
 

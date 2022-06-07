@@ -15,6 +15,7 @@ uses
   , bs.viewport
   , bs.gl.context
   , bs.test
+  , bs.scene
   ;
 
 type
@@ -28,15 +29,19 @@ type
     FCurrentTest: TBSTest;
     FCurrentTestClass: TBSTestClass;
     FOwnTest: boolean;
-    procedure AfterCreateContextEvent (Sender: TBlackSharkContext);
+    FCurrentScene: TBScene;
+    procedure AfterCreateContextEvent (Sender: TObject);
     procedure SetCurrentTest(const Value: TBSTest);
     function GetCurrentTest: TBSTest;
     function GetCurrentTestClass: TBSTestClass;
     procedure SetCurrentTestClass(const Value: TBSTestClass);
-  public
+    function GetCurrentScene: TBScene;
+
+    procedure SetCurrentScene(const Value: TBScene);  public
     { Public declarations }
     property CurrentTestClass: TBSTestClass read GetCurrentTestClass write SetCurrentTestClass;
     property CurrentTest: TBSTest read GetCurrentTest write SetCurrentTest;
+    property CurrentScene: TBScene read GetCurrentScene write SetCurrentScene;
     property ViewPort: TBlackSharkViewPort read FViewPort;
   end;
 
@@ -51,8 +56,12 @@ uses
 
 {$R *.dfm}
 
-procedure TFrmSecondContext.AfterCreateContextEvent(Sender: TBlackSharkContext);
+procedure TFrmSecondContext.AfterCreateContextEvent(Sender: TObject);
 begin
+  if Assigned(FCurrentScene) then
+  begin
+    FViewPort.CurrentScene := FCurrentScene;
+  end else
   if Assigned(ViewPort) and Assigned(ViewPort.Renderer) and Assigned(FCurrentTestClass) and not Assigned(FCurrentTest) then
   begin
     FOwnTest := true;
@@ -76,9 +85,15 @@ end;
 
 procedure TFrmSecondContext.FormShow(Sender: TObject);
 begin
-  if not Assigned(ViewPort) then
+  if Assigned(FCurrentScene) then
   begin
+    FViewPort.CurrentScene := FCurrentScene;
   end;
+end;
+
+function TFrmSecondContext.GetCurrentScene: TBScene;
+begin
+  Result := FCurrentScene;
 end;
 
 function TFrmSecondContext.GetCurrentTest: TBSTest;
@@ -89,6 +104,13 @@ end;
 function TFrmSecondContext.GetCurrentTestClass: TBSTestClass;
 begin
   Result := FCurrentTestClass;
+end;
+
+procedure TFrmSecondContext.SetCurrentScene(const Value: TBScene);
+begin
+  FCurrentScene := Value;
+  if Assigned(FViewPort) then
+    FViewPort.CurrentScene := FCurrentScene;
 end;
 
 procedure TFrmSecondContext.SetCurrentTest(const Value: TBSTest);

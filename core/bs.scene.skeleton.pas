@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -37,6 +37,7 @@ uses
   , bs.renderer
   , bs.mesh
   , bs.math
+  , bs.animation
   ;
 
 type
@@ -181,12 +182,14 @@ type
     FCurrentTrasforms: TListBoneMatrixes;
     CurrentTransformsUniform: PShaderParametr;
     FParentTransforms: TMatrix4f;
+    FAniUpdater: IBAnimationLinearFloat;
+    FAniUpdaterObserver: IBAnimationLinearFloatObsrv;
     procedure SetAnimation(const Value: string);
     procedure FindRoots;
     procedure DoStartAnimation;
     procedure DoStopAnimation;
     procedure SetSkin(const Value: TGraphicObject);
-    procedure BeforeDrawObject(Item: TGraphicObject);
+    procedure BeforeDrawObject({%H-}Item: TGraphicObject);
     procedure LinkBonesToVertexes;
     procedure DoRecalcAnimation; inline;
     procedure RecalcAnimation; inline;
@@ -200,6 +203,7 @@ type
     procedure SetPosition(const Value: TVec3f);
     procedure UpdateBonesTransform;
     procedure SetParentTransforms(const Value: TMatrix4f);
+    procedure OnUpdate(const {%H-}AValue: BSFloat);
   public
     constructor Create(AOwner: TObject; ARenderer: TBlackSharkRenderer);
     destructor Destroy; override;
@@ -231,11 +235,16 @@ uses
   {$endif}
   {$ifdef DEBUG_BS}
     bs.utils,
+    bs.log,
   {$endif}
     SysUtils
   , math
   , bs.config
+  {$ifdef ultibo}
+  , gles20
+  {$else}
   , bs.gl.es
+  {$endif}
   , bs.graphics
   , bs.obj
   , bs.mesh.primitives
@@ -352,12 +361,12 @@ begin
     FCurrentFrame := 0;
   end;
 
-
   RecalcAnimation;
   if FCalculateOnGPU and Assigned(CurrentTransformsUniform) then
     glUniformMatrix4fv(CurrentTransformsUniform.Location, FCurrentTrasforms.Count, GL_FALSE, FCurrentTrasforms.ShiftData[0]);
   { enforce to update the timer in order to off an application idle }
-  TBTimer.UpdateTimer(TTimeProcessEvent.TimeProcessEvent);
+  if not BSConfig.MaxFps then
+     TBTimer.UpdateTimer(TTimeProcessEvent.TimeProcessEvent);
 end;
 
 procedure TSkeleton.CheckAnimation;
@@ -469,7 +478,17 @@ begin
   end;
 
   FStartTime := TBTimer.CurrentTime.Low;
-  TBTimer.UpdateTimer(TTimeProcessEvent.TimeProcessEvent);
+  if not BSConfig.MaxFps then
+  begin
+    // the animation need only as task in order to indicate that need to redraw with max FPS
+    FAniUpdater := CreateAniFloatLinear;
+    FAniUpdater.IntervalUpdate := 1000;
+    FAniUpdater.Duration := 1000;
+    FAniUpdater.Loop := true;
+    FAniUpdaterObserver := FAniUpdater.CreateObserver(OnUpdate);
+    FAniUpdater.Run;
+  end else
+    TBTimer.UpdateTimer(TTimeProcessEvent.TimeProcessEvent);
 end;
 
 procedure TSkeleton.DoHideBones;
@@ -526,7 +545,7 @@ begin
       end;
 
       bone := FCurrentAnimation.Bones.Items[i];
-      QuaternionToMatrix(m, delta_rot);
+      QuaternionToMatrix(m{%H-}, delta_rot);
 
       if Assigned(bone.Parent) then
       begin
@@ -563,6 +582,10 @@ end;
 
 procedure TSkeleton.DoStopAnimation;
 begin
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TSkeleton.DoStopAnimation begin');
+  {$endif}
+
   if FCalculateOnGPU then
   begin
     if not FSkin.Mesh.HasComponent(vcBones) or not Assigned(FSkinShaderAnim) then
@@ -572,8 +595,8 @@ begin
     FSkin.Shader := FSkinShaderAnim;
     BSShaderManager.FreeShader(FSkinShaderAnim);
     FSkinShaderAnim := nil;
-    FSkin.Mesh.DeleteComponent(vcBones);
     FSkin.Mesh.DeleteComponent(vcWeights);
+    FSkin.Mesh.DeleteComponent(vcBones);
     FSkin.ChangedMesh;
   end else
   begin
@@ -584,7 +607,18 @@ begin
       FSkin.Mesh := FSkinMesh;
     FreeAndNil(FSkinMeshCopy);
   end;
+
   UpdateBonesTransform;
+
+  if Assigned(FAniUpdater) then
+    FAniUpdater.Stop;
+
+  FAniUpdaterObserver := nil;
+  FAniUpdater := nil;
+
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TSkeleton.DoStopAnimation end');
+  {$endif}
 end;
 
 procedure TSkeleton.FindRoots;
@@ -604,6 +638,11 @@ begin
   FParentTransforms := Value;
   // this is center of the skeleton
   Position := TVec3f(ParentTransforms.M3);
+end;
+
+procedure TSkeleton.OnUpdate(const AValue: BSFloat);
+begin
+  //RecalcAnimation;
 end;
 
 procedure TSkeleton.SetPauseAnimation(const Value: boolean);

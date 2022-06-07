@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -31,7 +31,11 @@ interface
 uses
     Classes
   , SysUtils
+  {$ifdef ultibo}
+  , gles20
+  {$else}
   , bs.gl.es
+  {$endif}
   , bs.basetypes
   , bs.log
   , bs.collections
@@ -437,10 +441,15 @@ type
   private
     { color uniform }
     FColor2: PShaderParametr;
+    FColorIndex: PShaderParametr;
   public
     constructor Create(const AName: string; const DataVertex, DataFragment: PAnsiChar); override;
+    class function DefaultName: string; override;
+    function LinkLocations: boolean; override;
     { color uniform }
     property Color2: PShaderParametr read FColor2;
+    { input variables }
+    property ColorIndex: PShaderParametr read FColorIndex;
   end;
 
   TBlackSharkShaderClass = class of TBlackSharkShader;
@@ -608,11 +617,10 @@ type
 
   BSShaderManager = class
   private
-    { TODO: hash table }
-    class var FShadersName: TBinTree<TBlackSharkShader>;
+    class var FShadersName: THashTable<string, TBlackSharkShader>;
     class var FLastUsedShader: TBlackSharkShader;
     class procedure Add(BSShader: TBlackSharkShader);
-    class function GetShaderByName(Name: string): TBlackSharkShader;
+    class function GetShaderByName(const Name: string): TBlackSharkShader;
     class constructor Create;
     class destructor Destroy;
   public
@@ -627,11 +635,10 @@ type
     class procedure Restore;
     class procedure UseShader(AShader: TBlackSharkShader);
     class procedure FreeShader(Shader: TBlackSharkShader);
-    class var property ShaderByName[Name: string]: TBlackSharkShader read GetShaderByName;
+    class var property ShaderByName[const Name: string]: TBlackSharkShader read GetShaderByName;
   end;
 
-  function CreateVBO(Taget { GL_ARRAY_BUFFER ...}: GLInt; Data: Pointer; SizeData: int32;
-    ModeDraw: GLEnum = GL_STATIC_DRAW): GLInt; //inline;
+  procedure CreateVBO(var VBO: GlUInt; Taget { GL_ARRAY_BUFFER ...}: GLInt; Data: Pointer; SizeData: int32; ModeDraw: GLEnum = GL_STATIC_DRAW); //inline;
 
 const
   SHADER_TYPE_TO_GL: array[TShaderBaseTypes] of GLUint =
@@ -665,17 +672,18 @@ uses
     bs.utils
   ;
 
-function CreateVBO(Taget: GLInt; Data: Pointer; SizeData: int32; ModeDraw: GLEnum = GL_STATIC_DRAW): GLInt;
+procedure CreateVBO(var VBO: GlUInt; Taget: GLInt; Data: Pointer; SizeData: int32; ModeDraw: GLEnum = GL_STATIC_DRAW);
 begin
-  glGenBuffers ( 1, @Result );
-  if (Result = 0) then
+  if VBO = 0 then
+    glGenBuffers(1, @VBO);
+  if (VBO = 0) then
   begin
     BSWriteMsg('BlackSharkSubGraphicItem.CreateVBO', 'Cannot create VBO!');
-    exit(-1);
+    exit;
   end;
   if (SizeData > 0) then
   begin
-    glBindBuffer ( Taget, Result );
+    glBindBuffer(Taget, VBO);
     glBufferData ( Taget, SizeData, Data, ModeDraw );
   end;
 end;
@@ -721,16 +729,16 @@ end;
 
 class procedure BSShaderManager.Add(BSShader: TBlackSharkShader);
 begin
-  if not FShadersName.Add(AnsiUpperCase(BSShader.Name), BSShader) then
+  if not FShadersName.TryAdd(BSShader.Name, BSShader) then
   begin
     BSWriteMsg(String('BSShaderManager.Add'), String('Filed adding the shader, because Name = ') + String(BSShader.Name) + String(' alredy exists!'));
     exit;
   end;
 end;
 
-class function BSShaderManager.GetShaderByName(Name: string): TBlackSharkShader;
+class function BSShaderManager.GetShaderByName(const Name: string): TBlackSharkShader;
 begin
-  FShadersName.Find(AnsiUpperCase(Name), Result);
+  FShadersName.Find(Name, Result);
 end;
 
 class function BSShaderManager.Load(const AName: string; AShaderClass: TBlackSharkShaderClass; AMVPasUniform: boolean = true): TBlackSharkShader;
@@ -747,15 +755,13 @@ end;
 
 class procedure BSShaderManager.Restore;
 var
-  sh: TBlackSharkShader;
-begin
-  FShadersName.Iterator.SetToBegin(sh);
-  while sh <> nil do
+  bucket: THashTable<string, TBlackSharkShader>.TBucket;
   begin
-    sh.Reset;
-    sh.LoadShader;
-    FShadersName.Iterator.Next(sh);
-  end;
+  if FShadersName.GetFirst(bucket) then
+  repeat
+    bucket.Value.Reset;
+    bucket.Value.LoadShader;
+  until not FShadersName.GetNext(bucket);
 end;
 
 class procedure BSShaderManager.UseShader(AShader: TBlackSharkShader);
@@ -772,19 +778,18 @@ end;
 
 class constructor BSShaderManager.Create;
 begin
-  FShadersName := TBinTree<TBlackSharkShader>.Create;
+  FShadersName := THashTable<string, TBlackSharkShader>.Create(@GetHashBlackSharkS, @StrCmpBool);
 end;
 
 class destructor BSShaderManager.Destroy;
 var
-  sh: TBlackSharkShader;
+  bucket: THashTable<string, TBlackSharkShader>.TBucket;
 begin
-  FShadersName.Iterator.SetToBegin(sh);
-  while sh <> nil do
-  begin
-    sh.Free;
-    FShadersName.Iterator.Next(sh);
-  end;
+  if FShadersName.GetFirst(bucket) then
+  repeat
+    bucket.Value.Free;
+  until not FShadersName.GetNext(bucket);
+
   FShadersName.Free;
   inherited;
 end;
@@ -800,8 +805,23 @@ begin
 
   nu8 := ChangeFileExt(ExtractFileName(AFileNameVertex), '');
 
-  if FShadersName.Find(AnsiUpperCase(nu8), Result) then
+  if FShadersName.Find(nu8, Result) then
     exit;
+
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('BSShaderManager.Load: shader name', '"' + nu8 + '"');
+  {$endif}
+
+  {$ifdef DEBUG_BS}
+  if not FileExists(AFileNameVertex) then
+    BSWriteMsg('BSShaderManager.Load: ', 'A file does not exist: ' + AFileNameVertex);
+  {$endif}
+
+  {$ifdef DEBUG_BS}
+  if not FileExists(AFileNameFragment) then
+    BSWriteMsg('BSShaderManager.Load: ', 'A file does not exist: ' + AFileNameFragment);
+  {$endif}
+
   msfs := TMemoryStream.Create;
   msvs := TMemoryStream.Create;
   try
@@ -836,7 +856,7 @@ begin
   else
     name := AName;
 
-  if FShadersName.Find(AnsiUpperCase(AName), Result) then
+  if FShadersName.Find(AName, Result) then
     exit;
   UseShader(nil);
 
@@ -854,7 +874,7 @@ begin
   if Shader._Counter <= 0 then
   begin
     //FShadersID.Remove(Shader.ProgramID);
-    FShadersName.Remove(AnsiUpperCase(Shader.Name));
+    FShadersName.Delete(Shader.Name);
     Shader.Free;
   end;
 end;
@@ -1409,6 +1429,9 @@ begin
   end;
   Params.Free;
   glDeleteProgram(FProgramID);
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBlackSharkShader.Destroy', Name);
+  {$endif}
   inherited;
 end;
 
@@ -1920,6 +1943,19 @@ constructor TBlackSharkVectorToDoubleColorShader.Create(const AName: string; con
 begin
   inherited;
   FColor2 := AddUniform('Color2', stVec4, tsFragment);
+  FColorIndex := AddAttribute('a_index_color', stFloat, tsVertex);
+end;
+
+class function TBlackSharkVectorToDoubleColorShader.DefaultName: string;
+begin
+  Result := 'DoubleColor';
+end;
+
+function TBlackSharkVectorToDoubleColorShader.LinkLocations: boolean;
+begin
+  Result := inherited;
+  VertexComponentLocations[vcIndex] := FColorIndex^.Location;
+  VertexComponentTypes[vcIndex] := FColorIndex^.DataTypeGL;
 end;
 
 { TBlackSharkFogOutShader }
@@ -2064,8 +2100,8 @@ end;
 function TBlackSharkStrokeCurveShader.LinkLocations: boolean;
 begin
   Result := inherited;
-  VertexComponentLocations[vcFloat] := FDistance^.Location;
-  VertexComponentTypes[vcFloat] := FDistance^.DataTypeGL;
+  VertexComponentLocations[vcIndex] := FDistance^.Location;
+  VertexComponentTypes[vcIndex] := FDistance^.DataTypeGL;
 end;
 
 { TBlackSharkStrokeCurveSingleColorShader }

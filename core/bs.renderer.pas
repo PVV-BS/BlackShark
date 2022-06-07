@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -36,7 +36,11 @@ uses
   , bs.collections
   , bs.events
   , bs.scene
+  {$ifdef ultibo}
+  , gles20
+  {$else}
   , bs.gl.es
+  {$endif}
   , bs.frustum
   , bs.fbo
   , bs.shader
@@ -50,13 +54,22 @@ type
 
   TRendererFunc = procedure (Pass: PRenderPass) of object;
 
+  { TRenderPass }
+
   TRenderPass = record
     // if even nil then direct out to screen
     FrameBuffer: TBlackSharkFBO;
-    SelfFrameFuffer: boolean;
-    Shader: TBlackSharkShader;
+    ViewportClient: boolean;
     Renderer: TRendererFunc;
     Attachments: TAttachmentsFBO;
+    PrevPass: PRenderPass;
+    NextPass: PRenderPass;
+    Shader: TBlackSharkShader;
+    Left: int32;
+    Top: int32;
+    Width: int32;
+    Height: int32;
+    class operator Equal(const p1, p2: TRenderPass): boolean;
   end;
 
   TListRendererPasses = TSingleList<PRenderPass>;
@@ -106,6 +119,9 @@ type
     bmAddAndBlend
   );
 
+  { TBlackSharkRenderer;
+    render into viewport a scene; receives mouse events for check of hit to objects }
+
   TBlackSharkRenderer = class
   private
     FScene: TBScene;
@@ -116,16 +132,13 @@ type
     FMouseBeginDragPos: TVec2i;
     FMouseButtonKeep: TBSMouseButton;
     FSmoothMSAA: boolean;
-    FSmoothByKernelMSAA: boolean;
-    FSmoothFXAA: boolean;
-    FSmoothSharkSSAA: boolean;
+    //FSmoothByKernelMSAA: boolean;
+    //FSmoothFXAA: boolean;
+    //FSmoothSharkSSAA: boolean;
     PassMSAA: PRenderPass;
-    PassSSAA: PRenderPass;
-    PassSharkSSAA: PRenderPass;
-    PassFXAA: PRenderPass;
-    { swaped frame buffers for draw to texture, for example - draw smooth pass }
-    FrameBuffers: TListVec<TBlackSharkFBO>;
-    CurrentFrameBuffer: int8;
+    //PassSSAA: PRenderPass;
+    //PassSharkSSAA: PRenderPass;
+    //PassFXAA: PRenderPass;
     //FColorShader: TBlackSharkSingleColorToStencil;
     { B-tree Graphics Instances hitted into Frustum; the tree auto-ordered }
     FListGIinFrustum: array[boolean] of TMultiTreeGI;
@@ -139,8 +152,7 @@ type
     FCurrentUnderMouseInstance: PRendererGraphicInstance;
     FSelectedInstances: TListRendererInstances;
     FDragInstances: TListDual<PDragInstanceData>;
-    FCountFRenderers: int8;
-    FRenderers: TListRendererPassesHead;
+    FPasses: TListRendererPassesHead;
     FScaleScreen: TVec2f;
     FScalePerimeterScreen: BSFloat;
     FScalePerimeterScreenInv: BSFloat;
@@ -188,6 +200,7 @@ type
     FEventBeginDrag: IBDragDropEvent;
     FEventEndDrag: IBDragDropEvent;
 
+    FMouseIsOver: boolean;
     FMouseIsDown: boolean;
     FDragsObjects: boolean;
     FMouseDownInstance: PRendererGraphicInstance;
@@ -231,38 +244,37 @@ type
     procedure UpdateLastMVP(AInstance: PRendererGraphicInstance); inline;
     procedure UpdateAllLastMVP;
     procedure CalcFPS; inline;
+    procedure CheckUnderMouseInstance(ANewInstance: PRendererGraphicInstance; X, Y: int32; Shift: TBSShiftState; Buttons: TBSMouseButtons);
   private
     { common method for a pass rendering; invoke from public method
     	TBlackSharkRenderer.Render }
-    procedure DrawAnyPass(Pass: PRenderPass); inline;
+    procedure DrawAnyPass(APass: PRenderPass); inline;
     { draw all visible in scene geometry through DrawAllInstances }
-    procedure DrawScene({%H-}Pass: PRenderPass); {$ifndef DEBUG_BS} inline; {$endif}
+    procedure DrawScene({%H-}APass: PRenderPass); {$ifndef DEBUG_BS} inline; {$endif}
     { passes for Full Screen Anti Aliasing }
     procedure DrawPassMSAA(Pass: PRenderPass); {$ifndef DEBUG_BS} inline; {$endif}
-    procedure DrawPassFXAA(Pass: PRenderPass); {$ifndef DEBUG_BS} inline; {$endif}
-    procedure DrawPassSSAA(Pass: PRenderPass); {$ifndef DEBUG_BS} inline; {$endif}
+//    procedure DrawPassFXAA(Pass: PRenderPass; AClearBuffers: boolean); {$ifndef DEBUG_BS} inline; {$endif}
+//    procedure DrawPassSSAA(Pass: PRenderPass; AClearBuffers: boolean); {$ifndef DEBUG_BS} inline; {$endif}
     { draw a geometry single an instance TGraphicObject }
     procedure DrawInstance(Instance: PRendererGraphicInstance); {$ifndef DEBUG_BS} inline; {$endif}
     procedure DoBlendMode;
+    procedure RecreateFrameBuffers;
   private
+    FCaption: string;
     function GetSelectedItemsCount: uint32;
     function GetScreenSize: TVec2i;
     function GetCountVisibleGI: int32;
     function GetScreen2dCentre: TVec2i;
     { enumerator graphic items on change frustum }
-    procedure EnumSingleVisibleObjectsByBVH (AInstance: PGraphicInstance; Distance: BSFloat); {$ifndef DEBUG_BS} inline; {$endif}
+    procedure EnumSingleVisibleObjectsByBVH (AInstance: PGraphicInstance; Distance: BSFloat);
+    procedure SetSmoothMSAA(AValue: boolean);
+ {$ifndef DEBUG_BS} inline; {$endif}
     procedure SetVisibleInstance(Instance: PRendererGraphicInstance; AValue: boolean); {$ifndef DEBUG_BS} inline; {$endif}
     procedure OnChangeFrustum;
     procedure SetBlendMode(AValue: TBlendMode); // inline;
-    procedure SetSmoothByKernelMSAA(const Value: boolean);
-    procedure SetSmoothMSAA(const AValue: boolean);
-    procedure SetSmoothFXAA(const Value: boolean); // inline;
-    procedure RecreateFrameBuffer;
-    procedure SetSmoothSharkSSAA(const Value: boolean);
-    procedure CreateFBOSharkSSAA;
-    function GetNextFBO(Width, Height: int32; Attachments: TAttachmentsFBO; ColorFormat: int32): TBlackSharkFBO;
-    procedure DecUsersFBO(FBO: TBlackSharkFBO);
-    procedure DoMouseMove(X, Y: int32; Shift: TShiftState; SendEvent: boolean);
+//    procedure CreateFBOSharkSSAA;
+    //function GetNextFBO(Width, Height: int32; Attachments: TAttachmentsFBO; ColorFormat: int32): TBlackSharkFBO;
+    procedure DoMouseMove(X, Y: int32; Shift: TBSShiftState; SendEvent: boolean);
     procedure SetSelectedInstance(Instance: PRendererGraphicInstance; AValue: boolean);
   protected
     { Frustum, also called virtual Camera; you can change a position and an orientation
@@ -273,48 +285,41 @@ type
     procedure DrawAllInstances;
     procedure SetScene(const AScene: TBScene); virtual;
     procedure RendererInit; virtual;
+    procedure RenderBefore(Pass: PRenderPass);
   public
 
     Keyboard: array[byte] of boolean;
-    ShiftState: TShiftState;
+    ShiftState: TBSShiftState;
 
     { can used any a render pass for draw a quad }
-    procedure DrawQUAD(Pass: PRenderPass);
+    procedure DrawQUAD(APass: PRenderPass);
   public
     constructor Create;
     destructor Destroy; override;
     procedure BeforeDestruction; override;
-    { render scene; call all added to list draw methods; draw all graphic items
-      scene hit into frustum; NOT VIRTUAL, therefore ancestors need use AddRenderer for
-      adding self method draw }
+    { accomplishes all passes of the renderer; one or more of the passes draws graphics items of the scene are containing in the frustum; }
     procedure Render; overload;
-    procedure Render(Pass: PRenderPass); overload;
-    procedure RenderBefore(Pass: PRenderPass);
+    procedure Render(APass: PRenderPass); overload;
 
     procedure ModalLevelInc;
     procedure ModalLevelDec;
 
     procedure ResizeViewPort(NewWidth, NewHeight: int32); virtual;
     procedure MouseDblClick(X, Y: int32); virtual;
-    procedure MouseDown({%H-}MouseButton: TBSMouseButton; X, Y: int32; Shift: TShiftState); virtual;
-    procedure MouseUp({%H-}MouseButton: TBSMouseButton; X, Y: int32; Shift: TShiftState); virtual;
-    procedure MouseMove(X, Y: int32; Shift: TShiftState); virtual;
+    procedure MouseDown({%H-}MouseButton: TBSMouseButton; X, Y: int32; Shift: TBSShiftState); virtual;
+    procedure MouseUp({%H-}MouseButton: TBSMouseButton; X, Y: int32; Shift: TBSShiftState); virtual;
+    procedure MouseMove(X, Y: int32; Shift: TBSShiftState); virtual;
     procedure MouseEnter({%H-}X, {%H-}Y: int32); virtual;
     procedure MouseLeave; virtual;
-    procedure MouseWheel(WheelDelta: int32; X, Y: int32; {%H-}Shift: TShiftState); virtual;
-    procedure KeyPress(var Key: WideChar; Shift: TShiftState); virtual;
-    procedure KeyDown(var Key: Word; Shift: TShiftState); virtual;
-    procedure KeyUp(var Key: Word; Shift: TShiftState); virtual;
+    procedure MouseWheel(WheelDelta: int32; X, Y: int32; {%H-}Shift: TBSShiftState); virtual;
+    procedure KeyPress(var Key: WideChar; Shift: TBSShiftState); virtual;
+    procedure KeyDown(var Key: Word; Shift: TBSShiftState); virtual;
+    procedure KeyUp(var Key: Word; Shift: TBSShiftState); virtual;
 
-    function AddRenderer(
-      Shader: TBlackSharkShader;
-      Renderer: TRendererFunc;
-      ViewPortWidth, ViewPortHeight: int32;
-      FrameBuffer: TBlackSharkFBO = nil; UseFrameBuffer: boolean = false;
-      Attachments: TAttachmentsFBO = [atColor, atDepth];
-      ColorFormat: int32 = GL_RGBA): PRenderPass;
+    function AddPass(AShader: TBlackSharkShader; ARenderer: TRendererFunc; ALeft, ATop, AViewPortWidth, AViewPortHeight: int32;
+      AViewportClient: boolean; AAttachments: TAttachmentsFBO = [atColor, atDepth]; AColorFormat: int32 = GL_RGBA): PRenderPass;
 
-    procedure DelRenderer(Renderer: PRenderPass);
+    procedure DeletePass(APass: PRenderPass);
 
     function CheckInstanceHitIntoFrustum(Instance: PRendererGraphicInstance): boolean; {$ifndef DEBUG_BS} inline; {$endif}
 
@@ -366,12 +371,13 @@ type
     procedure Screenshot(const X, Y, Width, Height: int32; const Buffer: Pointer); overload;
 
     property Frustum: TBlackSharkFrustum read FFrustum;
+
     { if Renderers.Count > 0 then first pass always contains FBO
     	for translate result draw geometry to next passes as texture;
     	if Renderers.Count = 1 then first pass don't contains
     	FBO and need create new pass by TBlackSharkRenderer.AddRenderer if you
       want draw to texture }
-    property Renderers: TListRendererPassesHead read FRenderers;
+    property Renderers: TListRendererPassesHead read FPasses;
 
     property Scene: TBScene read FScene write SetScene;
     property OwnScene: boolean read FOwnScene write FOwnScene;
@@ -399,15 +405,13 @@ type
     property ScalePerimeterScreen: BSFloat read FScalePerimeterScreen;
     property ScalePerimeterScreenInv: BSFloat read FScalePerimeterScreenInv;
     property ScaleScreen: TVec2f read FScaleScreen;
-    //property ScaleScreenLastDelta: TVec2f read FScaleScreenLastDelta;
-    //property ScreenRatio: BSFloat read FScreenRatio;
-    property SmoothByKernelMSAA: boolean read FSmoothByKernelMSAA write SetSmoothByKernelMSAA;
+    //property SmoothByKernelMSAA: boolean read FSmoothByKernelMSAA write SetSmoothByKernelMSAA;
     property KernelSSAA: TSamplingKernel read FKernelSSAA write FKernelSSAA;
     { multi sampling anti aliasing smooth }
     property SmoothMSAA: boolean read FSmoothMSAA write SetSmoothMSAA;
-    property SmoothFXAA: boolean read FSmoothFXAA write SetSmoothFXAA;
+    //property SmoothFXAA: boolean read FSmoothFXAA write SetSmoothFXAA;
     { smooth by draw to big Frame Buffer (more on 50 percent) and out to viewport size }
-    property SmoothSharkSSAA: boolean read FSmoothSharkSSAA write SetSmoothSharkSSAA;
+    //property SmoothSharkSSAA: boolean read FSmoothSharkSSAA write SetSmoothSharkSSAA;
     property MouseLastPos: TVec2i read FMouseLastPos;
     property MouseNowPos: TVec2i read FMouseNowPos;
     property MouseBeginDragPos: TVec2i read FMouseBeginDragPos;
@@ -448,6 +452,7 @@ type
     property EventBeginDrag: IBDragDropEvent read FEventBeginDrag;
     property EventEndDrag: IBDragDropEvent read FEventEndDrag;
     property FPS: uint16 read FFPS;
+    property Caption: string read FCaption write FCaption;
 
   end;
 
@@ -455,15 +460,16 @@ implementation
 
 uses
     SysUtils
+  {$ifdef DEBUG_BS}
+  , bs.exceptions
+  , bs.log
+  {$endif}
   , bs.events.keyboard
   , bs.thread
   , bs.utils
   , bs.config
   , bs.geometry
   , bs.mesh
-  {$ifdef DEBUG_BS}
-  , bs.exceptions
-  {$endif}
   ;
 
 function InstanceKey(Instance: PRendererGraphicInstance): TKeySortInstance; inline;
@@ -471,6 +477,14 @@ begin
   Result.Distance := Instance.DistanceToScreen;
   Result.DrawOnlyFront := Instance.Instance.Owner.DrawSides = TDrawSide.dsFront;
   Result.ModalLevel := Instance.Instance.Owner.ModalLevel;
+end;
+
+{ TRenderPass }
+
+class operator TRenderPass.Equal(const p1, p2: TRenderPass): boolean;
+begin
+  Result := (p1.Left = p2.Left) and (p1.Top = p2.Top) and (p1.Attachments = p2.Attachments) and (p1.ViewportClient = p2.ViewportClient) and
+            (p1.Height = p2.Height) and (p1.Width = p2.Width) and (p1.Shader.ClassType = p2.Shader.ClassType) and (p1.FrameBuffer = p2.FrameBuffer);
 end;
 
 { TMultiTreeGI }
@@ -559,12 +573,12 @@ begin
   FAutoSelect := true;
   FKeyMultiSelectAllows := VK_BS_CONTROL;
   LastCullFaceOption := dsAll;
-  FrameBuffers := TListVec<TBlackSharkFBO>.Create;
+  //FrameBuffers := TListVec<TBlackSharkFBO>.Create;
   FScaleScreen := vec2(1.0, 1.0);
   FScalePerimeterScreen := 1.0;
   FScalePerimeterScreenInv := 1.0;
   FirstSize := vec2(BSConfig.ResolutionWidth, BSConfig.ResolutionHeight);
-  TListRendererPasses.Create(FRenderers);
+  TListRendererPasses.Create(FPasses);
   FListGIinFrustum[false]  := TMultiTreeGIFarToNear.Create;
   FListGIinFrustum[true ]  := TMultiTreeGINearToFar.Create;
   FSelectedInstances       := TListRendererInstances.Create;
@@ -601,28 +615,29 @@ begin
   FOwnScene := True;
   LinkSceneEvents;
   RendererInit;
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('OnCreateGlContextEvent', '');
+  {$endif}
 end;
 
-procedure TBlackSharkRenderer.CreateFBOSharkSSAA;
-begin
-  if FRenderers.Count = 1 then
-  begin
-    PassSharkSSAA := AddRenderer(BSShaderManager.Load('QUAD', TBlackSharkQUADShader),
-      DrawQUAD, FWindowWidth*2, FWindowHeight*2, nil, false, [atColor, atDepth], GL_RGB);
-  end;
-
-  if FRenderers.Items[0].FrameBuffer = nil then
-  begin
-    FRenderers.Items[0].FrameBuffer := GetNextFBO(round(FWindowWidth)*2, round(FWindowHeight)*2, FRenderers.Items[0].Attachments, GL_RGBA);
-  end else
-  begin
-    FRenderers.Items[0].FrameBuffer.ReCreate(round(FWindowWidth)*2, round(FWindowHeight)*2, FRenderers.Items[0].Attachments, GL_RGBA);
-  end;
-end;
-
+//procedure TBlackSharkRenderer.CreateFBOSharkSSAA;
+//begin
+//  if FPasses.Count = 1 then
+//  begin
+//    PassSharkSSAA := AddRenderer(BSShaderManager.Load('QUAD', TBlackSharkQUADShader),
+//      DrawQUAD, FWindowWidth*2, FWindowHeight*2, nil, false, [atColor, atDepth], GL_RGB);
+//  end;
+//
+//  if FPasses.Items[0].FrameBuffer = nil then
+//  begin
+//    FPasses.Items[0].FrameBuffer := GetNextFBO(round(FWindowWidth)*2, round(FWindowHeight)*2, FPasses.Items[0].Attachments, GL_RGBA);
+//  end else
+//  begin
+//    FPasses.Items[0].FrameBuffer.ReCreate(round(FWindowWidth)*2, round(FWindowHeight)*2, FPasses.Items[0].Attachments, GL_RGBA);
+//  end;
+//end;
+//
 destructor TBlackSharkRenderer.Destroy;
-var
-  i: int32;
 begin
   FReleases := true;
   FEventEventFocus := nil;
@@ -641,19 +656,16 @@ begin
   FEventKeyUp := nil;
   FEventKeyPress := nil;
 
-  FSmoothSharkSSAA := false;
+  //FSmoothSharkSSAA := false;
 
   if FOwnScene then
     FScene.Free;
 
-  while (FRenderers.Count > 0) do
-    DelRenderer(FRenderers.Items[FRenderers.Count - 1]);
+  while (FPasses.Count > 0) do
+    DeletePass(FPasses.Items[FPasses.Count - 1]);
 
-  TListRendererPasses.Free(FRenderers);
+  TListRendererPasses.Free(FPasses);
 
-  for i := 0 to FrameBuffers.Count - 1 do
-    FrameBuffers.Items[i].Free;
-  FrameBuffers.Free;
   FFrustum.Free;
   BBSelectList.Free;
   FListGIinFrustum[false].Free;
@@ -704,8 +716,6 @@ begin
     v01 := PlaneCrossProduct(pln, dd^.Ray.Position, dd^.Ray.Direction, d, intersect);
     v02 := PlaneCrossProduct(pln, r.Position, r.Direction, d, intersect);
 
-    //if inst^.DragResolve then
-    begin
       delta := v02 - v01;
       if delta = vec3(0.0, 0.0, 0.0) then
         continue;
@@ -734,7 +744,6 @@ begin
       inst^.Owner.DoDrag(inst, false);
     end;
   end;
-end;
 
 procedure TBlackSharkRenderer.DoBlendMode;
 begin
@@ -810,7 +819,7 @@ begin
   CheckInstanceHitIntoFrustum(AData);
 end;
 
-procedure TBlackSharkRenderer.DoMouseMove(X, Y: int32; Shift: TShiftState; SendEvent: boolean);
+procedure TBlackSharkRenderer.DoMouseMove(X, Y: int32; Shift: TBSShiftState; SendEvent: boolean);
 var
   inst: PRendererGraphicInstance;
   dd: PDragInstanceData;
@@ -836,8 +845,6 @@ begin
 
   FMouseNowPos := vec2(X, Y);
   ShiftState := Shift;
-  //if not FEnabled then
-  //  exit;
   if FMouseIsDown and not FDragsObjects and (FSelectedInstances.Count > 0) and
     Assigned(MouseDownInstance) and (FMouseButtonKeep = TBSMouseButton.mbBsLeft) and
       not (FMouseNowPos = FMouseLastPos) then
@@ -876,16 +883,8 @@ begin
     FEventBeginDrag.Send(nil, false);
   end;
   inst := GetObject(x, y);
-  if FCurrentUnderMouseInstance <> inst then
-  begin
-    if Assigned(FCurrentUnderMouseInstance) then
-      FCurrentUnderMouseInstance.Instance.Owner.DoMouseLeave(MouseData(FCurrentUnderMouseInstance, X, Y, 0, m_btns, Shift));
 
-    if Assigned(inst) then
-      inst.Instance.Owner.DoMouseEnter(MouseData(inst, X, Y, 0, m_btns, Shift));
-
-    FCurrentUnderMouseInstance := inst;
-  end;
+  CheckUnderMouseInstance(inst, X, Y, Shift, m_btns);
 
   if SendEvent then
   begin
@@ -904,40 +903,40 @@ begin
   Result := FListGIinFrustum[false].MultiTree.Count + FListGIinFrustum[true].MultiTree.Count;
 end;
 
-function TBlackSharkRenderer.GetNextFBO(Width, Height: int32; Attachments: TAttachmentsFBO; ColorFormat: int32): TBlackSharkFBO;
-var
-  fbo: TBlackSharkFBO;
-  i: int32;
-begin
-  Result := nil;
-  i := CurrentFrameBuffer;
-  if not (atStencil in Attachments) and (FCountStencilUse > 0) then
-    Attachments := Attachments + [atStencil];
-
-  if FrameBuffers.Count > 0 then
-  repeat
-    fbo := FrameBuffers.items[i];
-    if (fbo.Width = Width) and (fbo.Height = Height)
-      and (Attachments = fbo.Attachments) and (ColorFormat = fbo.Format) and
-        ((FRenderers.Count < 2) or (FRenderers.Items[FRenderers.Count - 2].FrameBuffer <> fbo)) then
-    begin
-      Result := fbo;
-      break;
-    end;
-    inc(i);
-    i := i mod FrameBuffers.Count;
-  until (i = CurrentFrameBuffer);
-
-  if FrameBuffers.Count > 0 then
-    CurrentFrameBuffer := (i + 1) mod FrameBuffers.Count;
-
-  if Result = nil then
-  begin
-    Result := TBlackSharkFBO.Create(Width, Height, Attachments, ColorFormat);
-    FrameBuffers.Add(Result);
-  end;
-  Result.IncUsers;
-end;
+//function TBlackSharkRenderer.GetNextFBO(Width, Height: int32; Attachments: TAttachmentsFBO; ColorFormat: int32): TBlackSharkFBO;
+//var
+//  fbo: TBlackSharkFBO;
+//  i: int32;
+//begin
+//  Result := nil;
+//  i := CurrentFrameBuffer;
+//  if not (atStencil in Attachments) and (FCountStencilUse > 0) then
+//    Attachments := Attachments + [atStencil];
+//
+//  if FrameBuffers.Count > 0 then
+//  repeat
+//    fbo := FrameBuffers.items[i];
+//    if (fbo.Width = Width) and (fbo.Height = Height)
+//      and (Attachments = fbo.Attachments) and (ColorFormat = fbo.Format) and
+//        ((FPasses.Count < 2) or (FPasses.Items[FPasses.Count - 2].FrameBuffer <> fbo)) then
+//    begin
+//      Result := fbo;
+//      break;
+//    end;
+//    inc(i);
+//    i := i mod FrameBuffers.Count;
+//  until (i = CurrentFrameBuffer);
+//
+//  if FrameBuffers.Count > 0 then
+//    CurrentFrameBuffer := (i + 1) mod FrameBuffers.Count;
+//
+//  if Result = nil then
+//  begin
+//    Result := TBlackSharkFBO.Create(Width, Height, Attachments, ColorFormat);
+//    FrameBuffers.Add(Result);
+//  end;
+//  Result.IncUsers;
+//end;
 
 function TBlackSharkRenderer.GetScreen2dCentre: TVec2i;
 begin
@@ -996,29 +995,29 @@ begin
   DoBlendMode;
 end;
 
-procedure TBlackSharkRenderer.SetSmoothFXAA(const Value: boolean);
-var
-  at: TAttachmentsFBO;
-begin
-  if FSmoothFXAA = Value then
-    exit;
-  FSmoothFXAA := Value;
-  if FSmoothFXAA then
-  begin
-    if FRenderers.Count = 1 then
-      at := [atColor, atDepth]
-    else
-      at := [atColor];
-    PassFXAA := AddRenderer(BSShaderManager.Load('SmoothFXAA2', TBlackSharkSmoothFXAA),
-      DrawPassFXAA, FWindowWidth, FWindowHeight, nil, true, at, GL_RGB);
-  end else
-  begin
-    DelRenderer(PassFXAA);
-    //CheckOrderSwapBuffers;
-  end;
-end;
-
-procedure TBlackSharkRenderer.SetSmoothMSAA(const AValue: boolean);
+//procedure TBlackSharkRenderer.SetSmoothFXAA(const Value: boolean);
+//var
+//  at: TAttachmentsFBO;
+//begin
+//  if FSmoothFXAA = Value then
+//    exit;
+//  FSmoothFXAA := Value;
+//  if FSmoothFXAA then
+//  begin
+//    if FPasses.Count = 1 then
+//      at := [atColor, atDepth]
+//    else
+//      at := [atColor];
+//    PassFXAA := AddRenderer(BSShaderManager.Load('SmoothFXAA2', TBlackSharkSmoothFXAA),
+//      DrawPassFXAA, FWindowWidth, FWindowHeight, nil, true, at, GL_RGB);
+//  end else
+//  begin
+//    DelRenderer(PassFXAA);
+//    //CheckOrderSwapBuffers;
+//  end;
+//end;
+//
+procedure TBlackSharkRenderer.SetSmoothMSAA(AValue: boolean);
 var
   at: TAttachmentsFBO;
 begin
@@ -1027,72 +1026,71 @@ begin
   FSmoothMSAA := AValue;
   if FSmoothMSAA then
   begin
-    if FRenderers.Count = 1 then
+    if FPasses.Count = 1 then
       at := [atColor, atDepth]
     else
       at := [atColor];
-    PassMSAA := AddRenderer(BSShaderManager.Load('SmoothMSAA', TBlackSharkSmoothMSAA),
-      DrawPassMSAA, FWindowWidth, FWindowHeight, nil, true, at, GL_RGB);
+    PassMSAA := AddPass(BSShaderManager.Load('SmoothMSAA', TBlackSharkSmoothMSAA),
+      DrawPassMSAA, 0, 0, FWindowWidth, FWindowHeight, true, at, GL_RGB);
   end else
   begin
-    DelRenderer(PassMSAA);
-    //CheckOrderSwapBuffers;
+    DeletePass(PassMSAA);
   end;
 end;
 
-procedure TBlackSharkRenderer.SetSmoothSharkSSAA(const Value: boolean);
-begin
-  if FSmoothSharkSSAA = Value then
-    exit;
-  FSmoothSharkSSAA := Value;
-  if FSmoothSharkSSAA then
-  begin
-    CreateFBOSharkSSAA;
-  end else
-  if PassSharkSSAA <> nil then
-  begin
-    DelRenderer(PassSharkSSAA);
-    PassSharkSSAA := nil;
-    if (FRenderers.Count > 1) and (FRenderers.Items[0].FrameBuffer <> nil) then
-      FRenderers.Items[0].FrameBuffer.ReCreate(round(FWindowWidth), round(FWindowHeight),
-        FRenderers.Items[0].Attachments, FRenderers.Items[0].FrameBuffer.Format) else
-    //CheckOrderSwapBuffers;
-  end else
-  if (FRenderers.Items[0].FrameBuffer <> nil) then
-  begin
-    if FRenderers.Count > 1 then
-      FRenderers.Items[0].FrameBuffer.ReCreate(round(FWindowWidth), round(FWindowHeight),
-        FRenderers.Items[0].Attachments, FRenderers.Items[0].FrameBuffer.Format) else
-    begin
-      DecUsersFBO(FRenderers.Items[0].FrameBuffer);
-      FRenderers.Items[0].FrameBuffer := nil;
-    end;
-    //CheckOrderSwapBuffers;
-  end;
-end;
-
-procedure TBlackSharkRenderer.SetSmoothByKernelMSAA(const Value: boolean);
-var
-  at: TAttachmentsFBO;
-begin
-  if FSmoothByKernelMSAA = Value then
-    exit;
-  FSmoothByKernelMSAA := Value;
-  if FSmoothByKernelMSAA then
-  begin
-    if FRenderers.Count = 1 then
-      at := [atColor, atDepth]
-    else
-      at := [atColor];
-    PassSSAA := AddRenderer(BSShaderManager.Load('SmoothByKernelMSAA', TBlackSharkSmoothByKernelMSAA),
-      DrawPassSSAA, FWindowWidth, FWindowHeight, nil, true, at, GL_RGB);
-  end else
-  begin
-    DelRenderer(PassSSAA);
-    //CheckOrderSwapBuffers;
-  end;
-end;
-
+//procedure TBlackSharkRenderer.SetSmoothSharkSSAA(const Value: boolean);
+//begin
+//  if FSmoothSharkSSAA = Value then
+//    exit;
+//  FSmoothSharkSSAA := Value;
+//  if FSmoothSharkSSAA then
+//  begin
+//    CreateFBOSharkSSAA;
+//  end else
+//  if PassSharkSSAA <> nil then
+//  begin
+//    DelRenderer(PassSharkSSAA);
+//    PassSharkSSAA := nil;
+//    if (FPasses.Count > 1) and (FPasses.Items[0].FrameBuffer <> nil) then
+//      FPasses.Items[0].FrameBuffer.ReCreate(round(FWindowWidth), round(FWindowHeight),
+//        FPasses.Items[0].Attachments, FPasses.Items[0].FrameBuffer.Format) else
+//    //CheckOrderSwapBuffers;
+//  end else
+//  if (FPasses.Items[0].FrameBuffer <> nil) then
+//  begin
+//    if FPasses.Count > 1 then
+//      FPasses.Items[0].FrameBuffer.ReCreate(round(FWindowWidth), round(FWindowHeight),
+//        FPasses.Items[0].Attachments, FPasses.Items[0].FrameBuffer.Format) else
+//    begin
+//      DecUsersFBO(FPasses.Items[0].FrameBuffer);
+//      FPasses.Items[0].FrameBuffer := nil;
+//    end;
+//    //CheckOrderSwapBuffers;
+//  end;
+//end;
+//
+//procedure TBlackSharkRenderer.SetSmoothByKernelMSAA(const Value: boolean);
+//var
+//  at: TAttachmentsFBO;
+//begin
+//  if FSmoothByKernelMSAA = Value then
+//    exit;
+//  FSmoothByKernelMSAA := Value;
+//  if FSmoothByKernelMSAA then
+//  begin
+//    if FPasses.Count = 1 then
+//      at := [atColor, atDepth]
+//    else
+//      at := [atColor];
+//    PassSSAA := AddRenderer(BSShaderManager.Load('SmoothByKernelMSAA', TBlackSharkSmoothByKernelMSAA),
+//      DrawPassSSAA, FWindowWidth, FWindowHeight, nil, true, at, GL_RGB);
+//  end else
+//  begin
+//    DelRenderer(PassSSAA);
+//    //CheckOrderSwapBuffers;
+//  end;
+//end;
+//
 procedure TBlackSharkRenderer.EventInstanceTransform(const AData: BData);
 begin
   DoEventInstanceTransform(FInstances.Items[PGraphicInstance(AData.Instance).Index]);
@@ -1186,15 +1184,15 @@ begin
   BSShaderManager.UseShader(nil);
   BSTextureManager.UseTexture(nil);
   LastDrawGI := nil;
-  for i := 0 to FRenderers.Count - 1 do
-    DrawAnyPass(FRenderers.Items[i]);
+  for i := 0 to FPasses.Count - 1 do
+    DrawAnyPass(FPasses.Items[i]);
 
 end;
 
-procedure TBlackSharkRenderer.Render(Pass: PRenderPass);
+procedure TBlackSharkRenderer.Render(APass: PRenderPass);
 begin
   LastDrawGI := nil;
-	DrawAnyPass(Pass);
+  DrawAnyPass(APass);
 end;
 
 procedure TBlackSharkRenderer.RenderBefore(Pass: PRenderPass);
@@ -1203,9 +1201,9 @@ var
   i: int32;
 begin
   LastDrawGI := nil;
-  for i := 0 to FRenderers.Count - 1 do
+  for i := 0 to FPasses.Count - 1 do
   begin
-    render := FRenderers.Items[i];
+    render := FPasses.Items[i];
     if render = Pass then
       break;
     DrawAnyPass(render);
@@ -1214,9 +1212,9 @@ end;
 
 procedure TBlackSharkRenderer.RendererInit;
 begin
-  if FRenderers.Count = 0 then
-    AddRenderer(nil, DrawScene, FWindowWidth, FWindowHeight, nil, false);
-  RecreateFrameBuffer;
+  if FPasses.Count = 0 then
+    AddPass(nil, DrawScene, 0, 0, FWindowWidth, FWindowHeight, true);
+  RecreateFrameBuffers;
   DoBlendMode;
 end;
 
@@ -1236,6 +1234,9 @@ var
 begin
   if ((NewWidth < 5) or (NewHeight < 5)) then
     exit;
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBlackSharkRenderer.ResizeViewPort.' + Caption, 'NewWidth: ' + IntToStr(NewWidth) + '; NewHeight: ' + IntToStr(NewHeight));
+  {$endif}
   //EventsManager.SendMessage('TBlackSharkRenderer.ResizeWindow', 'Width: '+IntToStr(NewWidth)+'; Height: ' + IntToStr(NewHeight));
   s.x := NewWidth / FirstSize.x;
   s.y := NewHeight / FirstSize.y;
@@ -1254,24 +1255,43 @@ begin
   RendererInit;
   UpdateAllLastMVP;
   FEventResize.Send(Self, FWindowWidth, FWindowHeight, s.x, s.y);
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBlackSharkRenderer.ResizeViewPort.end', '');
+  {$endif}
 end;
 
-procedure TBlackSharkRenderer.RecreateFrameBuffer;
+procedure TBlackSharkRenderer.RecreateFrameBuffers;
 var
   i: int32;
+  pass: PRenderPass;
 begin
 
-  if FRenderers.Items[0].FrameBuffer <> nil then
-  begin
-    if FSmoothSharkSSAA then
-      FRenderers.Items[0].FrameBuffer.ReCreate(round(FWindowWidth)*2, round(FWindowHeight)*2, FRenderers.Items[0].FrameBuffer.Attachments)
-    else
-      FRenderers.Items[0].FrameBuffer.ReCreate(round(FWindowWidth), round(FWindowHeight), FRenderers.Items[0].FrameBuffer.Attachments);
-  end;
+  //if FPasses.Items[0].FrameBuffer <> nil then
+  //begin
+  //  if FSmoothSharkSSAA then
+  //    FPasses.Items[0].FrameBuffer.ReCreate(round(FWindowWidth)*2, round(FWindowHeight)*2, FPasses.Items[0].FrameBuffer.Attachments)
+  //  else
+  //    FPasses.Items[0].FrameBuffer.ReCreate(round(FWindowWidth), round(FWindowHeight), FPasses.Items[0].FrameBuffer.Attachments);
+  //end;
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBlackSharkRenderer.RecreateFrameBuffers.' + Caption, 'Count: ' + IntToStr(FPasses.Count));
+  {$endif}
 
-  for i := 0 to FrameBuffers.Count - 1 do
-    if FrameBuffers.Items[i] <> FRenderers.Items[0].FrameBuffer then
-      FrameBuffers.Items[i].ReCreate(round(FWindowWidth), round(FWindowHeight), FrameBuffers.Items[i].Attachments);
+  for i := 0 to FPasses.Count - 1 do
+  begin
+    pass := FPasses.Items[i];
+    if pass.ViewportClient then
+    begin
+      pass.Width := FWindowWidth;
+      pass.Height := FWindowHeight;
+      if Assigned(pass.FrameBuffer) then
+        pass.FrameBuffer.ReCreate(FWindowWidth, FWindowHeight, pass.FrameBuffer.Attachments);
+    end else
+    if Assigned(pass.FrameBuffer) then
+    begin
+      pass.FrameBuffer.ReCreate(pass.Width, pass.Height, pass.FrameBuffer.Attachments);
+    end;
+  end;
 end;
 
 procedure TBlackSharkRenderer.CalcFPS;
@@ -1285,6 +1305,22 @@ begin
   begin
     DivMod(FCountFrame, (delta div 1000), FFPS, FCountFrame);
     FLastUpdate := t;
+  end;
+end;
+
+procedure TBlackSharkRenderer.CheckUnderMouseInstance(ANewInstance: PRendererGraphicInstance; X, Y: int32; Shift: TBSShiftState; Buttons: TBSMouseButtons);
+begin
+  if FCurrentUnderMouseInstance <> ANewInstance then
+  begin
+    if Assigned(FCurrentUnderMouseInstance) then
+      FCurrentUnderMouseInstance.Instance.Owner.DoMouseLeave(MouseData(FCurrentUnderMouseInstance, X, Y, 0, Buttons, Shift));
+
+    if Assigned(ANewInstance) then
+    begin
+      ANewInstance.Instance.Owner.DoMouseEnter(MouseData(ANewInstance, X, Y, 0, Buttons, Shift));
+    end;
+
+    FCurrentUnderMouseInstance := ANewInstance;
   end;
 end;
 
@@ -1315,48 +1351,46 @@ begin
     Result := false;
 end;
 
-function TBlackSharkRenderer.AddRenderer(Shader: TBlackSharkShader;
-  Renderer: TRendererFunc; ViewPortWidth, ViewPortHeight: int32;
-  FrameBuffer: TBlackSharkFBO; UseFrameBuffer: boolean;
-  Attachments: TAttachmentsFBO; ColorFormat: int32): PRenderPass;
-var
-  fbo: TBlackSharkFBO;
+function TBlackSharkRenderer.AddPass(AShader: TBlackSharkShader;
+  ARenderer: TRendererFunc; ALeft, ATop, AViewPortWidth,
+  AViewPortHeight: int32; AViewportClient: boolean;
+  AAttachments: TAttachmentsFBO; AColorFormat: int32): PRenderPass;
 begin
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBlackSharkRenderer.AddPass begin', 'Left: ' + IntToStr(ALeft) + '; Top: ' + IntToStr(ATop) + '; ViewPortWidth: ' + IntToStr(AViewPortWidth) + '; AViewPortHeight: ' + IntToStr(AViewPortHeight));
+  {$endif}
+
   new(Result);
-  Result^.FrameBuffer := FrameBuffer;
-  if FrameBuffer = nil then
-  begin
-    Result^.SelfFrameFuffer := false;
-    if UseFrameBuffer then
+  FillChar(Result^, SizeOf(TRenderPass), 0);
+  Result^.Renderer := ARenderer;
+  Result^.Attachments := AAttachments;
+  Result^.Left := ALeft;
+  Result^.Top := ATop;
+  Result^.Width := AViewPortWidth;
+  Result^.Height := AViewPortHeight;
+  Result^.ViewportClient := AViewportClient;
+  Result^.Shader := AShader;
+
+  // for the shader necessary frame buffer
+  if Assigned(AShader) then
+    // this looks like a funny crutch, but I dont want to use managed type if it possible
+    AShader._AddRef;
+
+  if FPasses.Count > 0 then
     begin
-      if (FRenderers.Count > 0) and (FRenderers.Items[FRenderers.Count - 1].FrameBuffer = nil) then
-      begin
-        fbo := GetNextFBO(ViewPortWidth, ViewPortHeight, Attachments, ColorFormat);
-        FRenderers.Items[FRenderers.Count - 1].FrameBuffer := fbo;
-      end;
+    Result.FrameBuffer := TBlackSharkFBO.Create(AViewPortWidth, AViewPortHeight, AAttachments, AColorFormat);
+    Result.PrevPass := FPasses.Items[FPasses.Count-1];
+    Result.PrevPass.NextPass := Result;
     end;
-  end else
-    Result^.SelfFrameFuffer := true;
 
-  Result^.Shader := Shader;
+  TListRendererPasses.Add(FPasses, Result);
 
-  if Assigned(Shader) then
-  	Shader._AddRef;
-
-  Result^.Renderer := Renderer;
-  Result^.Attachments := Attachments;
-  TListRendererPasses.Add(FRenderers, Result);
-  inc(FCountFRenderers);
-  if Assigned(Result.FrameBuffer) then
-    Result.FrameBuffer.Bind
-  else
-  begin
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, ViewPortWidth, ViewPortHeight);
-  end;
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBlackSharkRenderer.AddPass end', 'Count passes: ' + IntToStr(FPasses.Count));
+  {$endif}
 end;
 
-procedure TBlackSharkRenderer.EventObjectDecStencilUse;
+procedure TBlackSharkRenderer.EventObjectDecStencilUse(const AData: BData);
 var
   main_pass: PRenderPass;
 begin
@@ -1365,49 +1399,41 @@ begin
   dec(FCountStencilUse);
   if (FCountStencilUse <= 0) then
   begin
-    main_pass := FRenderers.Items[0];
+    main_pass := FPasses.Items[0];
     if Assigned(main_pass.FrameBuffer) and (atStencil in main_pass.FrameBuffer.Attachments) then
       main_pass.FrameBuffer.Attachments := main_pass.FrameBuffer.Attachments - [atStencil];
   end;
 end;
 
-procedure TBlackSharkRenderer.DecUsersFBO(FBO: TBlackSharkFBO);
+procedure TBlackSharkRenderer.DeletePass(APass: PRenderPass);
 var
   i: int32;
 begin
-  if FBO.DecUsers() = 0 then
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBlackSharkRenderer.AddRenderer begin', '');
+  {$endif}
+  TListRendererPasses.Delete(FPasses, APass);
+  FreeAndNil(APass.FrameBuffer);
+  if Assigned(APass.Shader) then
+    BSShaderManager.FreeShader(APass.Shader);
+  dispose(APass);
+  for i := FPasses.Count - 1 downto 1 do
   begin
-    for i := 0 to FRenderers.Count - 1 do
-      if FRenderers.Items[i].FrameBuffer = FBO then
-      begin
-        FRenderers.Items[i].FrameBuffer := nil;
+    FPasses.Items[i].PrevPass := FPasses.Items[i-1];
+    if i < FPasses.Count - 1 then
+    FPasses.Items[i].NextPass := FPasses.Items[i+1];
       end;
-    for i := 0 to FrameBuffers.Count - 1 do
-      if FrameBuffers.Items[i] = FBO then
+
+  if (FPasses.Count > 0) then
       begin
-        FrameBuffers.Delete(i);
-        if (CurrentFrameBuffer >= i) and (FrameBuffers.Count > 0) then
-          CurrentFrameBuffer := CurrentFrameBuffer mod FrameBuffers.Count;
-      end;
-  end;
+    FPasses.Items[0].PrevPass := nil;
+    if FPasses.Count < 2 then
+      FPasses.Items[0].NextPass := nil;
 end;
 
-procedure TBlackSharkRenderer.DelRenderer(Renderer: PRenderPass);
-begin
-  dec(FCountFRenderers);
-  TListRendererPasses.Delete(FRenderers, Renderer);
-  if Assigned(Renderer^.FrameBuffer) and (not Renderer^.SelfFrameFuffer) then
-    DecUsersFBO(Renderer^.FrameBuffer);
-  if Assigned(Renderer^.Shader) then
-    BSShaderManager.FreeShader(Renderer^.Shader);
-  dispose(Renderer);
-  // set last render to draw direct to screen
-  if (FRenderers.Count > 0) and (not FRenderers.Items[FRenderers.Count - 1]^.SelfFrameFuffer) and (FRenderers.Items[FRenderers.Count - 1]^.FrameBuffer <> nil) then
-  begin
-    DecUsersFBO(FRenderers.Items[FRenderers.Count - 1]^.FrameBuffer);
-    if FSmoothSharkSSAA and (FRenderers.Count = 1) then
-      CreateFBOSharkSSAA;
-  end;
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBlackSharkRenderer.DelRenderer end', 'count renderers = ' + IntToStr(FPasses.Count));
+  {$endif}
 end;
 
 procedure TBlackSharkRenderer.MouseDblClick(X, Y: int32);
@@ -1428,7 +1454,7 @@ begin
   FEventMouseDblClick.Send(FCurrentUnderMouseInstance, X, Y, 0, [FMouseButtonKeep], ShiftState);
 end;
 
-procedure TBlackSharkRenderer.MouseDown(MouseButton: TBSMouseButton; X, Y: int32; Shift: TShiftState);
+procedure TBlackSharkRenderer.MouseDown(MouseButton: TBSMouseButton; X, Y: int32; Shift: TBSShiftState);
 var
   inst: PRendererGraphicInstance;
 begin
@@ -1439,7 +1465,7 @@ begin
   FMouseButtonKeep := MouseButton;
   FMouseIsDown := true;
   inst := GetObject(x, y);
-  if (inst <> nil) then
+  if Assigned(inst) then
   begin
     if (inst.Instance.Interactive) and FAutoSelect then
     begin
@@ -1460,14 +1486,17 @@ begin
     FEventMouseDown.Send(nil, X, Y, 0, [MouseButton], Shift);
   end;
   FMouseLastPos := vec2(X, Y);
+  CheckUnderMouseInstance(inst, X, Y, Shift, [MouseButton]);
 end;
 
 procedure TBlackSharkRenderer.MouseEnter(X, Y: int32);
 begin
+  FMouseIsOver := true;
 end;
 
 procedure TBlackSharkRenderer.MouseLeave;
 begin
+  FMouseIsOver := false;
   if Assigned(FCurrentUnderMouseInstance) then
   begin
     FCurrentUnderMouseInstance.Instance.Owner.DoMouseLeave(MouseData(FCurrentUnderMouseInstance, FMouseNowPos.X, FMouseNowPos.Y, 0, [], ShiftState));
@@ -1475,7 +1504,7 @@ begin
   end;
 end;
 
-procedure TBlackSharkRenderer.MouseUp(MouseButton: TBSMouseButton; X, Y: int32; Shift: TShiftState);
+procedure TBlackSharkRenderer.MouseUp(MouseButton: TBSMouseButton; X, Y: int32; Shift: TBSShiftState);
 begin
   ShiftState := Shift;
   FMouseIsDown := false;
@@ -1500,18 +1529,18 @@ begin
   end;
 end;
 
-procedure TBlackSharkRenderer.MouseWheel(WheelDelta: int32; X, Y: int32; {%H-}Shift: TShiftState);
+procedure TBlackSharkRenderer.MouseWheel(WheelDelta: int32; X, Y: int32; Shift: TBSShiftState);
 begin
   EventMouseWeel.Send(nil, X, Y, WheelDelta, [], Shift);
   DoMouseMove(X, Y, Shift, false);
 end;
 
-procedure TBlackSharkRenderer.MouseMove(X, Y: int32; Shift: TShiftState);
+procedure TBlackSharkRenderer.MouseMove(X, Y: int32; Shift: TBSShiftState);
 begin
   DoMouseMove(X, Y, Shift, true);
 end;
 
-procedure TBlackSharkRenderer.KeyPress(var Key: WideChar; Shift: TShiftState);
+procedure TBlackSharkRenderer.KeyPress(var Key: WideChar; Shift: TBSShiftState);
 var
   item, next: TListRendererInstances.PListItem;
 begin
@@ -1530,7 +1559,7 @@ begin
   EventKeyPress.Send(nil, word(Key), Shift);
 end;
 
-procedure TBlackSharkRenderer.KeyDown(var Key: Word; Shift: TShiftState);
+procedure TBlackSharkRenderer.KeyDown(var Key: Word; Shift: TBSShiftState);
 var
   item, next: TListRendererInstances.PListItem;
 begin
@@ -1553,7 +1582,7 @@ begin
   EventKeyDown.Send(nil, Key, Shift);
 end;
 
-procedure TBlackSharkRenderer.KeyUp(var Key: Word; Shift: TShiftState);
+procedure TBlackSharkRenderer.KeyUp(var Key: Word; Shift: TBSShiftState);
 var
   item, next: TListRendererInstances.PListItem;
 begin
@@ -1648,7 +1677,7 @@ begin
   Result := HitTestInstance(Ray, Instance, Distance);
 end;
 
-procedure TBlackSharkRenderer.EventObjectIncStencilUse;
+procedure TBlackSharkRenderer.EventObjectIncStencilUse(const AData: BData);
 var
   main_pass: PRenderPass;
 begin
@@ -1656,7 +1685,7 @@ begin
     exit;
   if (FCountStencilUse = 0) then
   begin
-    main_pass := FRenderers.Items[0];
+    main_pass := FPasses.Items[0];
     if (main_pass.FrameBuffer <> nil) and not (atStencil in main_pass.FrameBuffer.Attachments) then
       main_pass.FrameBuffer.Attachments := main_pass.FrameBuffer.Attachments + [atStencil];
   end;
@@ -1685,7 +1714,7 @@ begin                             //Frustum.DISTANCE_2D_SCREEN
   end else }
     mvp := Instance.ProdStackModelMatrix * FFrustum.ViewMatrix;
   // mvp := FFrustum.FTranslateMatrix * FFrustum.FRotateMatrix * Result.ProdStackModelMatrix;
-  MatrixInvert(mvp);
+  {%H-}MatrixInvert(mvp);
   //
   mvp.V[15] := 1.0;
   FLastRayTrans.Position := mvp * Ray.Position;
@@ -1781,6 +1810,9 @@ var
   it: TGraphicObject;
   bucket: THashTable<Pointer, TGraphicObject>.TBucket;
 begin
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBlackSharkRenderer.Restore', '');
+  {$endif}
   BSShaderManager.Restore;
   BSTextureManager.Restore;
   if FScene.GraphicObjects.GetFirst(bucket) then
@@ -1795,6 +1827,7 @@ begin
         break;
     end;
   end;
+  RendererInit;
 end;
 
 {
@@ -1819,6 +1852,11 @@ procedure TBlackSharkRenderer.SetSelectedInstance(Instance: PRendererGraphicInst
 begin
   if Assigned(Instance^.Selected) = AValue then
     exit;
+
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBlackSharkRenderer.SetSelectedInstance: ' + BoolToStr(AValue, true), 'Max.x: ' + FloatToStr(Instance.Instance.Owner.Mesh.FBoundingBox.Max.x) + '; Max.y: ' + FloatToStr(Instance.Instance.Owner.Mesh.FBoundingBox.Max.x));
+  {$endif}
+
   if AValue then
     Instance.Selected := FSelectedInstances.PushToEnd(Instance)
   else
@@ -1845,6 +1883,10 @@ begin
       raise Exception.Create('SelectResolve disabled!');
     Scene.InstanceSetSelected(Instance.Instance, true);
   end;
+
+  {$ifdef DEBUG_BS}
+  //BSWriteMsg('TBlackSharkRenderer.BeginDragInstance', 'Max.x: ' + FloatToStr(Instance.Instance.Owner.Mesh.FBoundingBox.Max.x) + '; Max.y: ' + FloatToStr(Instance.Instance.Owner.Mesh.FBoundingBox.Max.x));
+  {$endif}
 
   new(Instance^.Drag);
   Instance^.Drag^.Instance := Instance;
@@ -1884,6 +1926,11 @@ var
 begin
   if not Assigned(Instance.Drag) then
     exit;
+
+  {$ifdef DEBUG_BS}
+  //BSWriteMsg('TBlackSharkRenderer.DropDragInstance', 'Max.x: ' + FloatToStr(Instance.Instance.Owner.Mesh.FBoundingBox.Max.x) + '; Max.y: ' + FloatToStr(Instance.Instance.Owner.Mesh.FBoundingBox.Max.x));
+  {$endif}
+
   FDragInstances.Remove(Instance^.Drag^._list_item);
   drag_parent := Instance^.Drag.ParentDrag;
   dispose(Instance^.Drag);
@@ -1891,7 +1938,7 @@ begin
   if Instance.Instance.Owner.DoDrop(Instance.Instance) and (not drag_parent) then
   begin
     go := Instance.Instance.Owner.Parent;
-    while go <> nil do
+    while Assigned(go) do
     begin
       if go.DoDropChildren(Instance.Instance) then
         break;
@@ -2018,7 +2065,7 @@ begin
   if not Result then
   begin
     Result :=
-      LinesIntersectExclude(pos_min, vec2(pos_max.x, pos_min.y), a, b) or
+      {%H-}LinesIntersectExclude(pos_min{%H-}, vec2({%H-}pos_max.x, {%H-}pos_min.y), a, b) or
       LinesIntersectExclude(pos_min, vec2(pos_max.x, pos_min.y), b, c) or
       LinesIntersectExclude(pos_min, vec2(pos_max.x, pos_min.y), c, d) or
       LinesIntersectExclude(pos_min, vec2(pos_max.x, pos_min.y), d, a) or
@@ -2084,7 +2131,7 @@ begin
       GL_TRIANGLE_STRIP:
       while k < Indexes.Count do
       begin
-        tri.A := tri.B;
+        tri.A := {%H-}tri.B;
         tri.B := tri.C;
         tri.C := ScenePositionToScreenf(Instance.ProdStackModelMatrix * Instance.Owner.Mesh.ReadPoint(Indexes.Items[k]));
         { the triangle of point C inside the ScreenRect? }
@@ -2236,6 +2283,10 @@ begin
   if not Assigned(Instance^._VisibleNode) then
     Instance^._VisibleNode := FVisibleGI.PushToEnd(Instance);
 
+  { doesn't draw a transparent object }
+  if (Instance.Instance.Owner.Opacity = 0) then
+    exit;
+
   BSShaderManager.UseShader(Instance.Instance.Owner.Shader);
   if LastDrawGI <> Instance.Instance.Owner then
   begin
@@ -2322,7 +2373,7 @@ begin
   {$endif}
 end;
 
-procedure TBlackSharkRenderer.DrawAnyPass(Pass: PRenderPass);
+procedure TBlackSharkRenderer.DrawAnyPass(APass: PRenderPass);
 begin
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -2332,39 +2383,37 @@ begin
     StensilTestOn := false;
   end;
 
-  if Pass^.FrameBuffer = nil then
+  glViewport(APass.Left, APass.Top, APass.Width, APass.Height);
+
+  if Assigned(APass.NextPass) then
   begin
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, FWindowWidth, FWindowHeight);
-    Pass^.Renderer(Pass);
+    // draw to FBO next pass
+    APass.NextPass.FrameBuffer.Bind;
   end else
   begin
-    // out from texture to screen
-    Pass^.FrameBuffer.Bind;
-    Pass^.Renderer(Pass);
-    // bind texture for next render pass
-    if (Pass^.FrameBuffer.Texture > 0) then
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    if Assigned(APass.FrameBuffer) and (APass.FrameBuffer.Texture > 0) then
     begin
+      // for an out from texture to screen
       glActiveTexture(GL_TEXTURE0);
-      glBindTexture(GL_TEXTURE_2D, Pass^.FrameBuffer.Texture);
+      glBindTexture(GL_TEXTURE_2D, APass.FrameBuffer.Texture);
     end;
   end;
+
+  APass^.Renderer(APass);
 end;
 
-procedure TBlackSharkRenderer.DrawScene(Pass: PRenderPass);
+procedure TBlackSharkRenderer.DrawScene(APass: PRenderPass);
 begin
-  //glEnable(GL_BLEND);
-  //glBlendFunc(GL_ONE, GL_ONE);
   glClearColor(FColor.r, FColor.g, FColor.b, 0.0);
-  //glClearColor(0.0, 0.0, 0.0, 0.0);
+
   if FCountStencilUse > 0 then
     glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT or GL_STENCIL_BUFFER_BIT)
   else
     glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
+
   DrawAllInstances;
 end;
-
-
 
 (*procedure TBlackSharkRenderer.DrawToColorBufferDo;
 {var
@@ -2447,7 +2496,7 @@ begin
   {$endif}
 end;
 
-procedure TBlackSharkRenderer.DrawQUAD(Pass: PRenderPass);
+procedure TBlackSharkRenderer.DrawQUAD(APass: PRenderPass);
 var
   bm: TBlendMode;
 begin
@@ -2461,12 +2510,15 @@ begin
   glDisable(GL_BLEND);
   glDisable( GL_STENCIL_TEST );
   StensilTestOn := false;
+
   //glClearColor(FColor.r, FColor.g, FColor.b, 0.0);
   //glClearColor(0.0, 0.0, 0.0, 0.0);
   glClear(GL_COLOR_BUFFER_BIT);
-  BSShaderManager.UseShader(Pass^.Shader);
+
+  BSShaderManager.UseShader(APass.Shader);
+
   glVertexAttribPointer(
-    TBlackSharkQUADShader(Pass^.Shader).Position^.Location,     // attribute. No particular reason for 1, but must match the layout in the shader.
+    TBlackSharkQUADShader(APass.Shader).Position^.Location,     // attribute. No particular reason for 1, but must match the layout in the shader.
     3,                                    // size
     GL_FLOAT,                             // type
     GLboolean(GL_FALSE),                  // normalized?
@@ -2478,67 +2530,69 @@ begin
   if bm <> TBlendMode.bmNone then
     SetBlendMode(bm);
   {$ifdef DEBUG_BS}
-  CheckErrorGL('TBlackSharkRenderer.DrawQUAD', TTypeCheckError.tcNone, -1);
+  //CheckErrorGL('TBlackSharkRenderer.DrawQUAD', TTypeCheckError.tcNone, -1);
   {$endif}
 end;
 
-procedure TBlackSharkRenderer.DrawPassFXAA(Pass: PRenderPass);
-var
-  bm: TBlendMode;
-begin
-  bm := FBlendMode;
-  SetBlendMode(TBlendMode.bmNone);
-  glDisable(GL_DEPTH_TEST);
-  DepthTestOn := false;
-  //glClear(GL_COLOR_BUFFER_BIT);
-  Pass^.Shader.UseProgram;
-  glUniform2f(TBlackSharkSmoothFXAA(Pass^.Shader).Resolution^.Location, FWindowWidth, FWindowHeight);
-  glUniform2f(TBlackSharkSmoothFXAA(Pass^.Shader).ResolutionInv^.Location, 1/FWindowWidth, 1/FWindowHeight);
-  glVertexAttribPointer(
-    TBlackSharkSmoothFXAA(Pass^.Shader).Position^.Location,     // attribute. No particular reason for 1, but must match the layout in the shader.
-    3,                                    // size
-    GL_FLOAT,                             // type
-    GLboolean(GL_FALSE),                  // normalized?
-    sizeof(TVec3f), // stride
-    @QUAD_VERTEXES[0]                  // array buffer offset
-  );
-  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-  glDisableVertexAttribArray(0);
-  SetBlendMode(bm);
-  {$ifdef DEBUG_BS}
-  CheckErrorGL('TBlackSharkRenderer.DrawPassFXAA', TTypeCheckError.tcNone, -1);
-  {$endif}
-end;
-
-procedure TBlackSharkRenderer.DrawPassSSAA(Pass: PRenderPass);
-var
-  sx: BSFloat;
-  bm: TBlendMode;
-begin
-  bm := FBlendMode;
-  SetBlendMode(TBlendMode.bmNone);
-  glDisable(GL_DEPTH_TEST);
-  DepthTestOn := false;
-  //glClear(GL_COLOR_BUFFER_BIT);
-  sx := BSConfig.VoxelSize/3;
-  Pass^.Shader.UseProgram;
-  glUniform1fv(TBlackSharkSmoothByKernelMSAA(Pass^.Shader).Kernel^.Location, 9, @SAMPLING_KERNELS_SET[FKernelSSAA]);
-  glUniform1fv(TBlackSharkSmoothByKernelMSAA(Pass^.Shader).RatioResolutions^.Location, 1, @sx);
-  glVertexAttribPointer(
-    TBlackSharkSmoothByKernelMSAA(Pass^.Shader).Position^.Location,     // attribute. No particular reason for 1, but must match the layout in the shader.
-    3,                                    // size
-    GL_FLOAT,                             // type
-    GLboolean(GL_FALSE),                  // normalized?
-    sizeof(TVec3f),         // stride
-    @QUAD_VERTEXES[0]                  // array buffer offset
-  );
-  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-  glDisableVertexAttribArray(0);
-  SetBlendMode(bm);
-  {$ifdef DEBUG_BS}
-  CheckErrorGL('TBlackSharkRenderer.DrawPassSSAA', TTypeCheckError.tcNone, -1);
-  {$endif}
-end;
+//procedure TBlackSharkRenderer.DrawPassFXAA(Pass: PRenderPass;
+//  AClearBuffers: boolean);
+//var
+//  bm: TBlendMode;
+//begin
+//  bm := FBlendMode;
+//  SetBlendMode(TBlendMode.bmNone);
+//  glDisable(GL_DEPTH_TEST);
+//  DepthTestOn := false;
+//  //glClear(GL_COLOR_BUFFER_BIT);
+//  Pass^.Shader.UseProgram;
+//  glUniform2f(TBlackSharkSmoothFXAA(Pass^.Shader).Resolution^.Location, FWindowWidth, FWindowHeight);
+//  glUniform2f(TBlackSharkSmoothFXAA(Pass^.Shader).ResolutionInv^.Location, 1/FWindowWidth, 1/FWindowHeight);
+//  glVertexAttribPointer(
+//    TBlackSharkSmoothFXAA(Pass^.Shader).Position^.Location,     // attribute. No particular reason for 1, but must match the layout in the shader.
+//    3,                                    // size
+//    GL_FLOAT,                             // type
+//    GLboolean(GL_FALSE),                  // normalized?
+//    sizeof(TVec3f), // stride
+//    @QUAD_VERTEXES[0]                  // array buffer offset
+//  );
+//  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+//  glDisableVertexAttribArray(0);
+//  SetBlendMode(bm);
+//  {$ifdef DEBUG_BS}
+//  CheckErrorGL('TBlackSharkRenderer.DrawPassFXAA', TTypeCheckError.tcNone, -1);
+//  {$endif}
+//end;
+//
+//procedure TBlackSharkRenderer.DrawPassSSAA(Pass: PRenderPass;
+//  AClearBuffers: boolean);
+//var
+//  sx: BSFloat;
+//  bm: TBlendMode;
+//begin
+//  bm := FBlendMode;
+//  SetBlendMode(TBlendMode.bmNone);
+//  glDisable(GL_DEPTH_TEST);
+//  DepthTestOn := false;
+//  //glClear(GL_COLOR_BUFFER_BIT);
+//  sx := BSConfig.VoxelSize/3;
+//  Pass^.Shader.UseProgram;
+//  glUniform1fv(TBlackSharkSmoothByKernelMSAA(Pass^.Shader).Kernel^.Location, 9, @SAMPLING_KERNELS_SET[FKernelSSAA]);
+//  glUniform1fv(TBlackSharkSmoothByKernelMSAA(Pass^.Shader).RatioResolutions^.Location, 1, @sx);
+//  glVertexAttribPointer(
+//    TBlackSharkSmoothByKernelMSAA(Pass^.Shader).Position^.Location,     // attribute. No particular reason for 1, but must match the layout in the shader.
+//    3,                                    // size
+//    GL_FLOAT,                             // type
+//    GLboolean(GL_FALSE),                  // normalized?
+//    sizeof(TVec3f),         // stride
+//    @QUAD_VERTEXES[0]                  // array buffer offset
+//  );
+//  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+//  glDisableVertexAttribArray(0);
+//  SetBlendMode(bm);
+//  {$ifdef DEBUG_BS}
+//  CheckErrorGL('TBlackSharkRenderer.DrawPassSSAA', TTypeCheckError.tcNone, -1);
+//  {$endif}
+//end;
 
 procedure TBlackSharkRenderer.OnChangeFrustum;
 var
@@ -2654,32 +2708,8 @@ begin
 end;
 
 procedure TBlackSharkRenderer.Screenshot(const Rect: TRectBSi; const Buffer: Pointer);
-//var
-//  bm: TBlendMode;
-//  cl: TColor4f;
 begin
-  //BSShaderManager.UseShader(nil);
-  //BSTextureManager.UseTexture(nil);
-  //bm := FBlendMode;
-  //cl := FColor;
-  { reset background color }
-  //FColor := vec4(0.0, 0.0, 0.0, 0.0);
-  { select blending mode for copy without change original color and alpha showed
-    textures }
-  //BlendMode := bmAddAndBlend;
-  { add renderer if do't exists rendering to texture }
-  //if FRenderers.Count = 1 then
-  begin
-    //if ScreenShortRenderer = nil then
-    //  ScreenShortRenderer := AddRenderer(BSShaderManager.Load('QUAD', TBlackSharkQUADShader),
-    //  	DrawQUAD, FWindowWidth, FWindowHeight, nil, true, [atColor], GL_RGBA); //, [atColor, atDepth]
-    //RenderBefore(ScreenShortRenderer);
-    //Render(FRenderers.Items[0]);
     glReadPixels(Rect.X, Rect.Y, Rect.Width, Rect.Height, GL_RGBA, GL_UNSIGNED_BYTE, Buffer);
-    //DelRenderer(ScreenShortRenderer);
-  end;
-  //FColor := cl;
-  //BlendMode := bm;
 end;
 
 procedure TBlackSharkRenderer.Screenshot(const X, Y, Width, Height: int32; const Buffer: Pointer);

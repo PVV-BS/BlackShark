@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -103,12 +103,12 @@ begin
   begin
     getter_c := GetColorData;
     Result := FGrid.CreateColumn(TMethod(getter_c), TBColumnPresentorColor, '');
-    Result.Width := Height - 1.0;
+    Result.Width := Height - Frame.WidthLine;
   end else
   begin
     getter_s := GetStringData;
     Result := FGrid.CreateColumn(TMethod(getter_s), TBColumnPresentorString, '');
-    Result.Width := Width - Height - 1.0;
+    Result.Width := Width - Height - Frame.WidthLine;
     TBColumnPresentorString(Result).ColorText := ColorText;
   end;
 end;
@@ -230,7 +230,7 @@ end;
 
 procedure TBCustomColorBox.Resize(AWidth, AHeight: BSFloat);
 begin
-  LeftMargin := AHeight + 4;
+  LeftMargin := round(AHeight + 4*ToHiDpiScale);
   inherited;
 end;
 

@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -39,7 +39,6 @@ uses
   , bs.canvas
   , bs.scene
   , bs.geometry
-  , bs.animation
   , bs.strings
   , bs.gui.base
   , bs.gui.scrollbox
@@ -249,14 +248,14 @@ begin
   FShowGrid := true;
   FShowBottomLine := true;
   FShowColumnSplitters := true;
-  FHeaderHeight := round(CELL_HEIGHT_DEFAULT * 1.2);
+  FHeaderHeight := round(CELL_HEIGHT_DEFAULT * 1.2 * ToHiDpiScale);
   FRealHeaderHeight := round(Canvas.Scale*FHeaderHeight);
   FColorGrid1 := $1E1414; //ColorFloatToByte(BS_CL_MSVS_EDITOR*1.5).value; //ColorFloatToByte(ClipObject.Color).value;
   FColorGrid2 := $322323; //ColorFloatToByte(BS_CL_MSVS_EDITOR*1.8).value; //ColorFloatToByte(ClipObject.Color * 0.7).value;
   Color := $322323;
   //Color := clSkyBlue;// ColorFloatToByte(BS_CL_SKY_BLUE) clNavy;
   //FRowHeightPixels := CELL_HEIGHT_DEFAULT;
-  FRowHeight := CELL_HEIGHT_DEFAULT;
+  FRowHeight := round(CELL_HEIGHT_DEFAULT*ToHiDpiScale);
   FRealRowHeight := round(FRowHeight*Canvas.Scale);
   //FVisibleItems := TListItems.Create;
   //FSelected := TListItems.Create;
@@ -264,7 +263,7 @@ begin
   { list presentor }
   FItemsPresentor := TListVec<IColumnPresentor>.Create(@PtrCmp);
   if OwnCanvas then
-    FCanvas.Font.SizeInPixels := 8;
+    FCanvas.Font.SizeInPixels := round(8*ToHiDpiScale);
   Selector := TAreaMarker.Create(TBlackSharkRTree.Create);
   //ScrollBarsPaddingTop := FHeaderHeight;
   ScrollBarVert.Color := TGuiColors.SkyBlue;
@@ -273,7 +272,7 @@ begin
   SpaceTree.OnShowUserData := OnShowColumn;
   SpaceTree.OnHideUserData := OnHideColumn;
   SpaceTree.OnUpdatePositionUserData := OnUpdateColumn;
-  ScrollBarVert.Step := FRealRowHeight;
+  ScrollBarVert.Step := round(FRealRowHeight);
   if FShowGrid then
     CreateGrid;
   //Selector.SpaceTree.
@@ -297,7 +296,7 @@ begin
   Result.Header.Visible := FShowHeader;
   Result.Header.Caption := AHeaderCaption;
   Result.CellHeight := FRowHeight;
-  Result.Header.Size := vec2(COLUMN_WIDTH_DEFAULT, FRealHeaderHeight);
+  Result.Header.Size := vec2(COLUMN_WIDTH_DEFAULT*ToHiDpiScale, FRealHeaderHeight);
   Result.OffsetX := w - ScrollBarHor.Position;
   Result.Rect := RectBSd(w, 0.0, Result.Header.Size.Width, ScrolledArea.y);
   Result.ShowSplitter := FShowColumnSplitters;
@@ -416,7 +415,7 @@ var
   node: TBiDiListNodes.PListItem;
   c: BSFloat;
 begin
-  if (FItemsPresentor.Count = 0) or (FCount = 0) or (SpaceTree.VisibleData.Count = 0) then
+  if (FItemsPresentor.Count = 0) then
   begin
     if Assigned(BottomLine) then
       FreeAndNil(BottomLine);
@@ -582,11 +581,12 @@ begin
     BottomLine.BanScalableMode := true;
     BottomLine.Color := IColumnPresentor(SpaceTree.VisibleData.ItemListFirst.Item.BB.TagPtr).Splitter.Color;
     BottomLine.Layer2d := COLUMN_LAYER;
-    BottomLine.WidthLine := 1;
+    BottomLine.WidthLine := 1*ToHiDpiScale;
   end;
 
   if BottomLine.Width <> FVisibleColumnsWidth then
   begin
+    BottomLine.A := vec2(0.0, 0.0);
     BottomLine.B := vec2(FVisibleColumnsWidth, 0.0);
     BottomLine.Build;
   end;
@@ -841,13 +841,13 @@ begin
   FRowHeight := Value;
   FRealRowHeight := round(Value*Canvas.Scale);
   FLines.LineWidth := FRealRowHeight;
-  ScrollBarVert.Step := FRealRowHeight;
+  ScrollBarVert.Step := round(FRealRowHeight);
   UpdateSizeScrolledArea;
   for i := 0 to FItemsPresentor.Count - 1 do
   begin
     presentor := FItemsPresentor.Items[i];
     presentor.CellHeight := FRowHeight;
-    presentor.Rect := RectBS(presentor.Rect.X, 0.0, presentor.Rect.Width, ScrolledArea.Height);
+    presentor.Rect := RectBS(presentor.Rect.X, 0.0, presentor.Rect.Width, ScrolledArea.y);
   end;
   //SetViewPort(round(ScrollBarVert.Position));
 end;
@@ -947,7 +947,7 @@ var
   c: BSFloat;
 begin
 
-  if round(FRectViewport.Y) and 1 > 0 then
+  if (round(FRectViewport.Y) and 1 > 0) then
     c := FRealRowHeight
   else
     c := 0;

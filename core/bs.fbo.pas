@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -35,7 +35,11 @@ unit bs.fbo;
 interface
 
 uses
+  {$ifdef ultibo}
+    gles20
+  {$else}
     bs.gl.es
+  {$endif}
   ;
 
 type
@@ -66,9 +70,6 @@ type
     destructor Destroy; override;
     procedure Bind;
     procedure Unbind;
-    function IncUsers: int32;
-    { if count users stated to zero then class will released }
-    function DecUsers: int32;
     property Texture: GLint read FTexture;
     property Width: int32 read FWidth;
     property Height: int32 read FHeight;
@@ -83,6 +84,9 @@ implementation
   uses
       bs.utils
     , SysUtils
+    {$ifdef DEBUG_BS}
+    , bs.log
+    {$endif}
     ;
 
 { TBlackSharkFBO }
@@ -116,9 +120,12 @@ begin
 
 end;
 
-constructor TBlackSharkFBO.Create(AWidth, AHeight: int32;
-  AAttachments: TAttachmentsFBO; AFormat: int32);
+constructor TBlackSharkFBO.Create(AWidth, AHeight: int32; AAttachments: TAttachmentsFBO; AFormat: int32);
 begin
+  {$ifdef DEBUG_BS}
+  CheckErrorGL('TBlackSharkFBO.Create', TTypeCheckError.tcFrameBuffer,  ID);
+  BSWriteMsg('TBlackSharkFBO.Create', '');
+  {$endif}
   FTexture := -1;
   RenderBufferID := -1;
   FID := -1;
@@ -127,30 +134,13 @@ begin
   ReCreate(AWidth, AHeight, AAttachments, AFormat);
 end;
 
-function TBlackSharkFBO.DecUsers: int32;
-begin
-  dec(FUsers);
-  if FUsers < 0 then
-    FUsers := 0;
-  Result := FUsers;
-  if FUsers = 0 then
-    Free;
-end;
-
 destructor TBlackSharkFBO.Destroy;
 begin
   Clear;
   inherited;
 end;
 
-function TBlackSharkFBO.IncUsers: int32;
-begin
-  inc(FUsers);
-  Result := FUsers;
-end;
-
-procedure TBlackSharkFBO.ReCreate(AWidth, AHeight: int32;
-  AAttachments: TAttachmentsFBO; AFormat: int32);
+procedure TBlackSharkFBO.ReCreate(AWidth, AHeight: int32; AAttachments: TAttachmentsFBO; AFormat: int32);
 var
   err: int32;
 begin
@@ -158,12 +148,6 @@ begin
   FAttachments := AAttachments; // [atColor];
   FWidth := AWidth;
   FHeight := AHeight;
-  {FWidth := trunc(power(trunc(sqrt(AWidth)), 2.0));
-  if FWidth < AWidth then
-    FWidth := trunc(power(trunc(sqrt(AWidth)) + 1, 2.0));
-  FHeight := trunc(power(trunc(sqrt(AHeight)), 2.0));
-  if FHeight < AHeight then
-    FHeight := trunc(power(trunc(sqrt(AHeight)) + 1, 2.0));}
   FFormat := AFormat;
   // create a framebuffer
   glGenFramebuffers(1, @FID);
@@ -252,12 +236,11 @@ end;
 procedure TBlackSharkFBO.Bind;
 begin
   glBindFramebuffer(GL_FRAMEBUFFER, ID);
-  glViewport(0, 0, FWidth, FHeight);
 end;
 
 procedure TBlackSharkFBO.Unbind;
 begin
-  glBindFramebuffer (GL_FRAMEBUFFER, 0);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 end;
 
 end.

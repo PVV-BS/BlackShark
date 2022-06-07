@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -35,7 +35,11 @@ uses
   , bs.basetypes
   , bs.mesh
   , bs.collections
+  {$ifdef ultibo}
+  , gles20
+  {$else}
   , bs.gl.es
+  {$endif}
   ;
 
 type
@@ -314,13 +318,13 @@ begin
 
       BS_SinCos(abs(a + a_befor)*0.5 - 90, s, c);
 
-      edg := vec3(d*c, d*s, 0.0);
+      edg := vec3( d*c, d*s, 0.0);
 
       last_edg_path := edg_path;
 
       p1 := Points^[i] + edg;
       p2 := Points^[i] - edg;
- 
+
 
       Shape.AddVertex(p1);
       Shape.AddVertex(p2);

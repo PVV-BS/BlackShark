@@ -87,7 +87,11 @@ implementation
 uses
     SysUtils
   , bs.shader
+  {$ifdef ultibo}
+  , gles20
+  {$else}
   , bs.gl.es
+  {$endif}
   , bs.config
   , bs.mesh.primitives
   , bs.math

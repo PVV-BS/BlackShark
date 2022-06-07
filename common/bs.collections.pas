@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -516,10 +516,10 @@ public
   property FixedCapacity: boolean read FFixedCapacity write FFixedCapacity;
   { a pointer-tag for external use }
   property TagPtr: Pointer read FTagPtr write FTagPtr;
-  { for external use; you can to set TagProcedure for processing through incoming
+  { for external use; you can set TagProcedure for processing through incoming
     items }
   property TagProcedure: TProcessEventNotify read FTagProcedure write FTagProcedure;
-  { for external use; the event for use only in a writing thread context }
+  { for external use; the event is invoked only in a writing thread context }
   property OnWrite: TQueueEventNotify read FOnWrite write FOnWrite;
   { for external use; initialazed in constructor }
   property SourceThread: Pointer read FSourceThread write FSourceThread;
@@ -639,7 +639,7 @@ end;
 {
   TAhoCorasickFSA<T> is the Finite-state automaton (machine) built by the
   Aho–Corasick algorithm: https://en.wikipedia.org/wiki/Aho–Corasick_algorithm.
-  for a right work need calculate all suffexes of words, therefor need invoke
+  For a right work need calculate all suffexes of words, therefor need invoke
   BeginUpdate befor adding, and EndUpdate after adding all words; the container
   suits for saving static data.
   You also can use the container for safe pairs word(the same key-value), and
@@ -782,6 +782,7 @@ public
   function Exists(const Key: K): boolean;
   function Find(const Key: K; out Value: V): boolean; overload;
   function TryAdd(const Key: K; const Value: V): boolean; inline;
+  procedure TryAddOrReplace(const Key: K; const Value: V); inline;
   procedure UpdateValue(const Key: K; const Value: V);
   function GetFirst(out Bucket: TBucket): boolean;
   function GetNext(out Bucket: TBucket): boolean;
@@ -2611,7 +2612,8 @@ begin
   Result := false;
   if LenKey = 0 then
     exit;
-  k.Data := SysGetMem(LenKey);
+
+  GetMem(k.Data, LenKey);
   k.LenData := LenKey;
   if LenKey > FDepth then
     FDepth := LenKey;
@@ -2914,7 +2916,7 @@ procedure TBinTree<V>.DoDeleteNode(Node: TBinTreeNode);
 begin
   if (Node.Key.LenData > 0) and Assigned(Node.Key.Data) then
   begin
-    SysFreeMem(Node.Key.Data);
+    FreeMem(Node.Key.Data, Node.Key.LenData);
     Node.Key.Data := nil;
     Node.Key.LenData := 0;
   end;
@@ -3163,7 +3165,7 @@ end;
 function TListDual<T>.Remove(var Item: PListItem; FreeItem: boolean): PListItem;
 begin
   if (Item = nil) or (FCount = 0) then
-    exit;
+    exit(nil);
   //if Item.Owner <> self then
   //  raise Exception.Create('Do not remove item from other list!');
   dec(FCount);
@@ -3999,6 +4001,7 @@ begin
       break;
   end;
   Data := FDefault;
+  Result := false;
 end;
 
 function TAhoCorasickFSA<T>.WordExists(AWord: pByte; LenWord: int32): boolean;
@@ -4083,9 +4086,15 @@ begin
   if index < 0 then
     DoSetValue(Key, Value)
   else
-    DoSetValue(index, hash, Key, Value);
+    DoSetValue(index, hash{%H-}, Key, Value);
 
   Result := true;
+end;
+
+procedure THashTable<K, V>.TryAddOrReplace(const Key: K; const Value: V);
+begin
+  if not TryAdd(Key, Value) then
+    UpdateValue(Key, Value);
 end;
 
 procedure THashTable<K, V>.UpdateValue(const Key: K; const Value: V);

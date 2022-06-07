@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -1078,13 +1078,13 @@ var
 begin
 
   if (Source.ChildrenCount = 0) then
-    exit;
+    exit(nil);
 
   Result := nil;
 
   // TODO: have not tested
   for i := 0 to Source.ChildrenCount - 1 do
-    begin
+  begin
     it := Source.Children[i];
     Result := nil;
 
@@ -1094,7 +1094,7 @@ begin
 
     Result.Left := Position.X + (it.Left - Source.Left);
     Result.Top := Position.Y + (it.Top - Source.Top);
-    end;
+  end;
 
 end;
 

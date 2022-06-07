@@ -1,4 +1,4 @@
-﻿{
+{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -194,6 +194,9 @@ type
   TVec2i64 = record
     x, y: int64;
     class operator Implicit (const v: TVec2i64): TVec2d; inline;
+    class operator Implicit (const v: TVec2i64): TVec2f; inline;
+    class operator Implicit (const v: TVec2f): TVec2i64; inline;
+    class operator Implicit (const v: TVec2d): TVec2i64; inline;
   end;
 
   { TVec2i }
@@ -501,7 +504,7 @@ type
 
   TGuiColor = uint32;
 
-  TVertexComponent = (vcCoordinate, vcColor, vcNormal, vcTexture1, vcTexture2, vcBones, vcWeights, vcFloat);
+  TVertexComponent = (vcCoordinate, vcColor, vcNormal, vcTexture1, vcTexture2, vcBones, vcWeights, vcIndex);
   TVertexComponents = set of TVertexComponent;
   TVertexKind = (vkP, vkPT, vkPTN);
 
@@ -1058,29 +1061,13 @@ const
   function Vertex(const Point: TVec3f; const UV: TVec2f): TVertexPT; overload; inline;
 
   { Translate color RGB to HLS: hue, lightness (intensity), saturation;
-    тон, яркость, насыщенность (контраст) }
+    ���, �������, ������������ (��������) }
   function RGBtoHLS(const RGB: TVec3f): TVec3f;
   { Translate color HLS to RGB }
   function HLStoRGB(const HLS: TVec3f): TVec3f;
 
   function FloatToInt64(AValue: BSFloat): int64; inline;
 
-
-type
-  TEnumChars = record
-  private
-    Data: string;
-    {$ifdef FPC}
-    ch_a: string;
-    u: WideString;
-    len_ch: int8;
-    {$endif}
-    ptr_str: PChar;
-    len_str: int32;
-  public
-    procedure BeginRead(const Text: string); inline;
-    function Next(out Ch: WideChar): boolean; inline;
-  end;
 
 const
   IDENTITY_MAT: TMatrix4f = (V: (
@@ -1115,9 +1102,6 @@ const
 implementation
 
 uses
-  {$ifdef FPC}
-    LazUTF8,
-  {$endif}
     Math
   , DateUtils
   ;
@@ -2192,7 +2176,7 @@ begin
   Result.w := Round(v.w * Precition) / Precition;
 end;
 
-// Cross product/векторное произведение
+// Cross product/��������� ������������
 function VecCross(const u, v: TVec3f): TVec3f;
 begin
   Result.x := u.y*v.z - u.z*v.y;
@@ -2221,7 +2205,7 @@ begin
   Result := u.x * v.x + u.y * v.y;
 end;
 
-// dot product/скалярное произведение
+// dot product/��������� ������������
 function VecDot(const u, v: TVec3f): BSFloat;
 begin
   Result := u.x * v.x + u.y * v.y + u.z * v.z;
@@ -2771,10 +2755,11 @@ begin
 
 	if (Count <= 0) or (S = D) or (s = nil) or (d = nil) then
   	exit;
+
   d_l := pPage8192(D);
   s_l := pPage8192(S);
 	for i := 0 to (Count div SizeOf(TPage8192)) - 1 do //
-  	begin  //копируем страницами по 8192
+  begin  //copy by 8192
     d_l^ := s_l^;
     inc(s_l);
     inc(d_l);
@@ -2782,21 +2767,22 @@ begin
 
   m := Count mod SizeOf(TPage8192);
 	for i := 0 to m div SizeOf(TPage1024) - 1 do //
-  	begin  //копируем остаток от 8192 по 1024
+  begin  //copy remainder from 8192 by 1024
     pPage1024(d_l)^ := pPage1024(s_l)^;
     inc(pPage1024(s_l));
     inc(pPage1024(d_l));
     end;
+  
   m2 := m mod SizeOf(TPage1024);
 	for i := 0 to m2 div SizeOf(NativeInt) - 1 do //
-  	begin //копируем остаток от 1024 по слову
+  begin //copy reamainder from 1024 by word
     PNativeInt(d_l)^ := PNativeInt(s_l)^;
     inc(PNativeInt(s_l));
     inc(PNativeInt(d_l));
     end;
 
 	for i := 0 to m2 mod SizeOf(NativeInt) - 1 do
-  	begin //копируем остаток от слова
+  begin //copy remainder from word
     pByte(d_l)^ := pByte(s_l)^;
     inc(pByte(s_l));
     inc(pByte(d_l));
@@ -5024,38 +5010,6 @@ begin
   SetToColor(FDefaultColor);
 end;
 
-{ TEnumChars }
-
-procedure TEnumChars.BeginRead(const Text: string);
-begin
-  Data := Text;
-  len_str := Length(Data);
-  if len_str = 0 then
-    exit;
-  ptr_str := @Data[1];
-end;
-
-function TEnumChars.Next(out Ch: WideChar): boolean;
-begin
-  if len_str <= 0 then
-    exit(false);
-  {$ifdef FPC}
-  //len_ch := UTF8CharacterLength(ptr_str);
-  len_ch := UTF8CodepointSize(ptr_str);
-  SetLength(ch_a, len_ch);
-  move(ptr_str^, ch_a[1], len_ch);
-  inc(ptr_str, len_ch);
-  dec(len_str, len_ch);
-  u := UTF8Decode(ch_a);
-  Ch := u[1];
-  {$else}
-  Ch := ptr_str^;
-  dec(len_str);
-  inc(ptr_str);
-  {$endif}
-  Result := true;
-end;
-
 { TOperatorsDateTime }
 
 class function TOperatorsDateTime.Add(const Value1,
@@ -5187,6 +5141,24 @@ class operator TVec2i64.Implicit(const v: TVec2i64): TVec2d;
 begin
   Result.x := v.x;
   Result.y := v.y;
+end;
+
+class operator TVec2i64.Implicit(const v: TVec2i64): TVec2f;
+begin
+  Result.x := v.x;
+  Result.y := v.y;
+end;
+
+class operator TVec2i64.Implicit (const v: TVec2f): TVec2i64;
+begin
+  Result.x := round(v.x);
+  Result.y := round(v.y);
+end;
+
+class operator TVec2i64.Implicit (const v: TVec2d): TVec2i64;
+begin
+  Result.x := round(v.x);
+  Result.y := round(v.y);
 end;
 
 { TRectBSd }

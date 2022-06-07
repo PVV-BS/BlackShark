@@ -75,7 +75,11 @@ type
 implementation
 
 uses
+  {$ifdef ultibo}
+    gles20
+  {$else}
     bs.gl.es
+  {$endif}
   , bs.thread
   , bs.texture
   ;

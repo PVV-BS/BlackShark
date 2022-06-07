@@ -1,4 +1,4 @@
-﻿{
+{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -35,7 +35,11 @@ uses
   , bs.scene
   , bs.mesh
   , bs.mesh.primitives
+  {$ifdef ultibo}
+  , gles20
+  {$else}
   , bs.gl.es
+  {$endif}
   , bs.shader
   , bs.texture
   , bs.font
@@ -122,12 +126,14 @@ type
 
   TColoredVertexes = class(TObjectVertexes)
   strict private
+    ColorUniform: PShaderParametr;
     procedure BeforeDrawSetData({%H-}Item: TGraphicObject);
   private
     FColor: TColor4f;
   protected
     procedure SetColor(const Value: TColor4f); override;
     function GetColor: TColor4f; override;
+    procedure SetShader(const AShader: TBlackSharkShader); override;
   public
     constructor Create(AOwner: TObject; AParent: TGraphicObject; AScene: TBScene); override;
   end;
@@ -283,6 +289,7 @@ type
     // draw double colored solid lines
     procedure Draw(AWidth: BSFloat; AHorizontal: boolean; ACount: int32);
     procedure Clear; override;
+    class function CreateMesh: TMesh; override;
     { Width drawing lines; it works only on desktop OpenGL, because OGL ES
       doesn't support with line > 1 }
     property LineWidth: BSFloat read FLineWidth write SetLineWidth;
@@ -297,8 +304,7 @@ type
     DeltaF: BSFloat;
     BlankWidth: BSFloat;
     SettedSize: boolean;
-    FText: PString;
-    //VectorText: boolean;
+    FText: bs.strings.PString;
     Building: boolean;
     OnChangeFontSbscr: IBEmptyEventObserver;
     FTxtProcessor: TTextProcessor;
@@ -328,7 +334,7 @@ type
     procedure SetDiscardBlanks(const Value: boolean);
     procedure SetTxtProcessor(const Value: TTextProcessor);
     function GetText: string;
-    procedure SetTextData(const Value: PString);
+    procedure SetTextData(const Value: bs.strings.PString);
     function GetTxtProcessor: TTextProcessor;
     procedure SetOffsetX(const Value: BSFloat);
     procedure SetOutToWidth(const Value: BSFloat);
@@ -348,7 +354,7 @@ type
     procedure BeginChangeProp;
     procedure EndChangeProp;
     property Text: string read GetText write SetText;
-    property TextData: PString read FText write SetTextData;
+    property TextData: bs.strings.PString read FText write SetTextData;
     { calculator properties of lines and required size of space }
     property TxtProcessor: TTextProcessor read GetTxtProcessor write SetTxtProcessor;
     { drawed a font; assigned only outside }
@@ -441,6 +447,10 @@ function AddQuadToShape(Mesh: TMesh; const Position: TVec3f; const SizeHalf: TVe
 implementation
 
 uses
+  {$ifdef DEBUG_BS}
+    SysUtils,
+    bs.log,
+  {$endif}
   {$ifndef fpc}
     System.Classes,
   {$endif}
@@ -517,32 +527,51 @@ end;
 
 procedure TObjectVertexes.ChangedMesh;
 begin
-  inherited;
+  inherited ChangedMesh;
+  if StaticObject then
+  begin
+    if Assigned(FMesh) then
+    begin
+      // create VBO for all vertex components
+      if (FMesh.CountVertex > 0) then
+      begin
+        CreateVBO(FVBO_Vertexes, GL_ARRAY_BUFFER, FMesh.VertexesData, FMesh.CountVertex * FMesh.SizeOfVertex);
+        {$ifdef DEBUG_BS}
+        //BSWriteMsg('TObjectVertexes.ChangedMesh after reload VBO_Vertexes "' + Caption +  '":', IntToStr(FVBO_Vertexes));
+        {$endif}
+      end;
+      // create VBO for indexes
+      if (FMesh.Indexes.Count > 0) then
+      begin
+        CreateVBO(FVBO_Indexes, GL_ELEMENT_ARRAY_BUFFER, FMesh.Indexes.ShiftData[0], FMesh.Indexes.Count * FMesh.Indexes.IndexSizeOf);
+        {$ifdef DEBUG_BS}
+        //BSWriteMsg('TObjectVertexes.ChangedMesh after reload VBO_Indexes "' + Caption +  '":', IntToStr(FVBO_Indexes));
+        {$endif}
+      end;
+      // Automticaly set visibility by depend at position Frustum
+      if UpdateCount <= 0 then
+        FScene.InstanceTransform(BaseInstance, true);
+    end;
+  end else
+  begin
   if VBO_Vertexes > 0 then
   begin
+      {$ifdef DEBUG_BS}
+      //BSWriteMsg('TObjectVertexes.BeforeChangedMesh before reload VBO_Vertexes "' + Caption +  '":', IntToStr(FVBO_Vertexes));
+      {$endif}
     glDeleteBuffers(1, @FVBO_Vertexes);
     FVBO_Vertexes := 0;
   end;
 
   if VBO_Indexes > 0 then
   begin
+      {$ifdef DEBUG_BS}
+      //BSWriteMsg('TObjectVertexes.BeforeChangedMesh before reload VBO_Indexes "' + Caption +  '":', IntToStr(FVBO_Indexes));
+      {$endif}
     glDeleteBuffers(1, @FVBO_Indexes);
     FVBO_Indexes := 0;
   end;
-
-  if Assigned(FMesh) then
-  begin
-    // create VBO for all vertex components
-    if (FMesh.CountVertex > 0) and StaticObject then
-      FVBO_Vertexes := CreateVBO(GL_ARRAY_BUFFER, FMesh.VertexesData, FMesh.CountVertex * FMesh.SizeOFVertex);
-    // create VBO for indexes
-    if (FMesh.Indexes.Count > 0) and StaticObject then
-      FVBO_Indexes := CreateVBO(GL_ELEMENT_ARRAY_BUFFER, FMesh.Indexes.ShiftData[0], FMesh.Indexes.Count * FMesh.Indexes.IndexSizeOf);
-    // Automticaly set visibility by depend at position Frustum
-    if UpdateCount <= 0 then
-      FScene.InstanceTransform(BaseInstance, true);
   end;
-
 end;
 
 procedure TObjectVertexes.Clear;
@@ -757,7 +786,20 @@ end;
 
 procedure TColoredVertexes.BeforeDrawSetData(Item: TGraphicObject);
 begin
-  glUniform4fv( TBlackSharkVectorToSingleColorShader(Shader).Color^.Location, 1, @FColor );
+  if Assigned(ColorUniform) then
+    glUniform4fv(ColorUniform^.Location, 1, @FColor);
+end;
+
+procedure TColoredVertexes.SetShader(const AShader: TBlackSharkShader);
+begin
+  inherited SetShader(AShader);
+  if Assigned(Shader) then
+  begin
+    ColorUniform := Shader.Uniform['Color'];
+  end else
+  begin
+    ColorUniform := nil;
+  end;
 end;
 
 constructor TColoredVertexes.Create(AOwner: TObject; AParent: TGraphicObject; AScene: TBScene);
@@ -1294,7 +1336,7 @@ end;
 
 procedure TGraphicObjectText.SetText(const AValue: string);
 begin
-  if FText = nil then
+  if not Assigned(FText) then
   begin
     OwnTextData := true;
     new(FText);
@@ -1310,7 +1352,7 @@ begin
   Build;
 end;
 
-procedure TGraphicObjectText.SetTextData(const Value: PString);
+procedure TGraphicObjectText.SetTextData(const Value: bs.strings.PString);
 begin
   if FText = Value then
     exit;
@@ -1685,8 +1727,13 @@ begin
   FLineWidthHalf := FLineWidth * 0.5;
   FLineColor2 := BS_CL_BLUE;
   FMesh.TypePrimitive := tpLines;
-  Shader := TBlackSharkVectorToDoubleColorShader(BSShaderManager.Load('DoubleColor', TBlackSharkVectorToDoubleColorShader));
+  Shader := BSShaderManager.Load('DoubleColor', TBlackSharkVectorToDoubleColorShader);
   AddBeforeDrawMethod(BeforeDrawMethod);
+end;
+
+class function TGraphicObjectBiColoredSolidLines.CreateMesh: TMesh;
+begin
+  Result := TMeshPI.Create;
 end;
 
 procedure TGraphicObjectBiColoredSolidLines.Draw(AWidth: BSFloat; AHorizontal: boolean; ACount: int32);
@@ -1717,14 +1764,16 @@ begin
   end;
 
   FCountLines := ACount;
-  for i := 0 to ACount - 1 do
+  for i := ACount - 1 downto 0 do
   begin
+    col_1 := IfThen(i and 1 > 0, 1.0, 0.0);
     if FLineWidth > 1.0 then
     begin
-      FMesh.AddVertex(vec3(v1.x + h_x, v1.y + h_y, v1.z));  // -4
-      FMesh.AddVertex(vec3(v1.x - h_x, v1.y - h_y, v1.z));  // -3
-      FMesh.AddVertex(vec3(v2.x + h_x, v2.y + h_y, v2.z));  // -2
-      FMesh.AddVertex(vec3(v2.x - h_x, v2.y - h_y, v2.z));  // -1
+
+      FMesh.AddVertex(vec4(v1.x + h_x, v1.y + h_y, 0.0, col_1));  // -4
+      FMesh.AddVertex(vec4(v1.x - h_x, v1.y - h_y, 0.0, col_1));  // -3
+      FMesh.AddVertex(vec4(v2.x + h_x, v2.y + h_y, 0.0, col_1));  // -2
+      FMesh.AddVertex(vec4(v2.x - h_x, v2.y - h_y, 0.0, col_1));  // -1
 
       FMesh.Indexes.Add(FMesh.CountVertex - 4);
       FMesh.Indexes.Add(FMesh.CountVertex - 3);
@@ -1732,16 +1781,18 @@ begin
       FMesh.Indexes.Add(FMesh.CountVertex - 2);
       FMesh.Indexes.Add(FMesh.CountVertex - 3);
       FMesh.Indexes.Add(FMesh.CountVertex - 1);
+
     end else
     begin
+
       FMesh.Indexes.Add(FMesh.CountVertex);
-      FMesh.AddVertex(v1);
+      FMesh.AddVertex(vec4(v1, col_1));
       FMesh.Indexes.Add(FMesh.CountVertex);
-      FMesh.AddVertex(v2);
+      FMesh.AddVertex(vec4(v2, col_1));
+
     end;
-    col_1 := IfThen(i and 1 = 0, 0.0000001);
-    v1 := vec3(v1.x + step_x, v1.y + step_y, col_1);
-    v2 := vec3(v2.x + step_x, v2.y + step_y, col_1);
+    v1 := vec3(v1.x + step_x, v1.y + step_y, 0);
+    v2 := vec3(v2.x + step_x, v2.y + step_y, 0);
   end;
 
   FMesh.CalcBoundingBox(true);
@@ -1800,7 +1851,7 @@ end;
 procedure TMultiColorVertexes.SetTypePrimitive(const Value: TTypePrimitive);
 begin
   Mesh.TypePrimitive := Value;
-end;
+  end;
 
 procedure TMultiColorVertexes.WriteColor(AIndexVertex: int32; const AColor: TVec4f);
 begin
@@ -1869,6 +1920,20 @@ end;
 
 procedure TLayoutObject.ChangedMesh;
 begin
+
+  if StaticObject then
+  begin
+    // create VBO for all vertex components
+    if (FDrawedData.CountVertex > 0) then
+      CreateVBO(FVBO_Vertexes, GL_ARRAY_BUFFER, FDrawedData.VertexesData, FDrawedData.CountVertex * FDrawedData.SizeOFVertex);
+    // create VBO for indexes
+    if (FDrawedData.Indexes.Count > 0) then
+      CreateVBO(FVBO_Indexes, GL_ELEMENT_ARRAY_BUFFER, FDrawedData.Indexes.ShiftData[0], FDrawedData.Indexes.Count * FDrawedData.Indexes.IndexSizeOf);
+    // Automticaly set visibility by depend at position Frustum
+    if UpdateCount <= 0 then
+      FScene.InstanceTransform(BaseInstance, true);
+  end else
+  begin
   if VBO_Vertexes > 0 then
   begin
     glDeleteBuffers(1, @FVBO_Vertexes);
@@ -1880,18 +1945,6 @@ begin
     glDeleteBuffers(1, @FVBO_Indexes);
     FVBO_Indexes := 0;
   end;
-
-  if StaticObject then
-  begin
-    // create VBO for all vertex components
-    if (FDrawedData.CountVertex > 0) then
-      FVBO_Vertexes := CreateVBO(GL_ARRAY_BUFFER, FDrawedData.VertexesData, FDrawedData.CountVertex * FDrawedData.SizeOFVertex);
-    // create VBO for indexes
-    if (FDrawedData.Indexes.Count > 0) then
-      FVBO_Indexes := CreateVBO(GL_ELEMENT_ARRAY_BUFFER, FDrawedData.Indexes.ShiftData[0], FDrawedData.Indexes.Count * FDrawedData.Indexes.IndexSizeOf);
-    // Automticaly set visibility by depend at position Frustum
-    if UpdateCount <= 0 then
-      FScene.InstanceTransform(BaseInstance, true);
   end;
 end;
 

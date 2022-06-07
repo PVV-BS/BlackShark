@@ -2,69 +2,68 @@
 <CONFIG>
   <ProjectSession>
     <PathDelim Value="\"/>
-    <Version Value="11"/>
-    <BuildModes Active="Default"/>
-    <Units Count="64">
+    <Version Value="12"/>
+    <BuildModes Active="Win32"/>
+    <Units Count="78">
       <Unit0>
         <Filename Value="BSApplication.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="1"/>
-        <CursorPos X="80" Y="25"/>
-        <UsageCount Value="150"/>
+        <EditorIndex Value="5"/>
+        <CursorPos X="19" Y="19"/>
+        <UsageCount Value="185"/>
         <Loaded Value="True"/>
       </Unit0>
       <Unit1>
         <Filename Value="..\..\bsApplication\BSApplicationExample.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="2"/>
-        <TopLine Value="43"/>
-        <CursorPos X="46" Y="81"/>
-        <UsageCount Value="66"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="46"/>
+        <CursorPos X="58" Y="66"/>
+        <UsageCount Value="101"/>
         <Loaded Value="True"/>
       </Unit1>
       <Unit2>
         <Filename Value="..\..\bs.test.switcher.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="8"/>
         <TopLine Value="54"/>
         <CursorPos X="108" Y="79"/>
-        <UsageCount Value="66"/>
+        <UsageCount Value="101"/>
         <Loaded Value="True"/>
       </Unit2>
       <Unit3>
         <Filename Value="..\..\delphi\BSApplication\uTestBSApplication.pas"/>
-        <EditorIndex Value="4"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="5"/>
         <CursorPos X="70" Y="21"/>
-        <UsageCount Value="67"/>
-        <Loaded Value="True"/>
+        <UsageCount Value="63"/>
       </Unit3>
       <Unit4>
         <Filename Value="..\..\..\core\bs.application.pas"/>
         <EditorIndex Value="-1"/>
-        <UsageCount Value="64"/>
+        <UsageCount Value="60"/>
       </Unit4>
       <Unit5>
         <Filename Value="..\..\..\core\bs.basetypes.pas"/>
-        <EditorIndex Value="12"/>
-        <TopLine Value="182"/>
-        <CursorPos X="20" Y="86"/>
-        <UsageCount Value="75"/>
-        <Loaded Value="True"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="4984"/>
+        <CursorPos X="25" Y="5011"/>
+        <UsageCount Value="81"/>
       </Unit5>
       <Unit6>
         <Filename Value="..\..\..\core\bs.events.pas"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="38"/>
-        <CursorPos X="71" Y="49"/>
-        <UsageCount Value="32"/>
+        <EditorIndex Value="11"/>
+        <TopLine Value="32"/>
+        <CursorPos X="29" Y="53"/>
+        <UsageCount Value="36"/>
+        <Loaded Value="True"/>
       </Unit6>
       <Unit7>
         <Filename Value="C:\fpcupdeluxe\lazarus\lcl\lcltype.pp"/>
         <UnitName Value="LCLType"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="208"/>
-        <UsageCount Value="13"/>
+        <UsageCount Value="9"/>
       </Unit7>
       <Unit8>
         <Filename Value="C:\fpcupdeluxe\lazarus\lcl\controls.pp"/>
@@ -72,29 +71,31 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="2105"/>
         <CursorPos X="15" Y="2132"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="6"/>
       </Unit8>
       <Unit9>
         <Filename Value="..\..\..\core\bs.texture.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="21"/>
         <CursorPos X="5" Y="39"/>
-        <UsageCount Value="15"/>
+        <UsageCount Value="11"/>
       </Unit9>
       <Unit10>
         <Filename Value="..\..\..\core\bs.window.pas"/>
-        <EditorIndex Value="6"/>
-        <TopLine Value="238"/>
-        <CursorPos X="137" Y="275"/>
-        <UsageCount Value="75"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="10"/>
+        <UsageCount Value="91"/>
+        <Bookmarks Count="1">
+          <Item0 X="19" Y="642" ID="7"/>
+        </Bookmarks>
         <Loaded Value="True"/>
       </Unit10>
       <Unit11>
         <Filename Value="..\..\..\core\bs.renderer.pas"/>
-        <EditorIndex Value="9"/>
+        <EditorIndex Value="14"/>
         <TopLine Value="540"/>
         <CursorPos X="70" Y="558"/>
-        <UsageCount Value="45"/>
+        <UsageCount Value="61"/>
         <Loaded Value="True"/>
       </Unit11>
       <Unit12>
@@ -102,7 +103,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="347"/>
         <CursorPos X="21" Y="366"/>
-        <UsageCount Value="57"/>
+        <UsageCount Value="53"/>
         <Bookmarks Count="1">
           <Item0 X="21" Y="366" ID="2"/>
         </Bookmarks>
@@ -111,68 +112,68 @@
         <Filename Value="..\..\..\core\bs.window.context.windows.pas"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="80" Y="22"/>
-        <UsageCount Value="62"/>
+        <UsageCount Value="58"/>
       </Unit13>
       <Unit14>
         <Filename Value="C:\fpcupdeluxe\fpcsrc\rtl\win\wininc\messages.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="957"/>
         <CursorPos X="92" Y="968"/>
-        <UsageCount Value="73"/>
+        <UsageCount Value="69"/>
       </Unit14>
       <Unit15>
         <Filename Value="..\..\..\core\bs.window.context.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="124"/>
         <CursorPos X="60" Y="152"/>
-        <UsageCount Value="57"/>
+        <UsageCount Value="53"/>
       </Unit15>
       <Unit16>
         <Filename Value="..\..\..\core\bs.gl.context.pas"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="154"/>
-        <CursorPos X="21" Y="207"/>
-        <UsageCount Value="39"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="362"/>
+        <CursorPos X="62" Y="411"/>
+        <UsageCount Value="54"/>
         <Bookmarks Count="1">
-          <Item0 X="48" Y="170" ID="3"/>
+          <Item0 X="15" Y="491" ID="3"/>
         </Bookmarks>
+        <Loaded Value="True"/>
       </Unit16>
       <Unit17>
         <Filename Value="..\..\..\core\bs.gl.egl.pas"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="614"/>
-        <CursorPos Y="631"/>
-        <UsageCount Value="39"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="60"/>
+        <CursorPos X="47" Y="88"/>
+        <UsageCount Value="55"/>
+        <Loaded Value="True"/>
       </Unit17>
       <Unit18>
         <Filename Value="C:\fpcupdeluxe\fpcsrc\rtl\inc\objpash.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="192"/>
         <CursorPos X="23" Y="206"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="6"/>
       </Unit18>
       <Unit19>
         <Filename Value="..\..\..\common\bs.exceptions.pas"/>
-        <EditorIndex Value="11"/>
-        <TopLine Value="46"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="25"/>
         <CursorPos X="26" Y="51"/>
-        <UsageCount Value="65"/>
-        <Loaded Value="True"/>
+        <UsageCount Value="71"/>
       </Unit19>
       <Unit20>
         <Filename Value="..\..\..\core\bs.viewport.pas"/>
-        <EditorIndex Value="5"/>
-        <TopLine Value="13"/>
-        <CursorPos X="6" Y="26"/>
-        <UsageCount Value="44"/>
-        <Loaded Value="True"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="129"/>
+        <CursorPos X="73" Y="98"/>
+        <UsageCount Value="43"/>
       </Unit20>
       <Unit21>
         <Filename Value="C:\fpcupdeluxe\lazarus\lcl\include\wincontrol.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="7242"/>
         <CursorPos X="33" Y="7258"/>
-        <UsageCount Value="1"/>
+        <UsageCount Value="7"/>
       </Unit21>
       <Unit22>
         <Filename Value="C:\fpcupdeluxe\lazarus\lcl\lmessages.pp"/>
@@ -180,22 +181,21 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="166"/>
         <CursorPos X="3" Y="182"/>
-        <UsageCount Value="1"/>
+        <UsageCount Value="7"/>
       </Unit22>
       <Unit23>
         <Filename Value="C:\fpcupdeluxe\lazarus\lcl\include\controlconsts.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="98"/>
         <CursorPos X="3" Y="127"/>
-        <UsageCount Value="1"/>
+        <UsageCount Value="7"/>
       </Unit23>
       <Unit24>
         <Filename Value="C:\fpcupdeluxe\fpcsrc\rtl\objpas\classes\classesh.inc"/>
-        <EditorIndex Value="10"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="90"/>
         <CursorPos X="3" Y="108"/>
-        <UsageCount Value="44"/>
-        <Loaded Value="True"/>
+        <UsageCount Value="50"/>
       </Unit24>
       <Unit25>
         <Filename Value="C:\fpcupdeluxe\fpcsrc\packages\zlib\src\zlib.pp"/>
@@ -203,94 +203,97 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="19"/>
         <CursorPos X="5" Y="25"/>
-        <UsageCount Value="30"/>
+        <UsageCount Value="26"/>
       </Unit25>
       <Unit26>
         <Filename Value="..\..\..\common\bs.zlib.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="51"/>
         <CursorPos X="68" Y="62"/>
-        <UsageCount Value="13"/>
+        <UsageCount Value="9"/>
       </Unit26>
       <Unit27>
         <Filename Value="..\..\..\core\bs.font.pas"/>
         <EditorIndex Value="-1"/>
-        <TopLine Value="877"/>
-        <CursorPos X="5" Y="899"/>
-        <UsageCount Value="44"/>
+        <TopLine Value="3051"/>
+        <CursorPos X="30" Y="3071"/>
+        <UsageCount Value="49"/>
       </Unit27>
       <Unit28>
         <Filename Value="..\..\bs.test.mesh.skeleton.pas"/>
-        <EditorIndex Value="-1"/>
-        <UsageCount Value="44"/>
+        <EditorIndex Value="9"/>
+        <TopLine Value="238"/>
+        <CursorPos X="44" Y="265"/>
+        <UsageCount Value="53"/>
+        <Loaded Value="True"/>
       </Unit28>
       <Unit29>
         <Filename Value="..\..\backup\bs.test.font.pas"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="5" Y="19"/>
-        <UsageCount Value="17"/>
+        <UsageCount Value="13"/>
       </Unit29>
       <Unit30>
         <Filename Value="..\..\bs.test.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="46"/>
         <CursorPos Y="9"/>
-        <UsageCount Value="9"/>
+        <UsageCount Value="5"/>
       </Unit30>
       <Unit31>
         <Filename Value="..\..\backup\bs.test.pas"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="61" Y="7"/>
-        <UsageCount Value="9"/>
+        <UsageCount Value="5"/>
       </Unit31>
       <Unit32>
         <Filename Value="..\..\..\gui\bs.gui.base.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="30"/>
         <CursorPos X="5" Y="42"/>
-        <UsageCount Value="12"/>
+        <UsageCount Value="8"/>
       </Unit32>
       <Unit33>
         <Filename Value="..\..\..\gui\bs.gui.edit.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="1137"/>
         <CursorPos X="43" Y="1151"/>
-        <UsageCount Value="12"/>
+        <UsageCount Value="8"/>
       </Unit33>
       <Unit34>
         <Filename Value="..\..\..\gui\bs.gui.themes.primitives.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="678"/>
         <CursorPos X="5" Y="696"/>
-        <UsageCount Value="12"/>
+        <UsageCount Value="8"/>
       </Unit34>
       <Unit35>
         <Filename Value="..\..\..\gui\bs.gui.forms.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="331"/>
         <CursorPos X="23" Y="345"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="6"/>
       </Unit35>
       <Unit36>
         <Filename Value="..\..\..\gui\bs.gui.scrollbar.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="53"/>
         <CursorPos X="21" Y="51"/>
-        <UsageCount Value="12"/>
+        <UsageCount Value="8"/>
       </Unit36>
       <Unit37>
         <Filename Value="..\..\..\gui\bs.gui.column.presentor.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="392"/>
         <CursorPos X="5" Y="402"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="6"/>
       </Unit37>
       <Unit38>
         <Filename Value="..\..\..\gui\bs.gui.table.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="558"/>
         <CursorPos X="31" Y="560"/>
-        <UsageCount Value="6"/>
+        <UsageCount Value="2"/>
       </Unit38>
       <Unit39>
         <Filename Value="..\..\..\gui\bs.gui.chart.pas"/>
@@ -298,7 +301,7 @@
         <TopLine Value="3055"/>
         <CursorPos Y="3067"/>
         <FoldState Value=" T7qLS@411#"/>
-        <UsageCount Value="6"/>
+        <UsageCount Value="2"/>
         <Bookmarks Count="1">
           <Item0 Y="3067" ID="1"/>
         </Bookmarks>
@@ -308,21 +311,21 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="336"/>
         <CursorPos X="15" Y="355"/>
-        <UsageCount Value="6"/>
+        <UsageCount Value="2"/>
       </Unit40>
       <Unit41>
         <Filename Value="..\..\..\gui\bs.gui.colorbox.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="162"/>
         <CursorPos X="25" Y="184"/>
-        <UsageCount Value="8"/>
+        <UsageCount Value="4"/>
       </Unit41>
       <Unit42>
         <Filename Value="..\..\..\gui\bs.gui.objectinspector.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="1778"/>
         <CursorPos X="88" Y="1788"/>
-        <UsageCount Value="6"/>
+        <UsageCount Value="2"/>
       </Unit42>
       <Unit43>
         <Filename Value="C:\fpcupdeluxe\fpcsrc\packages\paszlib\src\zstream.pp"/>
@@ -330,7 +333,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="33"/>
         <CursorPos X="11" Y="45"/>
-        <UsageCount Value="8"/>
+        <UsageCount Value="4"/>
       </Unit43>
       <Unit44>
         <Filename Value="C:\fpcupdeluxe\fpcsrc\packages\paszlib\src\zinflate.pas"/>
@@ -338,7 +341,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="28"/>
         <CursorPos X="10" Y="40"/>
-        <UsageCount Value="8"/>
+        <UsageCount Value="4"/>
       </Unit44>
       <Unit45>
         <Filename Value="C:\fpcupdeluxe\fpcsrc\packages\paszlib\src\zbase.pas"/>
@@ -346,77 +349,77 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="276"/>
         <CursorPos X="3" Y="288"/>
-        <UsageCount Value="8"/>
+        <UsageCount Value="4"/>
       </Unit45>
       <Unit46>
         <Filename Value="C:\fpcupdeluxe\fpcsrc\packages\x11\src\x.pp"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="18"/>
         <CursorPos X="4" Y="30"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit46>
       <Unit47>
         <Filename Value="C:\fpcupdeluxe\fpcsrc\rtl\unix\aliasctp.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="37"/>
         <CursorPos X="3" Y="49"/>
-        <UsageCount Value="5"/>
+        <UsageCount Value="1"/>
       </Unit47>
       <Unit48>
         <Filename Value="C:\fpcupdeluxe\fpcsrc\rtl\unix\ctypes.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="43"/>
         <CursorPos X="33" Y="55"/>
-        <UsageCount Value="5"/>
+        <UsageCount Value="1"/>
       </Unit48>
       <Unit49>
         <Filename Value="C:\fpcupdeluxe\fpcsrc\packages\gtk2\src\gtk+\gtk\gtkwidget.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="90"/>
         <CursorPos X="4" Y="96"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit49>
       <Unit50>
         <Filename Value="..\..\bs.test.font.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="112"/>
         <CursorPos X="74" Y="137"/>
-        <UsageCount Value="33"/>
+        <UsageCount Value="29"/>
       </Unit50>
       <Unit51>
         <Filename Value="..\..\..\gui\bs.gui.scheme.controller.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="360"/>
         <CursorPos X="92" Y="410"/>
-        <UsageCount Value="32"/>
+        <UsageCount Value="28"/>
       </Unit51>
       <Unit52>
         <Filename Value="..\..\..\gui\bs.gui.scheme.view.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="1008"/>
         <CursorPos X="92" Y="1044"/>
-        <UsageCount Value="32"/>
+        <UsageCount Value="28"/>
       </Unit52>
       <Unit53>
         <Filename Value="..\..\..\core\bs.window.context.linux.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="337"/>
         <CursorPos X="22" Y="364"/>
-        <UsageCount Value="19"/>
+        <UsageCount Value="15"/>
       </Unit53>
       <Unit54>
         <Filename Value="C:\fpcupdeluxe\fpcsrc\rtl\inc\ustringh.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="118"/>
         <CursorPos X="10" Y="141"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="17"/>
       </Unit54>
       <Unit55>
         <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <EditorIndex Value="7"/>
-        <TopLine Value="214"/>
-        <CursorPos X="37" Y="224"/>
-        <UsageCount Value="21"/>
+        <EditorIndex Value="12"/>
+        <TopLine Value="253"/>
+        <CursorPos Y="270"/>
+        <UsageCount Value="37"/>
         <Bookmarks Count="1">
           <Item0 X="46" Y="239" ID="1"/>
         </Bookmarks>
@@ -427,213 +430,301 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="734"/>
         <CursorPos X="10" Y="753"/>
-        <UsageCount Value="9"/>
+        <UsageCount Value="5"/>
       </Unit56>
       <Unit57>
         <Filename Value="C:\fpcupdeluxe\fpcsrc\rtl\win\wininc\unifun.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="177"/>
         <CursorPos X="137" Y="211"/>
-        <UsageCount Value="9"/>
+        <UsageCount Value="5"/>
       </Unit57>
       <Unit58>
         <Filename Value="C:\fpcupdeluxe\fpcsrc\rtl\win\wininc\base.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="152"/>
         <CursorPos X="6" Y="171"/>
-        <UsageCount Value="9"/>
+        <UsageCount Value="5"/>
       </Unit58>
       <Unit59>
         <Filename Value="C:\fpcupdeluxe\fpcsrc\rtl\inc\systemh.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="537"/>
         <CursorPos X="29" Y="556"/>
-        <UsageCount Value="9"/>
+        <UsageCount Value="5"/>
       </Unit59>
       <Unit60>
         <Filename Value="..\..\bs.test.instancing.pas"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="5" Y="18"/>
-        <UsageCount Value="8"/>
+        <UsageCount Value="4"/>
       </Unit60>
       <Unit61>
         <Filename Value="..\..\..\core\bs.thread.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="298"/>
         <CursorPos X="52" Y="315"/>
-        <UsageCount Value="8"/>
+        <UsageCount Value="4"/>
       </Unit61>
       <Unit62>
         <Filename Value="..\..\bs.test.camera.pas"/>
-        <IsVisibleTab Value="True"/>
         <TopLine Value="52"/>
         <CursorPos X="30" Y="70"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="26"/>
         <Loaded Value="True"/>
       </Unit62>
       <Unit63>
         <Filename Value="..\..\bs.test.windows.pas"/>
-        <EditorIndex Value="8"/>
+        <EditorIndex Value="13"/>
         <TopLine Value="333"/>
         <CursorPos X="54" Y="344"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="26"/>
         <Loaded Value="True"/>
       </Unit63>
+      <Unit64>
+        <Filename Value="..\..\..\core\bs.linux.pas"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="3120"/>
+        <CursorPos X="48" Y="3128"/>
+        <UsageCount Value="26"/>
+        <Loaded Value="True"/>
+      </Unit64>
+      <Unit65>
+        <Filename Value="C:\Lazarus\Stable\fpcsrc\rtl\win\wininc\defines.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1966"/>
+        <CursorPos X="6" Y="1950"/>
+        <UsageCount Value="15"/>
+      </Unit65>
+      <Unit66>
+        <Filename Value="..\..\..\BlackSharkCfg.inc"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="53" Y="27"/>
+        <UsageCount Value="6"/>
+      </Unit66>
+      <Unit67>
+        <Filename Value="C:\Lazarus\Stable\lazarus\components\lazutils\lazutf8.pas"/>
+        <UnitName Value="LazUTF8"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="35"/>
+        <CursorPos X="29" Y="70"/>
+        <UsageCount Value="15"/>
+      </Unit67>
+      <Unit68>
+        <Filename Value="..\..\..\common\bs.strings.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="96"/>
+        <CursorPos X="37" Y="111"/>
+        <UsageCount Value="15"/>
+      </Unit68>
+      <Unit69>
+        <Filename Value="..\..\..\core\bs.window.android.pas"/>
+        <EditorIndex Value="7"/>
+        <TopLine Value="283"/>
+        <CursorPos X="23" Y="313"/>
+        <UsageCount Value="24"/>
+        <Loaded Value="True"/>
+      </Unit69>
+      <Unit70>
+        <Filename Value="..\..\..\core\bs.shader.pas"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="697"/>
+        <CursorPos X="78" Y="726"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit70>
+      <Unit71>
+        <Filename Value="..\..\..\core\bs.mesh.loaders.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1219"/>
+        <CursorPos Y="1229"/>
+        <UsageCount Value="10"/>
+      </Unit71>
+      <Unit72>
+        <Filename Value="..\..\..\common\XmlWriter.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="739"/>
+        <CursorPos X="31" Y="745"/>
+        <UsageCount Value="10"/>
+        <Bookmarks Count="1">
+          <Item0 X="8" Y="749" ID="4"/>
+        </Bookmarks>
+      </Unit72>
+      <Unit73>
+        <Filename Value="..\..\..\common\bs.utils.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="210"/>
+        <CursorPos X="52" Y="228"/>
+        <UsageCount Value="10"/>
+      </Unit73>
+      <Unit74>
+        <Filename Value="C:\Lazarus\Stable\fpcsrc\rtl\objpas\sysutils\syswideh.inc"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="10" Y="18"/>
+        <UsageCount Value="9"/>
+      </Unit74>
+      <Unit75>
+        <Filename Value="C:\Lazarus\Stable\fpcsrc\rtl\objpas\sysutils\syswide.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="58"/>
+        <CursorPos X="5" Y="60"/>
+        <UsageCount Value="9"/>
+      </Unit75>
+      <Unit76>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="3151"/>
+        <CursorPos X="20" Y="3154"/>
+        <FoldState Value=" T7iTI}F074 pjZr5AG]9iZjRH8 T8v424P"/>
+        <UsageCount Value="11"/>
+      </Unit76>
+      <Unit77>
+        <Filename Value="C:\Lazarus\Stable\fpcsrc\rtl\objpas\classes\classesh.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="87"/>
+        <CursorPos X="3" Y="108"/>
+        <UsageCount Value="9"/>
+      </Unit77>
     </Units>
-    <JumpHistory Count="30" HistoryIndex="29">
+    <JumpHistory Count="24" HistoryIndex="23">
       <Position1>
-        <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <Caret Line="241" Column="111" TopLine="209"/>
+        <Filename Value="..\..\..\core\bs.window.android.pas"/>
+        <Caret Line="165" Column="18" TopLine="141"/>
       </Position1>
       <Position2>
-        <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <Caret Line="225" Column="59" TopLine="212"/>
+        <Filename Value="..\..\..\core\bs.window.android.pas"/>
+        <Caret Line="78" Column="19" TopLine="52"/>
       </Position2>
       <Position3>
-        <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <Caret Line="239" Column="102" TopLine="212"/>
+        <Filename Value="..\..\..\core\bs.window.pas"/>
+        <Caret Line="539" Column="33" TopLine="518"/>
       </Position3>
       <Position4>
-        <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <Caret Line="20" Column="95"/>
+        <Filename Value="..\..\..\core\bs.window.pas"/>
+        <Caret Line="102" Column="22" TopLine="93"/>
       </Position4>
       <Position5>
-        <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <Caret Line="24" Column="96"/>
+        <Filename Value="..\..\..\core\bs.window.pas"/>
+        <Caret Line="644" Column="37" TopLine="618"/>
       </Position5>
       <Position6>
-        <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <Caret Line="100" Column="15" TopLine="67"/>
+        <Filename Value="..\..\..\core\bs.window.pas"/>
+        <Caret Line="289" Column="19" TopLine="250"/>
       </Position6>
       <Position7>
-        <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <Caret Line="242" Column="101" TopLine="223"/>
+        <Filename Value="..\..\..\core\bs.window.pas"/>
+        <Caret Line="1295" Column="3" TopLine="1277"/>
       </Position7>
       <Position8>
-        <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <Caret Line="241" Column="64" TopLine="213"/>
+        <Filename Value="..\..\..\core\bs.window.pas"/>
+        <Caret Line="239" Column="14" TopLine="220"/>
       </Position8>
       <Position9>
-        <Filename Value="BSApplication.lpr"/>
-        <Caret Line="25" Column="80"/>
+        <Filename Value="..\..\..\core\bs.window.pas"/>
+        <Caret Line="878" Column="28" TopLine="847"/>
       </Position9>
       <Position10>
-        <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <Caret Line="242" TopLine="224"/>
+        <Filename Value="..\..\..\core\bs.window.pas"/>
+        <Caret Line="280" Column="24" TopLine="261"/>
       </Position10>
       <Position11>
-        <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <Caret Line="246" Column="30" TopLine="218"/>
+        <Filename Value="..\..\..\core\bs.window.pas"/>
+        <Caret Line="1064" Column="48" TopLine="1057"/>
       </Position11>
       <Position12>
-        <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <Caret Line="241" Column="78" TopLine="224"/>
+        <Filename Value="..\..\..\core\bs.window.pas"/>
+        <Caret Line="103" Column="27" TopLine="89"/>
       </Position12>
       <Position13>
-        <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <Caret Line="95" Column="53" TopLine="72"/>
+        <Filename Value="..\..\..\core\bs.window.pas"/>
+        <Caret Line="647" Column="35" TopLine="627"/>
       </Position13>
       <Position14>
-        <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <Caret Line="247" Column="75" TopLine="221"/>
+        <Filename Value="..\..\..\core\bs.window.pas"/>
+        <Caret Line="103" Column="24" TopLine="87"/>
       </Position14>
       <Position15>
-        <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <Caret Line="249" Column="79" TopLine="221"/>
+        <Filename Value="..\..\..\core\bs.window.pas"/>
+        <Caret Line="645" Column="52" TopLine="630"/>
       </Position15>
       <Position16>
-        <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <Caret Line="248" Column="73" TopLine="221"/>
+        <Filename Value="..\..\..\core\bs.window.pas"/>
+        <Caret Line="631" Column="34" TopLine="618"/>
       </Position16>
       <Position17>
-        <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <Caret Line="247" Column="22" TopLine="214"/>
+        <Filename Value="..\..\..\core\bs.window.pas"/>
+        <Caret Line="280" Column="23" TopLine="257"/>
       </Position17>
       <Position18>
-        <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <Caret Line="242" Column="5" TopLine="224"/>
+        <Filename Value="..\..\..\core\bs.events.pas"/>
+        <Caret Line="53" Column="80" TopLine="30"/>
       </Position18>
       <Position19>
-        <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <Caret Line="247" Column="51" TopLine="214"/>
+        <Filename Value="..\..\..\core\bs.window.pas"/>
+        <Caret Line="281" Column="42" TopLine="257"/>
       </Position19>
       <Position20>
-        <Filename Value="..\..\..\core\bs.window.windows.pas"/>
-        <Caret Line="246" Column="21" TopLine="214"/>
+        <Filename Value="BSApplication.lpr"/>
+        <Caret Line="18" Column="10"/>
       </Position20>
       <Position21>
-        <Filename Value="..\..\bs.test.camera.pas"/>
-        <Caret Line="50" Column="58" TopLine="16"/>
+        <Filename Value="BSApplication.lpr"/>
+        <Caret Line="13"/>
       </Position21>
       <Position22>
-        <Filename Value="..\..\bs.test.windows.pas"/>
-        <Caret Line="363" Column="118" TopLine="335"/>
+        <Filename Value="..\..\..\core\bs.window.pas"/>
+        <Caret Line="590" Column="19" TopLine="560"/>
       </Position22>
       <Position23>
-        <Filename Value="..\..\bs.test.windows.pas"/>
-        <Caret Line="358" Column="139" TopLine="258"/>
+        <Filename Value="BSApplication.lpr"/>
+        <Caret Line="12" Column="27"/>
       </Position23>
       <Position24>
-        <Filename Value="..\..\bs.test.windows.pas"/>
-        <Caret Line="361" Column="56" TopLine="331"/>
+        <Filename Value="BSApplication.lpr"/>
+        <Caret Line="19" Column="19"/>
       </Position24>
-      <Position25>
-        <Filename Value="..\..\..\core\bs.basetypes.pas"/>
-        <Caret Line="214" Column="25" TopLine="167"/>
-      </Position25>
-      <Position26>
-        <Filename Value="..\..\bs.test.windows.pas"/>
-        <Caret Line="361" Column="37" TopLine="331"/>
-      </Position26>
-      <Position27>
-        <Filename Value="..\..\bs.test.windows.pas"/>
-        <Caret Line="358" Column="44" TopLine="331"/>
-      </Position27>
-      <Position28>
-        <Filename Value="..\..\..\core\bs.basetypes.pas"/>
-        <Caret Line="86" Column="20" TopLine="182"/>
-      </Position28>
-      <Position29>
-        <Filename Value="..\..\bs.test.windows.pas"/>
-        <Caret Line="367" Column="55" TopLine="331"/>
-      </Position29>
-      <Position30>
-        <Filename Value="..\..\bs.test.camera.pas"/>
-        <Caret Line="55" Column="70" TopLine="16"/>
-      </Position30>
     </JumpHistory>
     <RunParams>
       <FormatVersion Value="2"/>
       <Modes Count="1" ActiveMode="default">
         <Mode0 Name="default">
           <local>
-            <CommandLineParams Value="TBSCamera2dIn3d"/>
+            <CommandLineParams Value="TBSTestCanvas"/>
           </local>
         </Mode0>
       </Modes>
     </RunParams>
+    <HistoryLists Count="2">
+      <List0 Name="LaunchingApplication" Type="File" Count="1">
+        <Item1 Value="C:\Windows\system32\cmd.exe /C ${TargetCmdLine}"/>
+      </List0>
+      <List1 Name="CommandLineParameters" Count="2">
+        <Item1 Value="TBSTestCanvas"/>
+        <Item2 Value="TBSCamera2dIn3d"/>
+      </List1>
+    </HistoryLists>
   </ProjectSession>
   <Debugging>
-    <BreakPoints Count="2">
-      <Item1>
+    <BreakPoints>
+      <Item>
         <Kind Value="bpkSource"/>
         <WatchScope Value="wpsLocal"/>
         <WatchKind Value="wpkWrite"/>
         <Source Value="..\..\..\core\bs.window.context.windows.pas"/>
         <Line Value="210"/>
-      </Item1>
-      <Item2>
+      </Item>
+      <Item>
         <Kind Value="bpkSource"/>
         <WatchScope Value="wpsLocal"/>
         <WatchKind Value="wpkWrite"/>
         <Source Value="..\..\..\core\bs.gl.context.pas"/>
-        <Line Value="271"/>
-      </Item2>
+        <Line Value="589"/>
+      </Item>
     </BreakPoints>
-    <Watches Count="1">
-      <Item1>
+    <Watches>
+      <Item>
         <Expression Value="PCardinal(@(raw[0]))^"/>
-      </Item1>
+      </Item>
     </Watches>
   </Debugging>
 </CONFIG>

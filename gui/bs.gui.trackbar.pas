@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -97,6 +97,7 @@ uses
   , bs.thread
   , bs.math
   , bs.geometry
+  , bs.graphics
   ;
 
 { TBCustomTrackBar }
@@ -122,12 +123,12 @@ begin
   FHorizontal := true;
   FMainBody := TRectangle.Create(Canvas, nil);
   TRectangle(MainBody).Fill := true;
-  TRectangle(MainBody).Size := vec2(DEFAULT_WIDTH, (DEFAULT_HEIGHT shr 1));
+  TRectangle(MainBody).Size := vec2(DEFAULT_WIDTH*ToHiDpiScale, (DEFAULT_HEIGHT shr 1)*ToHiDpiScale);
   TRectangle(MainBody).Color := BS_CL_MSVS_PANEL;
   TRectangle(MainBody).Data.Interactive := false;
   FSlider := TRectangle.Create(Canvas, MainBody);
   FSlider.Fill := true;
-  FSlider.Size := vec2(MIN_SIZE_SLIDER, DEFAULT_HEIGHT);
+  FSlider.Size := vec2(MIN_SIZE_SLIDER*ToHiDpiScale, DEFAULT_HEIGHT*ToHiDpiScale);
   FSlider.Color := BS_CL_MSVS_EDIT_CURSOR_LINE;
 
   ObsrvSliderChMVP := FSlider.Data.EventChangeMVP.CreateObserver(GUIThread, OnDragSlider);
@@ -137,7 +138,7 @@ end;
 
 function TBCustomTrackBar.DefaultSize: TVec2f;
 begin
-  Result := vec2(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+  Result := vec2(DEFAULT_WIDTH*ToHiDpiScale, DEFAULT_HEIGHT*ToHiDpiScale);
 end;
 
 procedure TBCustomTrackBar.DoChangePosition;

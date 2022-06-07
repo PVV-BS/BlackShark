@@ -1,0 +1,700 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="12"/>
+    <BuildModes Active="x86_64">
+      <Item Name="Arm">
+        <CompilerOptions>
+          <Version Value="11"/>
+          <PathDelim Value="\"/>
+          <Target>
+            <Filename Value="..\libs\armeabi\blackshark"/>
+          </Target>
+          <SearchPaths>
+            <IncludeFiles Value="..\..\..\..\.."/>
+            <Libraries Value="C:\Users\Admin\AppData\Local\Android\Sdk\ndk\23.1.7779620\toolchains\llvm\prebuilt\windows\sysroot\usr\lib\arm-linux-androideabi\22\;C:\Users\Admin\AppData\Local\Android\Sdk\ndk\23.1.7779620\toolchains\arm-linux-androideabi-4.9\prebuilt\windows\lib\gcc\arm-linux-androideabi\4.9.x\"/>
+            <OtherUnitFiles Value="..\..\..\..\..\core;..\..\..\..\..\common;..\..\..\..\..\gui;..\..\..\..\bsApplication;..\..\..\.."/>
+            <UnitOutputDirectory Value="..\obj\blackshark"/>
+          </SearchPaths>
+          <Parsing>
+            <SyntaxOptions>
+              <SyntaxMode Value="Delphi"/>
+              <CStyleMacros Value="True"/>
+            </SyntaxOptions>
+          </Parsing>
+          <CodeGeneration>
+            <SmartLinkUnit Value="True"/>
+            <TargetCPU Value="arm"/>
+            <TargetOS Value="android"/>
+            <Optimizations>
+              <OptimizationLevel Value="3"/>
+            </Optimizations>
+            <SmallerCode Value="True"/>
+          </CodeGeneration>
+          <Linking>
+            <Debugging>
+              <GenerateDebugInfo Value="False"/>
+              <StripSymbols Value="True"/>
+            </Debugging>
+            <LinkSmart Value="True"/>
+            <Options>
+              <ExecutableType Value="Library"/>
+            </Options>
+          </Linking>
+          <Other>
+            <CompilerMessages>
+              <IgnoredMessages idx6058="True" idx5024="True"/>
+            </CompilerMessages>
+            <CustomOptions Value="-Xd 
+-CfSoft 
+-CpARMV6 
+-XParm-linux-androideabi- 
+-FDc:\Lazarus\Stable\cross\bin\all-android\bin\"/>
+          </Other>
+        </CompilerOptions>
+      </Item>
+    </BuildModes>
+    <Units>
+      <Unit>
+        <Filename Value="blackshark.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="23" Y="14"/>
+        <UsageCount Value="208"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\bsApplication\BSApplicationExample.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="52"/>
+        <CursorPos X="79" Y="82"/>
+        <UsageCount Value="202"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\bs.test.switcher.pas"/>
+        <IsPartOfProject Value="True"/>
+        <TopLine Value="40"/>
+        <CursorPos X="42" Y="67"/>
+        <UsageCount Value="210"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <EditorIndex Value="7"/>
+        <TopLine Value="321"/>
+        <CursorPos X="61" Y="355"/>
+        <UsageCount Value="200"/>
+        <Bookmarks Count="1">
+          <Item0 X="20" Y="710" ID="5"/>
+        </Bookmarks>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="appinit.pas"/>
+        <UnitName Value="AppInit"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="36" Y="30"/>
+        <UsageCount Value="7"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\bs.autotest.switcher.pas"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="113" Y="22"/>
+        <UsageCount Value="27"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus\Stable\fpcsrc\packages\fcl-base\src\custapp.pp"/>
+        <UnitName Value="CustApp"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="128"/>
+        <CursorPos X="3" Y="30"/>
+        <UsageCount Value="57"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.window.android.pas"/>
+        <EditorIndex Value="8"/>
+        <TopLine Value="382"/>
+        <CursorPos X="3" Y="396"/>
+        <UsageCount Value="105"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.android.jni.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="154"/>
+        <CursorPos X="95" Y="472"/>
+        <UsageCount Value="95"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.basetypes.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="5180"/>
+        <CursorPos X="48" Y="5204"/>
+        <UsageCount Value="54"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.window.linux.pas"/>
+        <EditorIndex Value="14"/>
+        <TopLine Value="654"/>
+        <CursorPos X="3" Y="665"/>
+        <UsageCount Value="100"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.gl.egl.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="143"/>
+        <CursorPos X="22" Y="166"/>
+        <UsageCount Value="93"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\BlackSharkCfg.inc"/>
+        <EditorIndex Value="9"/>
+        <CursorPos X="83" Y="26"/>
+        <UsageCount Value="93"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\common\bs.utils.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="41"/>
+        <CursorPos Y="255"/>
+        <UsageCount Value="84"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\common\bs.log.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="90"/>
+        <CursorPos X="3" Y="96"/>
+        <UsageCount Value="57"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.gl.es.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="976"/>
+        <CursorPos X="43" Y="1018"/>
+        <UsageCount Value="88"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.linux.pas"/>
+        <EditorIndex Value="16"/>
+        <CursorPos Y="3160"/>
+        <UsageCount Value="100"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.viewport.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="907"/>
+        <CursorPos X="51" Y="947"/>
+        <UsageCount Value="28"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.renderer.pas"/>
+        <EditorIndex Value="12"/>
+        <TopLine Value="1456"/>
+        <CursorPos X="64" Y="1488"/>
+        <UsageCount Value="104"/>
+        <Bookmarks Count="2">
+          <Item0 Y="1298" ID="6"/>
+          <Item1 X="44" Y="2530" ID="7"/>
+        </Bookmarks>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus\Stable\fpcsrc\rtl\inc\dynlibh.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="17"/>
+        <CursorPos X="10" Y="52"/>
+        <UsageCount Value="2"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus\Stable\fpcsrc\rtl\linux\sysosh.inc"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="16" Y="21"/>
+        <UsageCount Value="2"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus\Stable\fpcsrc\rtl\objpas\math.pp"/>
+        <UnitName Value="Math"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="641"/>
+        <CursorPos X="10" Y="666"/>
+        <UsageCount Value="2"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus\Stable\fpcsrc\rtl\unix\sysdlh.inc"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="31" Y="26"/>
+        <UsageCount Value="8"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.config.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="96"/>
+        <CursorPos X="60" Y="152"/>
+        <UsageCount Value="93"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.gl.context.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="129"/>
+        <CursorPos X="32" Y="151"/>
+        <UsageCount Value="50"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\bs.test.canvas.primitives.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="274"/>
+        <CursorPos X="28" Y="300"/>
+        <UsageCount Value="87"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.canvas.pas"/>
+        <EditorIndex Value="15"/>
+        <TopLine Value="2835"/>
+        <CursorPos X="10" Y="2839"/>
+        <UsageCount Value="105"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.scene.objects.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="893"/>
+        <CursorPos X="30" Y="927"/>
+        <UsageCount Value="99"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.shader.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1458"/>
+        <CursorPos X="3" Y="1473"/>
+        <UsageCount Value="70"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.scene.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1425"/>
+        <CursorPos X="3" Y="1429"/>
+        <UsageCount Value="94"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\common\bs.collections.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="3965"/>
+        <CursorPos X="19" Y="4003"/>
+        <UsageCount Value="1"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\bs.test.gui.pas"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="474"/>
+        <CursorPos X="17" Y="495"/>
+        <UsageCount Value="100"/>
+        <Bookmarks Count="1">
+          <Item0 X="90" Y="979" ID="4"/>
+        </Bookmarks>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\gui\bs.gui.checkbox.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="54"/>
+        <CursorPos X="33" Y="91"/>
+        <FoldState Value=" T3k80O11211y"/>
+        <UsageCount Value="24"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.window.windows.pas"/>
+        <EditorIndex Value="13"/>
+        <TopLine Value="247"/>
+        <CursorPos X="13" Y="274"/>
+        <UsageCount Value="101"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.events.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="188"/>
+        <CursorPos X="15" Y="204"/>
+        <UsageCount Value="83"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.thread.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="431"/>
+        <CursorPos X="69" Y="455"/>
+        <UsageCount Value="92"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\gui\bs.gui.forms.pas"/>
+        <EditorIndex Value="11"/>
+        <TopLine Value="682"/>
+        <CursorPos Y="694"/>
+        <UsageCount Value="72"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\bs.test.canvas.pas"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="451"/>
+        <CursorPos X="79" Y="473"/>
+        <UsageCount Value="81"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus\Stable\fpcsrc\packages\fcl-base\src\inifiles.pp"/>
+        <UnitName Value="IniFiles"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="162"/>
+        <CursorPos X="22" Y="208"/>
+        <UsageCount Value="67"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.mesh.loaders.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="663"/>
+        <CursorPos Y="694"/>
+        <UsageCount Value="1"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.font.pas"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="403"/>
+        <CursorPos X="79" Y="435"/>
+        <FoldState Value=" T7pCHb022 TL Hq821p"/>
+        <UsageCount Value="39"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\bs.test.windows.pas"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="568"/>
+        <CursorPos X="71" Y="603"/>
+        <UsageCount Value="100"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.fbo.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="97"/>
+        <CursorPos X="45" Y="116"/>
+        <UsageCount Value="85"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\gui\bs.gui.chart.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1382"/>
+        <CursorPos X="78" Y="1411"/>
+        <UsageCount Value="35"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus\Stable\fpcsrc\rtl\objpas\classes\classesh.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="77"/>
+        <CursorPos X="5" Y="102"/>
+        <UsageCount Value="11"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\gui\bs.gui.buttons.pas"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="381"/>
+        <CursorPos X="68" Y="404"/>
+        <UsageCount Value="16"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.mesh.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="50"/>
+        <CursorPos X="15" Y="70"/>
+        <UsageCount Value="41"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.align.pas"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="3" Y="36"/>
+        <UsageCount Value="17"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\bsAndroidNativeExports.inc"/>
+        <EditorIndex Value="10"/>
+        <CursorPos X="97" Y="12"/>
+        <UsageCount Value="63"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\gui\bs.gui.base.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="244"/>
+        <CursorPos X="3" Y="164"/>
+        <UsageCount Value="55"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.obj.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="155"/>
+        <CursorPos X="15" Y="174"/>
+        <UsageCount Value="1"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\gui\bs.gui.edit.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="869"/>
+        <CursorPos X="25" Y="916"/>
+        <UsageCount Value="44"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.events.keyboard.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="131"/>
+        <CursorPos X="51" Y="40"/>
+        <UsageCount Value="24"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\gui\bs.gui.table.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="829"/>
+        <CursorPos X="80" Y="852"/>
+        <UsageCount Value="20"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\gui\bs.gui.column.presentor.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="388"/>
+        <CursorPos Y="403"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.graphics.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="425"/>
+        <CursorPos X="46" Y="433"/>
+        <FoldState Value=" T7lNVI42321K"/>
+        <UsageCount Value="4"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\gui\bs.gui.scrollbar.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="312"/>
+        <CursorPos X="65" Y="480"/>
+        <UsageCount Value="15"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\gui\bs.gui.grid.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1437"/>
+        <CursorPos X="18" Y="1458"/>
+        <UsageCount Value="4"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\gui\bs.gui.memo.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="172"/>
+        <CursorPos X="3" Y="174"/>
+        <UsageCount Value="4"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\gui\bs.gui.objectinspector.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="971"/>
+        <CursorPos X="72" Y="996"/>
+        <UsageCount Value="4"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\gui\bs.gui.colordialog.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="452"/>
+        <CursorPos X="61" Y="473"/>
+        <UsageCount Value="8"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\bs.test.mesh.skeleton.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="64"/>
+        <CursorPos X="28" Y="74"/>
+        <UsageCount Value="25"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.scene.skeleton.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="639"/>
+        <CursorPos X="107" Y="664"/>
+        <UsageCount Value="25"/>
+        <Bookmarks Count="3">
+          <Item0 X="21" Y="478" ID="1"/>
+          <Item1 X="3" Y="602" ID="2"/>
+          <Item2 X="5" Y="626" ID="3"/>
+        </Bookmarks>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\core\bs.animation.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="104"/>
+        <CursorPos X="32" Y="141"/>
+        <UsageCount Value="25"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\..\gui\bs.gui.combobox.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="246"/>
+        <CursorPos X="52" Y="270"/>
+        <UsageCount Value="24"/>
+      </Unit>
+    </Units>
+    <JumpHistory HistoryIndex="29">
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.android.pas"/>
+        <Caret Line="311" Column="33" TopLine="291"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.android.pas"/>
+        <Caret Line="73" Column="22" TopLine="38"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.android.pas"/>
+        <Caret Line="396" Column="3" TopLine="382"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="169" Column="14" TopLine="146"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="883" Column="29" TopLine="855"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="332" Column="15" TopLine="312"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="1295" Column="29" TopLine="1288"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="332" Column="24" TopLine="311"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="886" Column="38" TopLine="842"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="879" Column="56" TopLine="862"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="332" Column="15" TopLine="311"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="1300" Column="7" TopLine="1279"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="274" Column="15" TopLine="254"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="307" Column="27" TopLine="281"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="370" Column="67" TopLine="345"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="1030" Column="22" TopLine="1006"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="1053" Column="13" TopLine="1026"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="1212" Column="16" TopLine="1188"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="1221" Column="16" TopLine="1188"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="1230" Column="16" TopLine="1206"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="1295" Column="29" TopLine="1280"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="332" Column="24" TopLine="311"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\..\core\bs.window.pas"/>
+        <Caret Line="833" Column="30" TopLine="803"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\bs.test.windows.pas"/>
+        <Caret Line="258" Column="74" TopLine="228"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\bs.test.windows.pas"/>
+        <Caret Line="234" Column="24" TopLine="206"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\bs.test.windows.pas"/>
+        <Caret Line="123" Column="29" TopLine="99"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\bs.test.windows.pas"/>
+        <Caret Line="296" Column="3" TopLine="277"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\bs.test.windows.pas"/>
+        <Caret Line="64" Column="20" TopLine="32"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\bs.test.windows.pas"/>
+        <Caret Line="586" Column="27" TopLine="562"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\bs.test.windows.pas"/>
+        <Caret Line="56" Column="22" TopLine="30"/>
+      </Position>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>

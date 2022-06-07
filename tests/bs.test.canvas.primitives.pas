@@ -502,7 +502,6 @@ begin
     Path.AnchorsReset;
 
   Path.Build;
-
 end;
 
 class function TBSTestCanvasPathMultiColored.TestName: string;

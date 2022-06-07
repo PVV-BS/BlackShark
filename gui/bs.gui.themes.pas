@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -814,8 +814,7 @@ end;
 
 { TPropValueAccessProvider<T> }
 
-class function TPropValueAccessProvider<T>.GetPropValue(Instance: TObject;
-  PropInfo: PPropInfo; Index: int32 = -1): T;
+class function TPropValueAccessProvider<T>.GetPropValue(Instance: TObject; PropInfo: PPropInfo; Index: int32 = -1): T;
 var
   m: TMethod;
 begin
@@ -839,7 +838,8 @@ begin
       else
         Result := TBIdxGetProc(m)(Index);
       {$endif}
-    end;
+    end else
+      FillChar(Result, SizeOf(Result), 0);
   end;
 end;
 

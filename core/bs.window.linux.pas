@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -137,6 +137,7 @@ type
     procedure DoSetPosition(AWindow: BSWindow; ALeft, ATop: int32); override;
     procedure DoFullScreen(AWindow: BSWindow); override;
     procedure DoActive(AWindow: BSWindow); override;
+    procedure DoShowCursor(AWindow: BSWindow); override;
   public
     constructor Create;
     destructor Destroy; override;
@@ -215,7 +216,7 @@ begin
   FDisplay := XOpenDisplay(nil);
 
   if not Assigned(FDisplay) then
-    raise Exception.Create('[TCDWidgetSet.AppInit] XOpenDisplay failed');
+    raise EBlackShark.Create('[class constructor BSApplicationLinux.Create] XOpenDisplay failed');
 
   // if we have a Display then we should have a Screen too
   FScreen:= XDefaultScreen(FDisplay);
@@ -230,12 +231,12 @@ begin
   // Initialize ScreenInfo
 
   // Screen Metrics
-  FDisplayWidth := XDisplayWidth(FDisplay,FScreen);
+  DisplayWidth := XDisplayWidth(FDisplay, FScreen);
   FDisplayWidthMM := XDisplayWidthMM(FDisplay,FScreen);
-  FPixelsPerInchX := round(FDisplayWidth / (FDisplayWidthMM / 25.4));
-  FDisplayHeight := XDisplayHeight(FDisplay, FScreen);
+  PixelsPerInchX := round(FDisplayWidth / (FDisplayWidthMM / 25.4));
+  DisplayHeight := XDisplayHeight(FDisplay, FScreen);
   FDisplayHeightMM := XDisplayHeightMM(FDisplay,FScreen);
-  FPixelsPerInchY:= round(FDisplayHeight /(FDisplayHeightMM /25.4));
+  PixelsPerInchY:= round(FDisplayHeight / (FDisplayHeightMM / 25.4));
   // Color Depth
   FColorDepth := XDefaultDepth(FDisplay, FScreen);
 
@@ -491,6 +492,11 @@ begin
   end;
 
   UpdateClientRect(AWindow);
+end;
+
+procedure BSApplicationLinux.DoShowCursor(AWindow: BSWindow);
+begin
+
 end;
 
 procedure BSApplicationLinux.DoSetPosition(AWindow: BSWindow; ALeft, ATop: int32);
@@ -767,7 +773,7 @@ begin
   else
   begin
     AWindow.MouseUp(mb, AEvent.xbutton.x, AEvent.xbutton.y, ss);
-    if TBTimer.CurrentTime.Low - LastTimeMouseUp < 300 then
+    if TBTimer.CurrentTime.Low - LastTimeMouseUp < MOUSE_DOUBLE_CLICK_DELTA then
       AWindow.MouseDblClick(AEvent.xbutton.x, AEvent.xbutton.y);
   end;
   LastTimeMouseUp := TBTimer.CurrentTime.Low;
@@ -900,6 +906,7 @@ procedure BSApplicationLinux.UpdateWait;
 var
   event: TXEvent;
   window: BSWindow;
+  i: int32;
 begin
   if FWindows.Count = 0 then
     exit;
@@ -912,6 +919,9 @@ begin
   end else
     ProcessEvent(FMainWindow, event);
 
+  FMainWindow.Draw;
+  for i := 0 to FMainWindow.Children.Count - 1 do
+    FMainWindow.Children.Items[i].Draw;
   inherited;
 end;
 
