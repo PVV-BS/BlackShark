@@ -1,4 +1,4 @@
-﻿{
+{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -189,6 +189,8 @@ type
     ObsrvOnMouseUpBtnUp: IBMouseEventObserver;
     ObsrvOnMouseDownBtnDown: IBMouseEventObserver;
     ObsrvOnMouseUpBtnDown: IBMouseEventObserver;
+    ObsrvOnMouseDblClkBtnUp: IBMouseEventObserver;
+    ObsrvOnMouseDblClkBtnDown: IBMouseEventObserver;
     ObsrvOnKeyPressBtnUp: IBKeyEventObserver;
     ObsrvOnKeyDownBtnUp: IBKeyEventObserver;
     ObsrvOnKeyPressBtnDown: IBKeyEventObserver;
@@ -197,6 +199,7 @@ type
     WaitTimer: IBAnimationLinearFloat;
     WaitTimerObsrv: IBAnimationLinearFloatObsrv;
     WaitTimerUp: boolean;
+    FIsDblClick: boolean;
     function GetValue: int64;
     procedure SetValue(const AValue: int64);
     procedure SetMaxValue(const AValue: int64);
@@ -204,8 +207,10 @@ type
     procedure CheckValue;
     procedure OnMouseDownBtnUp(const Data: BMouseData);
     procedure OnMouseDownBtnDown(const Data: BMouseData);
+    procedure OnMouseDblClickBtnDown(const Data: BMouseData);
     procedure OnMouseUpBtnUp(const Data: BMouseData);
     procedure OnMouseUpBtnDown(const Data: BMouseData);
+    procedure OnMouseDblClickBtnUp(const Data: BMouseData);
     procedure OnWaitTime(const AValue: BSFloat);
   protected
     procedure DoKeyPress(const Data: BKeyData); override;
@@ -256,7 +261,11 @@ uses
   , bs.thread
   , bs.graphics
   , bs.scene.objects
+  {$ifdef ultibo}
+  , gles20
+  {$else}
   , bs.gl.es
+  {$endif}
   , bs.math
   , bs.config
   , bs.align
@@ -1094,6 +1103,7 @@ begin
   TriUp.Color := BS_CL_CREAM;
   ObsrvOnMouseDownBtnUp := CreateMouseObserver(BtnUp.Data.EventMouseDown, OnMouseDownBtnUp);
   ObsrvOnMouseUpBtnUp := CreateMouseObserver(BtnUp.Data.EventMouseUp, OnMouseUpBtnUp);
+  ObsrvOnMouseDblClkBtnUp := CreateMouseObserver(BtnUp.Data.EventMouseDblClick, OnMouseDblClickBtnUp);
 
   BtnDown := TRectangle.Create(FCanvas, FMainBody);
   BtnDown.Fill := true;
@@ -1106,8 +1116,10 @@ begin
   TriDown.Color := BS_CL_CREAM;
   ObsrvOnMouseDownBtnDown := CreateMouseObserver(BtnDown.Data.EventMouseDown, OnMouseDownBtnDown);
   ObsrvOnMouseUpBtnDown := CreateMouseObserver(BtnDown.Data.EventMouseUp, OnMouseUpBtnDown);
+  ObsrvOnMouseDblClkBtnDown := CreateMouseObserver(BtnDown.Data.EventMouseDblClick, OnMouseDblClickBtnDown);
+
   FTextoutWidth := TextRect.Size.Width - BTN_WIDTH*ToHiDpiScale - Frame.WidthLine*2;
-  WaitTimer := CreateAniFloatLinear(GUIThread);
+  WaitTimer := CreateAniFloatLinear;
   WaitTimer.Duration := 10000;
   WaitTimer.IntervalUpdate := 50;
   WaitTimer.Loop := true;
@@ -1174,6 +1186,18 @@ begin
   end;
 end;
 
+procedure TBCustomSpinEdit.OnMouseDblClickBtnDown(const Data: BMouseData);
+begin
+  FIsDblClick := true;
+  OnMouseDownBtnDown(Data);
+end;
+
+procedure TBCustomSpinEdit.OnMouseDblClickBtnUp(const Data: BMouseData);
+begin
+  FIsDblClick := true;
+  OnMouseDownBtnUp(Data);
+end;
+
 procedure TBCustomSpinEdit.OnMouseDownBtnDown(const Data: BMouseData);
 begin
   if not Focused then
@@ -1216,6 +1240,18 @@ end;
 
 procedure TBCustomSpinEdit.OnWaitTime(const AValue: BSFloat);
 begin
+  if FIsDblClick then
+  begin
+    FIsDblClick := false;
+    if WaitTimerUp then
+      TriUp.Color := TriDown.Color
+    else
+      TriDown.Color := TriUp.Color;
+
+    WaitTimer.Stop;
+    exit;
+  end;
+
   if TBTimer.CurrentTime.Low - TimeDown < 1000 then
     exit;
   if WaitTimerUp then

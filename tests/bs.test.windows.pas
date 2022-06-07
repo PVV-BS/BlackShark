@@ -48,20 +48,26 @@ type
     AniLaw: IBAnimationLinearFloat;
     AniLawObsr: IBAnimationLinearFloatObsrv;
     LastTime: TTimeCounter;
+    ButtonClickObsrv: IBMouseEventObserver;
     function CreateCircle: TCanvasObject;
     function CreateSquare: TCanvasObject;
     function CreateTriangle: TCanvasObject;
     function CreateFreeShape: TCanvasObject;
     procedure OnUpdateValue(const Value: BSFloat);
+    procedure OnShow;
+    procedure OnButtonCloseClick(const AData: BMouseData);
   protected
+    CloseButton: TBButton;
     procedure OnCreateGlContext; override;
     procedure SetFullScreen(const AValue: boolean); override;
+    procedure CreateCloseButton;
   public
     //constructor Create;
     procedure AfterConstruction; override;
     destructor Destroy; override;
     procedure Resize(AWidth, AHeight: int32); override;
     procedure Show; override;
+    function ShowModal: int32; override;
     procedure Close; override;
     property ScrollBox: TBScrollBox read FScrollBox;
   end;
@@ -69,10 +75,6 @@ type
   { TWindowFullScreen }
 
   TWindowFullScreen = class(TWindowScrollable)
-  private
-    CloseButton: TBButton;
-    ButtonClickObsrv: IBMouseEventObserver;
-    procedure OnButtonCloseClick(const AData: BMouseData);
   protected
     procedure OnCreateGlContext; override;
   public
@@ -137,6 +139,7 @@ implementation
 
 uses
     bs.align
+  , bs.graphics
   , bs.scene
   , bs.utils
   {$ifdef DEBUG_BS}
@@ -159,42 +162,38 @@ begin
   Application.MainWindow.Caption := 'Main window';
 
   Button := TBButton.Create(ARenderer);
-  Button.BorderWidth := 3;
+  Button.Canvas.Font.Size := 6;
+  ButtonCreateFullScreenW := TBButton.Create(Button.Canvas);
+  ButtonCreateFullScreenW.Caption := 'Create/Show on full screen window';
   Button.Caption := 'Create scrollable window';
-  Button.Width := Button.Text.Width + 220;
-  Button.Canvas.Font.Size := 12;
+  Button.Width := ButtonCreateFullScreenW.Text.Width + ToHiDpiScale*10;
   //Button.Position2d := vec2(200, 280);
   //Button.Position2d := vec2(100.0, 100.0);
-  Button.Position2d := vec2((ARenderer.WindowWidth - Button.Width) * 0.5 - 30.0, ARenderer.WindowHeight*0.05);
+  Button.Position2d := vec2(ToHiDpiScale*10, ARenderer.WindowHeight*0.05); //(ARenderer.WindowWidth - Button.Width) * 0.5 - ToHiDpiScale*(ICON_WIN_SIZE + 4 + 10)
   ButtonClickObsrv := Button.OnClickEvent.CreateObserver(OnButtonClick);
 
   ButtonHideShow := TBButton.Create(Button.Canvas);
-  ButtonHideShow.BorderWidth := 3;
   ButtonHideShow.Caption := 'Hide/Show selected window';
   ButtonHideShow.Width := Button.Width;
-  ButtonHideShow.Position2d := vec2(Button.Position2d.left, Button.Position2d.y + Button.Height + 10);
+  ButtonHideShow.Position2d := vec2(Button.Position2d.left, Button.Position2d.y + Button.Height + ToHiDpiScale*5);
   ButtonHideShowClickObsrv := ButtonHideShow.OnClickEvent.CreateObserver(OnButtonHideShowClick);
 
   ButtonHideShowModal := TBButton.Create(Button.Canvas);
-  ButtonHideShowModal.BorderWidth := 3;
   ButtonHideShowModal.Caption := 'Hide/ShowModal selected window';
   ButtonHideShowModal.Width := Button.Width;
-  ButtonHideShowModal.Position2d := vec2(Button.Position2d.left, ButtonHideShow.Position2d.y + ButtonHideShow.Height + 10);
+  ButtonHideShowModal.Position2d := vec2(Button.Position2d.left, ButtonHideShow.Position2d.y + ButtonHideShow.Height + ToHiDpiScale*5);
   ButtonHideShowModalClickObsrv := ButtonHideShowModal.OnClickEvent.CreateObserver(OnButtonHideShowModalClick);
 
-  ButtonCreateFullScreenW := TBButton.Create(Button.Canvas);
-  ButtonCreateFullScreenW.BorderWidth := 3;
-  ButtonCreateFullScreenW.Caption := 'Create/Show on full screen window';
   ButtonCreateFullScreenW.Width := Button.Width;
-  ButtonCreateFullScreenW.Position2d := vec2(ButtonHideShowModal.Position2d.left, ButtonHideShowModal.Position2d.y + ButtonHideShowModal.Height + 10);
+  ButtonCreateFullScreenW.Position2d := vec2(ButtonHideShowModal.Position2d.left, ButtonHideShowModal.Position2d.y + ButtonHideShowModal.Height + ToHiDpiScale*5);
   ButtonCreateFullScreenWObsrv := ButtonCreateFullScreenW.OnClickEvent.CreateObserver(OnButtonCreateFullScreenClick);
 
   Windows := TListVec<TRectangle>.Create;
 
   IconSelection := TRectangle.Create(Button.Canvas, nil);
-  IconSelection.Size := vec2(ICON_WIN_SIZE + 4.0, ICON_WIN_SIZE + 4.0);
+  IconSelection.Size := vec2(ToHiDpiScale*(ICON_WIN_SIZE + 4.0), ToHiDpiScale*(ICON_WIN_SIZE + 4.0));
   IconSelection.Fill := false;
-  IconSelection.WidthLine := 1;
+  IconSelection.WidthLine := ToHiDpiScale*1;
   IconSelection.Color := BS_CL_RED;
   IconSelection.Build;
   IconSelection.Data.Hidden := true;
@@ -231,9 +230,9 @@ var
   lt, tp: int32;
 begin
 
-  lt := 30 + ChildWindowWidth*(Windows.Count mod 2);
-  tp := round(ButtonCreateFullScreenW.Position2d.y + ButtonCreateFullScreenW.Height) + 36 + (10 + ChildWindowHeight)*(Windows.Count div 2)
-    mod (Application.ApplicationSystem.DisplayHeight - (round(ButtonCreateFullScreenW.Position2d.y + ButtonCreateFullScreenW.Height) + 36));
+  lt := round(ToHiDpiScale*30) + ChildWindowWidth*(Windows.Count mod 2);
+  tp := round(ButtonCreateFullScreenW.Position2d.y + ButtonCreateFullScreenW.Height + ToHiDpiScale*36 + (ToHiDpiScale*10 + ChildWindowHeight)*(Windows.Count div 2))
+    mod round(Application.ApplicationSystem.DisplayHeight - (ButtonCreateFullScreenW.Position2d.y + ButtonCreateFullScreenW.Height) + ToHiDpiScale*36);
 
   window := TWindowScrollable(Application.CreateWindow(TWindowScrollable, nil, self, lt, tp, ChildWindowWidth, ChildWindowHeight));
   window.Caption := IntToStr(Windows.Count);
@@ -241,10 +240,10 @@ begin
   window.Owner := wrapper;
 
   r := TRectangle.Create(Button.Canvas, nil);
-  r.Size := vec2(ICON_WIN_SIZE, ICON_WIN_SIZE);
+  r.Size := vec2(ToHiDpiScale*(ICON_WIN_SIZE), ToHiDpiScale*(ICON_WIN_SIZE));
   r.Fill := true;
   r.Build;
-  r.Position2d := vec2(Button.Position2d.x + Button.Width + 30.0, Windows.Count * (r.Size.y + 10.0) + 30.0);
+  r.Position2d := vec2(Button.Position2d.x + Button.Width + ToHiDpiScale*10.0, Windows.Count * (r.Size.y + ToHiDpiScale*10.0) + Button.Position2d.y);
   r.Data.TagPtr := window;
   r.Color := BS_CL_BLUE;
 
@@ -257,7 +256,7 @@ begin
   IconClickObsrvs.Add(r.Data.EventMouseDown.CreateObserver(OnIconClick));
   Windows.Add(r);
   IconSelection.Data.Hidden := false;
-  IconSelection.Position2d := r.Position2d - 2.0;
+  IconSelection.Position2d := r.Position2d - ToHiDpiScale*2.0;
   IconSelection.Data.TagPtr := r;
 
   window.Show;
@@ -389,6 +388,14 @@ begin
   Result := circle;
 end;
 
+procedure TWindowScrollable.CreateCloseButton;
+begin
+  CloseButton := TBButton.Create(Renderer);
+  CloseButton.Caption := 'Close';
+  FScrollBox.DropControl(CloseButton, nil);
+  ButtonClickObsrv := CloseButton.OnClickEvent.CreateObserver(OnButtonCloseClick);
+end;
+
 function TWindowScrollable.CreateFreeShape: TCanvasObject;
 var
   shape: TFreeShape;
@@ -474,11 +481,14 @@ begin
 
   FScrollBox := TBScrollBox.Create(Renderer);
   FScrollBox.Focused := true;
-  FScrollBox.Resize(Width, Height);
-  {$ifdef ANDROID}
-  // it is emulation windows system for android
+  FScrollBox.Resize(ClientRect.Width, ClientRect.Height);
+  FScrollBox.MainBody.Data.DragResolve := true;
+  //FScrollBox.MainBody.Data.Opacity := 0.0;
+  {$ifdef SingleWinOnly}
+  // it is emulation windows system for android and ultibo
   FScrollBox.MainBody.Data.ModalLevel := Level + Application.MainWindow.Children.Count - 1;
   FScrollBox.Position2d := TVec2f(vec2(Left, Top)); //Application.MainWindow.Height - Top - Height
+  //CreateCloseButton;
   {$endif}
   //FScrollBox.MainBody.Data.Opacity := 0.0;
   co := FPrimitiveConstructors.Items[IndexPrimitiveConstructor]();
@@ -517,26 +527,17 @@ begin
   pos.x := Random(round(Width-staticPrimitive.Width));
   pos.y := Random(round(Height-staticPrimitive.Height));
   staticPrimitive.Position2d := pos;
-
-  //with TPicture.Create(FScrollBox.Canvas, FScrollBox.OwnerInstances) do
-  //begin
-  //
-  //  LoadFromFile(GetFilePath('logo.png', 'Pictures'));
-  //end;
-
-
-  //FScrollBox.Resize(ClientRect.Width, ClientRect.Height);
 end;
 
 procedure TWindowScrollable.SetFullScreen(const AValue: boolean);
 begin
   inherited SetFullScreen(AValue);
-  {$ifdef ANDROID}
+  {$ifdef SingleWinOnly}
   if Assigned(FScrollBox) then
     FScrollBox.Position2d := TVec2f(vec2(Left, Top));
   {$endif}
   if Assigned(FScrollBox) then
-    FScrollBox.Resize(Width, Height);
+    FScrollBox.Resize(ClientRect.Width, ClientRect.Height);
   {$ifdef DEBUG_BS}
   BSWriteMsg('bs.test.windows.TWindowScrollable.SetFullScreen: ', BoolToStr(AValue, true) + '; Width: ' + IntToStr(Width) + '; Height: ' + IntToStr(Height));
   {$endif}
@@ -566,19 +567,35 @@ begin
         if pos.x < 0 then
           pos.x := 0.0
         else
-          pos.x := Width - TCanvasObject(FInstances.Prototype.Owner).Width;
+          pos.x := ClientRect.Width - TCanvasObject(FInstances.Prototype.Owner).Width;
       end else
       begin
         p.Direction.y := -p.Direction.y;
         if pos.y < 0 then
           pos.y := 0.0
         else
-          pos.y := Height - TCanvasObject(FInstances.Prototype.Owner).Height;
+          pos.y := ClientRect.Height - TCanvasObject(FInstances.Prototype.Owner).Height;
       end;
       FParticles.Items[i] := p;
     end;
     FInstances.Position2d[i] := pos;
   end;
+end;
+
+procedure TWindowScrollable.OnShow;
+begin
+  {$ifdef SingleWinOnly}
+  FScrollBox.Position2d := TVec2f(vec2(Left, Top));
+  FScrollBox.Visible := true;
+  {$endif}
+  FScrollBox.Resize(ClientRect.Width, ClientRect.Height);
+  if not AniLaw.IsRun then
+    AniLaw.Run;
+
+  {$ifdef SingleWinOnly}
+  if Assigned(CloseButton) then
+  	CloseButton.MainBody.ToParentCenter;
+  {$endif}
 end;
 
 procedure TWindowScrollable.Resize(AWidth, AHeight: int32);
@@ -591,21 +608,26 @@ end;
 procedure TWindowScrollable.Show;
 begin
   inherited;
-  {$ifdef ANDROID}
-  FScrollBox.Position2d := TVec2f(vec2(Left, Top));
-  FScrollBox.Visible := true;
-  {$endif}
-  FScrollBox.Resize(Width, Height);
-  if not AniLaw.IsRun then
-    AniLaw.Run;
+  OnShow;
+end;
+
+function TWindowScrollable.ShowModal: int32;
+begin
+  OnShow;
+  Result := inherited ShowModal;
 end;
 
 procedure TWindowScrollable.Close;
 begin
   inherited Close;
-  {$ifdef ANDROID}
+  {$ifdef SingleWinOnly}
   FScrollBox.Visible := false;
   {$endif}
+end;
+
+procedure TWindowScrollable.OnButtonCloseClick(const AData: BMouseData);
+begin
+  Close;
 end;
 
 { TWindowWrapper }
@@ -634,24 +656,21 @@ begin
   inherited;
 end;
 
-procedure TWindowFullScreen.OnButtonCloseClick(const AData: BMouseData);
-begin
-  Close;
-end;
-
 procedure TWindowFullScreen.OnCreateGlContext;
 begin
   inherited;
-  CloseButton := TBButton.Create(Renderer);
-  CloseButton.Caption := 'Close';
-  ScrollBox.DropControl(CloseButton, nil);
-  //CloseButton.MainBody.ToParentCenter;
-  ButtonClickObsrv := CloseButton.OnClickEvent.CreateObserver(OnButtonCloseClick);
+  if not Assigned(CloseButton) then
+    CreateCloseButton;
 end;
 
 procedure TWindowFullScreen.Show;
 begin
   inherited;
+  {$ifdef SingleWinOnly}
+  SetPosition(0, 0);
+  FScrollBox.Resize(Application.ApplicationSystem.DisplayWidth, Application.ApplicationSystem.DisplayHeight);
+  {$endif}
+
   CloseButton.MainBody.ToParentCenter;
 end;
 

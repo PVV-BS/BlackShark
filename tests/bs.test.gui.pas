@@ -532,7 +532,11 @@ uses
   , bs.utils
   , bs.strings
   , bs.thread
+  {$ifdef ultibo}
+  , gles20
+  {$else}
   , bs.gl.es
+  {$endif}
   , bs.log
   ;
 
@@ -1241,7 +1245,7 @@ begin
 
   Obj3d := TTexturedVertexes.Create(Self, nil , ARenderer.Scene);
   MeshLoadObj('Models/Obj/aquafish01.obj', Obj3d.Mesh, 0.004);
-  Obj3d.Mesh.DrawingPrimitive := GL_TRIANGLES;
+  Obj3d.Mesh.TypePrimitive := tpTriangles;
   Obj3d.Texture := BSTextureManager.LoadTexture('Models/Obj/aquafish01.png');
   Obj3d.Shader := TBlackSharkTextureOutShader(BSShaderManager.Load('SimpleTexture', TBlackSharkTextureOutShader));
   Obj3d.Position := vec3(0.0, 0.0, -1.0);

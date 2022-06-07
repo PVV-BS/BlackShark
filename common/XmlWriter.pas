@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -172,17 +172,17 @@ type
     function CreateNode(AParent: TheXmlNode; const AName: WideString): TheXmlNode;
     function DelNodeFromPath(const Path: WideString): boolean;
     function DelNodeFromPathByAttrib(const Path: WideString; const AttribName: WideString;
-      // true - значение искомого каждого следующего уровня сложено из значений предыдущих, т.е. из строки 1a\2a\3a\4a\
-      // на первом уровне будет выполнятся поиск атрибута со значением 1a, на втором 1a\2a, на третьем 1a\2a\3a и т.д.
-      // false - для каждого уровня значения разделяются, т.е. выполнится поиск значения 1a на первом уровне, 2a - на втором, 3a - на третьем, и т.д.
+      // true - Р·РЅР°С‡РµРЅРёРµ РёСЃРєРѕРјРѕРіРѕ РєР°Р¶РґРѕРіРѕ СЃР»РµРґСѓСЋС‰РµРіРѕ СѓСЂРѕРІРЅСЏ СЃР»РѕР¶РµРЅРѕ РёР· Р·РЅР°С‡РµРЅРёР№ РїСЂРµРґС‹РґСѓС‰РёС…, С‚.Рµ. РёР· СЃС‚СЂРѕРєРё 1a\2a\3a\4a\
+      // РЅР° РїРµСЂРІРѕРј СѓСЂРѕРІРЅРµ Р±СѓРґРµС‚ РІС‹РїРѕР»РЅСЏС‚СЃСЏ РїРѕРёСЃРє Р°С‚СЂРёР±СѓС‚Р° СЃРѕ Р·РЅР°С‡РµРЅРёРµРј 1a, РЅР° РІС‚РѕСЂРѕРј 1a\2a, РЅР° С‚СЂРµС‚СЊРµРј 1a\2a\3a Рё С‚.Рґ.
+      // false - РґР»СЏ РєР°Р¶РґРѕРіРѕ СѓСЂРѕРІРЅСЏ Р·РЅР°С‡РµРЅРёСЏ СЂР°Р·РґРµР»СЏСЋС‚СЃСЏ, С‚.Рµ. РІС‹РїРѕР»РЅРёС‚СЃСЏ РїРѕРёСЃРє Р·РЅР°С‡РµРЅРёСЏ 1a РЅР° РїРµСЂРІРѕРј СѓСЂРѕРІРЅРµ, 2a - РЅР° РІС‚РѕСЂРѕРј, 3a - РЅР° С‚СЂРµС‚СЊРµРј, Рё С‚.Рґ.
       SignLenInc: boolean): boolean;
-    // находит узел по пути соединённых имён узлов через слэш
+    // РЅР°С…РѕРґРёС‚ СѓР·РµР» РїРѕ РїСѓС‚Рё СЃРѕРµРґРёРЅС‘РЅРЅС‹С… РёРјС‘РЅ СѓР·Р»РѕРІ С‡РµСЂРµР· СЃР»СЌС€
     function FindNodeFromPath(const Path: WideString): TheXmlNode;
-    // находит узел по пути соединённых значений атрибутов через слэш
+    // РЅР°С…РѕРґРёС‚ СѓР·РµР» РїРѕ РїСѓС‚Рё СЃРѕРµРґРёРЅС‘РЅРЅС‹С… Р·РЅР°С‡РµРЅРёР№ Р°С‚СЂРёР±СѓС‚РѕРІ С‡РµСЂРµР· СЃР»СЌС€
     function FindNodeFromPathArrtib(const Path: WideString; const AttribName: WideString;
-      // true - значение искомого каждого следующего уровня сложено из значений предыдущих, т.е. из строки 1a\2a\3a\4a\
-      // на первом уровне будет выполнятся поиск атрибута со значением 1a, на втором 1a\2a, на третьем 1a\2a\3a и т.д.
-      // false - для каждого уровня значения разделяются, т.е. выполнится поиск значения 1a на первом уровне, 2a - на втором, 3a - на третьем, и т.д.
+      // true - Р·РЅР°С‡РµРЅРёРµ РёСЃРєРѕРјРѕРіРѕ РєР°Р¶РґРѕРіРѕ СЃР»РµРґСѓСЋС‰РµРіРѕ СѓСЂРѕРІРЅСЏ СЃР»РѕР¶РµРЅРѕ РёР· Р·РЅР°С‡РµРЅРёР№ РїСЂРµРґС‹РґСѓС‰РёС…, С‚.Рµ. РёР· СЃС‚СЂРѕРєРё 1a\2a\3a\4a\
+      // РЅР° РїРµСЂРІРѕРј СѓСЂРѕРІРЅРµ Р±СѓРґРµС‚ РІС‹РїРѕР»РЅСЏС‚СЃСЏ РїРѕРёСЃРє Р°С‚СЂРёР±СѓС‚Р° СЃРѕ Р·РЅР°С‡РµРЅРёРµРј 1a, РЅР° РІС‚РѕСЂРѕРј 1a\2a, РЅР° С‚СЂРµС‚СЊРµРј 1a\2a\3a Рё С‚.Рґ.
+      // false - РґР»СЏ РєР°Р¶РґРѕРіРѕ СѓСЂРѕРІРЅСЏ Р·РЅР°С‡РµРЅРёСЏ СЂР°Р·РґРµР»СЏСЋС‚СЃСЏ, С‚.Рµ. РІС‹РїРѕР»РЅРёС‚СЃСЏ РїРѕРёСЃРє Р·РЅР°С‡РµРЅРёСЏ 1a РЅР° РїРµСЂРІРѕРј СѓСЂРѕРІРЅРµ, 2a - РЅР° РІС‚РѕСЂРѕРј, 3a - РЅР° С‚СЂРµС‚СЊРµРј, Рё С‚.Рґ.
       SignLenInc: boolean): TheXmlNode;
     function FindNode(const Name: WideString; AllChilds: boolean = false): TheXmlNode;
     function ForceAddNodeFromPath(const Path: WideString): TheXmlNode;
@@ -618,7 +618,7 @@ var
   i: int32;
   nu: WideString;
 begin
-  nu := WideUpperCase(Name);
+  nu := UpperCase(Name);
   attr := nil;
   for i := 0 to FAttributes.Count - 1 do
     if PAttrSign(FAttributes.Items[i])^.NameUp = nu then
@@ -630,7 +630,7 @@ begin
   begin
     new(attr);
     attr^.Name := Name;
-    attr^.NameUp := WideUpperCase(nu);
+    attr^.NameUp := UpperCase(nu);
     FAttributes.Add(attr);
   end;
   attr^.Value := Value;
@@ -704,7 +704,7 @@ var
   i: Integer;
   nUp: WideString;
 begin
-  nUp := WideUpperCase(Name);
+  nUp := UpperCase(Name);
   for i := 0 to FAttributes.Count - 1 do
   begin
     Result := FAttributes.Items[i];
@@ -742,10 +742,10 @@ var
   i: int32;
   nUp: WideString;
 begin
-  nUp := WideUpperCase(Name);
+  nUp := UpperCase(Name);
   for i := 0 to FChilds.Count - 1 do
   begin
-    if nUp = WideUpperCase(TheXmlNode(FChilds.Items[i]).FName) then
+    if nUp = UpperCase(TheXmlNode(FChilds.Items[i]).FName) then
       exit(TheXmlNode(FChilds.Items[i]));
   end;
 
@@ -766,11 +766,11 @@ var
   i: int32;
   nUp, S, NeedSignAttribUp: WideString;
 begin
-  nUp := WideUpperCase(NameAttrib);
-  NeedSignAttribUp := WideUpperCase(NeedSignAttrib);
+  nUp := UpperCase(NameAttrib);
+  NeedSignAttribUp := UpperCase(NeedSignAttrib);
   for i := 0 to FChilds.Count - 1 do
   begin
-    S := WideUpperCase(TheXmlNode(FChilds.Items[i]).GetAttribute(nUp, WideString('')));
+    S := UpperCase(TheXmlNode(FChilds.Items[i]).GetAttribute(nUp, WideString('')));
     if (NeedSignAttribUp = S) then
       exit(TheXmlNode(FChilds.Items[i]));
   end;
@@ -799,7 +799,7 @@ var
   nu: WideString;
 begin
   attr := nil;
-  nu := WideUpperCase(Name);
+  nu := UpperCase(Name);
   for i := 0 to FAttributes.Count - 1 do
     if PAttrSign(FAttributes.Items[i])^.NameUp = nu then
     begin
@@ -1118,7 +1118,7 @@ begin
       // inc(pos, tmp);
       e := FindMem(@Ptr[tmp], pos - tmp, S_QUOTE, SizeChar);
       TheCopyStr(enc_ch_w{%H-}, Pointer(@Ptr[tmp]), e, FEncoding);
-      enc_ch_w := WideUpperCase(enc_ch_w);
+      enc_ch_w := UpperCase(enc_ch_w);
       if ((enc_ch_w = 'UNICODE') or (enc_ch_w = 'UTF-16')) and (FEncoding <> tcUnicodeLE) and (FEncoding <> tcUnicodeBE) then
       begin
         SizeChar := 2;
@@ -1188,9 +1188,9 @@ begin
 end;
 
 function TheXmlWriter.DelNodeFromPathByAttrib(const Path, AttribName: WideString;
-  // true - значение искомого каждого следующего уровня сложено из значений предыдущих, т.е. из строки 1a\2a\3a\4a\
-  // на первом уровне будет выполнятся поиск атрибута со значением 1a, на втором 1a\2a, на третьем 1a\2a\3a и т.д.
-  // false - для каждого уровня значения разделяются, т.е. выполнится поиск значения 1a на первом уровне, 2a - на втором, 3a - на третьем, и т.д.
+  // true - Р·РЅР°С‡РµРЅРёРµ РёСЃРєРѕРјРѕРіРѕ РєР°Р¶РґРѕРіРѕ СЃР»РµРґСѓСЋС‰РµРіРѕ СѓСЂРѕРІРЅСЏ СЃР»РѕР¶РµРЅРѕ РёР· Р·РЅР°С‡РµРЅРёР№ РїСЂРµРґС‹РґСѓС‰РёС…, С‚.Рµ. РёР· СЃС‚СЂРѕРєРё 1a\2a\3a\4a\
+  // РЅР° РїРµСЂРІРѕРј СѓСЂРѕРІРЅРµ Р±СѓРґРµС‚ РІС‹РїРѕР»РЅСЏС‚СЃСЏ РїРѕРёСЃРє Р°С‚СЂРёР±СѓС‚Р° СЃРѕ Р·РЅР°С‡РµРЅРёРµРј 1a, РЅР° РІС‚РѕСЂРѕРј 1a\2a, РЅР° С‚СЂРµС‚СЊРµРј 1a\2a\3a Рё С‚.Рґ.
+  // false - РґР»СЏ РєР°Р¶РґРѕРіРѕ СѓСЂРѕРІРЅСЏ Р·РЅР°С‡РµРЅРёСЏ СЂР°Р·РґРµР»СЏСЋС‚СЃСЏ, С‚.Рµ. РІС‹РїРѕР»РЅРёС‚СЃСЏ РїРѕРёСЃРє Р·РЅР°С‡РµРЅРёСЏ 1a РЅР° РїРµСЂРІРѕРј СѓСЂРѕРІРЅРµ, 2a - РЅР° РІС‚РѕСЂРѕРј, 3a - РЅР° С‚СЂРµС‚СЊРµРј, Рё С‚.Рґ.
   SignLenInc: boolean): boolean;
 var
   cn: TheXmlNode;
@@ -1235,7 +1235,7 @@ begin
           if Result <> nil then
             exit;
         end
-        else if WideUpperCase(FRoot.Name) = WideUpperCase(sn) then
+        else if UpperCase(FRoot.Name) = UpperCase(sn) then
           exit(FRoot);
       end;
     end;
@@ -1308,7 +1308,7 @@ begin
   Result := nil;
   if (FRoot <> nil) then
   begin
-    if WideUpperCase(FRoot.Name) = WideUpperCase(Name) then
+    if UpperCase(FRoot.Name) = UpperCase(Name) then
       Result := FRoot
     else
       Result := FRoot.FindChildNode(Name, AllChilds);
@@ -1336,7 +1336,7 @@ begin
     begin
       if (st_pos < i - 1) then
       begin
-        sn := WideUpperCase(Copy(new_p, st_pos, i - st_pos));
+        sn := UpperCase(Copy(new_p, st_pos, i - st_pos));
         if Last <> nil then
         begin
           Result := Last.FindChildNode(sn);
@@ -1348,7 +1348,7 @@ begin
               Result := nil;
           end;
         end
-        else if WideUpperCase(FRoot.Name) = sn then
+        else if UpperCase(FRoot.Name) = sn then
         begin
           Last := FRoot;
           if i = l then
@@ -1480,7 +1480,7 @@ begin
         begin
           if (FRoot <> nil) then
           begin
-            if WideUpperCase(FRoot.Name) <> WideUpperCase(sn) then
+            if UpperCase(FRoot.Name) <> UpperCase(sn) then
               raise Exception.Create('Can not create node with AParent <> nil in empty xml document!')
             else
               Result := FRoot;

@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -516,10 +516,10 @@ public
   property FixedCapacity: boolean read FFixedCapacity write FFixedCapacity;
   { a pointer-tag for external use }
   property TagPtr: Pointer read FTagPtr write FTagPtr;
-  { for external use; you can to set TagProcedure for processing through incoming
+  { for external use; you can set TagProcedure for processing through incoming
     items }
   property TagProcedure: TProcessEventNotify read FTagProcedure write FTagProcedure;
-  { for external use; the event for use only in a writing thread context }
+  { for external use; the event is invoked only in a writing thread context }
   property OnWrite: TQueueEventNotify read FOnWrite write FOnWrite;
   { for external use; initialazed in constructor }
   property SourceThread: Pointer read FSourceThread write FSourceThread;
@@ -2612,7 +2612,8 @@ begin
   Result := false;
   if LenKey = 0 then
     exit;
-  k.Data := SysGetMem(LenKey);
+
+  GetMem(k.Data, LenKey);
   k.LenData := LenKey;
   if LenKey > FDepth then
     FDepth := LenKey;
@@ -2915,7 +2916,7 @@ procedure TBinTree<V>.DoDeleteNode(Node: TBinTreeNode);
 begin
   if (Node.Key.LenData > 0) and Assigned(Node.Key.Data) then
   begin
-    SysFreeMem(Node.Key.Data);
+    FreeMem(Node.Key.Data, Node.Key.LenData);
     Node.Key.Data := nil;
     Node.Key.LenData := 0;
   end;

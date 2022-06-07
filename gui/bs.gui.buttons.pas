@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -64,6 +64,7 @@ type
 
     ObsrvMD: IBMouseDownEventObserver;
     ObsrvMU: IBMouseUpEventObserver;
+    ObsrvMDbl: IBMouseUpEventObserver;
     {$ifndef ANDROID}
     ObsrvME: IBMouseEnterEventObserver;
     {$endif}
@@ -79,6 +80,7 @@ type
     FOpacity: BSFloat;
     FBorderColor: TGuiColor;
     FCaptionColor: TGuiColor;
+    FMouseDataDblClick: BMouseData;
 
     function GetCaption: string;
 
@@ -97,9 +99,11 @@ type
     procedure SetRoundRadius(const Value: BSFloat);
     procedure CreateBorder;
     procedure SetShowBorder(const Value: Boolean);
+    procedure AwaitDblClick(AData: Pointer);
   protected
     procedure OnMouseDown(const {%H-}Value: BMouseData); virtual;
     procedure OnMouseUp(const {%H-}Value: BMouseData); virtual;
+    procedure OnMouseDblClick(const {%H-}Value: BMouseData); virtual;
     {$ifndef ANDROID}
     procedure OnMouseEnter(const {%H-}Value: BMouseData); virtual;
     {$endif}
@@ -174,6 +178,9 @@ end;
 
 procedure TBButton.Resize(AWidth, AHeight: BSFloat);
 begin
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBButton.Resize', 'AWidth, AHeight: ' + IntToStr(round(AWidth)) + ', ' + IntToStr(round(AHeight)));
+  {$endif}
   InvisibleBody.Size := vec2(AWidth, AHeight);
   if Assigned(FBorder) then
   begin
@@ -209,9 +216,16 @@ begin
     Result := DefaultSize.Width;
 end;
 
+procedure TBButton.OnMouseDblClick(const Value: BMouseData);
+begin
+  FMouseDataDblClick := Value;
+  OnMouseDown(Value);
+  TTaskExecutor.AwaitExecuteTask(AwaitDblClick, @FMouseDataDblClick);
+end;
+
 procedure TBButton.OnMouseDown(const Value: BMouseData);
 begin
-  FHolderGUI.Position2d := FHolderGUI.Position2d + 1.0;
+  FHolderGUI.Position2d := FHolderGUI.Position2d + vec2(1.0, 1.0);
   FCaption.Position2d := FCaption.Position2d + 1.0;
   {$ifdef DEBUG_BS }
   BSWriteMsg('TBButton.OnMouseDown', Caption);
@@ -220,8 +234,9 @@ end;
 
 procedure TBButton.OnMouseUp(const Value: BMouseData);
 begin
-  FHolderGUI.Position2d := FHolderGUI.Position2d - 1.0;
+  FHolderGUI.Position2d := FHolderGUI.Position2d - vec2(1.0, 1.0);
   FCaption.ToParentCenter;
+  FOnClickEvent.SendEvent(Value);
   {$ifdef DEBUG_BS}
   BSWriteMsg('TBButton.OnMouseUp', Caption);
   {$endif}
@@ -357,7 +372,10 @@ constructor TBButton.Create(ACanvas: TBCanvas);
 begin
   inherited Create(ACanvas);
   if OwnCanvas then
-    FCanvas.Font.SizeInPixels := round(10*ToHiDpiScale);
+    FCanvas.Font.Size := 8;
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBButton.Create', 'FCanvas.Font.SizeInPixels: ' + IntToStr(FCanvas.Font.SizeInPixels));
+  {$endif}
   FShowBorder := true;
   FOpacity := 0.5;
   FBorderColor := $FF00FF00;
@@ -376,7 +394,7 @@ begin
   FBackground.Size := InvisibleBody.Size;
   //FMainBody := FBackground;
 
-  FOnClickEvent := InvisibleBody.Data.EventMouseUp;
+  FOnClickEvent := CreateMouseEvent;
 
   InvisibleBody.Data.DrawAsTransparent := false;
   InvisibleBody.Data.Interactive := true;
@@ -386,19 +404,19 @@ begin
 
   ObsrvMD := CreateMouseObserver(InvisibleBody.Data.EventMouseDown, OnMouseDown);
   ObsrvMU := CreateMouseObserver(InvisibleBody.Data.EventMouseUp, OnMouseUp);
+  ObsrvMDbl := CreateMouseObserver(InvisibleBody.Data.EventMouseDblClick, OnMouseDblClick);
   {$ifndef ANDROID}
   ObsrvME := CreateMouseObserver(InvisibleBody.Data.EventMouseEnter, OnMouseEnter);
   {$endif}
   ObsrvML := CreateMouseObserver(InvisibleBody.Data.EventMouseLeave, OnMouseLeave);
 
-  FRoundRadius := Round(sqrt(InvisibleBody.Size.Width * InvisibleBody.Size.Height) * 0.1);
+  FRoundRadius := 8;
   FWidthBorder := 1.0;
   if FShowBorder then
     CreateBorder;
 
   FCaption := TCanvasText.Create(FCanvas, InvisibleBody);
   FCaption.Data.Interactive := false;
-  //FCaption.CreateCustomFont;
   FCaption.Layer2d := 3;
   //FCaption.Align := TObjectAlign.oaCenter;
   FCaption.Text := 'Button';
@@ -460,6 +478,11 @@ procedure TBButton.DoAfterScale;
 begin
   inherited DoAfterScale;
   FCaption.ToParentCenter;
+end;
+
+procedure TBButton.AwaitDblClick(AData: Pointer);
+begin
+  OnMouseUp(PMouseData(AData)^);
 end;
 
 procedure TBButton.BuildView;

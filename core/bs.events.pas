@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -53,6 +53,7 @@ type
   TBSMouseButton = (mbBsLeft, mbBsRight, mbBsMiddle, mbBsExtra1, mbBsExtra2);
   TBSMouseButtons = set of TBSMouseButton;
 
+  PMouseData = ^BMouseData;
   BMouseData = record
     BaseHeader: BData;
     X, Y, DeltaWeel: int32;
@@ -251,32 +252,52 @@ type
     function  CreateObserver(ThreadCntx: TBThread; OnRsvProc: TGenericRecieveProc<T>): IBObserver<T>;
   end;
 
+  TAwaitTaskProc = procedure(AData: Pointer) of object;
+
   TTaskExecutor = class
   private
+    type
+      PAwaitTask = ^TAwaitTask;
+      TListAwaitTasks = TListDual<PAwaitTask>;
+      TAwaitTask = record
+        Position: TListAwaitTasks.PListItem;
+        TimeAwait: Cardinal;
+        TimeStart: Cardinal;
+        TaskProc: TAwaitTaskProc;
+        Data: Pointer;
+      end;
+  private
+    class var FCountTasks: int32;
+  private
     FTasks: TListTasks;
+    FAwaitTasks: TListAwaitTasks;
     FThreadContext: TBThread;
     function ProcessEvents: boolean;
     function Add(const Task: IUnknown; TaskUpdateProc: TUpdateTaskProc): PRecTask; inline;
+    procedure AddAwaitTask(AAwaitTaskProc: TAwaitTaskProc; ATimeAwait: Cardinal;  AData: Pointer); inline;
     procedure Remove(var TaskPos: PRecTask); inline;
     procedure ClearFromTasks;
+    class function GetExecuter(AContext: TBThread): TTaskExecutor;
   private
     class var Executors: TListVec<TTaskExecutor>;
-    { we not necessarily cs, because all ask for add/del task accept in self
-      thread context }
-    //class var CS: TCriticalSection;
+    class var CS: TCriticalSection;
     class constructor Create;
     class destructor Destroy;
   public
     constructor Create(AThreadContext: TBThread);
     destructor Destroy; override;
-    class function AddTask(const Task: IUnknown; TaskUpdateProc: TUpdateTaskProc; Context: TBThread): PRecTask;
+    class function AddTask(const ATask: IUnknown; ATaskUpdateProc: TUpdateTaskProc; AContext: TBThread): PRecTask;
+    class procedure AwaitExecuteTask(AAwaitTaskProc: TAwaitTaskProc; ATimeAwait: Cardinal; AContext: TBThread; AData: Pointer); overload;
+    class procedure AwaitExecuteTask(AAwaitTaskProc: TAwaitTaskProc; AData: Pointer; ATimeAwait: Cardinal); overload;
+    class procedure AwaitExecuteTask(AAwaitTaskProc: TAwaitTaskProc; AData: Pointer); overload;
+    class procedure AwaitExecuteTask(AAwaitTaskProc: TAwaitTaskProc); overload;
     class procedure RemoveTask(var TaskPos: PRecTask; Context: TBThread);
-    class function HasTasks: boolean;
   public
     property ThreadContext: TBThread read FThreadContext;
+    class property CountTasks: Int32 read FCountTasks;
   end;
 
-  { the task also as IBEvent<T> for return result of work demands observers }
+  { the task also as IBEvent<T> for work result return demands observers }
 
   TTemplateBTask<T> = class(TTemplateBEvent<T>, IBTaskObservable<T>)
   private
@@ -306,7 +327,6 @@ type
     destructor Destroy; override;
     procedure Run; virtual;
     procedure Stop; virtual;
-    //property Runned: boolean read GetRunned;
     property IsRun: boolean read GetIsRun;
     property IntervalUpdate: int32 read GetIntervalUpdate write SetIntervalUpdate;
   end;
@@ -872,38 +892,88 @@ begin
   Result.Deleted := false;
 end;
 
-class function TTaskExecutor.AddTask(const Task: IUnknown; TaskUpdateProc: TUpdateTaskProc; Context: TBThread): PRecTask;
+procedure TTaskExecutor.AddAwaitTask(AAwaitTaskProc: TAwaitTaskProc; ATimeAwait: Cardinal; AData: Pointer);
+var
+  awaitTask: PAwaitTask;
+begin
+  new(awaitTask);
+  awaitTask.Position := FAwaitTasks.PushToEnd(awaitTask);
+  awaitTask.TimeAwait := ATimeAwait;
+  awaitTask.TaskProc := AAwaitTaskProc;
+  awaitTask.Data := AData;
+  awaitTask.TimeStart := TBTimer.CurrentTime.Low;
+end;
+
+class function TTaskExecutor.AddTask(const ATask: IUnknown; ATaskUpdateProc: TUpdateTaskProc; AContext: TBThread): PRecTask;
 var
   exec: TTaskExecutor;
 begin
   {$ifdef DEBUG_BS}
-  BSWriteMsg('TTaskExecutor.AddTask', (Task as TObject).ClassName);
+  BSWriteMsg('TTaskExecutor.AddTask', (ATask as TObject).ClassName);
   {$endif}
-  {CS.Enter;
-  try }
-    exec := Executors.Items[Context.Index];
-    if not Assigned(exec) then
-      exec := TTaskExecutor.Create(Context);
-    Result := exec.Add(Task, TaskUpdateProc);
-  {finally
+  CS.Enter;
+  try
+    inc(FCountTasks);
+    exec := GetExecuter(AContext);
+    Result := exec.Add(ATask, ATaskUpdateProc);
+  finally
     CS.Leave;
-  end;}
+  end;
+end;
+
+class procedure TTaskExecutor.AwaitExecuteTask(AAwaitTaskProc: TAwaitTaskProc; AData: Pointer; ATimeAwait: Cardinal);
+begin
+  AwaitExecuteTask(AAwaitTaskProc, ATimeAwait, GUIThread, AData);
+end;
+
+class procedure TTaskExecutor.AwaitExecuteTask(AAwaitTaskProc: TAwaitTaskProc; AData: Pointer);
+begin
+  AwaitExecuteTask(AAwaitTaskProc, 0, GUIThread, AData);
+end;
+
+class procedure TTaskExecutor.AwaitExecuteTask(AAwaitTaskProc: TAwaitTaskProc);
+begin
+  AwaitExecuteTask(AAwaitTaskProc, 0, GUIThread, nil);
+end;
+
+class procedure TTaskExecutor.AwaitExecuteTask(AAwaitTaskProc: TAwaitTaskProc; ATimeAwait: Cardinal; AContext: TBThread; AData: Pointer);
+var
+  exec: TTaskExecutor;
+begin
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TTaskExecutor.AwaitExecuteTask', '');
+  {$endif}
+  CS.Enter;
+  try
+    inc(FCountTasks);
+    exec := GetExecuter(AContext);
+    exec.AddAwaitTask(AAwaitTaskProc, ATimeAwait, AData);
+  finally
+    CS.Leave;
+  end;
 end;
 
 class constructor TTaskExecutor.Create;
 begin
   Executors := TListVec<TTaskExecutor>.Create;
-  //CS := TCriticalSection.Create;
+  CS := TCriticalSection.Create;
 end;
 
 procedure TTaskExecutor.ClearFromTasks;
 var
   it: PRecTask;
+  awaitTask: PAwaitTask;
 begin
   while FTasks.Count > 0 do
   begin
     it := FTasks.Pop;
     dispose(it);
+  end;
+
+  while FAwaitTasks.Count > 0 do
+  begin
+    awaitTask := FAwaitTasks.Pop;
+    dispose(awaitTask);
   end;
 end;
 
@@ -911,10 +981,9 @@ constructor TTaskExecutor.Create(AThreadContext: TBThread);
 begin
   FThreadContext := AThreadContext;
   Executors.Items[AThreadContext.Index] := Self;
-  { task adds only in self thread context, there for adds synchronly
-    the method of update }
   AThreadContext.AddUpdateMethod(ProcessEvents);
   FTasks := TListTasks.Create;
+  FAwaitTasks := TListAwaitTasks.Create;
 end;
 
 destructor TTaskExecutor.Destroy;
@@ -923,19 +992,21 @@ begin
   FThreadContext.RemoveUpdateMethod(ProcessEvents);
   Executors.Items[FThreadContext.Index] := nil;
   FTasks.Free;
+  FAwaitTasks.Free;
 end;
 
-class function TTaskExecutor.HasTasks: boolean;
+class function TTaskExecutor.GetExecuter(AContext: TBThread): TTaskExecutor;
 var
-  i: int32;
+  context: TBThread;
 begin
-  for i := 0 to Executors.Count - 1 do
-  begin
-    if Assigned(Executors.Items[i]) and (Executors.Items[i].FTasks.Count > 0) then
-      exit(true);
-  end;
+  if Assigned(AContext) then
+    context := AContext
+  else
+    context := GUIThread;
 
-  Result := false;
+  Result := Executors.Items[context.Index];
+  if not Assigned(Result) then
+    Result := TTaskExecutor.Create(context);
 end;
 
 class destructor TTaskExecutor.Destroy;
@@ -946,16 +1017,19 @@ begin
     if Assigned(Executors.Items[i]) then
       Executors.Items[i].Free;
   Executors.Free;
+  CS.Free;
 end;
 
 function TTaskExecutor.ProcessEvents: boolean;
 var
   it: TListTasks.PListItem;
   pit: PRecTask;
+  awaitTaskIt: TListAwaitTasks.PListItem;
+  awaitTask: PAwaitTask;
 begin
   Result := FTasks.Count > 0;
   it := FTasks.ItemListFirst;
-  while it <> nil do
+  while Assigned(it) do
   begin
     pit := it.Item;
     it := it.Next;
@@ -965,6 +1039,22 @@ begin
       dispose(pit);
     end else
       pit.Proc();
+  end;
+
+  if not Result then
+    Result := FAwaitTasks.Count > 0;
+
+  awaitTaskIt := FAwaitTasks.ItemListFirst;
+  while Assigned(awaitTaskIt) do
+  begin
+    awaitTask := awaitTaskIt.Item;
+    awaitTaskIt := awaitTaskIt.Next;
+    if TBTimer.CurrentTime.Low - awaitTask.TimeStart >= awaitTask.TimeAwait then
+    begin
+      FAwaitTasks.Remove(awaitTask.Position);
+      awaitTask.TaskProc(awaitTask.Data);
+      dispose(awaitTask);
+    end;
   end;
 end;
 
@@ -979,12 +1069,13 @@ begin
   {$ifdef DEBUG_BS}
   BSWriteMsg('TTaskExecutor.RemoveTask', (IUnknown(TaskPos.Task) as TObject).ClassName);
   {$endif}
-  {CS.Enter;
-  try   }
+  CS.Enter;
+  try
+    dec(FCountTasks);
     Executors.Items[Context.Index].Remove(TaskPos);
-  {finally
+  finally
     CS.Leave;
-  end;}
+  end;
 end;
 
 { TEmptyTask }

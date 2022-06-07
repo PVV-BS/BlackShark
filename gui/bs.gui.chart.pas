@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -1018,7 +1018,7 @@ begin
   FMinY := OpY.High;
   MaxCountValues := 0;
   for i := 0 to FCurves.Count - 1 do
-  begin
+    begin
     Chart := FCurves.Items[i];
     { if arguments united then need to recalc TY limits befor draw; in that case
       also reordered on grow groups united arguments, and in fact, a count added
@@ -1036,7 +1036,7 @@ begin
       FMinY := Chart.MinY;
     if Chart.FTreeValues.Count > MaxCountValues then
       MaxCountValues := Chart.FTreeValues.Count;
-  end;
+    end;
 
   w := OpX.Subtract(FMaxX, FMinX);
   h := OpY.Subtract(FMaxY, FMinY);
@@ -1171,7 +1171,7 @@ begin
   FCurves := TListVec<TDataContainerPairXY>.Create;
   AxisText := TListVec<TCanvasText>.Create;
   if OwnCanvas then
-    FCanvas.Font.Size := 9;
+  FCanvas.Font.Size := 9;
 
   FInterpolateLines := true;
   CurrentColor := TBSColorsSet[bsRed];
@@ -1693,11 +1693,11 @@ begin
   LegendBorder.Position2d := vec2(0.0, 0.0);
   LegendPlane.Position2d := vec2(Grid.Width + LegendsOffset, 0);
   for i := 0 to FLegends.Count - 1 do
-  begin
+    begin
     FLegends.Items[i].Text.Position2d := vec2(20.0 * ToHiDpiScale, fs*i + 8 * ToHiDpiScale);
     FLegends.Items[i].Rect.Position2d := vec2(8.0 * ToHiDpiScale, FLegends.Items[i].Text.Position2d.y +
       (FLegends.Items[i].Text.Height - FLegends.Items[i].Rect.Size.Height)*0.5);
-  end;
+    end;
 end;
 
 procedure TBChart<TX, TY>.EndUpdate;
@@ -2312,30 +2312,30 @@ begin
   ArcAttrib.Len := ArcAttrib.Group^.Percent * 2 * BS_PI * FRadius;
   BS_SinCos(ArcAttrib.Group.AngleStart + ArcAttrib.Angle/2, ArcAttrib.s, ArcAttrib.c);
   if ArcAttrib.s < 0 then
-  begin
+    begin
     ArcAttrib.SignSin := -1;
     if ArcAttrib.c < 0 then
-    begin
+      begin
       ArcAttrib.SignCos := -1;
       ArcAttrib.NumQuad := 3;
-    end else
-    begin
+      end else
+      begin
       ArcAttrib.SignCos := 1;
       ArcAttrib.NumQuad := 4;
-    end;
-  end else
-  begin
-    ArcAttrib.SignSin := 1;
-    if ArcAttrib.c < 0 then
-    begin
-      ArcAttrib.SignCos := -1;
-      ArcAttrib.NumQuad := 2;
+      end;
     end else
     begin
+    ArcAttrib.SignSin := 1;
+    if ArcAttrib.c < 0 then
+      begin
+      ArcAttrib.SignCos := -1;
+      ArcAttrib.NumQuad := 2;
+      end else
+      begin
       ArcAttrib.SignCos := 1;
       ArcAttrib.NumQuad := 1;
+      end;
     end;
-  end;
 end;
 
 constructor TBChartCircular<TX, TY>.Create(ACanvas: TBCanvas);
@@ -2368,10 +2368,10 @@ begin
   if FChart <> nil then
     Result := FChart
   else
-  begin
+    begin
     Result := inherited;
     FChart := Result;
-  end;
+    end;
 end;
 
 procedure TBChartCircular<TX, TY>.LoadProperties;
@@ -2544,7 +2544,7 @@ begin
       pos.y := O.y - pos.y - group.Text.Data.Mesh.FBoundingBox.y_max;
       //pos := FCanvas.Renderer.SceneSizeToScreen(pos);
       group.Text.Data.Interactive := false;
-      FreeAndNil(group^.Hint);
+        FreeAndNil(group^.Hint);
       group.Text.Position2d := pos;
     end;
     //break;
@@ -2699,12 +2699,12 @@ begin
 
   Group := AniLawScale.CurrentSender;
   if not Group.AnimatePos then
-  begin
+    begin
     ReturnBeginParam(Group);
     if Group <> AnimatingGroup then
       ReturnBeginParam(AnimatingGroup);
     exit;
-  end;
+    end;
 
   if (Value = 0) then
     exit;
@@ -2754,32 +2754,32 @@ begin
 
   overlap := RectOverlap(Rect, UnitedHintRect);
   if (overlap.Height > 0) and (overlap.Width > 0) then
-  begin
+    begin
     if (Arc.NumQuad = 3) then
       Result.y := (abs(UnitedHintRect.y + UnitedHintRect.Height + 6.0*ToHiDpiScale + Height_hint_text) - abs(LegFirst.y)) else
     if (Arc.NumQuad = 1) then
       Result.y := (UnitedHintRect.y - LegFirst.y - 3*ToHiDpiScale)
     else
-    begin
+      begin
       if Arc.NumQuad in [2, 3] then
-      begin
+        begin
         Result.x := (UnitedHintRect.x - LegFirst.x);
-      end else
-      begin
+        end else
+        begin
         Result.x := (UnitedHintRect.x + UnitedHintRect.Size.x - LegFirst.x);
-      end;
+        end;
       off := abs(LegFirst.x) + abs(Result.x) + Rect.Size.x + (PUSH_SEGMENT_DISTANCE + 5)*ToHiDpiScale;
       if (off > LegendsOffset + Center.x) then
-      begin
+        begin
         Result.x := Arc.SignCos*(abs(Result.x) - (off - (LegendsOffset + Center.x)));
         Result.y := (UnitedHintRect.y - LegFirst.y - 3*ToHiDpiScale)
+        end;
       end;
-    end;
     if LegFirst.x < 0 then
       Rect.Position := LegFirst + Result - Rect.Size
     else
       Rect.Position := LegFirst + vec2(Result.x, Result.y - Rect.Size.y);
-  end;
+    end;
 end;
 
 procedure TBChartCircular<TX, TY>.SetIntegralY(const IntegralY: TY);

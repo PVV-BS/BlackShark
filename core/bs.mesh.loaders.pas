@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -30,10 +30,10 @@ interface
 
 uses
     SysUtils
+  , XmlWriter
   , bs.basetypes
   , bs.mesh
   , bs.collections
-  , XmlWriter
   , bs.scene
   , bs.renderer
   , bs.scene.skeleton
@@ -58,6 +58,9 @@ implementation
     , bs.exceptions
     , bs.scene.objects
     , bs.texture
+    {$ifdef DEBUG_BS}
+    , bs.log
+    {$endif}
     ;
 
 const
@@ -1105,13 +1108,29 @@ var
   bucket: THashTable<string, TSkeleton>.TBucket;
   bucket_go: THashTable<string, TGraphicObject>.TBucket;
   bucket_eff: THashTable<string, PEffect>.TBucket;
-
+  filePath: string;
 begin
   Result := nil;
-  xml := TheXmlWriter.Create(GetFilePath(FileName), true);
+  filePath := GetFilePath(FileName);
+  if not FileExists(filePath) then
+  begin
+    {$ifdef DEBUG_BS}
+    BSWriteMsg('MeshLoadCollada', 'File "' + FileName + '" doesn''''t exists!');
+    {$endif}
+    exit;
+  end;
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('MeshLoadCollada', '...loading collada model: ' + filePath);
+  {$endif}
+  xml := TheXmlWriter.Create(filePath, true);
   try
     if not Assigned(xml.Root) then
+    begin
+      {$ifdef DEBUG_BS}
+      BSWriteMsg('MeshLoadCollada', 'if not Assigned(xml.Root) then');
+      {$endif}
       exit;
+    end;
 
     upCorrection := IDENTITY_MAT;
     node := xml.Root.FindChildNode('asset');
@@ -1126,6 +1145,7 @@ begin
         end;
       end;
     end;
+
     upCorrectionInv := upCorrection;
     MatrixInvert(upCorrectionInv);
 

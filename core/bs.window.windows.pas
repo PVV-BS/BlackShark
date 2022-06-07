@@ -1,4 +1,4 @@
-﻿{
+{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -99,6 +99,7 @@ type
     procedure DoSetPosition(AWindow: BSWindow; ALeft, ATop: int32); override;
     procedure DoFullScreen(AWindow: BSWindow); override;
     procedure DoActive(AWindow: BSWindow); override;
+    procedure DoShowCursor(AWindow: BSWindow); override;
     function GetMousePointPos: TVec2i; override;
     procedure ChangeDisplayResolution(NewWidth, NewHeight: int32); // overload;
   public
@@ -612,6 +613,11 @@ begin
     EnableWindow(AWindow.Parent.Handle, FALSE);
 end;
 
+procedure BSApplicationWindows.DoShowCursor(AWindow: BSWindow);
+begin
+  // todo
+end;
+
 function BSApplicationWindows.FullScreenStyle: uint32;
 begin
   Result := WS_POPUP or WS_VISIBLE or WS_SYSMENU;
@@ -678,6 +684,7 @@ end;
 procedure BSApplicationWindows.UpdateWait;
 var
   msg: tagMSG;
+  i: int32;
 begin
   if FWindowsList.Count = 0 then
     exit;
@@ -686,6 +693,10 @@ begin
   begin
     TranslateMessage(msg);
     DispatchMessage(msg);
+  end;
+  for i := 0 to FWindowsList.Count - 1 do
+  begin
+    FWindowsList.Items[i].Draw;
   end;
   inherited;
 end;

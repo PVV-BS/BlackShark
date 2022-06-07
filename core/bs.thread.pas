@@ -1,4 +1,4 @@
-﻿{
+{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -219,7 +219,7 @@ type
 
   { TGUIThread
 
-    a main thread processing events on the side of GUI;
+    a main thread events processing on the side of GUI;
     singleton, raises an exception if try to create more 1; any kind of an
     application must invoke OnIdleApplication with speed able to support
     processing of events on a decent level

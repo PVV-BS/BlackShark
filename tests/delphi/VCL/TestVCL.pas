@@ -335,8 +335,8 @@ end;
 
 procedure TfrmMain.OnSecondFormShow(Sender: TObject);
 begin
-  if Assigned(FrmSecondContext) and Assigned(FrmSecondContext.ViewPort) then
-    FrmSecondContext.ViewPort.CurrentScene := ViewPort.CurrentScene;
+//  if Assigned(FrmSecondContext) and Assigned(FrmSecondContext.ViewPort) then
+//    FrmSecondContext.ViewPort.CurrentScene := ViewPort.CurrentScene;
 end;
 
 procedure TfrmMain.PanelInfoClick(Sender: TObject);
@@ -399,8 +399,8 @@ begin
   t := GetTickCount;
   CurrentTest.Run;
   MemoEvents.Lines.Add('Start of "' + CurrentTest.TestName + '" has taken ' + IntToStr(GetTickCount - t) + ' ms');
-  if Assigned(FrmSecondContext) and Assigned(FrmSecondContext.ViewPort) and Assigned(FrmSecondContext.ViewPort.Renderer) then
-    FrmSecondContext.ViewPort.CurrentScene := ViewPort.CurrentScene;
+  if Assigned(FrmSecondContext) then
+    FrmSecondContext.CurrentScene := ViewPort.CurrentScene;
 end;
 
 procedure TfrmMain.SbScreenShortClick(Sender: TObject);

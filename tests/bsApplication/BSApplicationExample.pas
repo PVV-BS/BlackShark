@@ -41,6 +41,8 @@ uses
   , bs.log
   , bs.basetypes
   , bs.align
+  , bs.thread
+  , bs.obj
   ;
 
 procedure BSApplicationExampleRun;
@@ -66,7 +68,7 @@ begin
   inherited;
   CommandLineParam := ParamStr(1);
   if CommandLineParam = '' then
-    CommandLineParam := 'TBSTestTable';//TBSTestWindows TBSTestSimple TBSTestCollada
+    CommandLineParam := 'TBSTestWindows'; //TBSTestWindows TBSTestEarth TBSTestCanvasImages TBSTestEdit TBSTestButton TBSTestTable TBSTestWindows TBSTestSimple TBSTestCollada  TBSTestCanvas
 end;
 
 destructor TBSApplicationExample.Destroy;
@@ -90,21 +92,30 @@ begin
       ClassTest := GetClassTest(i);
       if CommandLineParam = ClassTest.ClassName then
       begin
+        {$ifdef DEBUG_BS}
+        BSWriteMsg('TBSApplicationExample.OnCreateGlContext', 'the run of the test is beginning...');
+        {$endif}
         TestScene := ClassTest.Create(AWindow.Renderer);
         TestScene.Run;
         {$ifdef DEBUG_BS}
-        BSWriteMsg('TBSApplicationExample.OnCreateGlContext', 'the test was run');
+        BSWriteMsg('TBSApplicationExample.OnCreateGlContext', 'the test was run...');
         {$endif}
         break;
       end;
     end;
     FCanvas := TBCanvas.Create(AWindow.Renderer, nil);
-    FCanvas.Font.Size := 10;
+    FCanvas.Font.Size := 7;
     FpsOut := TCanvasText.Create(FCanvas, nil);
-    FpsOut.Text := 'FPS: 0';
+    FpsOut.Data.StaticObject := false;
+    FpsOut.Text := 'Tasks: 0; FPS: 0';
     FpsOut.Position2d := vec2(AWindow.Width - FpsOut.Width - 20.0, 5.0);
     FpsOut.Anchors[TAnchor.aLeft] := false;
     FpsOut.Anchors[TAnchor.aRight] := true;
+    FpsOut.Color := BS_CL_RED;
+
+    {$ifdef ultibo}
+    MainWindow.ShowCursor := true;
+    {$endif}
   end;
 end;
 
@@ -124,9 +135,9 @@ begin
   inherited;
   if Assigned(FpsOut) then
   begin
-    FpsOut.Text := 'FPS: ' + IntToStr(MainWindow.Renderer.FPS);
+    FpsOut.Text := 'Tasks: ' + IntToStr(TTaskExecutor.CountTasks) + '; FPS: ' + IntToStr(MainWindow.Renderer.FPS);
   end;
-end;
+  end;
 
 procedure TBSApplicationExample.OnGLContextLost;
 begin

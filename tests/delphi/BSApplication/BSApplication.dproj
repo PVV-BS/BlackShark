@@ -1253,7 +1253,7 @@
                         <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\TransparentBack.png" Configuration="Debug" Class="File">
+                <DeployFile LocalName="..\..\..\bin\Pictures\earth\earthcloudmapcolortrans.png" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Pictures</RemoteDir>
                         <RemoteName>TransparentBack.png</RemoteName>
@@ -2025,13 +2025,6 @@
                         <RemoteDir>.\Pictures</RemoteDir>
                         <RemoteName>point_red_7x7.png</RemoteName>
                         <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\earth\moonmap1k3.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\earth</RemoteDir>
-                        <RemoteName>moonmap1k3.png</RemoteName>
-                        <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">

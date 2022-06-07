@@ -473,17 +473,15 @@ begin
   VecText4.Color := BS_CL_AQUA;
 
   ButtonScaleOut := TBButton.Create(ARenderer);
-  ButtonScaleOut.Size := vec2(200.0, 50.0);
-  ButtonScaleOut.Canvas.Font.Size := 14;
   ButtonScaleOut.Caption := 'Zoom text out';
-  ButtonScaleOut.Position2d := vec2(450.0, 125.0);
+  ButtonScaleOut.Size := vec2(ButtonScaleOut.Text.Width + 20*ToHiDpiScale, ButtonScaleOut.Text.Height + 20*ToHiDpiScale);
   OnClickObsrvOut := ButtonScaleOut.OnClickEvent.CreateObserver(GUIThread, OnMouseUpScaleOut);
 
   ButtonScaleIn := TBButton.Create(ARenderer);
-  ButtonScaleIn.Size := vec2(200.0, 50.0);
-  ButtonScaleIn.Canvas.Font.Size := 14;
+  ButtonScaleIn.Size := ButtonScaleOut.Size;
   ButtonScaleIn.Caption := 'Zoom text in';
-  ButtonScaleIn.Position2d := vec2(450.0, 45.0);
+  ButtonScaleIn.Position2d := vec2(50.0, 450.0);
+  ButtonScaleOut.Position2d := vec2(50.0, ButtonScaleIn.Height + ButtonScaleIn.Position2d.Y + 20*ToHiDpiScale);
   OnClickObsrvIn := ButtonScaleIn.OnClickEvent.CreateObserver(GUIThread, OnMouseUpScaleIn);
 
 end;

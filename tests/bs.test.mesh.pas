@@ -75,7 +75,11 @@ type
 implementation
 
 uses
+  {$ifdef ultibo}
+    gles20
+  {$else}
     bs.gl.es
+  {$endif}
   , bs.thread
   , bs.texture
   ;
@@ -93,7 +97,7 @@ begin
   inherited Create(ARenderer);
   Obj := TTexturedVertexes.Create(Self, nil , Renderer.Scene);
   MeshLoadObj('Models/Obj/aquafish01.obj', Obj.Mesh, 0.004);
-  Obj.Mesh.DrawingPrimitive := GL_TRIANGLES;
+  Obj.Mesh.TypePrimitive := tpTriangles;
   Obj.Texture := BSTextureManager.LoadTexture('Models/Obj/aquafish01.png');
   //Obj.Texture := Scene.TextureManager.UV(BS_CL_BLUE);
   Obj.Shader := TBlackSharkTextureOutShader(BSShaderManager.Load('SimpleTexture', TBlackSharkTextureOutShader));

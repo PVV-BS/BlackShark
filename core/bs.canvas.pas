@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -450,9 +450,9 @@ type
     property TypePrimitive: TTypePrimitive read GetTypePrimitive write SetTypePrimitive;
   end;
 
-  { A base for sequence linked points }
+  { A base for sequentially linked points }
 
-  TBaseLine = class(TCanvasObject)
+  TLinesSequence = class abstract(TCanvasObject)
   private
     FShowPoints: boolean;
     FColorPoints: TColor4f;
@@ -477,16 +477,16 @@ type
     procedure CalcOriginPos;
     procedure SetColorPoints(const Value: TColor4f);
   protected
-    FPoints: TListVec3f;
     FOrigins: TListVec2f;
+    FPoints: TListVec3f;
+    FPointsInterpolated: TListVec3f;
     FOriginSize: TVec2f;
     FOriginMiddle: TVec2f;
-
+    FCurrentLength: double;
     function CreateGraphicObject(AParent: TGraphicObject): TGraphicObject; override;
     procedure DoAlign(var ParentClientAreaSize, ParentPaddingHor, ParentPaddingVert: TVec2f); override;
-    { return TCircle if a property ShowPoints is enabled }
-    function DoAddPoint(const Point: TVec2f): TCircle;
-    procedure SetPoint(Index: int32; const Value: TVec2f);
+    { return TCircle (TODO: remove it) if a property ShowPoints is enabled }
+    function DoAddPoint(const Point: TVec2f): TCircle; virtual;
     procedure SetPosition2d(const AValue: TVec2f); override;
     procedure SetColor(const Value: TColor4f); override;
     procedure SetWidthLine(const Value: BSFloat); virtual;
@@ -495,7 +495,6 @@ type
     destructor Destroy; override;
     procedure Build; override;
     procedure Clear; virtual;
-    { the property really if only enable a ShowPoints }
     property ShowPoints: boolean read FShowPoints write SetShowPoints;
     property ColorPoints: TColor4f read FColorPoints write SetColorPoints;
     property WidthLine: BSFloat read FWidthLine write SetWidthLine;
@@ -503,53 +502,96 @@ type
     property RadiusPoints: BSFloat read FRadiusPoints write FRadiusPoints;
     property CountPoints: int32 read GetCountPoint;
     property Points[Index: int32]: TVec2f read GetPoint;
+    property CurrentLength: double read FCurrentLength;
   end;
 
-  TLine = class(TBaseLine)
+  TBaseLine = class(TLinesSequence)
+  public
+    constructor Create(ACanvas: TBCanvas; AParent: TCanvasObject); override; deprecated 'Use TLinesSequence instead TBaseLine';
+  end;
+
+  TLinesSequenceStroke = class abstract(TLinesSequence)
   private
-    function GetLength: BSFloat;
-    procedure SetLength(const Value: BSFloat);
-    function GetA: TVec2f;
-    function GetB: TVec2f;
-    procedure SetA(const Value: TVec2f);
-    procedure SetB(const Value: TVec2f);
+    LastOrigin: TVec2f;
+    SumRemainder: BSFloat;
+    StartStroke: TVec2f;
+    procedure SetStrokeLength(const Value: BSFloat);
+    function GetColors(Index: int32): TColor4f;
+    function GetStrokeLength: BSFloat;
   protected
+    FColors: TListVec<TColor4f>;
+    FColorDistances: TListVec<Double>;
+    function DoAddPoint(const Point: TVec2f): TCircle; override;
+    function CreateGraphicObject(AParent: TGraphicObject): TGraphicObject; override;
     procedure DoBuild; override;
+    procedure SetColor(const Value: TColor4f); override;
   public
     constructor Create(ACanvas: TBCanvas; AParent: TCanvasObject); override;
-    property A: TVec2f read GetA write SetA;
-    property B: TVec2f read GetB write SetB;
+    destructor Destroy; override;
+    procedure Build; override;
+    procedure Clear; override;
+    { if it is more 0 then the line has strokes }
+    property StrokeLength: BSFloat read GetStrokeLength write SetStrokeLength;
+    property Colors[Index: int32]: TColor4f read GetColors;
+  end;
+
+  TLine = class(TLinesSequenceStroke)
+  private
+    FB: TVec2f;
+    FA: TVec2f;
+    function GetLength: BSFloat;
+    procedure SetLength(const Value: BSFloat);
+    //procedure SetA(const Value: TVec2f);
+    //procedure SetB(const Value: TVec2f);
+  protected
+    procedure DoBuild; override;
+    procedure SetPoint(Index: int32; const Value: TVec2f);
+  public
+    constructor Create(ACanvas: TBCanvas; AParent: TCanvasObject); override;
+    procedure Build; override;
+    property A: TVec2f read FA write FA;
+    property B: TVec2f read FB write FB;
     { you can define Size of the line drive direction by the point B }
     property Length: BSFloat read GetLength write SetLength;
   end;
 
-  { TPath colored by single color }
+  { TPath }
 
-  TPath = class(TBaseLine)
+  TPath = class(TLinesSequenceStroke)
   private type
-    TIntrpFunc = function: TVec3f of object;
+    TIntrpFunc = procedure of object;
   private
     FClosed: boolean;
     FuncIntrp: array [TInterpolateSpline] of TIntrpFunc;
     FInterpolateSpline: TInterpolateSpline;
     FInterpolateFactor: BSFloat;
-    function SplineInterpolateBezier: TVec3f;
-    function SplineInterpolateCubic: TVec3f;
+    procedure SplineInterpolateBezier;
+    procedure SplineInterpolateCubic;
     // https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Cardinal_spline
-    function SplineInterpolateCubicHermite: TVec3f;
-    function SplineNoInterpolate: TVec3f;
+    procedure SplineInterpolateCubicHermite;
+
     procedure DoAddArc(const APositionCenter: TVec2f; ARadius: BSFloat; AAngle, AStartAngle: BSFloat);
     procedure SetInterpolateFactor(const Value: BSFloat);
+    procedure AddColor(const AColor: TColor4f);
   protected
     procedure DoBuild; override;
   public
     constructor Create(ACanvas: TBCanvas; AParent: TCanvasObject); override;
-    function AddPoint(const Point: TVec2f): TCircle; overload; virtual;
-    function AddPoint(X, Y: BSFloat): TCircle; overload; virtual;
+    procedure Build; override;
+    function AddPoint(const Point: TVec2f): TCircle; overload;
+    function AddPoint(X, Y: BSFloat): TCircle; overload;
+    function AddPoint(const APoint: TVec2f; const AColor: TColor4f): TCircle; overload;
+    function AddPoint(const APoint: TVec2f; const AColor: TGuiColor): TCircle; overload;
+    function AddPoint(X, Y: BSFloat; const AColor: TColor4f): TCircle; overload;
+    function AddPoint(X, Y: BSFloat; const AColor: TGuiColor): TCircle; overload;
     { create a new curve with arc patern; smoothing depend on InterpolateFactor - the less, the better }
-    procedure AddFirstArc(const APositionCenter: TVec2f; ARadius: BSFloat; AAngle, AStartAngle: BSFloat); virtual;
+    procedure AddFirstArc(const APositionCenter: TVec2f; ARadius: BSFloat; AAngle, AStartAngle: BSFloat); overload;
+    procedure AddFirstArc(const APositionCenter: TVec2f; ARadius: BSFloat; AAngle, AStartAngle: BSFloat; const AColor: TColor4f); overload;
+    procedure AddFirstArc(const APositionCenter: TVec2f; ARadius: BSFloat; AAngle, AStartAngle: BSFloat; const AColor: TGuiColor); overload;
     { adds an arc to the end of the curve; smoothing depend on InterpolateFactor - the less, the better }
-    procedure AddArc(ARadius: BSFloat; AAngle: BSFloat); virtual;
+    procedure AddArc(ARadius: BSFloat; AAngle: BSFloat); overload;
+    procedure AddArc(ARadius: BSFloat; AAngle: BSFloat; const AColor: TColor4f); overload;
+    procedure AddArc(ARadius: BSFloat; AAngle: BSFloat; const AColor: TGuiColor); overload;
     property Closed: boolean read FClosed write FClosed;
     property InterpolateSpline: TInterpolateSpline read FInterpolateSpline write FInterpolateSpline;
     property InterpolateFactor: BSFloat read FInterpolateFactor write SetInterpolateFactor;
@@ -563,39 +605,19 @@ type
   }
 
   TPathMultiColored = class(TPath)
-  private
-    FColors: TListVec<TColor4f>;
-    function GetColors(Index: int32): TColor4f;
-  protected
-    function CreateGraphicObject(AParent: TGraphicObject): TGraphicObject; override;
-    procedure DoBuild; override;
-    procedure SetColor(const Value: TColor4f); override;
   public
-    constructor Create(ACanvas: TBCanvas; AParent: TCanvasObject); override;
-    destructor Destroy; override;
-    procedure Clear; override;
-    function AddPoint(const APoint: TVec2f; const AColor: TColor4f): TCircle; reintroduce; overload;
-    function AddPoint(X, Y: BSFloat; const AColor: TColor4f): TCircle; reintroduce; overload;
-    { create a new curve with arc patern; smoothing depend on InterpolateFactor - the less, the better }
-    procedure AddFirstArc(const APositionCenter: TVec2f; ARadius: BSFloat; AAngle, AStartAngle: BSFloat; const AColor: TColor4f); reintroduce;
-    { adds an arc to the end of the curve; smoothing depend on InterpolateFactor - the less, the better }
-    procedure AddArc(ARadius: BSFloat; AAngle: BSFloat; const AColor: TColor4f); reintroduce;
-    property Colors[Index: int32]: TColor4f read GetColors;
+    constructor Create(ACanvas: TBCanvas; AParent: TCanvasObject); override; deprecated 'Use TPath instead TPathMultiColored';
   end;
 
-  TBezierLine = class(TBaseLine)
+  TBezierLine = class(TLinesSequence)
   private
     function GetA: TVec2f;
     function GetB: TVec2f;
     procedure SetA(const Value: TVec2f);
     procedure SetB(const Value: TVec2f);
-    //procedure CalcOriginPos;
-    //procedure CalcByPointsPosAndSize;
   protected
-    //function CountPoints: int32; virtual;
     procedure DoBuild; override;
-    //procedure DoAlign; override;
-    //procedure ClearPointsG;
+    procedure SetPoint(Index: int32; const Value: TVec2f);
   public
     constructor Create(ACanvas: TBCanvas; AParent: TCanvasObject); override;
     destructor Destroy; override;
@@ -1074,7 +1096,11 @@ function CreateCanvasEventObserver(const ACanvasEvent: TCanvasEvent; ObserverPro
 implementation
 
 uses
+  {$ifdef ultibo}
+    gles20
+  {$else}
     bs.gl.es
+  {$endif}
   , bs.exceptions
   , bs.config
   , bs.math
@@ -2442,33 +2468,34 @@ end;
 procedure TLine.DoBuild;
 begin
   inherited DoBuild;
-  GenerateLine2d(Data.Mesh, FPoints.Items[0], FPoints.Items[1], RoundWidth(FWidthLine), true, true);
+  if FPoints.Count = 2 then
+    GenerateLine2d(Data.Mesh, FPoints.Items[0], FPoints.Items[1], RoundWidth(FWidthLine), true, true)
+  else
+    GeneratePath2d(Data.Mesh, PArrayVec3f(FPoints.ShiftData[0]), FPoints.Count, FWidthLine, false, true, FWidthLine = 1.0);
+end;
+
+procedure TLine.Build;
+begin
+  Clear;
+  DoAddPoint(FA);
+  DoAddPoint(FB);
+  inherited Build;
 end;
 
 constructor TLine.Create(ACanvas: TBCanvas; AParent: TCanvasObject);
 begin
   inherited;
-  Data.Mesh.DrawingPrimitive := GL_TRIANGLE_STRIP;
+  Data.Mesh.TypePrimitive := tpTriangleStrip;
   { merely define direction of the line }
-  B := vec2(0.0, 1.0);
-end;
-
-function TLine.GetA: TVec2f;
-begin
-  Result := FOrigins.Items[0];
-end;
-
-function TLine.GetB: TVec2f;
-begin
-  Result := FOrigins.Items[1];
+  FB := vec2(0.0, 1.0);
 end;
 
 function TLine.GetLength: BSFloat;
 begin
-  Result := VecLen(B - A);
+  Result := VecLen(FB - FA);
 end;
 
-procedure TLine.SetA(const Value: TVec2f);
+{procedure TLine.SetA(const Value: TVec2f);
 begin
   SetPoint(0, Value);
 end;
@@ -2476,17 +2503,55 @@ end;
 procedure TLine.SetB(const Value: TVec2f);
 begin
   SetPoint(1, Value);
-end;
+end; }
 
 procedure TLine.SetLength(const Value: BSFloat);
 var
   v: TVec2f;
 begin
-  if (B = A) then
+  if (FB = FA) then
     v := vec2(0.0, 1.0)
   else
-    v := VecNormalize(B - A);
-  B := A + v * Value;
+    v := VecNormalize(FB - FA);
+  FB := FA + v * Value;
+end;
+
+procedure TLine.SetPoint(Index: int32; const Value: TVec2f);
+var
+  orig: TListVec<TVec2f>;
+  points_g: TListVec<TCircle>;
+  i: Integer;
+begin
+  if Index < FOrigins.Count then
+  begin
+
+    orig := TListVec<TVec2f>.Create;
+    orig.AddList(FOrigins);
+    orig.Items[Index] := Value;
+
+    points_g := nil;
+    if Assigned(FPointsG) and (FPointsG.Count > 0) then
+    begin
+      points_g := TListVec<TCircle>.Create;
+      points_g.AddList(FPointsG);
+      FPointsG.Count := 0;
+    end;
+
+    Clear;
+
+    if Assigned(FPointsG) and Assigned(points_g) then
+    begin
+      FPointsG.AddList(points_g);
+      points_g.Free;
+    end;
+
+    for i := 0 to orig.Count - 1 do
+      DoAddPoint(orig.Items[i]);
+
+    orig.Free;
+
+  end else
+    DoAddPoint(Value);
 end;
 
 { TCanvasObjectP }
@@ -2518,9 +2583,6 @@ end;
 constructor TBezierLine.Create(ACanvas: TBCanvas; AParent: TCanvasObject);
 begin
   inherited;
-  { bans to create VBO for vertexes, so their will only two }
-  //Data.StaticObject := false;
-  //SetLength(OriginPoints, CountPoints);
 end;
 
 destructor TBezierLine.Destroy;
@@ -2531,7 +2593,7 @@ end;
 
 procedure TBezierLine.DoBuild;
 begin
-  GeneratePath2d(Data.Mesh, PArrayVec3f(FPoints.ShiftData[0]), FPoints.Count, RoundWidth(FWidthLine), false, true);
+  GeneratePath2d(Data.Mesh, PArrayVec3f(FPoints.ShiftData[0]), FPoints.Count, RoundWidth(FWidthLine), false, true, RoundWidth(FWidthLine) = 1.0);
 end;
 
 function TBezierLine.GetA: TVec2f;
@@ -2552,6 +2614,44 @@ end;
 procedure TBezierLine.SetB(const Value: TVec2f);
 begin
   SetPoint(1, Value);
+end;
+
+procedure TBezierLine.SetPoint(Index: int32; const Value: TVec2f);
+var
+  orig: TListVec<TVec2f>;
+  points_g: TListVec<TCircle>;
+  i: Integer;
+begin
+  if Index < FOrigins.Count then
+  begin
+
+    orig := TListVec<TVec2f>.Create;
+    orig.AddList(FOrigins);
+    orig.Items[Index] := Value;
+
+    if Assigned(FPointsG) and (FPointsG.Count > 0) then
+    begin
+      points_g := TListVec<TCircle>.Create;
+      points_g.AddList(FPointsG);
+      FPointsG.Count := 0;
+    end;
+
+    Clear;
+
+    points_g := nil;
+    if Assigned(FPointsG) and Assigned(points_g) then
+    begin
+      FPointsG.AddList(points_g);
+      points_g.Free;
+    end;
+
+    for i := 0 to orig.Count - 1 do
+      DoAddPoint(orig.Items[i]);
+
+    orig.Free;
+
+  end else
+    DoAddPoint(Value);
 end;
 
 { TBezierQuadratic }
@@ -2614,19 +2714,20 @@ begin
   SetPoint(3, Value);
 end;
 
-{ TBaseLine }
+{ TLinesSequence }
 
-destructor TBaseLine.Destroy;
+destructor TLinesSequence.Destroy;
 begin
   ClearPointsG;
   FPointsG.Free;
   FPoints.Free;
   FOrigins.Free;
+  FPointsInterpolated.Free;
   ObsrvOnBeforeCanvasClear := nil;
   inherited;
 end;
 
-procedure TBaseLine.Build;
+procedure TLinesSequence.Build;
 begin
   CalcOriginPos;
 
@@ -2644,7 +2745,7 @@ begin
     UpdatePointsPos;
 end;
 
-procedure TBaseLine.SetShowPoints(const Value: boolean);
+procedure TLinesSequence.SetShowPoints(const Value: boolean);
 begin
   if FShowPoints = Value then
     exit;
@@ -2666,7 +2767,7 @@ begin
   end;
 end;
 
-procedure TBaseLine.ClearPointsG;
+procedure TLinesSequence.ClearPointsG;
 var
   i: int32;
 begin
@@ -2678,10 +2779,15 @@ begin
   FPointsG.Count := 0;
 end;
 
-function TBaseLine.DoAddPoint(const Point: TVec2f): TCircle;
+function TLinesSequence.DoAddPoint(const Point: TVec2f): TCircle;
 begin
+
+  if FOrigins.Count > 0 then
+    FCurrentLength := FCurrentLength + VecLen(FOrigins.Items[FOrigins.Count - 1] - Point);
+
   FOrigins.Add(Point);
   FPoints.Add(Canvas.Renderer.ScreenPositionToScene(Point));
+
   FOriginPosition.x := bs.math.Min(FOriginPosition.x, Point.x);
   FOriginPosition.y := bs.math.Min(FOriginPosition.y, Point.y);
 
@@ -2695,7 +2801,7 @@ begin
     Result := nil;
 end;
 
-procedure TBaseLine.OnDrag(const Value: BDragDropData);
+procedure TLinesSequence.OnDrag(const Value: BDragDropData);
 var
   p: TCircle;
   i: int32;
@@ -2712,12 +2818,12 @@ begin
   Build;
 end;
 
-function TBaseLine.GetPoint(Index: int32): TVec2f;
+function TLinesSequence.GetPoint(Index: int32): TVec2f;
 begin
   Result := FOrigins.Items[Index];
 end;
 
-procedure TBaseLine.SetColor(const Value: TColor4f);
+procedure TLinesSequence.SetColor(const Value: TColor4f);
 var
   i: Integer;
 begin
@@ -2735,21 +2841,12 @@ begin
   inherited;
 end;
 
-procedure TBaseLine.SetColorPoints(const Value: TColor4f);
+procedure TLinesSequence.SetColorPoints(const Value: TColor4f);
 begin
   FColorPoints := Value;
 end;
 
-procedure TBaseLine.SetPoint(Index: int32; const Value: TVec2f);
-begin
-  if Index < FOrigins.Count then
-  begin
-    FOrigins.Items[Index] := Value;
-  end else
-    DoAddPoint(Value);
-end;
-
-function TBaseLine.GetPointG(Index: int32): TCircle;
+function TLinesSequence.GetPointG(Index: int32): TCircle;
 begin
   if FPointsG <> nil then
     Result := FPointsG.Items[Index]
@@ -2757,13 +2854,13 @@ begin
     Result := nil;
 end;
 
-procedure TBaseLine.OnBeforeCanvasClear(const AData: BEmpty);
+procedure TLinesSequence.OnBeforeCanvasClear(const AData: BEmpty);
 begin
   if ShowPoints then
     ClearPointsG;
 end;
 
-procedure TBaseLine.UpdatePointsPos;
+procedure TLinesSequence.UpdatePointsPos;
 var
   i: int32;
 begin
@@ -2774,19 +2871,19 @@ begin
     FPointsG.Items[i].Position2d := FOrigins.Items[i]*Canvas.Scale;
 end;
 
-constructor TBaseLine.Create(ACanvas: TBCanvas; AParent: TCanvasObject);
+constructor TLinesSequence.Create(ACanvas: TBCanvas; AParent: TCanvasObject);
 begin
   inherited;
   FPoints := TListVec3f.Create;
   FOrigins := TListVec2f.Create;
   FWidthLine    := 1;
   FRadiusPoints := 5;
-  FOriginPosition.x := 65535;
-  FOriginPosition.y := 65535;
+  FOriginPosition.x := 65535.0;
+  FOriginPosition.y := 65535.0;
   FColorPoints := Color;
 end;
 
-procedure TBaseLine.CreateGPoints;
+procedure TLinesSequence.CreateGPoints;
 var
   i: int32;
 begin
@@ -2794,12 +2891,12 @@ begin
     CreatePoint(i);
 end;
 
-function TBaseLine.CreateGraphicObject(AParent: TGraphicObject): TGraphicObject;
+function TLinesSequence.CreateGraphicObject(AParent: TGraphicObject): TGraphicObject;
 begin
   Result := TColoredVertexes.Create(Self, AParent, FCanvas.Renderer.Scene);
 end;
 
-function TBaseLine.CreatePoint(Index: int32): TCircle;
+function TLinesSequence.CreatePoint(Index: int32): TCircle;
 begin
   Result := FPointsG.Items[Index];
   if Assigned(Result) then
@@ -2828,12 +2925,12 @@ begin
   Obsers[Index] := Result.Data.EventDrag.CreateObserver(GUIThread, OnDrag);
 end;
 
-function TBaseLine.GetCountPoint: int32;
+function TLinesSequence.GetCountPoint: int32;
 begin
   Result := FPoints.Count;
 end;
 
-procedure TBaseLine.SetWidthLine(const Value: BSFloat);
+procedure TLinesSequence.SetWidthLine(const Value: BSFloat);
 begin
   if FWidthLine = Value then
     exit;
@@ -2843,7 +2940,7 @@ begin
   FRadiusPoints := FWidthLine * 2;
 end;
 
-procedure TBaseLine.SetPosition2d(const AValue: TVec2f);
+procedure TLinesSequence.SetPosition2d(const AValue: TVec2f);
 var
   i: int32;
 begin
@@ -2865,23 +2962,25 @@ begin
     UpdatePointsPos;
 end;
 
-procedure TBaseLine.Clear;
+procedure TLinesSequence.Clear;
 begin
   FPoints.Count := 0;
   FOrigins.Count := 0;
-  FOriginPosition.x := 65535;
-  FOriginPosition.y := 65535;
+  FOriginPosition.x := 65535.0;
+  FOriginPosition.y := 65535.0;
+  FCurrentLength := 0.0;
+  FreeAndNil(FPointsInterpolated);
   Data.Clear;
   ClearPointsG;
 end;
 
-procedure TBaseLine.DoAlign(var ParentClientAreaSize, ParentPaddingHor, ParentPaddingVert: TVec2f);
+procedure TLinesSequence.DoAlign(var ParentClientAreaSize, ParentPaddingHor, ParentPaddingVert: TVec2f);
 begin
   inherited;
   UpdatePointsPos;
 end;
 
-procedure TBaseLine.CalcOriginPos;
+procedure TLinesSequence.CalcOriginPos;
 var
   i: int32;
   max_pos: TVec2f;
@@ -2905,6 +3004,174 @@ begin
   FOriginMiddle := (FOriginPos + max_pos) * 0.5;
 end;
 
+{ TLinesSequenceStroke }
+
+constructor TLinesSequenceStroke.Create(ACanvas: TBCanvas; AParent: TCanvasObject);
+begin
+  inherited;
+  FColors := TListVec<TColor4f>.Create;
+  FColorDistances := TListVec<Double>.Create;
+end;
+
+procedure TLinesSequenceStroke.Build;
+var
+  i, indexColor: int32;
+  src: TListVec3f;
+  distance, len: double;
+  currentColor: TColor4f;
+  p, prev_p: TVec2f;
+  isLineGL: boolean;
+begin
+  inherited;
+
+  { distributes colors on all vertexes from control points
+    if the object has mesh which contains color in every vertex }
+
+  if TComplexCurveObject(Data).MultiColor then
+  begin
+    if Assigned(FPointsInterpolated) and (FPointsInterpolated.Count > 0) then
+      src := FPointsInterpolated
+    else
+      src := FPoints;
+
+    distance := 0.0;
+    isLineGL := Data.Mesh.TypePrimitive in [TTypePrimitive.tpLines, TTypePrimitive.tpLineStrip];
+
+    indexColor := 0;
+    if FColors.Count > 0 then
+      currentColor := FColors.Items[0]
+    else
+      currentColor := Color;
+
+    prev_p := TVec2f(src.Items[0]);
+
+    for i := 0 to src.Count - 1 do
+    begin
+
+      p := TVec2f(src.Items[i]);
+      len := VecLen(p - prev_p);
+      distance := distance + len;
+      if (indexColor < FColors.Count - 1) then
+      begin
+        if (len < EPSILON) and (distance >= FColorDistances.Items[indexColor+1]) then
+          inc(indexColor);
+      end;
+
+      prev_p := p;
+      currentColor := FColors.Items[indexColor];
+
+      if isLineGL then
+      begin
+        Data.Mesh.Write(i, vcColor, currentColor);
+        Data.Mesh.Write(i, vcIndex, distance);
+      end else
+      begin
+        Data.Mesh.Write(i shl 1, vcColor, currentColor);
+        Data.Mesh.Write((i shl 1)+1, vcColor, currentColor);
+        Data.Mesh.Write(i shl 1, vcIndex, distance);
+        Data.Mesh.Write((i shl 1)+1, vcIndex, distance);
+      end;
+    end;
+
+    Data.ChangedMesh;
+  end;
+end;
+
+procedure TLinesSequenceStroke.Clear;
+begin
+  inherited;
+  SumRemainder := 0.0;
+  FColors.Clear;
+end;
+
+function TLinesSequenceStroke.CreateGraphicObject(AParent: TGraphicObject): TGraphicObject;
+begin
+  Result := TComplexCurveObject.Create(Self, AParent, FCanvas.Renderer.Scene);
+end;
+
+destructor TLinesSequenceStroke.Destroy;
+begin
+  FColors.Free;
+  FColorDistances.Free;
+  inherited;
+end;
+
+function TLinesSequenceStroke.DoAddPoint(const Point: TVec2f): TCircle;
+var
+  l: BSFloat;
+  count: int32;
+  i: int32;
+  step: TVec2f;
+  p: TVec2f;
+begin
+
+  if (StrokeLength > 0.0) then
+  begin
+
+    if not ((FOrigins.Count = 0) or (LastOrigin = Point)) then
+    begin
+      step := Point - LastOrigin;
+      l := VecLen(step) + SumRemainder;
+      if l > StrokeLength then
+      begin
+        count := Trunc(l / StrokeLength);
+        SumRemainder := l - count*StrokeLength;
+        if SumRemainder = 0 then
+          dec(count);
+        if count > 1 then
+        begin
+          step := step / count;
+          p := LastOrigin;
+          for i:= 0 to count - 2 do
+          begin
+            p := p + step;
+            FOrigins.Add(p);
+            FPoints.Add(Canvas.Renderer.ScreenPositionToScene(p));
+          end;
+        end;
+        //FCurrentLength := FCurrentLength + l - SumRemainder;
+        FCurrentLength := FCurrentLength + VecLen(FOrigins.Items[FOrigins.Count - 1] - LastOrigin);
+      end else
+      if l = StrokeLength then
+      begin
+        SumRemainder := 0.0;
+        //FStrokePoints.Add(Point);
+      end;
+
+    end else
+      StartStroke := Point;
+    //LastOrigin
+  end;
+  LastOrigin := Point;
+  Result := inherited;
+end;
+
+procedure TLinesSequenceStroke.DoBuild;
+begin
+  inherited DoBuild;
+end;
+
+function TLinesSequenceStroke.GetColors(Index: int32): TColor4f;
+begin
+  Result := FColors.Items[Index];
+end;
+
+function TLinesSequenceStroke.GetStrokeLength: BSFloat;
+begin
+  Result := TComplexCurveObject(Data).StrokeLength;
+end;
+
+procedure TLinesSequenceStroke.SetColor(const Value: TColor4f);
+begin
+  inherited;
+  FColors.DefaultValue := Value;
+end;
+
+procedure TLinesSequenceStroke.SetStrokeLength(const Value: BSFloat);
+begin
+  TComplexCurveObject(Data).StrokeLength := Value;
+end;
+
 { TPath }
 
 procedure TPath.AddArc(ARadius, AAngle: BSFloat);
@@ -2914,11 +3181,16 @@ var
   startAngle: BSFloat;
   center: TVec2f;
   s, c: BSFloat;
+  i: int32;
 begin
   if FOrigins.Count > 1 then
   begin
-    p0 := FOrigins.Items[FOrigins.Count-2];
-    p1 := FOrigins.Items[FOrigins.Count-1];
+    i := FOrigins.Count-1;
+    repeat
+      p0 := FOrigins.Items[i-1];
+      p1 := FOrigins.Items[i];
+      dec(i);
+    until (i = 0) or not(p0 = p1);
   end else
   if FOrigins.Count > 0 then
   begin
@@ -2983,8 +3255,11 @@ end;
 
 procedure TPath.DoBuild;
 begin
-  if FPoints.Count > 1 then
-    FuncIntrp[FInterpolateSpline]();
+  inherited DoBuild;
+  if (FInterpolateSpline <> isNone) and Assigned(FPointsInterpolated) and (FPointsInterpolated.Count > 0) then
+    GeneratePath2d(Data.Mesh, PArrayVec3f(FPointsInterpolated.ShiftData[0]), FPointsInterpolated.Count, FWidthLine, FClosed, true, FWidthLine = 1.0)
+  else
+    GeneratePath2d(Data.Mesh, PArrayVec3f(FPoints.ShiftData[0]), FPoints.Count, FWidthLine, FClosed, true, FWidthLine = 1.0);
 end;
 
 procedure TPath.AddFirstArc(const APositionCenter: TVec2f; ARadius, AAngle, AStartAngle: BSFloat);
@@ -2999,12 +3274,19 @@ begin
   Result := DoAddPoint(vec2(X, Y));
 end;
 
+procedure TPath.Build;
+begin
+  // if necessary, prepares interpolated path
+  if (FInterpolateSpline <> isNone) and (FPoints.Count > 1) then
+    FuncIntrp[FInterpolateSpline]();
+  inherited;
+end;
+
 constructor TPath.Create(ACanvas: TBCanvas; AParent: TCanvasObject);
 begin
   inherited;
   FInterpolateSpline := isCubicHermite;
-  FInterpolateFactor := 0.01;
-  FuncIntrp[isNone        ] := SplineNoInterpolate;
+  FInterpolateFactor := 0.02;
   FuncIntrp[isBezier      ] := SplineInterpolateBezier;
   FuncIntrp[isCubic       ] := SplineInterpolateCubic;
   FuncIntrp[isCubicHermite] := SplineInterpolateCubicHermite;
@@ -3015,126 +3297,84 @@ begin
   FInterpolateFactor := clamp(1.0, 0.01, Value);
 end;
 
-function TPath.SplineInterpolateBezier: TVec3f;
-var
-  out_values: TListVec<TVec3f>;
+procedure TPath.SplineInterpolateBezier;
 begin
-  out_values := nil;
-  GenerateBezierSpline(PArrayVec3f(FPoints.ShiftData[0]), FPoints.Count, out_values, FInterpolateFactor);
-  Result := GeneratePath2d(Data.Mesh, PArrayVec3f(out_values.ShiftData[0]), out_values.Count, FWidthLine, FClosed, true, FWidthLine = 1.0);
-  out_values.Free;
+  FreeAndNil(FPointsInterpolated);
+  GenerateBezierSpline(PArrayVec3f(FPoints.ShiftData[0]), FPoints.Count, FPointsInterpolated, FInterpolateFactor);
 end;
 
-function TPath.SplineInterpolateCubic: TVec3f;
-var
-  out_values: TListVec<TVec3f>;
+procedure TPath.SplineInterpolateCubic;
 begin
-  out_values := nil;
-  GenerateCubicSpline(PArrayVec3f(FPoints.ShiftData[0]), FPoints.Count, out_values, FInterpolateFactor);
-  Result := GeneratePath2d(Data.Mesh, PArrayVec3f(out_values.ShiftData[0]), out_values.Count, FWidthLine, FClosed, true, FWidthLine = 1.0);
-  out_values.Free;
+  FreeAndNil(FPointsInterpolated);
+  GenerateCubicSpline(PArrayVec3f(FPoints.ShiftData[0]), FPoints.Count, FPointsInterpolated, FInterpolateFactor);
 end;
 
-function TPath.SplineInterpolateCubicHermite: TVec3f;
-var
-  out_values: TListVec<TVec3f>;
+procedure TPath.SplineInterpolateCubicHermite;
 begin
-  out_values := nil;
-  GenerateCubicHermiteSpline(PArrayVec3f(FPoints.ShiftData[0]), FPoints.Count, out_values, FInterpolateFactor, FClosed);
-  Result := GeneratePath2d(Data.Mesh, PArrayVec3f(out_values.ShiftData[0]), out_values.Count, FWidthLine, FClosed, true, FWidthLine = 1.0);
-  out_values.Free;
+  FreeAndNil(FPointsInterpolated);
+  GenerateCubicHermiteSpline(PArrayVec3f(FPoints.ShiftData[0]), FPoints.Count, FPointsInterpolated, FInterpolateFactor, FClosed);
 end;
 
-function TPath.SplineNoInterpolate: TVec3f;
+procedure TPath.AddArc(ARadius, AAngle: BSFloat; const AColor: TColor4f);
 begin
-  Result := GeneratePath2d(Data.Mesh, PArrayVec3f(FPoints.ShiftData[0]), FPoints.Count, FWidthLine, FClosed, true, FWidthLine = 1.0);
+  AddColor(AColor);
+  AddArc(ARadius, AAngle);
+  AddColor(AColor);
+end;
+
+procedure TPath.AddArc(ARadius, AAngle: BSFloat; const AColor: TGuiColor);
+begin
+  AddArc(ARadius, AAngle, TColor4f(AColor));
+end;
+
+procedure TPath.AddColor(const AColor: TColor4f);
+begin
+  FColorDistances.Add(FCurrentLength);
+  if FOrigins.Count > 0 then
+    AddPoint(FOrigins.Items[FOrigins.Count - 1]);
+  if not TComplexCurveObject(Data).MultiColor then
+    TComplexCurveObject(Data).MultiColor := true;
+    FColors.Add(AColor);
+end;
+
+procedure TPath.AddFirstArc(const APositionCenter: TVec2f; ARadius, AAngle, AStartAngle: BSFloat; const AColor: TGuiColor);
+begin
+  AddFirstArc(APositionCenter, ARadius, AAngle, AStartAngle, TColor4f(AColor));
+end;
+
+procedure TPath.AddFirstArc(const APositionCenter: TVec2f; ARadius, AAngle, AStartAngle: BSFloat; const AColor: TColor4f);
+begin
+  AddColor(AColor);
+  AddFirstArc(APositionCenter, ARadius, AAngle, AStartAngle);
+  AddColor(AColor);
+end;
+
+function TPath.AddPoint(const APoint: TVec2f; const AColor: TColor4f): TCircle;
+begin
+  Result := AddPoint(APoint);
+  AddColor(AColor);
+end;
+
+function TPath.AddPoint(X, Y: BSFloat; const AColor: TColor4f): TCircle;
+begin
+  Result := AddPoint(vec2(X, Y), AColor);
+end;
+
+function TPath.AddPoint(const APoint: TVec2f; const AColor: TGuiColor): TCircle;
+begin
+  Result := AddPoint(APoint, TColor4f(AColor));
+end;
+
+function TPath.AddPoint(X, Y: BSFloat; const AColor: TGuiColor): TCircle;
+begin
+  Result := AddPoint(vec2(X, Y), TColor4f(AColor));
 end;
 
 { TPathMultiColored }
 
-procedure TPathMultiColored.AddArc(ARadius, AAngle: BSFloat; const AColor: TColor4f);
-var
-  i, count: int32;
-begin
-  count := FPoints.Count;
-  inherited AddArc(ARadius, AAngle);
-  for i := count to FPoints.Count - 1 do
-    FColors.Add(AColor);
-end;
-
-procedure TPathMultiColored.AddFirstArc(const APositionCenter: TVec2f; ARadius, AAngle, AStartAngle: BSFloat; const AColor: TColor4f);
-var
-  i: int32;
-begin
-  inherited AddFirstArc(APositionCenter, ARadius, AAngle, AStartAngle);
-  for i := 0 to FPoints.Count - 1 do
-    FColors.Add(AColor);
-end;
-
-function TPathMultiColored.AddPoint(const APoint: TVec2f; const AColor: TColor4f): TCircle;
-begin
-  FColors.Add(AColor);
-  Result := inherited AddPoint(APoint);
-end;
-
-function TPathMultiColored.AddPoint(X, Y: BSFloat; const AColor: TColor4f): TCircle;
-begin
-  FColors.Add(AColor);
-  Result := inherited AddPoint(X, Y);
-end;
-
-procedure TPathMultiColored.Clear;
-begin
-  inherited;
-  FColors.Clear;
-end;
-
 constructor TPathMultiColored.Create(ACanvas: TBCanvas; AParent: TCanvasObject);
 begin
   inherited;
-  FColors := TListVec<TColor4f>.Create;
-  InterpolateSpline := TInterpolateSpline.isNone;
-end;
-
-function TPathMultiColored.CreateGraphicObject(AParent: TGraphicObject): TGraphicObject;
-begin
-  Result := TMultiColorVertexes.Create(Self, AParent, FCanvas.Renderer.Scene);
-end;
-
-destructor TPathMultiColored.Destroy;
-begin
-  FColors.Free;
-  inherited;
-end;
-
-procedure TPathMultiColored.DoBuild;
-var
-  i: int32;
-begin
-  inherited;
-  if FWidthLine > 1.0 then
-  begin
-    for i := 0 to FColors.Count - 1 do
-    begin
-      TMultiColorVertexes(Data).WriteColor(i shl 1, TVec3f(FColors.Items[i]));
-      TMultiColorVertexes(Data).WriteColor((i shl 1) + 1, TVec3f(FColors.Items[i]));
-    end;
-  end else
-  begin
-    for i := 0 to FColors.Count - 1 do
-      TMultiColorVertexes(Data).WriteColor(i, TVec3f(FColors.Items[i]));
-  end;
-end;
-
-function TPathMultiColored.GetColors(Index: int32): TColor4f;
-begin
-  Result := FColors.Items[Index];
-end;
-
-procedure TPathMultiColored.SetColor(const Value: TColor4f);
-begin
-  inherited;
-  FColors.DefaultValue := Value;
 end;
 
 { TTriangle }
@@ -3180,7 +3420,7 @@ end;
 constructor TTriangle.Create(ACanvas: TBCanvas; AParent: TCanvasObject);
 begin
   inherited;
-  Data.Mesh.DrawingPrimitive := GL_TRIANGLES;
+  Data.Mesh.TypePrimitive := tpTriangles;
   FWidthLine := 1.0;
 end;
 
@@ -4585,6 +4825,13 @@ begin
   begin
     Data.Mesh.Indexes.Add(indexes.Items[i]);
   end;
+end;
+
+{ TBaseLine }
+
+constructor TBaseLine.Create(ACanvas: TBCanvas; AParent: TCanvasObject);
+begin
+  inherited;
 end;
 
 end.

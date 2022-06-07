@@ -1,7 +1,17 @@
 {.$define DEBUG_BS}
 
 {$ifdef ANDROID}
-  {$define DBG_IO}
+  {$ifdef DEBUG_BS}
+    {$define DBG_IO}
+  {$endif}
+  {$define SingleWinOnly}
+{$endif}
+
+{$ifdef ultibo}
+  {$ifdef DEBUG_BS}
+    {$define DBG_IO}
+  {$endif}
+  {$define SingleWinOnly}
 {$endif}
 
 {$INLINE ON}

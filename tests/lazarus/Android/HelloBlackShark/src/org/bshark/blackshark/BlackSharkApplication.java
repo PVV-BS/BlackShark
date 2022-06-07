@@ -49,6 +49,11 @@ public class BlackSharkApplication extends Activity {
     private static final int SHIFT_STATE_CAPS       = 16;
     private static final int SHIFT_STATE_NUM        = 32;
     private static final int SHIFT_STATE_LONG       = 64;
+    // Ultibo Mouse Data Definitions (Values for TMouseData.Buttons)
+    private static final int MOUSE_LEFT_BUTTON      = 1; // The Left mouse button is pressed
+    private static final int MOUSE_RIGHT_BUTTON     = 2; // The Right mouse button is pressed
+    private static final int MOUSE_MIDDLE_BUTTON    = 4; // The Middle mouse button is pressed
+    private static final int MOUSE_SIDE_BUTTON      = 8; // The Side mouse button is pressed
 
 
     public native int bsNativeInit(String appPath, String filesPath);
@@ -186,8 +191,8 @@ public class BlackSharkApplication extends Activity {
                     int count = event.getPointerCount();
                     for ( int i = 0; i < count; i++ )
                     {
-                        int pointerID = event.getPointerId( i );
-                        opCode = bsNativeOnTouch(MotionEvent.ACTION_DOWN, pointerID, event.getX( i ), event.getY( i ), event.getPressure( i ) );
+                        //int pointerID = event.getPointerId( i );
+                        opCode = bsNativeOnTouch(MotionEvent.ACTION_DOWN, MOUSE_LEFT_BUTTON, event.getX( i ), event.getY( i ), event.getPressure( i ) );
                     }
                     break;
                 }
@@ -196,8 +201,8 @@ public class BlackSharkApplication extends Activity {
                     int count = event.getPointerCount();
                     for ( int i = 0; i < count; i++ )
                     {
-                        int pointerID = event.getPointerId( i );
-                        opCode = bsNativeOnTouch(MotionEvent.ACTION_MOVE, pointerID, event.getX( i ), event.getY( i ), event.getPressure( i ) );
+                        //int pointerID = event.getPointerId( i );
+                        opCode = bsNativeOnTouch(MotionEvent.ACTION_MOVE, MOUSE_LEFT_BUTTON, event.getX( i ), event.getY( i ), event.getPressure( i ) );
                     }
                     break;
                 }
@@ -207,8 +212,8 @@ public class BlackSharkApplication extends Activity {
                     int count = event.getPointerCount();
                     for ( int i = 0; i < count; i++ )
                     {
-                        int pointerID = event.getPointerId( i );
-                        opCode = bsNativeOnTouch(MotionEvent.ACTION_UP, pointerID, event.getX( i ), event.getY( i ), 0 );
+                        //int pointerID = event.getPointerId( i );
+                        opCode = bsNativeOnTouch(MotionEvent.ACTION_UP, MOUSE_LEFT_BUTTON, event.getX( i ), event.getY( i ), 0 );
                     }
                     break;
                 }

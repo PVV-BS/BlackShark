@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -122,7 +122,6 @@ type
     procedure CheckSizeSlider;
     procedure SetPositionSlider;
     procedure FillColors;
-    //procedure SliderPositionCorrect;
     procedure UpdatePostion;
     procedure OnWaitTime(const AValue: BSFloat);
     procedure DoChangePosition; inline;
@@ -631,31 +630,6 @@ begin
   FStep := Value;
   CheckSizeSlider;
 end;
-
-{procedure TBScrollBar.SliderPositionCorrect;
-var
-  p_top: BSFloat;
-  w_btn_up_down, Len: BSFloat;
-  value: TVec3f;
-begin
-  value := Slider.Data.Position;
-  // buttons width
-  w_btn_up_down := BtnUpLeft.Data.Mesh.FBoundingBox.y_max*2;
-  // self size
-  Len := Slider.Data.Mesh.FBoundingBox.y_max;
-  // define position limits
-  p_top := BtnUpLeft.Data.ServiceScale*(FMainBody.Data.Mesh.FBoundingBox.y_max - w_btn_up_down) - Len*BSConfig.VoxelSize;
-  if value.y > p_top then
-    value.y := p_top
-  else
-  if value.y < -p_top then
-    value.y := -p_top;
-
-  value.x := 0.0;
-
-  if value <> Slider.Data.Position then
-    Slider.Data.Position := value;
-end;   }
 
 procedure TBScrollBar.UpdatePostion;
 var

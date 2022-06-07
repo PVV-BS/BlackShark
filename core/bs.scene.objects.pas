@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -35,7 +35,11 @@ uses
   , bs.scene
   , bs.mesh
   , bs.mesh.primitives
+  {$ifdef ultibo}
+  , gles20
+  {$else}
   , bs.gl.es
+  {$endif}
   , bs.shader
   , bs.texture
   , bs.font
@@ -136,22 +140,56 @@ type
 
   {  }
 
-  TTypePrimitive = (tpTriangle, tpTriangleFan, tpTriangleStrip, tpQuad);
-
   { TMultiColorVertexes
     the graphic item for every vertex contains its color }
 
   TMultiColorVertexes = class(TObjectVertexes)
   private
-    FTypePrimitive: TTypePrimitive;
     procedure SetTypePrimitive(const Value: TTypePrimitive);
+    function GetTypePrimitive: TTypePrimitive;
   public
     constructor Create(AOwner: TObject; AParent: TGraphicObject; AScene: TBScene); override;
     class function CreateMesh: TMesh; override;
     function AddVertex(const APoint: TVec3f; const AColor: TVec3f): int32;
-    procedure WriteColor(AIndexVertex: int32; const AColor: TVec3f);
+    procedure WriteColor(AIndexVertex: int32; const AColor: TVec3f); overload;
+    procedure WriteColor(AIndexVertex: int32; const AColor: TVec4f); overload;
     procedure Build;
-    property TypePrimitive: TTypePrimitive read FTypePrimitive write SetTypePrimitive;
+    property TypePrimitive: TTypePrimitive read GetTypePrimitive write SetTypePrimitive;
+  end;
+
+  { TComplexCurveObject
+
+    The object can draw two models:
+      - single color for all mesh vertexes; a vertex consists of point only (mesh type TMeshP);
+      - own color for every mesh vertex (mesh type TMeshPCrgba);
+  }
+
+  TComplexCurveObject = class(TObjectVertexes)
+  private
+    FColor: TColor4f;
+    FMultiColor: boolean;
+    ColorUniform: PShaderParametr;
+    StrokeLenUniform: PShaderParametr;
+    FStrokeLength: BSFloat;
+    procedure BeforeDraw({%H-}Item: TGraphicObject);
+    procedure SetMultiColor(const Value: boolean);
+    procedure SetStrokeLength(const Value: BSFloat);
+  protected
+    procedure SetColor(const Value: TColor4f); override;
+    function GetColor: TColor4f; override;
+    procedure SetShader(const AShader: TBlackSharkShader); override;
+  public
+    constructor Create(AOwner: TObject; AParent: TGraphicObject; AScene: TBScene); override;
+    class function CreateMesh: TMesh; override;
+    function AddVertex(const APoint: TVec3f): int32;
+    procedure WriteComponent(AIndexVertex: int32; AVertexComponent: TVertexComponent; const AValue: BSFloat); overload;
+    procedure WriteComponent(AIndexVertex: int32; AVertexComponent: TVertexComponent; const AValue: TVec2f); overload;
+    procedure WriteComponent(AIndexVertex: int32; AVertexComponent: TVertexComponent; const AValue: TVec3f); overload;
+    procedure WriteComponent(AIndexVertex: int32; AVertexComponent: TVertexComponent; const AValue: TVec4f); overload;
+    procedure Build;
+    property MultiColor: boolean read FMultiColor write SetMultiColor;
+    { if it is more 0 then the line has strokes }
+    property StrokeLength: BSFloat read FStrokeLength write SetStrokeLength;
   end;
 
   TLayoutObject = class(TColoredVertexes)
@@ -267,7 +305,6 @@ type
     BlankWidth: BSFloat;
     SettedSize: boolean;
     FText: bs.strings.PString;
-    //VectorText: boolean;
     Building: boolean;
     OnChangeFontSbscr: IBEmptyEventObserver;
     FTxtProcessor: TTextProcessor;
@@ -490,30 +527,50 @@ end;
 
 procedure TObjectVertexes.ChangedMesh;
 begin
-  inherited;
+  inherited ChangedMesh;
+  if StaticObject then
+  begin
+    if Assigned(FMesh) then
+    begin
+      // create VBO for all vertex components
+      if (FMesh.CountVertex > 0) then
+      begin
+        CreateVBO(FVBO_Vertexes, GL_ARRAY_BUFFER, FMesh.VertexesData, FMesh.CountVertex * FMesh.SizeOfVertex);
+        {$ifdef DEBUG_BS}
+        //BSWriteMsg('TObjectVertexes.ChangedMesh after reload VBO_Vertexes "' + Caption +  '":', IntToStr(FVBO_Vertexes));
+        {$endif}
+      end;
+      // create VBO for indexes
+      if (FMesh.Indexes.Count > 0) then
+      begin
+        CreateVBO(FVBO_Indexes, GL_ELEMENT_ARRAY_BUFFER, FMesh.Indexes.ShiftData[0], FMesh.Indexes.Count * FMesh.Indexes.IndexSizeOf);
+        {$ifdef DEBUG_BS}
+        //BSWriteMsg('TObjectVertexes.ChangedMesh after reload VBO_Indexes "' + Caption +  '":', IntToStr(FVBO_Indexes));
+        {$endif}
+      end;
+      // Automticaly set visibility by depend at position Frustum
+      if UpdateCount <= 0 then
+        FScene.InstanceTransform(BaseInstance, true);
+    end;
+  end else
+  begin
   if VBO_Vertexes > 0 then
   begin
+      {$ifdef DEBUG_BS}
+      //BSWriteMsg('TObjectVertexes.BeforeChangedMesh before reload VBO_Vertexes "' + Caption +  '":', IntToStr(FVBO_Vertexes));
+      {$endif}
     glDeleteBuffers(1, @FVBO_Vertexes);
     FVBO_Vertexes := 0;
   end;
 
   if VBO_Indexes > 0 then
   begin
+      {$ifdef DEBUG_BS}
+      //BSWriteMsg('TObjectVertexes.BeforeChangedMesh before reload VBO_Indexes "' + Caption +  '":', IntToStr(FVBO_Indexes));
+      {$endif}
     glDeleteBuffers(1, @FVBO_Indexes);
     FVBO_Indexes := 0;
   end;
-
-  if Assigned(FMesh) then
-  begin
-    // create VBO for all vertex components
-    if (FMesh.CountVertex > 0) and StaticObject then
-      FVBO_Vertexes := CreateVBO(GL_ARRAY_BUFFER, FMesh.VertexesData, FMesh.CountVertex * FMesh.SizeOFVertex);
-    // create VBO for indexes
-    if (FMesh.Indexes.Count > 0) and StaticObject then
-      FVBO_Indexes := CreateVBO(GL_ELEMENT_ARRAY_BUFFER, FMesh.Indexes.ShiftData[0], FMesh.Indexes.Count * FMesh.Indexes.IndexSizeOf);
-    // Automticaly set visibility by depend at position Frustum
-    if UpdateCount <= 0 then
-      FScene.InstanceTransform(BaseInstance, true);
   end;
 end;
 
@@ -807,9 +864,9 @@ procedure TGraphicObjectLines.SetDrawByTriangleOnly(const Value: boolean);
 begin
   FDrawByTriangleOnly := Value;
   if (FLineWidth > 1.0) or FDrawByTriangleOnly then
-    FMesh.DrawingPrimitive := GL_TRIANGLES
+    FMesh.TypePrimitive := tpTriangles
   else
-    FMesh.DrawingPrimitive := GL_LINES;
+    FMesh.TypePrimitive := tpLines;
 end;
 
 procedure TGraphicObjectLines.SetLineWidth(AValue: BSFloat);
@@ -820,9 +877,9 @@ begin
     FLineWidth := 1.0;
   FLineWidthHalf := FLineWidth * 0.5;
   if (FLineWidth > 1.0) or FDrawByTriangleOnly then
-    FMesh.DrawingPrimitive := GL_TRIANGLES
+    FMesh.TypePrimitive := tpTriangles
   else
-    FMesh.DrawingPrimitive := GL_LINES;
+    FMesh.TypePrimitive := tpLines;
 end;
 
 procedure TGraphicObjectLines.Clear;
@@ -836,7 +893,7 @@ begin
   inherited;
   if FMesh = nil then
     FMesh := TBlackSharkFactoryShapesP.CreateShape;
-  FMesh.DrawingPrimitive := GL_LINES;
+  FMesh.TypePrimitive := tpLines;
   FLineWidth := 1.0;
   FLineWidthHalf := FLineWidth * 0.5;
 end;
@@ -1047,15 +1104,19 @@ begin
   begin
     if Shader.Name <> TBlackSharkVectorToSingleColorShader.DefaultName then
     begin
+      if Assigned(Mesh) then
+        Mesh.Free;
       Mesh := TMeshP.Create;
-      Mesh.DrawingPrimitive := GL_TRIANGLES;
+      Mesh.TypePrimitive := tpTriangles;
       Shader := BSShaderManager.Load(TBlackSharkVectorToSingleColorShader.DefaultName, TBlackSharkVectorToSingleColorShader);
     end;
   end else
   if Shader.Name <> TTextFromTextureShader.DefaultName then
   begin
+    if Assigned(Mesh) then
+      Mesh.Free;
     Mesh := TMeshPT.Create;
-    Mesh.DrawingPrimitive := GL_TRIANGLES;
+    Mesh.TypePrimitive := tpTriangles;
     Shader := BSShaderManager.Load(TTextFromTextureShader.DefaultName, TTextFromTextureShader);
   end;
 end;
@@ -1637,7 +1698,7 @@ end;
 constructor TColorPatettePlane.Create(AOwner: TObject; AParent: TGraphicObject; AScene: TBScene);
 begin
   inherited;
-  Mesh.DrawingPrimitive := GL_TRIANGLE_STRIP;
+  Mesh.TypePrimitive := tpTriangleStrip;
 end;
 
 procedure TColorPatettePlane.SetSize(const Value: TVec2f);
@@ -1665,7 +1726,7 @@ begin
   FLineWidth := 1.0;
   FLineWidthHalf := FLineWidth * 0.5;
   FLineColor2 := BS_CL_BLUE;
-  FMesh.DrawingPrimitive := GL_LINES;
+  FMesh.TypePrimitive := tpLines;
   Shader := BSShaderManager.Load('DoubleColor', TBlackSharkVectorToDoubleColorShader);
   AddBeforeDrawMethod(BeforeDrawMethod);
 end;
@@ -1742,14 +1803,17 @@ procedure TGraphicObjectBiColoredSolidLines.SetLineWidth(AValue: BSFloat);
 begin
   if FLineWidth = AValue then
     Exit;
+
   FLineWidth := AValue;
   if FLineWidth < 1.0 then
     FLineWidth := 1.0;
+
   FLineWidthHalf := FLineWidth * 0.5;
+
   if FLineWidth > 1.0 then
-    FMesh.DrawingPrimitive := GL_TRIANGLES
+    FMesh.TypePrimitive := tpTriangles
   else
-    FMesh.DrawingPrimitive := GL_LINES;
+    FMesh.TypePrimitive := tpLines;
 end;
 
 { TMultiColorVertexes }
@@ -1764,19 +1828,6 @@ end;
 
 procedure TMultiColorVertexes.Build;
 begin
-  {case FTypePrimetive of
-    tpTriangleFan, tpTriangleStrip, tpTriangle: begin
-      for i := 0 to FMesh.CountVertex - 1 do
-        FMesh.Indexes.Add(i);
-    end else
-    begin
-      // four point - two triangles
-      for i := 0 to FMesh.CountVertex shr 1 - 2 do
-      begin
-        FMesh.Indexes.Add(0);
-      end;
-    end;
-  end;    }
   FMesh.CalcBoundingBox(true);
   ChangedMesh;
 end;
@@ -1785,7 +1836,6 @@ constructor TMultiColorVertexes.Create(AOwner: TObject; AParent: TGraphicObject;
 begin
   inherited;
   Shader := BSShaderManager.Load(TBlackSharkColorSelectorShader.DefaultName, TBlackSharkColorSelectorShader);
-  FTypePrimitive := tpTriangle;
 end;
 
 class function TMultiColorVertexes.CreateMesh: TMesh;
@@ -1793,16 +1843,19 @@ begin
   Result := TMeshPC.Create;
 end;
 
+function TMultiColorVertexes.GetTypePrimitive: TTypePrimitive;
+begin
+  Result := Mesh.TypePrimitive;
+end;
+
 procedure TMultiColorVertexes.SetTypePrimitive(const Value: TTypePrimitive);
 begin
-  if FTypePrimitive = Value then
-    exit;
-  FTypePrimitive := Value;
-  case FTypePrimitive of
-    tpTriangle, tpQuad: Mesh.DrawingPrimitive := GL_TRIANGLES;
-    tpTriangleFan: Mesh.DrawingPrimitive := GL_TRIANGLE_FAN;
-    tpTriangleStrip: Mesh.DrawingPrimitive := GL_TRIANGLE_STRIP;
+  Mesh.TypePrimitive := Value;
   end;
+
+procedure TMultiColorVertexes.WriteColor(AIndexVertex: int32; const AColor: TVec4f);
+begin
+  Mesh.Write(AIndexVertex, TVertexComponent.vcColor, vec3(AColor.x, AColor.y, AColor.z));
 end;
 
 procedure TMultiColorVertexes.WriteColor(AIndexVertex: int32; const AColor: TVec3f);
@@ -1867,6 +1920,20 @@ end;
 
 procedure TLayoutObject.ChangedMesh;
 begin
+
+  if StaticObject then
+  begin
+    // create VBO for all vertex components
+    if (FDrawedData.CountVertex > 0) then
+      CreateVBO(FVBO_Vertexes, GL_ARRAY_BUFFER, FDrawedData.VertexesData, FDrawedData.CountVertex * FDrawedData.SizeOFVertex);
+    // create VBO for indexes
+    if (FDrawedData.Indexes.Count > 0) then
+      CreateVBO(FVBO_Indexes, GL_ELEMENT_ARRAY_BUFFER, FDrawedData.Indexes.ShiftData[0], FDrawedData.Indexes.Count * FDrawedData.Indexes.IndexSizeOf);
+    // Automticaly set visibility by depend at position Frustum
+    if UpdateCount <= 0 then
+      FScene.InstanceTransform(BaseInstance, true);
+  end else
+  begin
   if VBO_Vertexes > 0 then
   begin
     glDeleteBuffers(1, @FVBO_Vertexes);
@@ -1878,23 +1945,10 @@ begin
     glDeleteBuffers(1, @FVBO_Indexes);
     FVBO_Indexes := 0;
   end;
-
-  if StaticObject then
-  begin
-    // create VBO for all vertex components
-    if (FDrawedData.CountVertex > 0) then
-      FVBO_Vertexes := CreateVBO(GL_ARRAY_BUFFER, FDrawedData.VertexesData, FDrawedData.CountVertex * FDrawedData.SizeOFVertex);
-    // create VBO for indexes
-    if (FDrawedData.Indexes.Count > 0) then
-      FVBO_Indexes := CreateVBO(GL_ELEMENT_ARRAY_BUFFER, FDrawedData.Indexes.ShiftData[0], FDrawedData.Indexes.Count * FDrawedData.Indexes.IndexSizeOf);
-    // Automticaly set visibility by depend at position Frustum
-    if UpdateCount <= 0 then
-      FScene.InstanceTransform(BaseInstance, true);
   end;
 end;
 
-constructor TLayoutObject.Create(AOwner: TObject; AParent: TGraphicObject;
-  AScene: TBScene);
+constructor TLayoutObject.Create(AOwner: TObject; AParent: TGraphicObject; AScene: TBScene);
 begin
   inherited Create(AOwner, AParent, AScene);
   FDrawedData := TMeshP.Create;
@@ -1906,7 +1960,7 @@ begin
   ClearBeforeDrawListMethods;
   DrawInstance := DrawLayout;
   Shader := BSShaderManager.Load(TBlackSharkLayoutShader.DefaultName, TBlackSharkLayoutShader);
-  FDrawedData.DrawingPrimitive := GL_LINES;
+  FDrawedData.TypePrimitive := tpLines;
 end;
 
 destructor TLayoutObject.Destroy;
@@ -1968,6 +2022,124 @@ end;
 procedure TLayoutObject.SetSize(const Value: TVec2f);
 begin
   FSize := Value;
+end;
+
+{ TComplexCurveObject }
+
+procedure TComplexCurveObject.BeforeDraw(Item: TGraphicObject);
+begin
+  if Assigned(ColorUniform) then
+    glUniform4fv(ColorUniform^.Location, 1, @FColor);
+  if Assigned(StrokeLenUniform) then
+    glUniform1fv(StrokeLenUniform^.Location, 1, @FStrokeLength);
+end;
+
+function TComplexCurveObject.AddVertex(const APoint: TVec3f): int32;
+begin
+  Result := FMesh.CountVertex;
+  FMesh.Indexes.Add(Result);
+  FMesh.AddVertex(APoint);
+  //FMesh.Write(Result, TVertexComponent.vcColor, AColor);
+end;
+
+procedure TComplexCurveObject.Build;
+begin
+  FMesh.CalcBoundingBox(true);
+  ChangedMesh;
+end;
+
+constructor TComplexCurveObject.Create(AOwner: TObject; AParent: TGraphicObject; AScene: TBScene);
+begin
+  inherited;
+  Shader := BSShaderManager.Load(TBlackSharkVectorToSingleColorShader.DefaultName, TBlackSharkVectorToSingleColorShader);
+  AddBeforeDrawMethod(BeforeDraw);
+  FColor := BS_CL_RED;
+end;
+
+class function TComplexCurveObject.CreateMesh: TMesh;
+begin
+  Result := TMeshLine.Create;
+end;
+
+function TComplexCurveObject.GetColor: TColor4f;
+begin
+  Result := FColor;
+end;
+
+procedure TComplexCurveObject.SetColor(const Value: TColor4f);
+begin
+  inherited;
+  FColor := Value;
+end;
+
+procedure TComplexCurveObject.SetMultiColor(const Value: boolean);
+var
+  m, old: TMesh;
+begin
+  if FMultiColor = Value then
+    exit;
+
+  old := Mesh;
+
+  FMultiColor := Value;
+
+  if FMultiColor then
+  begin
+    m := TMeshLineMultiColored.Create;
+    Shader := BSShaderManager.Load(TBlackSharkStrokeCurveMulticoloredShader.DefaultName, TBlackSharkStrokeCurveMulticoloredShader);
+  end else
+  begin
+    m := TMeshLine.Create;
+    Shader := BSShaderManager.Load(TBlackSharkStrokeCurveSingleColorShader.DefaultName, TBlackSharkStrokeCurveSingleColorShader);
+  end;
+
+  m.CopyMesh(Mesh);
+
+  Mesh := m;
+
+  old.Free;
+end;
+
+procedure TComplexCurveObject.SetShader(const AShader: TBlackSharkShader);
+begin
+  inherited;
+  if Assigned(Shader) then
+  begin
+    ColorUniform := Shader.Uniform['Color'];
+    StrokeLenUniform := Shader.Uniform['StrokeLen'];
+  end else
+  begin
+    ColorUniform := nil;
+    StrokeLenUniform := nil;
+  end;
+end;
+
+procedure TComplexCurveObject.SetStrokeLength(const Value: BSFloat);
+begin
+  if FStrokeLength = Value then
+    exit;
+  FStrokeLength := Value;
+  MultiColor := Value > 0.0;
+end;
+
+procedure TComplexCurveObject.WriteComponent(AIndexVertex: int32; AVertexComponent: TVertexComponent; const AValue: TVec2f);
+begin
+  Mesh.Write(AIndexVertex, AVertexComponent, AValue);
+end;
+
+procedure TComplexCurveObject.WriteComponent(AIndexVertex: int32; AVertexComponent: TVertexComponent; const AValue: TVec3f);
+begin
+  Mesh.Write(AIndexVertex, AVertexComponent, AValue);
+end;
+
+procedure TComplexCurveObject.WriteComponent(AIndexVertex: int32; AVertexComponent: TVertexComponent; const AValue: TVec4f);
+begin
+  Mesh.Write(AIndexVertex, AVertexComponent, AValue);
+end;
+
+procedure TComplexCurveObject.WriteComponent(AIndexVertex: int32; AVertexComponent: TVertexComponent; const AValue: BSFloat);
+begin
+  Mesh.Write(AIndexVertex, AVertexComponent, AValue);
 end;
 
 end.

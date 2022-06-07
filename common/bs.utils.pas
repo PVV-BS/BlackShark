@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -31,7 +31,11 @@ interface
 
 uses
     SysUtils
+  {$ifdef ultibo}
+  , gles20
+  {$else}
   , bs.gl.es
+  {$endif}
   ;
 
 type
@@ -65,7 +69,7 @@ implementation
 
 uses
   {$ifdef FPC}
-    LazUTF8,
+  //  LazUTF8,
   {$endif}
     bs.log
   , bs.strings
@@ -232,7 +236,11 @@ begin
   {$IFDEF MSWINDOWS}
     tmp_str := StringReplace(FileName, '/', '\', [rfReplaceAll]);
   {$ELSE}
-    tmp_str := StringReplace(FileName, '\', '/', [rfReplaceAll]);
+    {$IFDEF ultibo}
+      tmp_str := StringReplace(FileName, '/', '\', [rfReplaceAll]);
+    {$ELSE}
+      tmp_str := StringReplace(FileName, '\', '/', [rfReplaceAll]);
+    {$ENDIF}
   {$ENDIF}
 
   if FileExists(tmp_str) or (tmp_str[2] = ':') or (tmp_str[2] = '/') or (tmp_str[2] = '\') or (tmp_str[1] = '/') then // contain full path ?

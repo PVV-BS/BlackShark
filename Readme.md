@@ -1,10 +1,21 @@
-Black Shark Graphics Engine is a simple 2D and 3D engine written in Pascal for developers to produce applications utilising hardware-accelerated graphics. It supports Lazarus (v. >= 2.0) and Delphi (Community Edition 10.3, another versions haven't been tested).
+Black Shark Graphics Engine is a simple 2D and 3D engine written in Pascal for developers to produce applications utilising hardware-accelerated graphics. It supports Lazarus (v. >= 2.0) and Delphi.
 It's a young, a freely available, project that currently has a vector of development in the 2D area. Beside, if you want, you can create 3D objects (see tests example TBSTestMesh, TBSTestEarth in a unit bs.test.mesh.pas). A main purpose of the project is creating the simplest entities for simple access to OpenGL API abilities within of version >= ES2.
 
 [shark.org](https://bshark.org/)  
 [Repository](https://github.com/PVV-BS/BlackShark)  
 [Telegram channel](https://t.me/BSharkGE)  
 
+### 07.06.22
+  ### Version 4.0:
+	+ support for the Android OS has been added (see a test project: "./tests/lazarus/Android/HelloBlackShark/jni/blackshark.lpr" and its application-wrapper project for Android Studio:  "./tests/lazarus/Android/HelloBlackShark"; your also need to create 'assets' directory and copy to it all folders from 'bin', for except other platforms folders (such as 'Win32' and 'Win64'); for compilation to ARM architecture you need change in 'build.gradle' file value 'x86_64' to 'armeabi' and select 'Arm' build profile for the project in IDE Lazarus (Options->Compiler Options->Build modes));
+	+ support for the Ultibo OS has been added (see a test project: "./tests/lazarus/Ultibo/BSApplication/BSApplication.lpr"; for its compilation use this IDE: https://github.com/ultibohub/Core/releases/download/2.5.037/Ultibo-Core-2.5.037-Beetroot.exe);
+	+ on Raspberry OS it simply has been run without special implementation;
+	+ high DPI support for default GUI sizes;
+	+ now renderer doesn't draw invisible (with opacity 0) objects;
+	+ adaptive FPS was improved for the pure Black Shark application;
+	+ TBTable - some fixes;
+	+ refactoring of gl-context creation, bs.font, bs.renderer (multiple passes were fixed), bs.config (save and load implementations were added), bs.gui.chat.
+	 
 ### 06.02.22  
 ###   Version 3.02:  
 	+ improve TPath:  

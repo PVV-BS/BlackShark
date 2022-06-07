@@ -1,4 +1,27 @@
-﻿unit bs.window.android;
+{
+-- Begin License block --
+  
+  Copyright (C) 2019-2022 Pavlov V.V. (PVV)
+
+  "Black Shark Graphics Engine" for Delphi and Lazarus (named 
+"Library" in the file "License(LGPL).txt" included in this distribution). 
+The Library is free software.
+
+  Last revised June, 2022
+
+  This file is part of "Black Shark Graphics Engine", and may only be
+used, modified, and distributed under the terms of the project license 
+"License(LGPL).txt". By continuing to use, modify, or distribute this
+file you indicate that you have read the license and understand and 
+accept it fully.
+
+  "Black Shark Graphics Engine" is distributed in the hope that it will be 
+useful, but WITHOUT ANY WARRANTY; without even the implied 
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+
+-- End License block --
+}
+unit bs.window.android;
 
 {$ifdef FPC}
   {$WARN 5024 off : Parameter "$1" not used}
@@ -12,7 +35,6 @@ interface
 uses
     bs.basetypes
   , bs.window
-  , bs.gui.base
   , bs.gl.egl
   , bs.android.jni
   , bs.events
@@ -37,23 +59,7 @@ type
 
   BSApplicationAndroid = class(BSApplicationSystem)
   private
-    const
-      //OPCODE_SHOW_KEYBOARD   = 6;
-      //OPCODE_HIDE_KEYBOARD   = 7;
-      //OPCODE_EXIT            = 8;
-      OPCODE_ANIMATION_RUN   = 9;
-      OPCODE_ANIMATION_STOP  = 10;
-      OPCODE_LIST_ACTIONS    = 11;
-  private
-    LastTimeMouseUp: uint32;
-    FTimeMouseDown: uint64;
-    GuiEvetnsObserver: IBOpCodeEventObserver;
-    FLastOpCode: int32;
-    FStackNeedActions: TListVec<int32>;
-    function GetShiftState(JShiftState: JInt): TBSShiftState;
-    procedure OnGuiEvent(const AData: BOpCode);
     procedure UpdateClientRect(AWindow: BSWindow);
-    function BuildCommonResult: int32;
   protected
     procedure InitHandlers; override;
     procedure InitMonitors; override;
@@ -64,6 +70,7 @@ type
     procedure DoSetPosition(AWindow: BSWindow; ALeft, ATop: int32); override;
     procedure DoFullScreen(AWindow: BSWindow); override;
     procedure DoActive(AWindow: BSWindow); override;
+    procedure DoShowCursor(AWindow: BSWindow); override;
     function GetMousePointPos: TVec2i; override;
     procedure ChangeDisplayResolution(NewWidth, NewHeight: int32); // overload;
   public
@@ -74,11 +81,8 @@ type
     procedure Update; override;
     procedure UpdateWait; override;
 
-    function OnTouch(ActionID: int32; PointerID: int32; X, Y: int32; Pressure: single): int32;
     function ProcsessOnKey(IsDown: boolean; keyChar: JChar; keyCode: JInt; shiftState: JInt): int32;
     function Draw: int32;
-    function GetWindow(X, Y: int32): BSWindow;
-    function GetNextAction: int32;
   end;
 
 { exported interface of the engine }
@@ -114,7 +118,7 @@ uses
   {$ifdef DEBUG_BS}
   , bs.log
   {$endif}
-  , bs.gl.es
+  , bs.gl.context
   , bs.utils
   , bs.thread
   , bs.config
@@ -137,8 +141,6 @@ constructor BSApplicationAndroid.Create;
 begin
   inherited;
   ApplicationAndroid := Self;
-  GuiEvetnsObserver := CreateOpCodeObserver(bs.gui.base.TBControl.ControlEvents, OnGuiEvent);
-  FStackNeedActions := TListVec<int32>.Create;
 end;
 
 function BSApplicationAndroid.CreateWindow(AWindow: BSWindow): BSWindow;
@@ -155,7 +157,6 @@ end;
 
 destructor BSApplicationAndroid.Destroy;
 begin
-  FStackNeedActions.Free;
   inherited;
 end;
 
@@ -163,6 +164,11 @@ procedure BSApplicationAndroid.DoActive(AWindow: BSWindow);
 begin
   inherited;
   ApplicationRun;
+end;
+
+procedure BSApplicationAndroid.DoShowCursor(AWindow: BSWindow);
+begin
+
 end;
 
 procedure BSApplicationAndroid.DoClose(AWindow: BSWindow);
@@ -205,89 +211,13 @@ begin
   Result := vec2(0, 0);
 end;
 
-function BSApplicationAndroid.GetShiftState(JShiftState: JInt): TBSShiftState;
-const
-  SHIFT_STATE_SHIFT      = 1;
-  SHIFT_STATE_CTRL       = 2;
-  SHIFT_STATE_ALT        = 4;
-  //SHIFT_STATE_META       = 8; // ???
-  //SHIFT_STATE_CAPS       = 16;
-  //SHIFT_STATE_NUM        = 32;
-  //SHIFT_STATE_LONG       = 64;
-begin
-  Result := [];
-
-  if JShiftState or SHIFT_STATE_SHIFT > 0 then
-    Result := Result + [ssShift];
-
-  if JShiftState or SHIFT_STATE_CTRL > 0 then
-    Result := Result + [ssCtrl];
-
-  if JShiftState or SHIFT_STATE_ALT > 0 then
-    Result := Result + [ssAlt];
-end;
-
-function BSApplicationAndroid.OnTouch(ActionID: int32; PointerID: int32; X, Y: int32; Pressure: single): int32;
-const
-  ACTION_DOWN = 0;
-  ACTION_UP   = 1;
-  ACTION_MOVE = 2;
-var
-  window: BSWindow;
-begin
-  FLastOpCode := 0;
-  Result := 0;
-  window := GetWindow(X, Y);
-  if window <> ActiveWindow then
-    window.IsActive := true;
-
-  FMousePos := vec2(X, Y);
-
-  if (ActionID = ACTION_DOWN) Then
-  begin
-    ActiveWindow.MouseDown(TBSMouseButton.mbBsLeft, X, Y, [ssLeft]);
-    FTimeMouseDown := TBTimer.CurrentTime.Counter;
-  end else
-  if (ActionID = ACTION_UP) Then
-  begin
-    if Assigned(ActiveWindow.Parent) and ActiveWindow.Parent.MouseIsDown then
-    begin
-      ActiveWindow.Parent.MouseUp(TBSMouseButton.mbBsLeft, X, Y, [ssLeft]);
-      ActiveWindow.Parent.MouseClick(TBSMouseButton.mbBsLeft, X, Y, [ssLeft]);
-      if TBTimer.CurrentTime.Low - LastTimeMouseUp < MOUSE_DOUBLE_CLICK_DELTA then
-        ActiveWindow.Parent.MouseDblClick(X, Y);
-      ActiveWindow.Parent.MouseLeave;
-    end else
-    begin
-      ActiveWindow.MouseUp(TBSMouseButton.mbBsLeft, X, Y, [ssLeft]);
-      ActiveWindow.MouseClick(TBSMouseButton.mbBsLeft, X, Y, [ssLeft]);
-      if TBTimer.CurrentTime.Low - LastTimeMouseUp < MOUSE_DOUBLE_CLICK_DELTA then
-        ActiveWindow.MouseDblClick(X, Y);
-    end;
-    LastTimeMouseUp := TBTimer.CurrentTime.Low;
-  end else
-  if (ActionID = ACTION_MOVE) Then
-  begin
-    {$ifdef DEBUG_BS}
-    //BSWriteMsg('ActiveWindow.MouseMove', 'X: ' + IntToStr(X) + '; Y: ' + IntToStr(Y));
-    {$endif}
-    if ActiveWindow.MouseIsDown then
-      ActiveWindow.MouseMove(X, Y, [ssLeft]) //
-    else
-      ActiveWindow.MouseMove(X, Y, []); // userless?
-  end;
-
-  Result := BuildCommonResult;
-
-end;
-
 function BSApplicationAndroid.ProcsessOnKey(IsDown: boolean; keyChar: JChar; keyCode: JInt; shiftState: JInt): int32;
 var
   code: word;
   ch: WideChar;
   ss: TBSShiftState;
 begin
-  FLastOpCode := 0;
+  LastOpCode := 0;
   Result := 0;
 
   ss := GetShiftState(shiftState);
@@ -347,75 +277,6 @@ begin
   BSWriteMsg('BSApplicationAndroid.UpdateClientRect end: ', 'Left: ' + IntToStr(AWindow.ClientRect.Left) + '; Top: ' + IntToStr(AWindow.ClientRect.Top) +
     '; Width: ' + IntToStr(AWindow.ClientRect.Width) + '; Height: ' + IntToStr(AWindow.ClientRect.Height));
   {$endif}
-end;
-
-function BSApplicationAndroid.BuildCommonResult: int32;
-begin
-  if FLastOpCode = 0 then
-  begin
-    if TTaskExecutor.HasTasks then
-      Result := OPCODE_ANIMATION_RUN
-    else
-      Result := OPCODE_ANIMATION_STOP;
-  end else
-  begin
-    if TTaskExecutor.HasTasks then
-      FStackNeedActions.Add(OPCODE_ANIMATION_RUN)
-    else
-      FStackNeedActions.Add(OPCODE_ANIMATION_STOP);
-
-    FStackNeedActions.Add(FLastOpCode);
-
-    Result := OPCODE_LIST_ACTIONS;
-  end;
-end;
-
-function BSApplicationAndroid.GetWindow(X, Y: int32): BSWindow;
-var
-  i: int32;
-  w: BSWindow;
-  modalW: BSWindow;
-  showW: BSWindow;
-begin
-  modalW := nil;
-  showW := nil;
-  for i := 0 to WindowsList.Count - 1 do
-  begin
-    w := WindowsList.Items[i];
-    if not w.IsVisible then
-      continue;
-    if not ((X >= w.Left) and (Y >= w.Top) and (X < w.Left + w.Width) and (Y < w.Top + w.Height)) then
-      continue;
-    if (w.WindowState = TWindowState.wsShown) then
-    begin
-      if not Assigned(showW) or (showW.Level < w.Level) then
-        showW := w;
-    end else
-    if not Assigned(modalW) or (modalW.Level < w.Level) then
-      modalW := w;
-  end;
-
-  if Assigned(showW) then
-  begin
-    if Assigned(modalW) and (modalW.Level > showW.Level) then
-      Result := modalW
-    else
-      Result := showW;
-  end else
-    Result := modalW;
-end;
-
-function BSApplicationAndroid.GetNextAction: int32;
-begin
-  if FStackNeedActions.Count > 0 then
-    Result := FStackNeedActions.Pop
-  else
-    Result := -1;
-end;
-
-procedure BSApplicationAndroid.OnGuiEvent(const AData: BOpCode);
-begin
-  FLastOpCode := AData.OpCode;
 end;
 
 procedure BSApplicationAndroid.InitHandlers;

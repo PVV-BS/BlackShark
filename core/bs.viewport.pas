@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -229,8 +229,8 @@ uses
   {$else}
     {$ifdef FMX}
       {$ifdef MSWINDOWS}
-        FMX.Platform.Win,
-      {$endif}
+      FMX.Platform.Win,
+    {$endif}
 
 
     {$endif}
@@ -241,6 +241,8 @@ uses
   {$endif}
 
     bs.obj
+  , bs.constants
+  , bs.graphics
   , bs.exceptions
   , bs.config
   , bs.utils
@@ -295,7 +297,7 @@ begin
 {$ifdef FMX}
   {$ifdef X}
     Result := 0;
-    {$Message error 'For FMXLinux use pure Black Shark application instead it (see example in ".tests\delphi\BSApplication\")'}
+      {$Message error 'For FMXLinux use pure Black Shark application instead it (see example in ".tests\delphi\BSApplication\")'}
   {$else}
     Result := WindowHandleToPlatform(Application.MainForm.Handle).Wnd;
   {$endif}
@@ -338,6 +340,7 @@ end;
 
 procedure TBlackSharkViewPort.SetCurrentScene(AValue: TBScene);
 begin
+  if Assigned(FRenderer) then
   FRenderer.Scene := AValue;
 end;
 
@@ -647,7 +650,7 @@ begin
   inherited;
 
   if (Width < 5) or (Height < 5) or not Assigned(FContext) or not FContext.ContextCreated or not FContext.MakeCurrent then
-      exit;
+    exit;
 
   {$ifndef FMXX}
   FContext.Swap;
@@ -736,7 +739,7 @@ end;
 
 procedure TBlackSharkViewPort.CheckFPS;
 begin
-  if (TBTimer.CurrentTime.Counter - TTimeProcessEvent.TimeProcessEvent.Counter > 3000) then
+  if (TBTimer.CurrentTime.Counter - TTimeProcessEvent.TimeProcessEvent.Counter > TIMEOUT_MAX_FPS) then
   begin
     if Timer.Enabled then
       Timer.Enabled := false;
@@ -808,7 +811,7 @@ begin
   if FContext.MakeCurrent then
   {$endif}
     if Assigned(FRenderer) then
-      FRenderer.Restore;
+    FRenderer.Restore;
 end;
 
 procedure TBlackSharkViewPort.DblClick;
@@ -940,11 +943,11 @@ initialization
   {$endif}
 
   {$ifdef FMX}
-  bs.utils.PixelsPerInch := TDeviceDisplayMetrics.Default.PixelsPerInch;
+  bs.graphics.PixelsPerInch := TDeviceDisplayMetrics.Default.PixelsPerInch;
   {$else}
-  bs.utils.PixelsPerInch := Screen.PixelsPerInch;
+  bs.graphics.PixelsPerInch := Screen.PixelsPerInch;
   {$endif}
-  bs.utils.ToHiDpiScale := bs.utils.PixelsPerInch/96;
+  bs.graphics.ToHiDpiScale := bs.graphics.PixelsPerInch/96;
 
 
 end.

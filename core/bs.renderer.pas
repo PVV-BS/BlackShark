@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -36,7 +36,11 @@ uses
   , bs.collections
   , bs.events
   , bs.scene
+  {$ifdef ultibo}
+  , gles20
+  {$else}
   , bs.gl.es
+  {$endif}
   , bs.frustum
   , bs.fbo
   , bs.shader
@@ -135,7 +139,7 @@ type
     //PassSSAA: PRenderPass;
     //PassSharkSSAA: PRenderPass;
     //PassFXAA: PRenderPass;
-   //FColorShader: TBlackSharkSingleColorToStencil;
+    //FColorShader: TBlackSharkSingleColorToStencil;
     { B-tree Graphics Instances hitted into Frustum; the tree auto-ordered }
     FListGIinFrustum: array[boolean] of TMultiTreeGI;
     FWindowWidth: int32;
@@ -466,6 +470,9 @@ uses
   , bs.config
   , bs.geometry
   , bs.mesh
+  {$ifdef DEBUG_BS}
+  , bs.exceptions
+  {$endif}
   ;
 
 function InstanceKey(Instance: PRendererGraphicInstance): TKeySortInstance; inline;
@@ -712,34 +719,34 @@ begin
     v01 := PlaneCrossProduct(pln, dd^.Ray.Position, dd^.Ray.Direction, d, intersect);
     v02 := PlaneCrossProduct(pln, r.Position, r.Direction, d, intersect);
 
-    delta := v02 - v01;
-    if delta = vec3(0.0, 0.0, 0.0) then
-      continue;
+      delta := v02 - v01;
+      if delta = vec3(0.0, 0.0, 0.0) then
+        continue;
 
-    if Assigned(inst.Owner.Parent) then
-    begin
-
-      if (inst^.Owner.Parent.ServiceScaleInv <> 1.0) then
+      if Assigned(inst.Owner.Parent) then
       begin
-        m3parent := TMatrix3f(inst^.Owner.Parent.BaseInstance.ProdStackModelMatrix)*inst^.Owner.Parent.ServiceScaleInv;
-        //m3parent.M[0, 0] := m3parent.M[0, 0]*inst^.Owner.Parent.MeshSizeScaleInv;
-        //m3parent.M[1, 1] := m3parent.M[1, 1]*inst^.Owner.Parent.MeshSizeScaleInv;
-        //m3parent.M[2, 2] := m3parent.M[2, 2]*inst^.Owner.Parent.MeshSizeScaleInv;
+
+        if (inst^.Owner.Parent.ServiceScaleInv <> 1.0) then
+        begin
+          m3parent := TMatrix3f(inst^.Owner.Parent.BaseInstance.ProdStackModelMatrix)*inst^.Owner.Parent.ServiceScaleInv;
+          //m3parent.M[0, 0] := m3parent.M[0, 0]*inst^.Owner.Parent.MeshSizeScaleInv;
+          //m3parent.M[1, 1] := m3parent.M[1, 1]*inst^.Owner.Parent.MeshSizeScaleInv;
+          //m3parent.M[2, 2] := m3parent.M[2, 2]*inst^.Owner.Parent.MeshSizeScaleInv;
+        end else
+          m3parent := inst^.Owner.Parent.BaseInstance.ProdStackModelMatrix;
+
+        MatrixInvert(m3parent);
+         { if multiply back into "delta" then in FPC accept bad value (bag inline operators),
+           therefor write to v01 }
+        v01 := m3parent * delta;
       end else
-        m3parent := inst^.Owner.Parent.BaseInstance.ProdStackModelMatrix;
+        v01 := delta;
 
-      MatrixInvert(m3parent);
-       { if multiply back into "delta" then in FPC accept bad value (bag inline operators),
-         therefor write to v01 }
-      v01 := m3parent * delta;
-    end else
-      v01 := delta;
-
-    pos := dd^.BeginDragPos + v01;
-    inst^.Owner.SetPositionInstance(inst, pos);
-    inst^.Owner.DoDrag(inst, false);
+      pos := dd^.BeginDragPos + v01;
+      inst^.Owner.SetPositionInstance(inst, pos);
+      inst^.Owner.DoDrag(inst, false);
+    end;
   end;
-end;
 
 procedure TBlackSharkRenderer.DoBlendMode;
 begin
@@ -1373,11 +1380,11 @@ begin
     AShader._AddRef;
 
   if FPasses.Count > 0 then
-  begin
+    begin
     Result.FrameBuffer := TBlackSharkFBO.Create(AViewPortWidth, AViewPortHeight, AAttachments, AColorFormat);
     Result.PrevPass := FPasses.Items[FPasses.Count-1];
     Result.PrevPass.NextPass := Result;
-  end;
+    end;
 
   TListRendererPasses.Add(FPasses, Result);
 
@@ -1418,14 +1425,14 @@ begin
     FPasses.Items[i].PrevPass := FPasses.Items[i-1];
     if i < FPasses.Count - 1 then
     FPasses.Items[i].NextPass := FPasses.Items[i+1];
-  end;
+      end;
 
   if (FPasses.Count > 0) then
-  begin
+      begin
     FPasses.Items[0].PrevPass := nil;
     if FPasses.Count < 2 then
       FPasses.Items[0].NextPass := nil;
-  end;
+end;
 
   {$ifdef DEBUG_BS}
   BSWriteMsg('TBlackSharkRenderer.DelRenderer end', 'count renderers = ' + IntToStr(FPasses.Count));
@@ -2279,6 +2286,10 @@ begin
   if not Assigned(Instance^._VisibleNode) then
     Instance^._VisibleNode := FVisibleGI.PushToEnd(Instance);
 
+  { doesn't draw a transparent object }
+  if (Instance.Instance.Owner.Opacity = 0) then
+    exit;
+
   BSShaderManager.UseShader(Instance.Instance.Owner.Shader);
   if LastDrawGI <> Instance.Instance.Owner then
   begin
@@ -2500,7 +2511,7 @@ begin
   if FBlendMode <> TBlendMode.bmNone then
     SetBlendMode(TBlendMode.bmNone);
   glDisable(GL_BLEND);
-  glDisable(GL_STENCIL_TEST);
+  glDisable( GL_STENCIL_TEST );
   StensilTestOn := false;
 
   //glClearColor(FColor.r, FColor.g, FColor.b, 0.0);
@@ -2701,7 +2712,7 @@ end;
 
 procedure TBlackSharkRenderer.Screenshot(const Rect: TRectBSi; const Buffer: Pointer);
 begin
-  glReadPixels(Rect.X, Rect.Y, Rect.Width, Rect.Height, GL_RGBA, GL_UNSIGNED_BYTE, Buffer);
+    glReadPixels(Rect.X, Rect.Y, Rect.Width, Rect.Height, GL_RGBA, GL_UNSIGNED_BYTE, Buffer);
 end;
 
 procedure TBlackSharkRenderer.Screenshot(const X, Y, Width, Height: int32; const Buffer: Pointer);

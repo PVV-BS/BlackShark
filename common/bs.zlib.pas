@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -58,7 +58,7 @@ constructor ZLibDecompressor.Create;
 begin
   InflateInit2(FZStream, 15);
   FOutBufferSize := 1024*1024;
-  FOutBuffer := SysGetMem(FOutBufferSize);
+  GetMem(FOutBuffer, FOutBufferSize);
 end;
 
 function ZLibDecompressor.Decompress(AData: PByte; ASize: int32; AOutStream: TStream): uint32;
@@ -88,7 +88,7 @@ end;
 destructor ZLibDecompressor.Destroy;
 begin
   inflateEnd(FZStream);
-  SysFreeMem(FOutBuffer);
+  FreeMem(FOutBuffer, FOutBufferSize);
   inherited;
 end;
 

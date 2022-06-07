@@ -13,7 +13,6 @@ uses
   , bs.mesh.loaders
   , bs.mesh.primitives
   , bs.shader
-  , bs.animation
   , bs.events
   , bs.scene.skeleton
   , bs.canvas
@@ -59,9 +58,10 @@ implementation
 
 uses
     bs.texture
-  {$ifndef fpc}
+  {.$ifndef fpc}
   , SysUtils
-  {$endif}
+  {.$endif}
+  , bs.log
   , math
   , bs.config
   , bs.collections
@@ -92,6 +92,8 @@ begin
   BtnPause := TBButton.Create(Canvas);
   BtnPause.Resize(AnimationsCombo.Width, 25*ToHiDpiScale);
   BtnPause.Caption := 'Run';
+  // set caption for diagnostic
+  BtnPause.Text.Data.Caption := 'Button run/stop of animation';
   BtnPause.Position2d := vec2(AnimationsCombo.Position2d.x + AnimationsCombo.Width + 10*ToHiDpiScale, AnimationsCombo.Position2d.y);
   BtnClickObsrver := BtnPause.OnClickEvent.CreateObserver(PauseResume);
   AnimLabel := TCanvasText.Create(Canvas, nil);
@@ -231,6 +233,10 @@ begin
     TxtPoint.Text := 'Point: ' + VecToStr(p_min);
     Point.Hidden := true;
   end;
+
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBSTestCollada.OnMouseDown, FPS:', IntToStr(Renderer.FPS) + '; Camera position: ' + VecToStr(Renderer.Frustum.Position));
+  {$endif}
 end;
 
 procedure TBSTestCollada.OnMouseMove(const AData: BMouseData);
@@ -248,11 +254,21 @@ procedure TBSTestCollada.PauseResume(const AData: BMouseData);
 begin
   if not Assigned(Skeleton) or (Skeleton.Animation = '') then
     exit;
+
   Skeleton.PauseAnimation := not Skeleton.PauseAnimation;
+
   if Skeleton.PauseAnimation then
     BtnPause.Caption := 'Run'
   else
     BtnPause.Caption := 'Stop';
+
+  {$ifdef DEBUG_BS}
+  if Skeleton.PauseAnimation then
+    BSWriteMsg('TBSTestCollada.PauseResume', 'Animation is stoped')
+  else
+    BSWriteMsg('TBSTestCollada.PauseResume', 'Animation is run');
+  {$endif}
+
 end;
 
 function TBSTestCollada.Run: boolean;

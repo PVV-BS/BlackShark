@@ -1,4 +1,4 @@
-п»ї{
+{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -416,6 +416,8 @@ type
     pXminYminZmax, pXminYmaxZmax, pXmaxYmaxZmax, pXmaxYminZmax,
     pXminYminZmin, pXminYmaxZmin, pXmaxYmaxZmin, pXmaxYminZmin
   );
+
+  TTypePrimitive = (tpTriangles, tpTriangleFan, tpTriangleStrip, tpQuad, tpLines, tpLineStrip);
 
   TBoxPlanes = (bpNear, bpFar, bpRight, bpLeft, bpBottom, bpTop);
 
@@ -1059,7 +1061,7 @@ const
   function Vertex(const Point: TVec3f; const UV: TVec2f): TVertexPT; overload; inline;
 
   { Translate color RGB to HLS: hue, lightness (intensity), saturation;
-    С‚РѕРЅ, СЏСЂРєРѕСЃС‚СЊ, РЅР°СЃС‹С‰РµРЅРЅРѕСЃС‚СЊ (РєРѕРЅС‚СЂР°СЃС‚) }
+    тон, яркость, насыщенность (контраст) }
   function RGBtoHLS(const RGB: TVec3f): TVec3f;
   { Translate color HLS to RGB }
   function HLStoRGB(const HLS: TVec3f): TVec3f;
@@ -2174,7 +2176,7 @@ begin
   Result.w := Round(v.w * Precition) / Precition;
 end;
 
-// Cross product/РІРµРєС‚РѕСЂРЅРѕРµ РїСЂРѕРёР·РІРµРґРµРЅРёРµ
+// Cross product/векторное произведение
 function VecCross(const u, v: TVec3f): TVec3f;
 begin
   Result.x := u.y*v.z - u.z*v.y;
@@ -2203,7 +2205,7 @@ begin
   Result := u.x * v.x + u.y * v.y;
 end;
 
-// dot product/СЃРєР°Р»СЏСЂРЅРѕРµ РїСЂРѕРёР·РІРµРґРµРЅРёРµ
+// dot product/скалярное произведение
 function VecDot(const u, v: TVec3f): BSFloat;
 begin
   Result := u.x * v.x + u.y * v.y + u.z * v.z;
@@ -2747,44 +2749,44 @@ type
     page: array[0..1023] of byte;
   end;
 var
-  i, m, m2: NativeInt;
+	i, m, m2: NativeInt;
   d_l, s_l: pPage8192;
 begin
 
-  if (Count <= 0) or (S = D) or (s = nil) or (d = nil) then
-    exit;
+	if (Count <= 0) or (S = D) or (s = nil) or (d = nil) then
+  	exit;
 
   d_l := pPage8192(D);
   s_l := pPage8192(S);
-  for i := 0 to (Count div SizeOf(TPage8192)) - 1 do //
+	for i := 0 to (Count div SizeOf(TPage8192)) - 1 do //
   begin  //copy by 8192
     d_l^ := s_l^;
     inc(s_l);
     inc(d_l);
-  end;
+    end;
 
   m := Count mod SizeOf(TPage8192);
-  for i := 0 to m div SizeOf(TPage1024) - 1 do //
+	for i := 0 to m div SizeOf(TPage1024) - 1 do //
   begin  //copy remainder from 8192 by 1024
     pPage1024(d_l)^ := pPage1024(s_l)^;
     inc(pPage1024(s_l));
     inc(pPage1024(d_l));
-  end;
+    end;
   
   m2 := m mod SizeOf(TPage1024);
-  for i := 0 to m2 div SizeOf(NativeInt) - 1 do //
+	for i := 0 to m2 div SizeOf(NativeInt) - 1 do //
   begin //copy reamainder from 1024 by word
     PNativeInt(d_l)^ := PNativeInt(s_l)^;
     inc(PNativeInt(s_l));
     inc(PNativeInt(d_l));
-  end;
+    end;
 
-  for i := 0 to m2 mod SizeOf(NativeInt) - 1 do
+	for i := 0 to m2 mod SizeOf(NativeInt) - 1 do
   begin //copy remainder from word
     pByte(d_l)^ := pByte(s_l)^;
     inc(pByte(s_l));
     inc(pByte(d_l));
-  end;
+    end;
 
 end;
 

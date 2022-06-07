@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -235,11 +235,16 @@ uses
   {$endif}
   {$ifdef DEBUG_BS}
     bs.utils,
+    bs.log,
   {$endif}
     SysUtils
   , math
   , bs.config
+  {$ifdef ultibo}
+  , gles20
+  {$else}
   , bs.gl.es
+  {$endif}
   , bs.graphics
   , bs.obj
   , bs.mesh.primitives
@@ -577,6 +582,10 @@ end;
 
 procedure TSkeleton.DoStopAnimation;
 begin
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TSkeleton.DoStopAnimation begin');
+  {$endif}
+
   if FCalculateOnGPU then
   begin
     if not FSkin.Mesh.HasComponent(vcBones) or not Assigned(FSkinShaderAnim) then
@@ -586,8 +595,8 @@ begin
     FSkin.Shader := FSkinShaderAnim;
     BSShaderManager.FreeShader(FSkinShaderAnim);
     FSkinShaderAnim := nil;
-    FSkin.Mesh.DeleteComponent(vcBones);
     FSkin.Mesh.DeleteComponent(vcWeights);
+    FSkin.Mesh.DeleteComponent(vcBones);
     FSkin.ChangedMesh;
   end else
   begin
@@ -598,6 +607,7 @@ begin
       FSkin.Mesh := FSkinMesh;
     FreeAndNil(FSkinMeshCopy);
   end;
+
   UpdateBonesTransform;
 
   if Assigned(FAniUpdater) then
@@ -606,6 +616,9 @@ begin
   FAniUpdaterObserver := nil;
   FAniUpdater := nil;
 
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TSkeleton.DoStopAnimation end');
+  {$endif}
 end;
 
 procedure TSkeleton.FindRoots;

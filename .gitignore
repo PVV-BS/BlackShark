@@ -152,3 +152,10 @@
 /**/backup/*
 /**/*.local
 /tests/lazarus/Android/HelloBlackShark/libs/
+/tests/lazarus/Android/HelloBlackShark/trash/
+*.keystore
+/tests/lazarus/Ultibo/BSApplication/3BPlus/
+*.local
+/tests/lazarus/Ultibo/BSApplication/**.elf
+/tests/lazarus/Ultibo/BSApplication/**.img
+/tests/lazarus/Ultibo/BSApplication/**.qimg

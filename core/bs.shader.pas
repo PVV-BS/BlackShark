@@ -7,7 +7,7 @@
 "Library" in the file "License(LGPL).txt" included in this distribution). 
 The Library is free software.
 
-  Last revised January, 2022
+  Last revised June, 2022
 
   This file is part of "Black Shark Graphics Engine", and may only be
 used, modified, and distributed under the terms of the project license 
@@ -31,7 +31,11 @@ interface
 uses
     Classes
   , SysUtils
+  {$ifdef ultibo}
+  , gles20
+  {$else}
   , bs.gl.es
+  {$endif}
   , bs.basetypes
   , bs.log
   , bs.collections
@@ -273,17 +277,68 @@ type
     property Resolution: PShaderParametr read FResolution;
   end;
 
-  TBlackSharkColorSelectorShader = class(TBlackSharkVertexOutShader)
+  TBlackSharkColoredVertexesShader = class(TBlackSharkVertexOutShader)
   private
-    { base input }
-    { input uniforms }
+    { input variable }
     FColors: PShaderParametr;
   public
     constructor Create(const AName: string; const DataVertex, DataFragment: PAnsiChar); override;
     class function DefaultName: string; override;
     function LinkLocations: boolean; override;
-    { base input }
-    { input uniforms }
+    { input variable }
+    property Colors: PShaderParametr read FColors;
+  end;
+
+  TBlackSharkColorSelectorShader = TBlackSharkColoredVertexesShader;
+
+  TBlackSharkColoredRGBAVertexesShader = class(TBlackSharkVertexOutShader)
+  private
+    { input variable }
+    FColors: PShaderParametr;
+  public
+    constructor Create(const AName: string; const DataVertex, DataFragment: PAnsiChar); override;
+    class function DefaultName: string; override;
+    function LinkLocations: boolean; override;
+    { input variable }
+    property Colors: PShaderParametr read FColors;
+  end;
+
+  TBlackSharkStrokeCurveShader = class(TBlackSharkVertexOutShader)
+  private
+    { input uniform }
+    FStrokeLen: PShaderParametr;
+    { input variable }
+    FDistance: PShaderParametr;
+  public
+    constructor Create(const AName: string; const DataVertex, DataFragment: PAnsiChar); override;
+    function LinkLocations: boolean; override;
+    { input uniform }
+    property StrokeLen: PShaderParametr read FStrokeLen;
+    { input variable }
+    property Distance: PShaderParametr read FDistance;
+  end;
+
+  TBlackSharkStrokeCurveSingleColorShader = class(TBlackSharkStrokeCurveShader)
+  private
+    { input variable }
+    FColor: PShaderParametr;
+  public
+    constructor Create(const AName: string; const DataVertex, DataFragment: PAnsiChar); override;
+    class function DefaultName: string; override;
+    function LinkLocations: boolean; override;
+    { color uniform }
+    property Color: PShaderParametr read FColor;
+  end;
+
+  TBlackSharkStrokeCurveMulticoloredShader = class(TBlackSharkStrokeCurveShader)
+  private
+    { input variable }
+    FColors: PShaderParametr;
+  public
+    constructor Create(const AName: string; const DataVertex, DataFragment: PAnsiChar); override;
+    class function DefaultName: string; override;
+    function LinkLocations: boolean; override;
+    { input variable }
     property Colors: PShaderParametr read FColors;
   end;
 
@@ -369,7 +424,7 @@ type
     property Color: PShaderParametr read FColor;
   end;
 
-  { Shader fill all vertexes a single color }
+  { The shader fills all vertexes a single color }
 
   TBlackSharkVectorToSingleColorShader = class(TBlackSharkVertexOutShader)
   private
@@ -583,8 +638,7 @@ type
     class var property ShaderByName[const Name: string]: TBlackSharkShader read GetShaderByName;
   end;
 
-  function CreateVBO(Taget { GL_ARRAY_BUFFER ...}: GLInt; Data: Pointer; SizeData: int32;
-    ModeDraw: GLEnum = GL_STATIC_DRAW): GLInt; //inline;
+  procedure CreateVBO(var VBO: GlUInt; Taget { GL_ARRAY_BUFFER ...}: GLInt; Data: Pointer; SizeData: int32; ModeDraw: GLEnum = GL_STATIC_DRAW); //inline;
 
 const
   SHADER_TYPE_TO_GL: array[TShaderBaseTypes] of GLUint =
@@ -618,18 +672,19 @@ uses
     bs.utils
   ;
 
-function CreateVBO(Taget: GLInt; Data: Pointer; SizeData: int32; ModeDraw: GLEnum = GL_STATIC_DRAW): GLInt;
+procedure CreateVBO(var VBO: GlUInt; Taget: GLInt; Data: Pointer; SizeData: int32; ModeDraw: GLEnum = GL_STATIC_DRAW);
 begin
-  glGenBuffers(1, @Result);
-  if (Result = 0) then
+  if VBO = 0 then
+    glGenBuffers(1, @VBO);
+  if (VBO = 0) then
   begin
     BSWriteMsg('BlackSharkSubGraphicItem.CreateVBO', 'Cannot create VBO!');
-    exit(-1);
+    exit;
   end;
   if (SizeData > 0) then
   begin
-    glBindBuffer(Taget, Result);
-    glBufferData(Taget, SizeData, Data, ModeDraw);
+    glBindBuffer(Taget, VBO);
+    glBufferData ( Taget, SizeData, Data, ModeDraw );
   end;
 end;
 
@@ -701,7 +756,7 @@ end;
 class procedure BSShaderManager.Restore;
 var
   bucket: THashTable<string, TBlackSharkShader>.TBucket;
-begin
+  begin
   if FShadersName.GetFirst(bucket) then
   repeat
     bucket.Value.Reset;
@@ -750,11 +805,11 @@ begin
 
   nu8 := ChangeFileExt(ExtractFileName(AFileNameVertex), '');
 
-  if FShadersName.Find(AnsiUpperCase(nu8), Result) then
+  if FShadersName.Find(nu8, Result) then
     exit;
 
   {$ifdef DEBUG_BS}
-  BSWriteMsg('BSShaderManager.Load: shader name = ', '"' + nu8 + '"');
+  BSWriteMsg('BSShaderManager.Load: shader name', '"' + nu8 + '"');
   {$endif}
 
   {$ifdef DEBUG_BS}
@@ -1374,6 +1429,9 @@ begin
   end;
   Params.Free;
   glDeleteProgram(FProgramID);
+  {$ifdef DEBUG_BS}
+  BSWriteMsg('TBlackSharkShader.Destroy', Name);
+  {$endif}
   inherited;
 end;
 
@@ -1914,20 +1972,20 @@ begin
   Result := 'Fog';
 end;
 
-{ TBlackSharkColorSelectorShader }
+{ TBlackSharkColoredVertexesShader }
 
-constructor TBlackSharkColorSelectorShader.Create(const AName: string; const DataVertex, DataFragment: PAnsiChar);
+constructor TBlackSharkColoredVertexesShader.Create(const AName: string; const DataVertex, DataFragment: PAnsiChar);
 begin
   inherited;
   FColors := AddAttribute('a_color', stVec3, tsVertex);
 end;
 
-class function TBlackSharkColorSelectorShader.DefaultName: string;
+class function TBlackSharkColoredVertexesShader.DefaultName: string;
 begin
   Result := 'ColoredVertexes';
 end;
 
-function TBlackSharkColorSelectorShader.LinkLocations: boolean;
+function TBlackSharkColoredVertexesShader.LinkLocations: boolean;
 begin
   Result := inherited;
   VertexComponentLocations[vcColor] := FColors^.Location;
@@ -2008,6 +2066,80 @@ begin
   inherited;
   // Set the sampler texture unit to 0
   glUniform1i ( FTexSampler^.Location, 0 );
+end;
+
+{ TBlackSharkColoredRGBAVertexesShader }
+
+constructor TBlackSharkColoredRGBAVertexesShader.Create(const AName: string; const DataVertex, DataFragment: PAnsiChar);
+begin
+  inherited;
+  FColors := AddAttribute('a_color', stVec4, tsVertex);
+end;
+
+class function TBlackSharkColoredRGBAVertexesShader.DefaultName: string;
+begin
+  Result := 'ColoredRGBAVertexes';
+end;
+
+function TBlackSharkColoredRGBAVertexesShader.LinkLocations: boolean;
+begin
+  Result := inherited LinkLocations;
+  VertexComponentLocations[vcColor] := FColors^.Location;
+  VertexComponentTypes[vcColor] := FColors^.DataTypeGL;
+end;
+
+{ TBlackSharkStrokeCurveShader }
+
+constructor TBlackSharkStrokeCurveShader.Create(const AName: string; const DataVertex, DataFragment: PAnsiChar);
+begin
+  inherited;
+  FStrokeLen := AddUniform('StrokeLen', stFloat, tsFragment);
+  FDistance := AddAttribute('a_distance', stFloat, tsVertex);
+end;
+
+function TBlackSharkStrokeCurveShader.LinkLocations: boolean;
+begin
+  Result := inherited;
+  VertexComponentLocations[vcIndex] := FDistance^.Location;
+  VertexComponentTypes[vcIndex] := FDistance^.DataTypeGL;
+end;
+
+{ TBlackSharkStrokeCurveSingleColorShader }
+
+constructor TBlackSharkStrokeCurveSingleColorShader.Create(const AName: string; const DataVertex, DataFragment: PAnsiChar);
+begin
+  inherited;
+  FColor := AddUniform('Color', stVec3, tsFragment);
+end;
+
+class function TBlackSharkStrokeCurveSingleColorShader.DefaultName: string;
+begin
+  Result := 'StrokeCurve';
+end;
+
+function TBlackSharkStrokeCurveSingleColorShader.LinkLocations: boolean;
+begin
+  Result := inherited;
+end;
+
+{ TBlackSharkStrokeCurveMulticoloredShader }
+
+constructor TBlackSharkStrokeCurveMulticoloredShader.Create(const AName: string; const DataVertex, DataFragment: PAnsiChar);
+begin
+  inherited;
+  FColors := AddAttribute('a_color', stVec4, tsVertex);
+end;
+
+class function TBlackSharkStrokeCurveMulticoloredShader.DefaultName: string;
+begin
+  Result := 'StrokeCurveMulticolored';
+end;
+
+function TBlackSharkStrokeCurveMulticoloredShader.LinkLocations: boolean;
+begin
+  Result := inherited;
+  VertexComponentLocations[vcColor] := FColors^.Location;
+  VertexComponentTypes[vcColor] := FColors^.DataTypeGL;
 end;
 
 end.
