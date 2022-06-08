@@ -116,6 +116,7 @@ uses
   , bs.texture
   , bs.utils
   , bs.thread
+  , bs.graphics
   ;
 
 { TBRadialSlider }
@@ -174,7 +175,7 @@ begin
   RadiusF := BSConfig.VoxelSize * s_def.Width;
 
   RadiusF5 := RadiusF - RadiusF * 0.2;
-  FCanvas.Font.SizeInPixels := 10;
+  FCanvas.Font.Size := 7;
   DragBody := TCircle.Create(FCanvas, nil);
   DragBody.Radius := s_def.Width;
   DragBody.Fill := true;
@@ -187,6 +188,7 @@ begin
   FBorder.Radius := s_def.Width;
   FBorder.Data.Interactive := false;
   FBorder.Color := BS_CL_ORANGE_2;
+  FBorder.WidthLine := FBorder.WidthLine*ToHiDpiScale;
   FCaption := TCanvasText.Create(FCanvas, FBorder);
   FCaption.Data.Interactive := false;
   FCaption.Color := BS_CL_WHITE;
@@ -213,12 +215,12 @@ begin
   if texture = nil then
   begin
     FDragPoint := TCircle.Create(FCanvas, FBorder);
-    TCircle(FDragPoint).Radius := (s_def.Width - 1) * 0.2;
+    TCircle(FDragPoint).Radius := (s_def.Width - 1*ToHiDpiScale) * 0.2;
     TCircle(FDragPoint).Fill := true;
   end else
   begin
     FDragPoint := TCircleTextured.Create(FCanvas, FBorder);
-    TCircleTextured(FDragPoint).Radius := (s_def.Width - 1) * 0.2;
+    TCircleTextured(FDragPoint).Radius := (s_def.Width - 1*ToHiDpiScale) * 0.2;
     TCircleTextured(FDragPoint).Fill := true;
     TTexturedVertexes(FDragPoint.Data).Texture := texture;
   end;
@@ -246,10 +248,10 @@ begin
   { return radius as size }
   if FCanvas.Scalable then
   begin
-    Result := vec2(6, 6);
+    Result := vec2(6, 6)*ToHiDpiScale;
   end else
   begin
-    Result := vec2(30, 30);
+    Result := vec2(30, 30)*ToHiDpiScale;
   end;
 end;
 

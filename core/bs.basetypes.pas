@@ -865,6 +865,7 @@ type
   function VecToStr(const v: TVec2i): string; overload; inline;
   function VecToStr(const v: TVec3f): string; overload; inline;
   function VecToStr(const v: TVec4f): string; overload; inline;
+  function VecToStr(const v: TVec4f; Precision: int8): string; overload; inline;
 
   function Plane(const p1, p2, p3: TVec3f): TVec4f; overload; inline;
   function Plane(const Normal, Origin: TVec3f): TVec4f; overload; inline;
@@ -2719,14 +2720,17 @@ end;
 
 function VecToStr(const v: TVec3f): string;
 begin
-  //Result := '(' + FloatToStr(v.x) + '; ' + FloatToStr(v.y) + '; ' + FloatToStr(v.z) + ')';
   Result := '(' + Format('%f', [v.x]) + '; ' + Format('%f', [v.y]) + '; ' + Format('%f', [v.z]) + ')';
 end;
 
 function VecToStr(const v: TVec4f): string;
 begin
-  //Result := '(' + FloatToStr(v.x) + '; ' + FloatToStr(v.y) + '; ' + FloatToStr(v.z) + ')';
   Result := '(' + Format('%.6f; ', [v.x]) + Format('%.6f; ', [v.y]) + Format('%.6f; ', [v.z]) + Format('%.6f', [v.w]) + ')';
+end;
+
+function VecToStr(const v: TVec4f; Precision: int8): string;
+begin
+  Result := '(' + Format('%.'+ IntToStr(Precision) +'f; ', [v.x]) + Format('%.'+ IntToStr(Precision) +'f; ', [v.y]) + Format('%.'+ IntToStr(Precision) +'f; ', [v.z]) + Format('%.'+ IntToStr(Precision) +'f', [v.w]) + ')';
 end;
 
 

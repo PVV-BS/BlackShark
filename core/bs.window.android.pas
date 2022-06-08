@@ -83,6 +83,7 @@ type
 
     function ProcsessOnKey(IsDown: boolean; keyChar: JChar; keyCode: JInt; shiftState: JInt): int32;
     function Draw: int32;
+    procedure OnGLContextLost; override;
   end;
 
 { exported interface of the engine }
@@ -257,6 +258,11 @@ begin
   Result := BuildCommonResult;
 end;
 
+procedure BSApplicationAndroid.OnGLContextLost;
+begin
+  inherited OnGLContextLost;
+end;
+
 procedure BSApplicationAndroid.UpdateClientRect(AWindow: BSWindow);
 begin
   {$ifdef DEBUG_BS}
@@ -323,8 +329,11 @@ begin
 end;
 
 procedure bsNativeOnViewCreated(PEnv: PJNIEnv; this: JObject; nativeHandle: JObject; displayWidthPixels: jfloat; displayHeightPixels: jfloat; dpiX: jfloat; dpiY: jfloat); cdecl;
+var
+  oldNativeHandleView: JObject;
 begin
 
+  oldNativeHandleView := g_NativeHandleView;
   g_NativeHandleView := ANativeWindow_fromSurface(g_CurrentEnv, nativeHandle);
 
   {$ifdef DEBUG_BS}
@@ -343,6 +352,9 @@ begin
   BSWriteMsg('bsNativeInit', ' DisplayWidth: ' + IntToStr(round(displayWidthPixels)) + '; DisplayHeight: ' + IntToStr(round(displayHeightPixels)) + '; DpiX: '
     + IntToStr(round(dpiX)) + '; DpiY: ' + IntToStr(round(DpiY)));
   {$endif}
+
+  if Assigned(oldNativeHandleView) then
+  	ApplicationAndroid.OnGLContextLost;
 
 end;
 

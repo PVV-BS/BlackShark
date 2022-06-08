@@ -42,6 +42,8 @@ uses
   , bs.collections
   ;
 
+	{ TODO: resize of objects by selectors works wrong if camera position differs from (0.0, 0.0, 1.0) }
+
 type
 
   { TBlackSharkSelectorInstances }
@@ -277,6 +279,7 @@ uses
   , bs.utils
   , bs.thread
   , bs.config
+  , bs.graphics
   ;
 
 { TBlackSharkSelectorInstances }
@@ -525,7 +528,7 @@ constructor TBlackSharkSelectorInstances.Create(ACanvas: TBCanvas; SelectorOwner
 begin
   Canvas := ACanvas;
   Rect := TRectangle.Create(Canvas, SelectorOwner);
-  Rect.Size := vec2(FIRST_SIZE, FIRST_SIZE);
+  Rect.Size := vec2(FIRST_SIZE*ToHiDpiScale, FIRST_SIZE*ToHiDpiScale);
   Rect.Fill := true;
   //Rect.Build;
   Rect.Position2d := vec2(0, 0);
@@ -539,8 +542,8 @@ begin
   Rect.Data.Hidden := true;
   Rect.Data.Color := BS_CL_SKY_BLUE;
   Rect.Data.DragResolve := false;
-  Rect.MinWidth := 4.0;
-  Rect.MinHeight := 4.0;
+  Rect.MinWidth := 4.0*ToHiDpiScale;
+  Rect.MinHeight := 4.0*ToHiDpiScale;
   Rect.Data.Interactive := false;
   Rect.BanScalableMode := true;
   //Rect.Data.DrawAsTransparent := true;
@@ -548,15 +551,15 @@ begin
     off this property }
   Rect.Data.StaticObject := false;
   Border := TRectangle.Create(Canvas, Rect);
-  Border.Size := vec2(FIRST_SIZE + 2, FIRST_SIZE + 2);
+  Border.Size := vec2((FIRST_SIZE + 2)*ToHiDpiScale, (FIRST_SIZE + 2)*ToHiDpiScale);
   Border.Position2d := vec2(-1, -1);
   //Border.Data.DrawAsTransparent := true;
   Border.Data.DragResolve := false;
   Border.Data.Opacity := 0.3;
   Border.Data.Hidden := true;
   Border.Data.Color := BS_CL_AQUA;
-  Border.MinWidth := 6.0;
-  Border.MinHeight := 6.0;
+  Border.MinWidth := 6.0*ToHiDpiScale;
+  Border.MinHeight := 6.0*ToHiDpiScale;
   Border.Data.StaticObject := false;
   Border.Data.Interactive := false;
   Border.Layer2d := 0;
@@ -646,13 +649,13 @@ var
     begin
       Result := TCircleTextured.Create(Canvas, nil);
       TCircleTextured(Result).Fill := true;
-      TCircleTextured(Result).Radius := RADIUS_POINTS;
+      TCircleTextured(Result).Radius := RADIUS_POINTS*ToHiDpiScale;
       TTexturedVertexes(Result.Data).Texture := texture;
     end else
     begin
       Result := TCircle.Create(Canvas, nil);
       TCircle(Result).Fill := true;
-      TCircle(Result).Radius := RADIUS_POINTS;
+      TCircle(Result).Radius := RADIUS_POINTS*ToHiDpiScale;
     end;
     Result.Build;
     Result.Data.SelectResolve := false;
@@ -961,7 +964,7 @@ begin
     bb := @FSelectItem.Instance.Owner.Mesh.FBoundingBox;
     pl := TBoxPlanes(SelectedMidPoint.Data.TagInt);
     BBMiddle := TVec3f(FSelectItem.Instance.ProdStackModelMatrix.M3);
-    OriginPos := FSelectItem.Instance.ProdStackModelMatrix * vec3(
+    OriginPos := (FSelectItem.Instance.ProdStackModelMatrix) * vec3(
       bb^.Named[APROPRIATE_MID[pl, 0]],
         bb^.Named[APROPRIATE_MID[pl, 1]],
           bb^.Named[APROPRIATE_MID[pl, 2]]);
@@ -1371,7 +1374,7 @@ begin
   RotorZ.MainBody.Parent := Root;
   Reset := TBButton.Create(Canvas);
   Reset.Resize(RotorX.Width*0.75, RotorX.Height*0.35);
-  Reset.Canvas.Font.Size := 8;
+  Reset.Canvas.Font.Size := 7;
   Reset.Caption := 'Reset';
   Reset.Visible := false;
   Reset.MainBody.Parent := Root;
@@ -1462,10 +1465,10 @@ begin
       bb^.Named[zMid]));
   h := RotorX.Border.Height;
   Root.Position2d := pos;
-  RotorY.Position2d := vec2(h*0.5 + 15, -h*0.5);
-  RotorZ.Position2d := vec2(10, -h*0.5 + h + 24);
-  RotorX.Position2d := vec2(h + 20, -h*0.5 + h + 24);
-  Reset.Position2d := vec2(h - 5, -h*0.5 + h + 4);
+  RotorY.Position2d := vec2(h*0.5 + 15*ToHiDpiScale, -h*0.5);
+  RotorZ.Position2d := vec2(10*ToHiDpiScale, -h*0.5 + h + 24*ToHiDpiScale);
+  RotorX.Position2d := vec2(h + 20*ToHiDpiScale, -h*0.5 + h + 24*ToHiDpiScale);
+  Reset.Position2d := vec2(h - 5*ToHiDpiScale, -h*0.5 + h + 4*ToHiDpiScale);
 end;
 
 procedure TBlackSharkRotor3D.OnMouseDownOnReset(const Data: BMouseData);
@@ -1554,7 +1557,7 @@ begin
   if w = 0 then
     exit;
   shape_size := FSelectItem.Instance.Owner.Mesh.FBoundingBox.Max*2;
-  s := shape_size / vec3(w, w, w) + 0.1;
+  s := shape_size / vec3(w, w, w) + 0.2;
   if shape_size.x = 0 then
   begin
     if shape_size.y <> 0 then

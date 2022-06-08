@@ -66,8 +66,8 @@ end;
 constructor TBSApplicationExample.Create;
 begin
   inherited;
-  {$ifndef ultibo}  // ultibo transmits own params in command line
   CommandLineParam := ParamStr(1);
+  {$ifndef ultibo}  // ultibo transmits own params in command line
   if CommandLineParam = '' then
   {$endif}
     CommandLineParam := 'TBSTestWindows'; //TBSTestWindows TBSTestEarth TBSTestCanvasImages TBSTestEdit TBSTestButton TBSTestTable TBSTestWindows TBSTestSimple TBSTestCollada  TBSTestCanvas

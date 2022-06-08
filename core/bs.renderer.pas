@@ -1640,6 +1640,7 @@ begin
   min_dist := MaxSingle;
   modal_lev := 0;
   Selected := nil;
+  // TODO: select area by descent in KD-tree
   it := FVisibleGI.ItemListLast;
   while Assigned(it) do
   begin

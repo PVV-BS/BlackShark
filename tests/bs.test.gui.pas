@@ -1147,7 +1147,7 @@ begin
   Obj3d := TTexturedVertexes.Create(Self, nil , ARenderer.Scene);
   MeshLoadObj('Models/Obj/aquafish01.obj', Obj3d.Mesh, 0.004);
   Obj3d.Texture := BSTextureManager.LoadTexture('Models/Obj/aquafish01.png');
-  Obj3d.Position := vec3(0.0, 0.0, -3.0);
+  Obj3d.Position := vec3(0.0, 0.0, -2.0);
   //Obj3d.Angle := vec3(0.0, 90.0, 0.0);
   Obj3d.DragResolve := true;
   Obj3d.Interactive := true;
@@ -1239,7 +1239,7 @@ begin
   with bs.canvas.TPicture.Create(Obj2d, nil) do
   begin
     LoadFromFile('Pictures/snowflake.png');
-    Position2d := vec2(100, 100);
+    Position2d := vec2(150.0, 150.0);
     ObsrDownOnSnow := Data.EventMouseDown.CreateObserver(GUIThread,  MouseDownOnSnowflake);
   end;
 
@@ -1262,8 +1262,8 @@ begin
   Canvas.CreateEmptyCanvasObject.Position2d := vec2(0.0, 0.0);
   Canvas.Font.Size := 14;
   TextQuat := TCanvasText.Create(Canvas, nil);
-  TextQuat.Text := 'Quat: ' + VecToStr(vec4(0.0, 0.0, 0.0, 1.0));
-  TextQuat.Position2d := vec2(200, 60);
+  TextQuat.Text := 'Quat: ' + VecToStr(vec4(0.0, 0.0, 0.0, 1.0), 2);
+  TextQuat.Position2d := vec2(80, 60);
   TextQuat.Color := BS_CL_GREEN;
 
   Rotor := TBlackSharkRotor3D.Create(Canvas);
@@ -1290,7 +1290,7 @@ end;
 procedure TBSTestRotor.MouseDownOnFish(const Data: BMouseData);
 begin
   Rotor.SelectItem := Data.BaseHeader.Instance;
-  TextQuat.Text := 'Quat: ' + VecToStr(Rotor.SelectItem.Instance.Quaternion);
+  TextQuat.Text := 'Quat: ' + VecToStr(Rotor.SelectItem.Instance.Quaternion, 2);
 end;
 
 procedure TBSTestRotor.MouseDownOnScreen(const Data: BMouseData);
@@ -1302,13 +1302,13 @@ end;
 procedure TBSTestRotor.MouseDownOnSnowflake(const Data: BMouseData);
 begin
   Rotor.SelectItem := Data.BaseHeader.Instance;
-  TextQuat.Text := 'Quat: ' + VecToStr(Rotor.SelectItem.Instance.Quaternion);
+  TextQuat.Text := 'Quat: ' + VecToStr(Rotor.SelectItem.Instance.Quaternion, 2);
 end;
 
 procedure TBSTestRotor.MouseMove(const Data: BMouseData);
 begin
   if (Rotor.SelectItem <> nil) then
-    TextQuat.Text := 'Quat: ' + VecToStr(Rotor.SelectItem.Instance.Quaternion);
+    TextQuat.Text := 'Quat: ' + VecToStr(Rotor.SelectItem.Instance.Quaternion, 2);
 end;
 
 function TBSTestRotor.Run: boolean;

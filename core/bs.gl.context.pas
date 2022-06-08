@@ -352,7 +352,9 @@ end;
 class procedure TSharedEglContext.OnContextLost;
 begin
   eglMakeCurrent(FSharedDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+  {$ifdef ultibo}
   eglDestroySurface(FSharedDisplay, SharedSurface);
+  {$endif}
   eglDestroyContext(FSharedDisplay, FSharedContext);
   eglTerminate(FSharedDisplay);
   FillChar(FSharedDisplay, SizeOf(FSharedDisplay), 0);
