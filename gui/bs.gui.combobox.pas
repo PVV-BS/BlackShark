@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -107,6 +107,7 @@ type
   public
     constructor Create(ACanvas: TBCanvas); override;
     destructor Destroy; override;
+    function DefaultSize: TVec2f; override;
     procedure BuildView; override;
     procedure Resize(AWidth, AHeight: BSFloat); override;
     procedure Clear; virtual;
@@ -215,7 +216,10 @@ var
 begin
   method := GetItemData;
   Result := FGrid.CreateColumn(TMethod(method), TBColumnPresentorString, '');
-  Result.Width := FGrid.Width;
+  if FGrid.ShowBorder then
+    Result.Width := FGrid.Width - 2*FGrid.Border.WidthLine
+  else
+    Result.Width := FGrid.Width;
   TBColumnPresentorString(Result).ColorText := ColorText;
 end;
 
@@ -223,6 +227,7 @@ procedure TBCustomComboBox.CreateGrid;
 var
   i: int32;
   w: BSFloat;
+  c: TColor4f;
 begin
   if Assigned(FGrid) or (RowsCount = 0) then
     exit;
@@ -260,16 +265,20 @@ begin
   if w > FListHeight then
     w := FListHeight;
 
-  FGrid.Resize(Width-FGrid.Border.WidthLine*2, w);
-  //w := FGrid.Width / CountColumns;
+  FGrid.Resize(Width, w);
   for i := 0 to CountColumns - 1 do
     CreateColumn(i);
 
   FGrid.Position2d := vec2(0.0, 0.0);
   FGrid.OnCellMouseDown := OnCellMouseDown;
   FGrid.Color := Color;
+
+  c := TColor4f(Color) + 0.4;
+  c.a := 1.0;
+  FGrid.ScrollBarVert.Color :=  ColorFloatToByte(c).value;
+  FGrid.ScrollBarHor.Color := FGrid.ScrollBarVert.Color;
   FGrid.Count := RowsCount;
-  Curtain.Size := vec2(FGrid.Width+FGrid.Border.WidthLine*2, FGrid.Height+FGrid.Border.WidthLine*2);
+  Curtain.Size := vec2(FGrid.Width, FGrid.Height);
   Curtain.Build;
   Curtain.Position2d := vec2(0.0, Height);
   FGrid.Position2d := vec2(0.0, -FGrid.Height);
@@ -284,6 +293,12 @@ begin
       FGrid.GoToCell(0, FSelectedIndex, true);
   end;
   FGrid.Focused := true;
+end;
+
+function TBCustomComboBox.DefaultSize: TVec2f;
+begin
+  Result := inherited DefaultSize;
+  Result.x := Result.x + Result.Height;
 end;
 
 destructor TBCustomComboBox.Destroy;

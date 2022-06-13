@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -92,6 +92,8 @@ type
     ObsrvBtnDwnRgtMD: IBMouseDownEventObserver;
     ObsrvBtnUpLeftMU: IBMouseDownEventObserver;
     ObsrvBtnDwnRgtMU: IBMouseDownEventObserver;
+    ObsrvBtnDwnRgtMDbl: IBMouseDownEventObserver;
+    ObsrvBtnUpLeftMDbl: IBMouseDownEventObserver;
 
     ObsrvSliderMU: IBMouseDownEventObserver;
     ObsrvSliderMD: IBMouseDownEventObserver;
@@ -102,12 +104,16 @@ type
     WaitTimerObsrv: IBAnimationLinearFloatObsrv;
     WaitTimerUp: boolean;
 
+    FMouseDataDblClick: BMouseData;
+
     procedure SetHorizontal(const Value: boolean);
 
     procedure BtnUpLeftMouseDown({%H-}const Data: BMouseData);
     procedure BtnDownRightMouseDown({%H-}const Data: BMouseData);
     procedure BtnUpLeftMouseUp({%H-}const Data: BMouseData);
     procedure BtnDownRightMouseUp({%H-}const Data: BMouseData);
+    procedure BtnDownRightDblClick({%H-}const Data: BMouseData);
+    procedure BtnUpLeftDblClick({%H-}const Data: BMouseData);
     procedure BodyMouseDown({%H-}const Data: BMouseData);
 
     procedure OnChangeMVP({%H-}const Data: BTransformData);
@@ -125,6 +131,8 @@ type
     procedure UpdatePostion;
     procedure OnWaitTime(const AValue: BSFloat);
     procedure DoChangePosition; inline;
+    procedure AwaitDblClickUpLeft(AData: Pointer);
+    procedure AwaitDblClickDownRight(AData: Pointer);
   protected
     BtnUpLeft: TRectangle;
     BtnDownRight: TRectangle;
@@ -218,6 +226,16 @@ begin
   end;
 end;
 
+procedure TBScrollBar.AwaitDblClickDownRight(AData: Pointer);
+begin
+  BtnDownRightMouseUp(PMouseData(AData)^);
+end;
+
+procedure TBScrollBar.AwaitDblClickUpLeft(AData: Pointer);
+begin
+  BtnUpLeftMouseUp(PMouseData(AData)^);
+end;
+
 procedure TBScrollBar.BodyMouseDown(const Data: BMouseData);
 var
   page_size: int32;
@@ -235,6 +253,13 @@ begin
     Position := FPosition - page_size;
 end;
 
+procedure TBScrollBar.BtnDownRightDblClick(const Data: BMouseData);
+begin
+  FMouseDataDblClick := Data;
+  BtnDownRightMouseDown(Data);
+  TTaskExecutor.AwaitExecuteTask(AwaitDblClickDownRight, @FMouseDataDblClick);
+end;
+
 procedure TBScrollBar.BtnDownRightMouseDown(const Data: BMouseData);
 begin
   if not Slider.Data.Hidden and (FPosition + 1 + Slider.Height < FSize) then
@@ -249,6 +274,13 @@ end;
 procedure TBScrollBar.BtnDownRightMouseUp(const Data: BMouseData);
 begin
   WaitTimer.Stop;
+end;
+
+procedure TBScrollBar.BtnUpLeftDblClick(const Data: BMouseData);
+begin
+  FMouseDataDblClick := Data;
+  BtnUpLeftMouseDown(Data);
+  TTaskExecutor.AwaitExecuteTask(AwaitDblClickUpLeft, @FMouseDataDblClick);
 end;
 
 procedure TBScrollBar.BtnUpLeftMouseDown(const Data: BMouseData);
@@ -339,7 +371,7 @@ begin
   FMainBody.Color := FBody.Color;
 
   FOnMouseEnterLeaveBody := TOnMouseColorExchanger.Create(FBody);
-  ObsrvBodyMD := FBody.Data.EventMouseDown.CreateObserver(GUIThread, BodyMouseDown);
+  ObsrvBodyMD := FBody.Data.EventMouseDown.CreateObserver(BodyMouseDown);
 
   // create button Up/Left
   BtnUpLeft := TRectangle.Create(FCanvas, FBody);
@@ -347,8 +379,9 @@ begin
   BtnUpLeft.Data.DragResolve := false;
   BtnUpLeft.Data.SelectResolve := false;
   BtnUpLeft.Size := vec2(FBody.Size.Width, FBody.Size.Width);
-  ObsrvBtnUpLeftMD := BtnUpLeft.Data.EventMouseDown.CreateObserver(GUIThread, BtnUpLeftMouseDown);
-  ObsrvBtnUpLeftMU := BtnUpLeft.Data.EventMouseUp.CreateObserver(GUIThread, BtnUpLeftMouseUp);
+  ObsrvBtnUpLeftMD := BtnUpLeft.Data.EventMouseDown.CreateObserver(BtnUpLeftMouseDown);
+  ObsrvBtnUpLeftMU := BtnUpLeft.Data.EventMouseUp.CreateObserver(BtnUpLeftMouseUp);
+  ObsrvBtnUpLeftMDbl := BtnUpLeft.Data.EventMouseDblClick.CreateObserver(BtnUpLeftDblClick);
   FOnMouseEnterLeaveLeftUpBtn := TOnMouseMoveAndClickColorExchanger.Create(BtnUpLeft);
 
   // create button Right/Down
@@ -357,8 +390,9 @@ begin
   BtnDownRight.Data.DragResolve := false;
   BtnDownRight.Data.SelectResolve := false;
   BtnDownRight.Size := BtnUpLeft.Size;
-  ObsrvBtnDwnRgtMD := BtnDownRight.Data.EventMouseDown.CreateObserver(GUIThread, BtnDownRightMouseDown);
-  ObsrvBtnDwnRgtMU := BtnDownRight.Data.EventMouseUp.CreateObserver(GUIThread, BtnDownRightMouseUp);
+  ObsrvBtnDwnRgtMD := BtnDownRight.Data.EventMouseDown.CreateObserver(BtnDownRightMouseDown);
+  ObsrvBtnDwnRgtMU := BtnDownRight.Data.EventMouseUp.CreateObserver(BtnDownRightMouseUp);
+  ObsrvBtnDwnRgtMDbl := BtnDownRight.Data.EventMouseDblClick.CreateObserver(BtnDownRightDblClick);
   FOnMouseEnterLeaveRightDownBtn := TOnMouseMoveAndClickColorExchanger.Create(BtnDownRight);
 
   // create triangle inside buttons

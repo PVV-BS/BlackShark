@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -67,6 +67,7 @@ type
     procedure AfterConstruction; override;
     destructor Destroy; override;
     procedure BuildView; override;
+    function DefaultSize: TVec2f; override;
     procedure Resize(AWidth, AHeight: BSFloat); override;
     property SelectedColor: TGuiColor read FSelectedColor write SetSelectedColor;
   end;
@@ -164,9 +165,15 @@ end;
 procedure TBCustomColorBox.BuildView;
 begin
   inherited;
-  ColorRect.Size := vec2(Height - 4, Height - 4);
+  ColorRect.Size := vec2(Height - 4*ToHiDpiScale, Height - 4*ToHiDpiScale);
   ColorRect.Build;
-  ColorRect.Position2d := vec2(2.0, 2.0);
+  ColorRect.Position2d := vec2(2.0*ToHiDpiScale, 2.0*ToHiDpiScale);
+end;
+
+function TBCustomColorBox.DefaultSize: TVec2f;
+begin
+  Result := inherited;
+  Result:= vec2(Result.x + Result.Height + 30*ToHiDpiScale, Result.y)
 end;
 
 destructor TBCustomColorBox.Destroy;

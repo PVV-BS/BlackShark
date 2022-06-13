@@ -2284,9 +2284,12 @@ begin
   if not Assigned(Instance^._VisibleNode) then
     Instance^._VisibleNode := FVisibleGI.PushToEnd(Instance);
 
-  { doesn't draw a transparent object }
-  if (Instance.Instance.Owner.Opacity = 0) then
+  if Instance.Instance.Owner.BanDraw then
     exit;
+
+  { doesn't draw a transparent object }
+  //if (Instance.Instance.Owner.Opacity = 0) then
+  //  exit;
 
   BSShaderManager.UseShader(Instance.Instance.Owner.Shader);
   if LastDrawGI <> Instance.Instance.Owner then

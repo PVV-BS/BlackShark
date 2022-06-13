@@ -268,6 +268,7 @@ type
       end;
   private
     class var FCountTasks: int32;
+    class var FLastTimeRemoveTask: int64;
   private
     FTasks: TListTasks;
     FAwaitTasks: TListAwaitTasks;
@@ -294,7 +295,8 @@ type
     class procedure RemoveTask(var TaskPos: PRecTask; Context: TBThread);
   public
     property ThreadContext: TBThread read FThreadContext;
-    class property CountTasks: Int32 read FCountTasks;
+    class property CountTasks: int32 read FCountTasks;
+    class property LastTimeRemoveTask: int64 read FLastTimeRemoveTask;
   end;
 
   { the task also as IBEvent<T> for work result return demands observers }
@@ -1076,6 +1078,7 @@ begin
   finally
     CS.Leave;
   end;
+  FLastTimeRemoveTask := TBTimer.CurrentTime.Counter;
 end;
 
 { TEmptyTask }
@@ -1086,10 +1089,13 @@ begin
 end;
 
 procedure TEmptyTask.Update;
+var
+  t: uint64;
 begin
-  if (not IsRun) or (FIntervalUpdate > TBTimer.CurrentTime.Counter - LastTime) then
-    exit;
-  LastTime := TBTimer.CurrentTime.Counter;
+  t := TBTimer.CurrentTime.Counter;
+  if (not IsRun) or (FIntervalUpdate > t - LastTime) then
+  	exit;
+  LastTime := t;
   SendEvent(0);
 end;
 

@@ -1235,6 +1235,7 @@ begin
   FBody.Fill := true;
   FBody.Data.DragResolve := false;
   FBody.Data.SelectResolve := false;
+  FBody.Data.BanDraw := true;
   FBody.Data.Opacity := 0.0;
   // set over grid
   FBody.Layer2d := 2;
@@ -1288,6 +1289,7 @@ begin
 
   //ChangeAniStopValues(false);
   AnimationEnter.Run;
+  FBody.Data.BanDraw := false;
   if Assigned(FOnMouseEnter) then
     FOnMouseEnter(Self, AData);
 end;
@@ -1304,6 +1306,7 @@ begin
   AnimationEnter.StartValue := FBody.Data.Opacity;
   AnimationEnter.StopValue := int32(CellState)*0.2;
   AnimationEnter.Run;
+  FBody.Data.BanDraw := true;
   if Assigned(FOnMouseLeave) then
     FOnMouseLeave(Self, AData);
 end;

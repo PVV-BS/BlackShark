@@ -488,6 +488,7 @@ type
   end;
 
   TColor4f = record
+    class operator Add      (const AValue: TColor4f; const k: BSFloat): TColor4f; inline;
     class operator Implicit (const AValue: TVec4f): TColor4f; inline;
     class operator Implicit (const AValue: TColor4f): TVec4f; inline;
     class operator Explicit (const AValue: int32): TColor4f; inline;
@@ -5232,6 +5233,14 @@ begin
   Result.g := AValue.y;
   Result.b := AValue.z;
   Result.a := AValue.w;
+end;
+
+class operator TColor4f.Add(const AValue: TColor4f; const k: BSFloat): TColor4f;
+begin
+  Result.r := AValue.r + k;
+  Result.g := AValue.g + k;
+  Result.b := AValue.b + k;
+  Result.w := AValue.w + k;
 end;
 
 class operator TColor4f.Equal(const v1, v2: TColor4f): boolean;

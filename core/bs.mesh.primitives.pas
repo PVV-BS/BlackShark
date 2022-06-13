@@ -948,8 +948,7 @@ var
   tmp_values: TListVec<TVec3f>;
   ptr: PVec3f;
   i: int32;
-  x, y: bsfloat;			// our x,y coords
-  t1x, t2x, t1y, t2y: bsfloat;	// tension vectors
+  t1, t2: TVec3f;	// tension vectors
   c1, c2, c3, c4: bsfloat;		  // cardinal points
   st, st2, st3: bsfloat;		    // steps based on num. of segments
 begin
@@ -990,11 +989,8 @@ begin
     while st < 1 do
     begin
       // calc tension vectors
-      t1x := (tmp_values.Items[i+1].x - tmp_values.Items[i-1].x) * tension;
-      t2x := (tmp_values.Items[i+2].x - tmp_values.Items[i].x) * tension;
-
-      t1y := (tmp_values.Items[i+1].y - tmp_values.Items[i-1].y) * tension;
-      t2y := (tmp_values.Items[i+2].y - tmp_values.Items[i].y) * tension;
+      t1 := (tmp_values.Items[i+1] - tmp_values.Items[i-1]) * tension;
+      t2 := (tmp_values.Items[i+2] - tmp_values.Items[i]) * tension;
 
       st2 := st * st;
       st3 := st2 * st;
@@ -1008,12 +1004,8 @@ begin
       if st > 1.0 then
        st := 1.0;
 
-      // calc x and y cords with common control vectors
-      x := c1 * tmp_values.Items[i].x	+ c2 * tmp_values.Items[i+1].x + c3 * t1x + c4 * t2x;
-      y := c1 * tmp_values.Items[i].y	+ c2 * tmp_values.Items[i+1].y + c3 * t1y + c4 * t2y;
-
-      //store points in array
-      OutSplineVertexes.Add(vec3(x, y, 0.0));
+      // calc x and y cords with common control vectors and store points in array
+      OutSplineVertexes.Add(tmp_values.Items[i]*c1	+ tmp_values.Items[i+1]*c2 + t1*c3 + t2*c4);
     end;
   end;
   tmp_values.Free;

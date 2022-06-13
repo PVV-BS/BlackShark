@@ -124,6 +124,7 @@ uses
   , bs.thread
   , bs.config
   , bs.events.keyboard
+  , bs.lang.dictionary
   {$ifndef FPC}
   , FMX.Platform.Android
   //,  fmx.Platform.Android
@@ -325,6 +326,9 @@ begin
   SetApplicationPath(IncludeTrailingPathDelimiter(s));
 
   BSConfig.Load;
+  if IsDictionaryEmpty then
+    LoadLang('lang.en');
+
   Result := BSConfig.GetProperty('ScreenOrientation', SCREEN_ORIENTATION_PORTRAIT);
 end;
 

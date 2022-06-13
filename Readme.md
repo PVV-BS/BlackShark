@@ -16,7 +16,6 @@ It's a young, a freely available, project that currently has a vector of develop
 	  for its compilation use this IDE: https://github.com/ultibohub/Core/releases/download/2.5.037/Ultibo-Core-2.5.037-Beetroot.exe;
     + on Raspberry OS it just has been run without special implementation;
     + high DPI support for default GUI sizes;
-    + now renderer doesn't draw invisible (with opacity 0) objects;
     + adaptive FPS was improved for the pure Black Shark application;
     + TBTable - some fixes;
     + refactoring of gl-context creation, bs.font, bs.renderer (multiple passes were fixed), bs.config (save and load implementations were added), bs.gui.chat.

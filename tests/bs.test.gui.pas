@@ -2297,9 +2297,9 @@ var
 begin
   inherited;
   ComboBox := TBComboBox.Create(ARenderer);
-  ComboBox.Resize(120*ToHiDpiScale, ComboBox.Height);
-  for i := 0 to 10 do
-    ComboBox.AddItem('I ' + IntToStr(i));
+  //ComboBox.Resize(120*ToHiDpiScale, ComboBox.Height);
+  for i := 0 to 15 do
+    ComboBox.AddItem('Item ' + IntToStr(i));
   //Renderer.Frustum.Angle := vec3(Renderer.Frustum.Angle.x, Renderer.Frustum.Angle.y + 90, Renderer.Frustum.Angle.z);
 end;
 

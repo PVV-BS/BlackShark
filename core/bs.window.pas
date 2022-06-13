@@ -584,7 +584,7 @@ var
   t, delta: uint32;
 begin
   t := TBTimer.CurrentTime.Low;
-  if (BSConfig.MaxFps or (TTaskExecutor.CountTasks > 0)) and (t - TTimeProcessEvent.TimeProcessEvent.Counter < TIMEOUT_MAX_FPS) then
+  if (BSConfig.MaxFps or (TTaskExecutor.CountTasks > 0)) or (t - TTaskExecutor.LastTimeRemoveTask < TIMEOUT_MAX_FPS) then
     FApplicationSystem.Update
   else
     FApplicationSystem.UpdateWait;

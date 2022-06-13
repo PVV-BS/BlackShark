@@ -33,6 +33,7 @@ function GetSentence(const NameSentence: string): string;
 
 // you can add own dictionaries by AddToExisting = true
 function LoadLang(const NameDictionary: string; AddToExisting: boolean = true): boolean;
+function IsDictionaryEmpty: boolean;
 
 implementation
 
@@ -41,10 +42,19 @@ uses
   , bs.collections
   , bs.utils
   , bs.strings
+  {$ifdef DEBUG_BS}
+  , SysUtils
+  , bs.log
+  {$endif}
   ;
 
 var
   g_DictSpell: THashTable<string, string>;
+
+function IsDictionaryEmpty: boolean;
+begin
+  Result := g_DictSpell.Count = 0;
+end;
 
 function GetSentence(const NameSentence: string): string;
 begin
@@ -64,11 +74,24 @@ begin
   if not AddToExisting then
     g_DictSpell.Clear;
   path := GetFilePath(NameDictionary, 'Lang');
+  {$ifdef DEBUG_BS}
+  bs.log.BSWriteMsg('LoadLang', path);
+  {$endif}
   xml := TheXmlWriter.Create(path, true);
   try
     node := xml.FindNode('Sentences', true);
     if not Assigned(node) then
+    begin
+      {$ifdef DEBUG_BS}
+      bs.log.BSWriteMsg('LoadLang.Sentences', 'not found!');
+      {$endif}
       exit(false);
+    end;
+
+    {$ifdef DEBUG_BS}
+    bs.log.BSWriteMsg('LoadLang.Sentences.Count', IntToStr(node.CountChilds));
+    {$endif}
+
     for i := 0 to node.CountChilds - 1 do
     begin
       ch := node.Childs[i];

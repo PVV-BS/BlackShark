@@ -59,6 +59,7 @@ type
     { create a simple observer and connect its to the event }
     function  CreateObserver(ThreadCntx: TBThread; OnRsvProc: TGenericRecieveProc<T>): IBObserver<T>; overload;
     function  CreateObserver(OnRsvProc: TGenericRecieveProc<T>): IBObserver<T>; overload;
+    function GetCurrentNormalizedTime: BSFloat;
 
     property Duration: int32 read GetDuration write SetDuration;
     property Loop: boolean read GetLoop write SetLoop;
@@ -69,6 +70,7 @@ type
     property CurrentValue: T read GetCurrentValue;
     { any user pointer }
     property CurrentSender: Pointer read GetCurrentSender write SetCurrentSender;
+    property CurrentNormalizedTime: BSFloat read GetCurrentNormalizedTime;
   end;
 
   { TAniValueLawBase<T>
@@ -91,6 +93,7 @@ type
     TimeStart: uint64;
     LastTime: uint64;
     CurrentDeltaTime: int32;
+    FCurrentNormalizedTime: BSFloat;
     { if TAniValueLawBase<T>.Loop even false this method call automaticaly from
       thread context TBlackSharkAnimator }
     FDelta: T;
@@ -116,12 +119,14 @@ type
     function GetCurrentValue: T;
     function GetCurrentSender: Pointer;
     procedure SetCurrentSender(Value: Pointer);
+    procedure Update; override;
 
   public
     constructor Create(ThreadContext: TBThread);
     { Run calculate value in depend on time }
     procedure Run; override;
     procedure Stop; override;
+    function GetCurrentNormalizedTime: BSFloat;
   end;
 
   IBAnimationLinearFloat = IBAnimation<BSFloat>;
@@ -138,6 +143,21 @@ type
 
   IBAnimationElipseObsrv = IBObserver<TVec2f>;
 
+  IBAnimationPath3d = interface(IBAnimation<TVec3f>)
+    procedure AddPoint(const AValue: TVec3f);
+    function GetInterpolateSpline: TInterpolateSpline;
+    procedure SetInterpolateSpline(AValue: TInterpolateSpline);
+    function GetInterpolateFactor: BSFloat;
+    procedure SetInterpolateFactor(AValue: BSFloat);
+    function GetOrigins: TListVec<TVec3f>;
+    function GetPointsInterpolated: TListVec<TVec3f>;
+    property InterpolateSpline: TInterpolateSpline read GetInterpolateSpline write SetInterpolateSpline;
+    property InterpolateFactor: BSFloat read GetInterpolateFactor write SetInterpolateFactor;
+    property Origins: TListVec<TVec3f> read GetOrigins;
+    property PointsInterpolated: TListVec<TVec3f> read GetPointsInterpolated;
+  end;
+  IBAnimationPath3dObsrv = IBObserver<TVec3f>;
+
   function CreateAniFloatLinear(ThreadContext: TBThread): IBAnimationLinearFloat; overload;
   function CreateAniFloatLinear: IBAnimationLinearFloat; overload;
   function CreateAniFloatLivearObsrv(const Animation: IBAnimationLinearFloat;
@@ -146,14 +166,16 @@ type
 
   function CreateAniElipse(ThreadContext: TBThread): IBAnimationElipse;
 
+  function CreateAniPath3d(ThreadContext: TBThread): IBAnimationPath3d; overload;
+  function CreateAniPath3d: IBAnimationPath3d; overload;
+
 
 implementation
 
 uses
-  {$ifndef FPC}
-    math,
-  {$endif}
-    bs.math
+    math
+  ,	bs.mesh.primitives
+  , bs.math
   ;
 
 type
@@ -253,6 +275,55 @@ type
     procedure Run; override;
   end;
 
+  { TAniPath3d }
+
+  TAniPath3d = class(TAniValueLawBase<TVec3f>, IBAnimationPath3d)
+  private type
+    TVec3fItemQ = TItemQueue<TVec3f>;
+    TVec3fDataQ = TQueueTemplate<TVec3fItemQ>;
+    TIntrpFunc = procedure of object;
+  private
+    FuncIntrp: array [TInterpolateSpline] of TIntrpFunc;
+    FOrigins: TListVec<TVec3f>;
+    FPointsInterpolated: TListVec<TVec3f>;
+    FInterpolateSpline: TInterpolateSpline;
+    FInterpolateFactor: BSFloat;
+    FIsBackPass: boolean;
+    FCurrentIndexValue: int32;
+    FCurrentDelta: TVec3f;
+    FCurrentSnippetTimeStart: uint32;
+    FCurrentPoint: TVec3f;
+    FDurationSnippet: uint32;
+    procedure SplineInterpolateBezier;
+    procedure SplineInterpolateNone;
+    procedure SplineInterpolateCubic;
+    // https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Cardinal_spline
+    procedure SplineInterpolateCubicHermite;
+    procedure BuildPath;
+  protected
+    procedure Reverse; override;
+    procedure Update; override;
+    class function GetQueueClass: TQueueWrapperClass; override;
+  public
+    procedure AfterConstruction; override;
+    destructor Destroy; override;
+    procedure Run; override;
+    procedure AddPoint(const AValue: TVec3f);
+    procedure Clear;
+
+    function GetInterpolateSpline: TInterpolateSpline;
+    procedure SetInterpolateSpline(AValue: TInterpolateSpline);
+    function GetInterpolateFactor: BSFloat;
+    procedure SetInterpolateFactor(AValue: BSFloat);
+    function GetOrigins: TListVec<TVec3f>;
+    function GetPointsInterpolated: TListVec<TVec3f>;
+
+    property InterpolateSpline: TInterpolateSpline read GetInterpolateSpline write SetInterpolateSpline;
+    property InterpolateFactor: BSFloat read GetInterpolateFactor write SetInterpolateFactor;
+    property Origins: TListVec<TVec3f> read GetOrigins;
+    property PointsInterpolated: TListVec<TVec3f> read GetPointsInterpolated;
+  end;
+
 
 {$region 'TAniValueLawBase<T>'}
 
@@ -323,9 +394,22 @@ begin
   inherited;
 end;
 
+function TAniValueLawBase<T>.GetCurrentNormalizedTime: BSFloat;
+begin
+  Result := FCurrentNormalizedTime;
+end;
+
 procedure TAniValueLawBase<T>.SetCurrentSender(Value: Pointer);
 begin
   FCurrentSender := Value;
+end;
+
+procedure TAniValueLawBase<T>.Update;
+begin
+  CurrentDeltaTime := TBTimer.CurrentTime.Counter - TimeStart;
+  FCurrentNormalizedTime := CurrentDeltaTime / FDuration;
+  if FCurrentNormalizedTime > 1.0 then
+    FCurrentNormalizedTime := 1.0;
 end;
 
 procedure TAniValueLawBase<T>.SetDuration(Value: int32);
@@ -368,14 +452,18 @@ begin
 end;
 
 procedure TAniValueLawBase<T>.SendEvent(const Value: T);
+var
+  t: uint64;
 begin
-  if (not IsRun) or (FIntervalUpdate > TBTimer.CurrentTime.Counter - LastTime) then
-    exit;
-  LastTime := TBTimer.CurrentTime.Counter;
+  t := TBTimer.CurrentTime.Counter;
+  if (not IsRun) or (FIntervalUpdate > t - LastTime) then
+  	exit;
+  LastTime := t;
   { Send new event-value all subscribers }
   if (CurrentDeltaTime > FDuration) then
   begin // end animation
     FCurrentValue := FStopValue;
+    FCurrentNormalizedTime := 1.0;
     inherited;
     if (FLoop) then
     begin
@@ -403,16 +491,11 @@ end;
 { TAniValueLawFloat }
 
 procedure TAniValueLawFloat.Update;
-var
-  norm_time: BSFloat;
 begin
   if not IsRun then
     exit;
-  CurrentDeltaTime := TBTimer.CurrentTime.Counter - TimeStart;
-  norm_time := CurrentDeltaTime / FDuration;
-  if norm_time > 1.0 then
-    norm_time := 1.0;
-  SendEvent(FStartValue + norm_time * FDelta);
+  inherited;
+  SendEvent(FStartValue + FCurrentNormalizedTime * FDelta);
 end;
 
 class function TAniValueLawFloat.GetQueueClass: TQueueWrapperClass;
@@ -440,16 +523,11 @@ end;
 { TAniValueLawsInt32 }
 
 procedure TAniValueLawsInt32.Update;
-var
-  norm_time: BSFloat;
 begin
   if not IsRun then
     exit;
-  CurrentDeltaTime := TBTimer.CurrentTime.Counter - TimeStart;
-  norm_time := CurrentDeltaTime / FDuration;
-  if norm_time > 1.0 then
-    norm_time := 1.0;
-  SendEvent(FStartValue + Round(FDelta * norm_time));
+  inherited;
+  SendEvent(FStartValue + Round(FDelta * FCurrentNormalizedTime));
 end;
 
 class function TAniValueLawsInt32.GetQueueClass: TQueueWrapperClass;
@@ -475,16 +553,11 @@ end;
 { TAniValueLawsVec2f }
 
 procedure TAniValueLawsVec2f.Update;
-var
-  norm_time: BSFloat;
 begin
   if not IsRun then
     exit;
-  CurrentDeltaTime := TBTimer.CurrentTime.Counter - TimeStart;
-  norm_time := CurrentDeltaTime / FDuration;
-  if norm_time > 1.0 then
-    norm_time := 1.0;
-  SendEvent(FStartValue + FDelta * norm_time);
+  inherited;
+  SendEvent(FStartValue + FDelta * FCurrentNormalizedTime);
 end;
 
 class function TAniValueLawsVec2f.GetQueueClass: TQueueWrapperClass;
@@ -511,14 +584,11 @@ end;
 { TAniValueLawsVec3f }
 
 procedure TAniValueLawsVec3f.Update;
-var
-  norm_time: BSFloat;
 begin
   if not IsRun then
     exit;
-  CurrentDeltaTime := TBTimer.CurrentTime.Counter - TimeStart;
-  norm_time := CurrentDeltaTime / FDuration;
-  SendEvent(FStartValue + FDelta * norm_time);
+  inherited;
+  SendEvent(FStartValue + FDelta * FCurrentNormalizedTime);
 end;
 
 class function TAniValueLawsVec3f.GetQueueClass: TQueueWrapperClass;
@@ -544,16 +614,12 @@ end;
 
 procedure TAniValueLawElipse.Update;
 var
-  norm_time: BSFloat;
   v: TVec2f;
 begin
   if not IsRun then
     exit;
-  CurrentDeltaTime := TBTimer.CurrentTime.Counter - TimeStart;
-  norm_time := CurrentDeltaTime / FDuration;
-  if norm_time > 1.0 then
-    norm_time := 1.0;
-  FAngle := norm_time * 360.0;
+  inherited;
+  FAngle := FCurrentNormalizedTime * 360.0;
   v.x := Fa * BS_Cos(FAngle);
   v.y := Fb * BS_Sin(FAngle);
   SendEvent(v);
@@ -614,6 +680,197 @@ end;
 function CreateAniElipse(ThreadContext: TBThread): IBAnimationElipse;
 begin
   Result := TAniValueLawElipse.Create(ThreadContext);
+end;
+
+{ TAniPath3d }
+
+procedure TAniPath3d.AddPoint(const AValue: TVec3f);
+begin
+  FOrigins.Add(AValue);
+end;
+
+procedure TAniPath3d.AfterConstruction;
+begin
+  inherited;
+  FOrigins := TListVec<TVec3f>.Create;
+  FInterpolateSpline := isCubicHermite;
+  FInterpolateFactor := 0.02;
+  FuncIntrp[isNone        ] := SplineInterpolateNone;
+  FuncIntrp[isBezier      ] := SplineInterpolateBezier;
+  FuncIntrp[isCubic       ] := SplineInterpolateCubic;
+  FuncIntrp[isCubicHermite] := SplineInterpolateCubicHermite;
+  FPointsInterpolated := TListVec<TVec3f>.Create;
+end;
+
+procedure TAniPath3d.BuildPath;
+begin
+  FPointsInterpolated.Clear;
+  if (FOrigins.Count > 1) then
+    FuncIntrp[FInterpolateSpline]();
+end;
+
+procedure TAniPath3d.Clear;
+begin
+  FOrigins.Clear;
+end;
+
+destructor TAniPath3d.Destroy;
+begin
+  FOrigins.Free;
+  FPointsInterpolated.Free;
+  inherited;
+end;
+
+function TAniPath3d.GetInterpolateFactor: BSFloat;
+begin
+  Result := FInterpolateFactor;
+end;
+
+function TAniPath3d.GetInterpolateSpline: TInterpolateSpline;
+begin
+  Result := FInterpolateSpline;
+end;
+
+class function TAniPath3d.GetQueueClass: TQueueWrapperClass;
+begin
+  Result := TVec3fDataQ;
+end;
+
+procedure TAniPath3d.Reverse;
+begin
+  inherited;
+  FIsBackPass := not FIsBackPass;
+end;
+
+procedure TAniPath3d.Run;
+begin
+  BuildPath;
+  if FPointsInterpolated.Count = 0 then
+  	exit;
+
+  if GetLoopInverse then
+  begin
+    FCurrentIndexValue := FPointsInterpolated.Count-1;
+    FCurrentPoint := FOrigins.Items[FCurrentIndexValue];
+  	FCurrentDelta := FPointsInterpolated.Items[FPointsInterpolated.Count-2] - FCurrentPoint;
+  end else
+  begin
+    FCurrentIndexValue := 0;
+    FCurrentPoint := FOrigins.Items[FCurrentIndexValue];
+    FCurrentDelta := FPointsInterpolated.Items[1] - FCurrentPoint;
+  end;
+
+  FDurationSnippet := round(GetDuration/FPointsInterpolated.Count);
+  FCurrentSnippetTimeStart := TBTimer.CurrentTime.Counter;
+  inherited;
+end;
+
+procedure TAniPath3d.SetInterpolateFactor(AValue: BSFloat);
+begin
+  FInterpolateFactor := clamp(1.0, 0.0001, AValue);
+end;
+
+function TAniPath3d.GetOrigins: TListVec<TVec3f>;
+begin
+  Result := FOrigins;
+end;
+
+function TAniPath3d.GetPointsInterpolated: TListVec<TVec3f>;
+begin
+	Result := FPointsInterpolated;
+end;
+
+procedure TAniPath3d.SetInterpolateSpline(AValue: TInterpolateSpline);
+begin
+  FInterpolateSpline := AValue;
+end;
+
+procedure TAniPath3d.SplineInterpolateBezier;
+begin
+  GenerateBezierSpline(PArrayVec3f(FOrigins.ShiftData[0]), FOrigins.Count, FPointsInterpolated, FInterpolateFactor);
+end;
+
+procedure TAniPath3d.SplineInterpolateCubic;
+begin
+  { GenerateCubicSpline is wrong for 3d, therefor uses GenerateCubicHermiteSpline instead }
+  //GenerateCubicSpline(PArrayVec3f(FOrigins.ShiftData[0]), FOrigins.Count, FPointsInterpolated, FInterpolateFactor);
+  GenerateCubicHermiteSpline(PArrayVec3f(FOrigins.ShiftData[0]), FOrigins.Count, FPointsInterpolated, FInterpolateFactor, false);
+end;
+
+procedure TAniPath3d.SplineInterpolateCubicHermite;
+begin
+  GenerateCubicHermiteSpline(PArrayVec3f(FOrigins.ShiftData[0]), FOrigins.Count, FPointsInterpolated, FInterpolateFactor, false);
+end;
+
+procedure TAniPath3d.SplineInterpolateNone;
+begin
+  FPointsInterpolated.Add(FOrigins.ShiftData[0], FOrigins.Count);
+end;
+
+procedure TAniPath3d.Update;
+var
+	v: TVec3f;
+  currentSnippetDeltaTime: uint32;
+  norm_time: BSFloat;
+  currTime: uint32;
+  newIndex: int32;
+begin
+  if not IsRun then
+    exit;
+	inherited;
+  currTime := TBTimer.CurrentTime.Counter;
+
+  newIndex := trunc(FCurrentNormalizedTime*(FPointsInterpolated.Count-1));
+  if FIsBackPass then
+  	newIndex := FPointsInterpolated.Count - 1 - newIndex;
+
+  //if newIndex >= 10 then
+  //	newIndex := newIndex;
+
+  if newIndex <> FCurrentIndexValue then
+  begin
+    FCurrentIndexValue := newIndex;
+    if FIsBackPass then
+    begin
+      if FCurrentIndexValue < 2 then
+      begin
+        CurrentDeltaTime := GetDuration+1;
+  		  SendEvent(FPointsInterpolated.Items[0]);
+        exit;
+      end;
+      FCurrentPoint := FPointsInterpolated.Items[FCurrentIndexValue];
+      FCurrentDelta := FPointsInterpolated.Items[FCurrentIndexValue-1]-FCurrentPoint;
+    end else
+    begin
+      if FCurrentIndexValue > FPointsInterpolated.Count - 2 then
+      begin
+        CurrentDeltaTime := GetDuration+1;
+			  SendEvent(FPointsInterpolated.Items[FPointsInterpolated.Count-1]);
+    	  exit;
+  	  end;
+      FCurrentPoint := FPointsInterpolated.Items[FCurrentIndexValue];
+      FCurrentDelta := FPointsInterpolated.Items[FCurrentIndexValue+1]-FCurrentPoint;
+    end;
+    FCurrentSnippetTimeStart := currTime;
+  end;
+
+  currentSnippetDeltaTime := currTime - FCurrentSnippetTimeStart;
+  norm_time := currentSnippetDeltaTime / FDurationSnippet;
+  if norm_time > 1.0 then
+    norm_time := 1.0;
+  v := FCurrentPoint + FCurrentDelta * norm_time;
+  SendEvent(v);
+
+end;
+
+function CreateAniPath3d(ThreadContext: TBThread): IBAnimationPath3d;
+begin
+	Result := TAniPath3d.Create(ThreadContext);
+end;
+
+function CreateAniPath3d: IBAnimationPath3d;
+begin
+  Result := TAniPath3d.Create(GUIThread);
 end;
 
 end.

@@ -66,9 +66,11 @@ end;
 constructor TBSApplicationExample.Create;
 begin
   inherited;
+  {$ifndef ultibo}  // ultibo transmits own params in command line;
+  	{$ifndef android} // for android it is library
   CommandLineParam := ParamStr(1);
-  {$ifndef ultibo}  // ultibo transmits own params in command line
   if CommandLineParam = '' then
+  	{$endif}
   {$endif}
     CommandLineParam := 'TBSTestWindows'; //TBSTestWindows TBSTestEarth TBSTestCanvasImages TBSTestEdit TBSTestButton TBSTestTable TBSTestWindows TBSTestSimple TBSTestCollada  TBSTestCanvas
 end;
@@ -139,7 +141,7 @@ begin
   begin
     FpsOut.Text := 'Tasks: ' + IntToStr(TTaskExecutor.CountTasks) + '; FPS: ' + IntToStr(MainWindow.Renderer.FPS);
   end;
-  end;
+end;
 
 procedure TBSApplicationExample.OnGLContextLost;
 begin

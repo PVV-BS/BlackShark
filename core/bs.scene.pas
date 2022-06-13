@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -204,6 +204,7 @@ type
     {.$ifdef DEBUG_BS}
     FCaption: string;
     {.$endif}
+    FBanDraw: boolean;
     function GetAbsolutePosition: TVec3f;
     procedure GenerateProdStackMatrix(Instance: PGraphicInstance);{$ifndef DEBUG_BS} inline; {$endif}
     procedure GenerateModelMatrixFromAllTransformations(Instance: PGraphicInstance; ASendEvent: boolean); {$ifndef DEBUG_BS} inline; {$endif}
@@ -430,6 +431,8 @@ type
     property SelectResolve: boolean read GetSelectResolve write SetSelectResolve;
     { is the object now dragging ? }
     property IsDrag: boolean read GetIsDrag write SetIsDrag;
+    { bans to draw the object }
+    property BanDraw: boolean read FBanDraw write FBanDraw;
     { a drawn mesh (shape) }
     property Mesh: TMesh read FMesh write SetMesh;
     { it determines whether participate all the object instances in space tree of the scene;

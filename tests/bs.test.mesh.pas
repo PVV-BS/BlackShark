@@ -15,6 +15,8 @@ uses
   , bs.mesh.primitives
   , bs.shader
   , bs.animation
+  , bs.events
+  , bs.gui.buttons
   ;
 
 type
@@ -46,13 +48,16 @@ type
     class function TestName: string; override;
   end;
 
+  { TBSTestEarth }
+
   TBSTestEarth = class(TBSTest)
   private
-    //Canvas: TBlackSharkCanvas;
     AniLaw: IBAnimationLinearFloat;
     AniLawElipse: IBAnimationElipse;
     ObsrvFloat: IBAnimationLinearFloatObsrv;
     ObsrvElipse: IBAnimationElipseObsrv;
+    AniFly: IBAnimationPath3d;
+    ObsrvFly: IBAnimationPath3dObsrv;
     Earth: TTexturedVertexes;
     Clouds: TTexturedVertexes;
     CloudsBack: TTexturedVertexes;
@@ -62,8 +67,13 @@ type
     EmptyMoonAngle: TGraphicObject;
     Sky: TTexturedVertexes;
     //Tmp: TColoredVertexes;
+    Button: TBButton;
+    OnClckObsr: IBMouseDownEventObserver;
+    //Path: TGraphicObjectLines;
     procedure OnUpdateValueAngle(const Value: BSFloat);
     procedure OnUpdateValueTrackMoon(const Value: TVec2f);
+    procedure OnUpdatePosFly(const Value: TVec3f);
+  	procedure OnButtonFlyClick(const AData: BMouseData);
   public
     constructor Create(ARenderer: TBlackSharkRenderer); override;
     destructor Destroy; override;
@@ -82,6 +92,7 @@ uses
   {$endif}
   , bs.thread
   , bs.texture
+  , bs.graphics
   ;
 
 { TBSTestMesh }
@@ -155,12 +166,45 @@ begin
   Moon.Angle := vec3(0.0, AniLawElipse.Angle, 0.0);
 end;
 
+procedure TBSTestEarth.OnUpdatePosFly(const Value: TVec3f);
+begin
+  if not AniFly.IsRun then
+    exit;
+  Renderer.Frustum.BeginUpdate;
+  Renderer.Frustum.Position := Value;
+	Renderer.Frustum.Angle := vec3(0.0, AniFly.CurrentNormalizedTime*360, 0.0);
+  Renderer.Frustum.EndUpdate;
+end;
+
+procedure TBSTestEarth.OnButtonFlyClick(const AData: BMouseData);
+//var
+//  i: int32;
+begin
+	if AniFly.IsRun then
+  begin
+    AniFly.Stop;
+  end else
+  begin
+  	AniFly.Run;
+    //Path.Clear;
+    //Path.BeginUpdate;
+    //Path.MoveTo(AniFly.PointsInterpolated.Items[0]);
+    //for i := 1 to AniFly.PointsInterpolated.Count - 1 do
+    //begin
+    //  Path.LineTo(AniFly.PointsInterpolated.Items[i]);
+    //end;
+    //Path.EndUpdate(false);
+  end;
+end;
+
 constructor TBSTestEarth.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
+  AllowMoveCameraByKeyboard := true;
   Renderer.Frustum.Angle := vec3(0.0, 0.0, 0.0);
+  Renderer.Frustum.DistanceFarPlane := 500;
   Sky := TTexturedVertexes.Create(Self, nil, Renderer.Scene);
-  TBlackSharkFactoryShapesPT.GenerateSphere(Sky.Mesh, 10, Renderer.Frustum.DistanceFarPlane - Renderer.Frustum.DEFAULT_POSITION.z, true); //
+  TBlackSharkFactoryShapesPT.GenerateSphere(Sky.Mesh, 10, Renderer.Frustum.DistanceFarPlane * 0.5, true); //
   Sky.Texture := BSTextureManager.LoadTexture('Pictures/earth/sky.png', false, false);
   Sky.Interactive := false;
   Sky.DrawSides := dsBack;
@@ -172,7 +216,7 @@ begin
   EmptyMoon := TGraphicObject.Create(Self, Empty, Renderer.Scene);
   EmptyMoonAngle := TGraphicObject.Create(Self, EmptyMoon, Renderer.Scene);
   Earth := TTexturedVertexes.Create(Self, Empty , Renderer.Scene);
-  TBlackSharkFactoryShapesPT.GenerateSphere(Earth.Mesh, 10, Renderer.ScreenSizeToScene(500), true);
+  TBlackSharkFactoryShapesPT.GenerateSphere(Earth.Mesh, 10, Renderer.ScreenSizeToScene(round(500)), true);
   Earth.Texture := BSTextureManager.LoadTexture('Pictures/earth/earthmap1k.png');
   Earth.Shader := TBlackSharkTextureOutShader(BSShaderManager.Load('SimpleTexture', TBlackSharkTextureOutShader));
   //Earth.Position := vec3(0.0, 0.0, -4.0);
@@ -184,7 +228,7 @@ begin
   Earth.DrawSides := dsFront;
   //Earth.Hide := true;
   Clouds := TTexturedVertexes.Create(Self, Earth, Renderer.Scene);
-  TBlackSharkFactoryShapesPT.GenerateSphere(Clouds.Mesh, 10, Renderer.ScreenSizeToScene(525), true);
+  TBlackSharkFactoryShapesPT.GenerateSphere(Clouds.Mesh, 10, Renderer.ScreenSizeToScene(round(525)), true);
   Clouds.Texture := BSTextureManager.LoadTexture('Pictures/earth/earthcloudmapcolortrans.png');
   Clouds.Shader := TBlackSharkTextureOutShader(BSShaderManager.Load('SimpleTexture', TBlackSharkTextureOutShader));
   Clouds.Interactive := false;
@@ -193,7 +237,7 @@ begin
   Clouds.ChangedMesh;
   Clouds.DrawSides := dsFront;
   CloudsBack := TTexturedVertexes.Create(Self, Earth , Renderer.Scene);
-  TBlackSharkFactoryShapesPT.GenerateSphere(CloudsBack.Mesh, 10, Renderer.ScreenSizeToScene(525), true);
+  TBlackSharkFactoryShapesPT.GenerateSphere(CloudsBack.Mesh, 10, Renderer.ScreenSizeToScene(round(525)), true);
   CloudsBack.Texture := BSTextureManager.LoadTexture('Pictures/earth/earthcloudmapcolortrans.png');
   //CloudsBack.Texture := Clouds.Texture;
   CloudsBack.Shader := TBlackSharkTextureOutShader(BSShaderManager.Load('SimpleTexture', TBlackSharkTextureOutShader));
@@ -204,7 +248,7 @@ begin
   CloudsBack.DrawSides := dsBack;
   EmptyMoon.Angle := vec3(0.0, 0.0, 15.0);
   Moon := TTexturedVertexes.Create(Self, EmptyMoonAngle , Renderer.Scene);
-  TBlackSharkFactoryShapesPT.GenerateSphere(Moon.Mesh, 10, Renderer.ScreenSizeToScene(150), true);
+  TBlackSharkFactoryShapesPT.GenerateSphere(Moon.Mesh, 10, Renderer.ScreenSizeToScene(round(150)), true);
   Moon.Texture := BSTextureManager.LoadTexture('Pictures/earth/moonmap1k.png');
   Moon.Shader := TBlackSharkTextureOutShader(BSShaderManager.Load('SimpleTexture', TBlackSharkTextureOutShader));
   //Moon.DragResolve := false;
@@ -212,12 +256,13 @@ begin
   Moon.DrawSides := dsFront;
   Moon.ChangedMesh;
   //Moon.Hide := true;
-  EmptyMoonAngle.Position := vec3(Renderer.ScreenSizeToScene(2000), 0.0, 0.0);
+  EmptyMoonAngle.Position := vec3(Renderer.ScreenSizeToScene(round(2000)), 0.0, 0.0);
 
   AniLaw := CreateAniFloatLinear(GUIThread);
   ObsrvFloat := AniLaw.CreateObserver(GUIThread, OnUpdateValueAngle);
   AniLaw.Duration := 20000;
   AniLaw.Loop := true;
+  AniLaw.IntervalUpdate := 0;
   //AniLaw.LoopInverse := true;
   AniLaw.StartValue := 0.0;
   AniLaw.StopValue := 360.0;
@@ -226,23 +271,52 @@ begin
   AniLawElipse.c := EmptyMoonAngle.Position.x;
   AniLawElipse.Duration := round(AniLaw.Duration*3);
   AniLawElipse.Loop := true;
+  AniLawElipse.IntervalUpdate := 0;
   //AniLaw.LoopInverse := true;
   AniLawElipse.StartValue := vec2(EmptyMoonAngle.Position.x, EmptyMoonAngle.Position.y);
   AniLawElipse.StopValue := vec2(EmptyMoonAngle.Position.x, EmptyMoonAngle.Position.y);
+
+  Button := TBButton.Create(ARenderer);
+  Button.Caption := 'Fly';
+  Button.Canvas.Font.Size := 10;
+  OnClckObsr := Button.OnClickEvent.CreateObserver(OnButtonFlyClick);
+  Button.Position2d := vec2(20.0, 20.0);
+
+  AniFly := CreateAniPath3d(NextExecutor);
+  ObsrvFly := AniFly.CreateObserver(GUIThread, OnUpdatePosFly);
+  AniFly.Duration := 10000;
+  AniFly.IntervalUpdate := 0;
+  AniFly.InterpolateFactor := 0.001;
+  AniFly.Loop := false;
+  AniFly.InterpolateSpline := TInterpolateSpline.isCubicHermite;
+  AniFly.AddPoint(Renderer.Frustum.Position);
+  AniFly.AddPoint(vec3(-3, 0.0, -4.0));
+  AniFly.AddPoint(vec3(0.0, 0.0, -7));
+  AniFly.AddPoint(vec3(3, 0.0, -4.0));
+  AniFly.AddPoint(Renderer.Frustum.Position);
+  AniFly.StartValue := Renderer.Frustum.Position;
+  AniFly.StopValue := Renderer.Frustum.Position;
+
+  //Path := TGraphicObjectLines.Create(nil, nil, Renderer.Scene);
 end;
 
 destructor TBSTestEarth.Destroy;
 begin
   AniLaw.Stop;
   AniLawElipse.Stop;
+  AniFly.Stop;
+  ObsrvFly := nil;
+  AniFly := nil;
   ObsrvElipse := nil;
   ObsrvFloat := nil;
   AniLaw := nil;
   AniLawElipse := nil;
+  //Path.Free;
   Sky.Free;
   Moon.Free;
   Earth.Free;
   Empty.Free;
+  Button.Free;
   inherited;
 end;
 

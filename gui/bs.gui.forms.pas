@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -398,7 +398,7 @@ begin
   FScrollBarHor.MainBody.Data.DragResolve := false;
   // be careful, because if TBScrolledWindowCustom will have parent with high Layer2d
   // then ScrollBar can be hided or one of its parts
-  FScrollBarHor.MainBody.Layer2d := Round(TBlackSharkFrustum.MAX_COUNT_LAYERS - 5);
+  FScrollBarHor.MainBody.Layer2d := Round(TBlackSharkFrustum.MAX_COUNT_LAYERS - 20);
   FScrollBarHor.OnChangePosition := ChangeScrollHor;
   FScrollBarHor.MainBody.Parent := FClipObject;
 
@@ -474,9 +474,9 @@ begin
   CheckSizeScrollBars;
   if Assigned(Border) then
   begin
-    FBorder.Size := vec2(FClipObject.Width, FClipObject.Height) + FBorder.WidthLine*2;
+    FBorder.Size := vec2(FClipObject.Width, FClipObject.Height);
     FBorder.Build;
-    FBorder.Position2d := vec2(-round(FBorder.WidthLine), -round(FBorder.WidthLine));
+    FBorder.Position2d := vec2(0.0, 0.0);
   end;
 
   if not FAllowDragWindowOverData then
@@ -651,12 +651,10 @@ begin
   inherited DoAfterScale;
   if Assigned(Border) then
   begin
-    Border.Size := vec2(FClipObject.Width+FBorder.WidthLine*2, FClipObject.Height+FBorder.WidthLine*2);
+    Border.Size := vec2(FClipObject.Width, FClipObject.Height);
     Border.Build;
-    FBorder.Position2d := vec2(-round(FBorder.WidthLine*0.5), -round(FBorder.WidthLine*0.5));
+    FBorder.Position2d := vec2(0.0, 0.0);
   end;
-  //FScrollBarHor.DoScaling;
-  //FScrollBarVert.DoScaling;
   CheckSizeScrollBars;
   if Assigned(FSpaceTree) then
   begin
@@ -747,14 +745,11 @@ begin
   if Border = nil then
   begin
     FBorder := TRectangle.Create(FCanvas, FClipObject);
-    FBorder.Position2d := vec2(-1.0, -1.0);
     FBorder.Color := BS_CL_MED_GRAY;
     FBorder.Data.Interactive := false;
     FBorder.WidthLine := round(1.0*ToHiDpiScale);
-    //FBorder.FixedWidthLine := true;
     FBorder.BanScalableMode := true;
     FBorder.Layer2d := FScrollBarHor.MainBody.Layer2d + 1;
-    //FBorder.Align := TObjectAlign.oaClient;
   end;
 end;
 
@@ -877,8 +872,16 @@ var
   work_area_height: BSFloat;
   work_area_width: BSFloat;
 begin
-  work_area_height := FClipObject.Height - FScrollBarsPaddingTop - FScrollBarsPaddingBottom;
-  work_area_width := FClipObject.Width - FScrollBarsPaddingLeft - FScrollBarsPaddingRight;
+  if ShowBorder then
+  begin
+    work_area_height := FClipObject.Height - FScrollBarsPaddingTop - FScrollBarsPaddingBottom - FBorder.WidthLine*2;
+    work_area_width := FClipObject.Width - FScrollBarsPaddingLeft - FScrollBarsPaddingRight - FBorder.WidthLine*2;
+  end else
+  begin
+    work_area_height := FClipObject.Height - FScrollBarsPaddingTop - FScrollBarsPaddingBottom;
+    work_area_width := FClipObject.Width - FScrollBarsPaddingLeft - FScrollBarsPaddingRight;
+  end;
+
   if Canvas.Scalable then
   begin
     hh := WidthScrollBars;
@@ -922,8 +925,15 @@ begin
     end;
   end;
 
-  FScrollBarVert.Position2d := vec2(FClipObject.Width - FScrollBarVert.Width - FScrollBarsPaddingRight, FScrollBarsPaddingTop);
-  FScrollBarHor.Position2d := vec2(FScrollBarsPaddingLeft, FClipObject.Height - FScrollBarsPaddingBottom - FScrollBarHor.Height);
+  if ShowBorder then
+  begin
+    FScrollBarVert.Position2d := vec2(FClipObject.Width - FScrollBarVert.Width - FScrollBarsPaddingRight - FBorder.WidthLine, FScrollBarsPaddingTop + FBorder.WidthLine);
+    FScrollBarHor.Position2d := vec2(FScrollBarsPaddingLeft + FBorder.WidthLine, FClipObject.Height - FScrollBarsPaddingBottom - FScrollBarHor.Height - FBorder.WidthLine);
+  end else
+  begin
+    FScrollBarVert.Position2d := vec2(FClipObject.Width - FScrollBarVert.Width - FScrollBarsPaddingRight, FScrollBarsPaddingTop);
+    FScrollBarHor.Position2d := vec2(FScrollBarsPaddingLeft, FClipObject.Height - FScrollBarsPaddingBottom - FScrollBarHor.Height);
+  end;
 end;
 
 procedure TBScrolledWindowCustom.ChangeScrollHor(ScrollBar: TBScrollBar);

@@ -265,7 +265,7 @@ public class BlackSharkApplication extends Activity {
         appSourceDir = getApplicationInfo().sourceDir;
         dataDir = getFilesDir().getAbsolutePath();
 
-        //ref. http://stackoverflow.com/questions/8706464/defaulthttpclient-to-androidhttpclient
+        // http://stackoverflow.com/questions/8706464/defaulthttpclient-to-androidhttpclient
         int systemVersion = android.os.Build.VERSION.SDK_INT;
 
         if (systemVersion > 9) {
@@ -346,8 +346,7 @@ public class BlackSharkApplication extends Activity {
     	super.onConfigurationChanged(newConfig);    
     	
     	screenOrientation = newConfig.orientation;
-        //newConfig.
-    	
+
     	glSurfaceView.requestLayout();
     	//bsNativeOnChanged();
     }
@@ -405,8 +404,6 @@ public class BlackSharkApplication extends Activity {
             case KeyEvent.KEYCODE_VOLUME_DOWN:
               //mute = bsNativeOnKeyDown(c,keyCode,KeyEvent.keyCodeToString(keyCode));
               break;*/
-
-              /*commented! need SDK API >= 18 [Android 4.3] to compile!*/
 
             /*case KeyEvent.KEYCODE_BRIGHTNESS_DOWN:
                 bsNativeOnKeyDown(c,keyCode,KeyEvent.keyCodeToString(keyCode));
@@ -483,11 +480,6 @@ public class BlackSharkApplication extends Activity {
     private void stopLoop() {
         if (updateTask != null) {
             updateTask.cancel();
-//            try {
-//                updateTask.wait();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
             updateTask = null;
             timer = null;
         }
@@ -510,20 +502,12 @@ public class BlackSharkApplication extends Activity {
         while (zipEntry != null) {
             if (!zipEntry.isDirectory() && (zipEntry.toString().contains("assets/"))) {
                 String newFile = dataDir + "/" + zipEntry.toString().substring(7);
-                // write file content
-//                try {
-//                    Files.createFile(Paths.get(newFile));
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
                 int len;
                 File file = new File(newFile);
                 File parent = new File(file.getParent());
                 if (!parent.exists()) {
                     parent.mkdirs();
                 }
-                //File f = Files.exists()
-                //if (path.)
                 FileOutputStream fos = new FileOutputStream(newFile);
                 while (true) {
                     len = 0;
@@ -545,7 +529,6 @@ public class BlackSharkApplication extends Activity {
                     e.printStackTrace();
                 }
                 fos = null;
-                //zipEntry.
             }
             try {
                 zipEntry = zis.getNextEntry();

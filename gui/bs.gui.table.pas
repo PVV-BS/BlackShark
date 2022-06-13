@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -275,7 +275,6 @@ begin
   ScrollBarVert.Step := round(FRealRowHeight);
   if FShowGrid then
     CreateGrid;
-  //Selector.SpaceTree.
 end;
 
 function TBCustomTable.CreateColumn(ADataGetter: TMethod; AColumnClass: IColumnPresentorClass; const AHeaderCaption: string): IColumnPresentor;
