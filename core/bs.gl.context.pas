@@ -219,6 +219,13 @@ begin
   if GLESLib = 0 then
     exit;
 
+  SupportsVAO := Assigned(glGenVertexArrays);
+  {$ifdef DEBUG_BS}
+  if SupportsVAO then
+    BSWriteMsg('TSharedEglContext.CreateSharedContext', 'VAO is supported')
+  else
+    BSWriteMsg('TSharedEglContext.CreateSharedContext', 'VAO is not supported');
+  {$endif}
   SharedConfigSelected := nil;
   if not Assigned(eglGetDisplay) then
   begin

@@ -105,11 +105,11 @@ uses
 constructor TBSTestInstancing.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Renderer.Frustum.Angle := vec3(0.0, 0.0, 0.0);
+  //Renderer.Frustum.Angle := vec3(0.0, 0.0, 0.0);
   Proto := TColoredVertexes.Create(Self, nil, Renderer.Scene);
   Proto.Color := BS_CL_ORANGE;
   Proto.DragResolve := true;
-  TBlackSharkFactoryShapesP.GenerateCylinder(Proto.Mesh, 0.1, 20, 0.2);
+  TBlackSharkFactoryShapesP.GenerateCylinder(Proto.Mesh, 0.04, 20, 0.08);
   Proto.ChangedMesh;
   Instansing := TBlackSharkInstancing.Create(ARenderer, Proto);
 end;
@@ -125,8 +125,10 @@ function TBSTestInstancing.Run: boolean;
 var
   i: int32;
 begin
+  Allow3dManipulationByMouse := true;
+  AllowMoveCameraByKeyboard := true;
   //Proto.Position := vec3(0.0, 0.0, -3.0);
-  Instansing.CountInstance := 50;
+  Instansing.CountInstance := 5000;
   Instansing.BeginUpdate;
   Instansing.Position[0] := vec3(0.0, 0.0, -3.0);
   for i := 1 to Instansing.CountInstance - 1 do
@@ -176,18 +178,23 @@ var
   i: int32;
   pos: TVec3f;
   r: int32;
-  //op: BSFloat;
 begin
-  //exit;
   for i := 0 to Particles.CountParticle - 1 do
-    begin
+  begin
     pos := Particles.Position[i];
     r := Random(100000);
     if r < 50000 then
-      pos.x := pos.x + Random(3)/10000 else
+    begin
+      pos.x := pos.x + Random(3)/10000;
+      //pos.z := pos.z - Random(5)/1000;
+    end else
+    begin
       pos.x := pos.x - Random(3)/10000;
-    //pos.z := pos.z + Random(5)/1000 - 0.005;
+      //pos.z := pos.z + Random(5)/1000;
+    end;
+
     pos.y := pos.y - Random(3)/5000;
+
     if Renderer.Frustum.PointInFrustum(pos) or (pos.y > 0.0) or Renderer.Frustum.PointInFrustum(
       vec3(pos.x, pos.y + Particles.Texture.Rect.Height*BSConfig.VoxelSize, pos.z)) then
     begin
@@ -200,9 +207,9 @@ begin
     end else
     begin     // Inv *
       pos := vec3(
-        Random(high(int32))/high(int32) * Renderer.Frustum.NearPlaneWidth - Renderer.Frustum.NearPlaneWidth*0.5,
-        Renderer.Frustum.NearPlaneHeight + (Particles.Texture.Rect.Height)*BSConfig.VoxelSize, //Random(high(int32))/high(int32) * (BB_SIZE_Y - Renderer.Frustum.FNearPlaneHeight)) * 0.5,
-        -Random(high(int32))/high(int32) * Deep);  //
+         Random(high(int32))/high(int32) * Renderer.Frustum.NearPlaneWidth - Renderer.Frustum.NearPlaneWidth*0.5,
+         Renderer.Frustum.NearPlaneHeight + (Particles.Texture.Rect.Height)*BSConfig.VoxelSize,
+        -Random(high(int32))/high(int32) * Deep);
       if pos.x < 0 then
         pos.x := pos.x - (Renderer.Frustum.FarPlaneWidth * abs(pos.z)/Deep)
       else
@@ -218,16 +225,13 @@ function TBSTestParticles.Run: boolean;
 var
   i: int32;
   pos: TVec3f;
-  //op: BSFloat;
 begin
-  Particles.CountParticle := 500;
-  {BB := Box3(vec3(-BB_SIZE_X/2, -BB_SIZE_Y/2, -BB_SIZE_Z/2),
-    vec3(BB_SIZE_X/2, BB_SIZE_Y/2, BB_SIZE_Z/2));}       // Renderer.Frustum.FLastProjViewMat *
+  Particles.CountParticle := 1000;
   for i := 0 to Particles.CountParticle - 1 do
   begin
     pos := vec3(
       Random(high(int32))/high(int32) * Renderer.Frustum.NearPlaneWidth - Renderer.Frustum.NearPlaneWidth*0.5,
-      Random(high(int32))/high(int32) * Renderer.Frustum.NearPlaneHeight - Renderer.Frustum.NearPlaneHeight*0.5, //Random(high(int32))/high(int32) * (BB_SIZE_Y - Renderer.Frustum.FNearPlaneHeight)) * 0.5,
+      Random(high(int32))/high(int32) * Renderer.Frustum.NearPlaneHeight - Renderer.Frustum.NearPlaneHeight*0.5,
       -Random(high(int32))/high(int32) * Deep);  //
     if pos.x < 0 then
       pos.x := pos.x - (Renderer.Frustum.FarPlaneWidth * abs(pos.z)/Deep)
@@ -237,17 +241,6 @@ begin
       pos.y := pos.y - (Renderer.Frustum.FarPlaneHeight * abs(pos.z)/Deep)
     else
       pos.y := pos.y + (Renderer.Frustum.FarPlaneHeight * abs(pos.z)/Deep);
-    //pos := Renderer.Frustum.FViewMatrix * pos;
-    //vec3(0.0, 0.0, 0.0);
-    {pos := Renderer.Frustum.FViewMatrix * vec3(
-      Random(high(int32))/high(int32) * BB_SIZE_X - BB_SIZE_X * 0.5,
-      Random(high(int32))/high(int32) * BB_SIZE_Y - BB_SIZE_Y * 0.5,
-      Random(high(int32))/high(int32) * BB_SIZE_Z - BB_SIZE_Z * 0.5); }
-    //Particles.Position[i] := pos;
-    {if Renderer.Frustum.PointInFrustum(pos) then
-      op := 0.8 else
-      op := 0.001; }
-    //Particles.SetupParticleProperties(i, pos, op, 1.0);
     Particles.Position[i] := pos;
     //Particles.Color[i] := vec3(random(1000)/1000, random(1000)/1000, random(1000)/1000);
   end;
@@ -262,6 +255,7 @@ begin
 end;
 
 { TBSTestFog }
+
 constructor TBSTestFog.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;

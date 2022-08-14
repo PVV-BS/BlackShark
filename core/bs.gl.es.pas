@@ -963,8 +963,6 @@ type
 
   //----------------------------- OpenGL ES 3.0 ------------------------------//
 
-  {$ifdef GLES30}
-
   // GL_ARB_map_buffer_range
   GL_MAP_READ_BIT = $0001;
   GL_MAP_WRITE_BIT = $0002;
@@ -992,7 +990,6 @@ var
 
   //glDrawArraysInstancedEXT: procedure (mode: GLenum; start: GLint; count: GLsizei; primcount: GLsizei); {$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
 
-  {$endif} // {$ifdef GLES30}
   //-------------------------------------------------------------------------//
 
   // OpenGL Extension ARB framebuffer
@@ -1422,7 +1419,6 @@ begin
 
 end;
 
-{$ifdef GLES30}
 procedure LoadGLESv3;
 begin
   glGenVertexArrays := glGetProcAddress(GLESLib, 'glGenVertexArrays', 8);
@@ -1444,20 +1440,12 @@ begin
   //glFramebufferTexture2D:
   glFramebufferTexture1D := glGetProcAddress(GLESLib, 'glFramebufferTexture1D', 20);
 end;
-{$endif}
 
 function InitGLES(const PathGL: string): boolean;
 begin
   Result := LoadGLESv2(@PathGL[1]);
-  {$ifdef GLES30}
   LoadGLESv3;
-  {$endif}
 end;
-
-initialization
-
-  //InitGLES;
-
 
 end.
 

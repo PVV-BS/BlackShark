@@ -78,6 +78,9 @@ type
     class function GetProperty(const AName: string; ADefault: uint32): uint32; overload;
   end;
 
+var
+  SupportsVAO: boolean = false;
+
 implementation
 
 uses

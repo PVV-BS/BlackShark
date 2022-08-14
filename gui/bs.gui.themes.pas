@@ -309,12 +309,12 @@ var
 begin
   Result := CreateStyleGroup(URL); // , ClassGroup.ClassType
   if AutoCreatePropList then
-    begin
+  begin
     props := nil;
     i := GetPropList(ClassGroup, props);
     try
       while i > 0 do
-        begin
+      begin
         dec(i);
         if IsPublishedProp(ClassGroup, string(props[i].Name)) then
           begin
@@ -327,12 +327,12 @@ begin
             style_item.ReadFromProperty(props[i], ClassGroup);
             end;
           end;
-        end;
+      end;
     finally
       if props <> nil then
         FreeMem(props);
     end;
-    end;
+  end;
 end;
 
 class destructor TBTheme.Destroy;

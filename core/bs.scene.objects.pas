@@ -65,22 +65,26 @@ type
 
   TObjectVertexes = class abstract(TGraphicObject)
   private
+    FVAO: GLUint;
     FVBO_Vertexes: GLUint;
     FVBO_Indexes: GLUint;
     OpacityUniform: PShaderParametr;
     MVPUniform: PShaderParametr;
-    { bind vertexes componets }
+
     procedure BeforeDraw({%H-}Item: TGraphicObject); inline;
   protected
     procedure SetShader(const AShader: TBlackSharkShader); override;
   public
     constructor Create(AOwner: TObject; AParent: TGraphicObject; AScene: TBScene); override;
     procedure ChangedMesh; override;
+    { bind vertexes componets }
+    procedure BindVBO; inline;
     procedure DrawVertexs(Instance: PRendererGraphicInstance);
     procedure Clear; override;
     procedure Restore; override;
     property VBO_Vertexes: GLUint read FVBO_Vertexes;
     property VBO_Indexes: GLUint read FVBO_Indexes;
+    property VAO: GLUint read FVAO;
   end;
 
   {
@@ -301,6 +305,7 @@ type
 
   TGraphicObjectText = class(TObjectVertexes)
   private
+    ColorUniform: PShaderParametr;
     DeltaF: BSFloat;
     BlankWidth: BSFloat;
     SettedSize: boolean;
@@ -319,6 +324,7 @@ type
     FFont: IBlackSharkFont;
     FontText: TBlackSharkTexture;
     FontTextI: IBlackSharkTexture;
+    FDefaultGlyph: string;
     function SelectorKey(Index: int32; out Code: int32): PKeyInfo;
     function SelectAverageWidth (Index: int32): BSFloat;
     procedure CalcBlankWidth;
@@ -345,6 +351,7 @@ type
     FColor: TColor4f;
     procedure SetColor(const Value: TColor4f); override;
     function GetColor: TColor4f; override;
+    procedure SetShader(const AShader: TBlackSharkShader); override;
   public
     constructor Create(AOwner: TObject; AParent: TGraphicObject; AScene: TBScene); override;
     destructor Destroy; override;
@@ -354,6 +361,7 @@ type
     procedure BeginChangeProp;
     procedure EndChangeProp;
     property Text: string read GetText write SetText;
+    property DefaultGlyph: string read FDefaultGlyph write FDefaultGlyph;
     property TextData: bs.strings.PString read FText write SetTextData;
     { calculator properties of lines and required size of space }
     property TxtProcessor: TTextProcessor read GetTxtProcessor write SetTxtProcessor;
@@ -548,29 +556,55 @@ begin
         //BSWriteMsg('TObjectVertexes.ChangedMesh after reload VBO_Indexes "' + Caption +  '":', IntToStr(FVBO_Indexes));
         {$endif}
       end;
+
+      if SupportsVAO and (FVBO_Indexes > 0) then
+      begin
+        if (FVAO = 0) then
+        begin
+          glGenVertexArrays(1, @FVAO);
+          if FVAO = 0 then
+            SupportsVAO := false;
+        end;
+
+        if (FVAO > 0) then
+        begin
+          glBindVertexArray(FVAO);
+          Shader.UseProgram(true);
+          BindVBO;
+          glBindVertexArray(0);
+        end;
+      end;
+
       // Automticaly set visibility by depend at position Frustum
       if UpdateCount <= 0 then
         FScene.InstanceTransform(BaseInstance, true);
+
     end;
   end else
   begin
-  if VBO_Vertexes > 0 then
-  begin
+    if VBO_Vertexes > 0 then
+    begin
       {$ifdef DEBUG_BS}
       //BSWriteMsg('TObjectVertexes.BeforeChangedMesh before reload VBO_Vertexes "' + Caption +  '":', IntToStr(FVBO_Vertexes));
       {$endif}
-    glDeleteBuffers(1, @FVBO_Vertexes);
-    FVBO_Vertexes := 0;
-  end;
+      glDeleteBuffers(1, @FVBO_Vertexes);
+      FVBO_Vertexes := 0;
+    end;
 
-  if VBO_Indexes > 0 then
-  begin
+    if VBO_Indexes > 0 then
+    begin
       {$ifdef DEBUG_BS}
       //BSWriteMsg('TObjectVertexes.BeforeChangedMesh before reload VBO_Indexes "' + Caption +  '":', IntToStr(FVBO_Indexes));
       {$endif}
-    glDeleteBuffers(1, @FVBO_Indexes);
-    FVBO_Indexes := 0;
-  end;
+      glDeleteBuffers(1, @FVBO_Indexes);
+      FVBO_Indexes := 0;
+    end;
+
+    if FVAO > 0 then
+    begin
+      glDeleteVertexArrays(1, @FVAO);
+      FVAO := 0;
+    end;
   end;
 end;
 
@@ -588,6 +622,12 @@ begin
     glDeleteBuffers(1, @VBO_Vertexes);
     FVBO_Vertexes := 0;
   end;
+
+  if FVAO > 0 then
+  begin
+    glDeleteVertexArrays(1, @FVAO);
+    FVAO := 0;
+  end;
 end;
 
 constructor TObjectVertexes.Create(AOwner: TObject; AParent: TGraphicObject; AScene: TBScene);
@@ -600,14 +640,15 @@ end;
 
 procedure TObjectVertexes.DrawVertexs(Instance: PRendererGraphicInstance);
 begin
-  glUniformMatrix4fv (MVPUniform.Location, 1, GL_FALSE, @Instance.LastMVP );
+  if Assigned(MVPUniform) then
+    glUniformMatrix4fv(MVPUniform.Location, 1, GL_FALSE, @Instance.LastMVP);
   if StaticObject then
   begin
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VBO_Indexes );
-    glDrawElements(FMesh.DrawingPrimitive, FMesh.Indexes.Count, FMesh.Indexes.Kind, nil);   
+    glDrawElements(FMesh.DrawingPrimitive, FMesh.Indexes.Count, FMesh.Indexes.Kind, nil);
   end else
   begin
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0 );
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glDrawElements(FMesh.DrawingPrimitive, FMesh.Indexes.Count, FMesh.Indexes.Kind, FMesh.Indexes.ShiftData[0]); 
   end;
 end;
@@ -639,14 +680,14 @@ begin
   end;
 end;
 
-procedure TObjectVertexes.BeforeDraw(Item: TGraphicObject);
+procedure TObjectVertexes.BindVBO;
 var
   vc: TVertexComponent;
   i: int8;
 begin
   if StaticObject then
   begin
-    glBindBuffer ( GL_ARRAY_BUFFER, VBO_Vertexes );
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_Vertexes);
     for i := 0 to FMesh.ComponentsCount - 1 do
     begin
       vc := FMesh.Components[i];
@@ -662,8 +703,7 @@ begin
     end;
   end else
   begin
-    glBindBuffer ( GL_ARRAY_BUFFER, 0 );
-    //for vc in FMesh.Components do
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     for i := 0 to FMesh.ComponentsCount - 1 do
     begin
       vc := FMesh.Components[i];
@@ -678,8 +718,19 @@ begin
         );
     end;
   end;
+end;
+
+procedure TObjectVertexes.BeforeDraw(Item: TGraphicObject);
+begin
+  if FVAO > 0 then
+  begin
+    glBindVertexArray(FVAO)
+  end else
+  begin
+    BindVBO;
+  end;
   if Assigned(OpacityUniform) then
-    glUniform1f( OpacityUniform^.Location, Opacity );
+    glUniform1f(OpacityUniform^.Location, Opacity);
 end;
 
 { TBlackSharkTexturedGraphicItem }
@@ -695,9 +746,9 @@ begin
     {$endif}
     //glUniform1i(TBlackSharkTextureOutShader(Shader).TexSampler.Location, 0);
     if Assigned(AreaUVUniform) then
-      glUniform4fv( AreaUVUniform.Location, 1, @FTexture^.UV );
+      glUniform4fv(AreaUVUniform.Location, 1, @FTexture^.UV);
     if ReplaceColor and Assigned(HLSUniform) then
-      glUniform3fv( HLSUniform^.Location, 1, @HLS );
+      glUniform3fv(HLSUniform^.Location, 1, @HLS);
   end;
 end;
 
@@ -938,21 +989,15 @@ end;
 
 procedure TGraphicObjectText.BeforeDraw(Item: TGraphicObject);
 begin
-  { VectorText used inverted }
-  if (FFont.IsVectoral) then
-  begin
-    glUniform4fv( TBlackSharkVectorToSingleColorShader(Shader).Color^.Location, 1, @FColor );
-  end else
-  begin
-    BSTextureManager.UseTexture( FontText );
-    glUniform4fv( TTextFromTextureShader(Shader).Color^.Location, 1, @FColor );
-  end;
+  if not FFont.IsVectoral then
+    BSTextureManager.UseTexture(FontText);
+  if Assigned(ColorUniform) then
+    glUniform4fv( ColorUniform^.Location, 1, @FColor );
 end;
 
 constructor TGraphicObjectText.Create(AOwner: TObject; AParent: TGraphicObject; AScene: TBScene);
 begin
   inherited;
-  //ServiceScale := 1.0;
   Color := BS_CL_BLACK;
   SettedSize := false;
   FDiscardBlanks := true;
@@ -1174,6 +1219,18 @@ begin
   FOutToWidth := Value;
   //FTxtProcessor.SetOutRect(FOutToWidth, FOutToHeight);
   Build;
+end;
+
+procedure TGraphicObjectText.SetShader(const AShader: TBlackSharkShader);
+begin
+  inherited;
+  if Assigned(Shader) then
+  begin
+    ColorUniform := Shader.Uniform['Color'];
+  end else
+  begin
+    ColorUniform := nil;
+  end;
 end;
 
 procedure TGraphicObjectText.CalcBlankWidth;
@@ -2001,6 +2058,9 @@ begin
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glDrawElements(FDrawedData.DrawingPrimitive , FDrawedData.Indexes.Count, FDrawedData.Indexes.Kind, FDrawedData.Indexes.ShiftData[0]);
   end;
+
+  if VAO > 0 then
+    glBindVertexArray(GL_NONE);
 end;
 
 procedure TLayoutObject.SetDrawOn(const Value: boolean);

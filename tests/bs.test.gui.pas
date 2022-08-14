@@ -842,48 +842,32 @@ begin
     Grid := CreateGrid(TGridAnsiDataPresentation, BS_CL_GREEN, vec2(0.0, 0.0),
       vec2(Renderer.WindowWidth shr 1, Renderer.WindowHeight shr 1), true);
     Grid.OnChangePosition := OnChangePosGrid;
-    //Grid.Canvas.Root.Anchors[aLeft] := false;
-    //Grid.Canvas.Root.Anchors[aTop] := false;
     DrawData(Grid);
     Grid.SetSizeGrid;
-    //Grid.Canvas.Root.AnchorLeft := 0.0;
-    //Grid.Canvas.Root.AnchorTop := 0.0;
 
     Grid2 := CreateGrid(TGridHexDataPresentation, BS_CL_SILVER2, vec2(Renderer.WindowWidth shr 1, 0.0),
       vec2(Renderer.WindowWidth shr 1, Renderer.WindowHeight shr 1), true);
     Grid2.OnChangePosition := OnChangePosGrid;
-    //Grid2.Canvas.Root.Anchors[aLeft] := false;
-    //Grid2.Canvas.Root.Anchors[aTop] := false;
     DrawData(Grid2);
     Grid2.SetSizeGrid;
-    //Grid2.Canvas.Root.AnchorLeft := 0.0;
-    //Grid2.Canvas.Root.AnchorTop := 0.0;
 
 
     Grid3 := CreateGrid(TBitsDataPresentation, BS_CL_ORANGE, vec2(0.0, Renderer.WindowHeight shr 1),
       vec2(Renderer.WindowWidth shr 1, Renderer.WindowHeight shr 1), true);
     Grid3.OnChangePosition := OnChangePosGrid;
-    //Grid3.Canvas.Root.Anchors[aLeft] := false;
-   // Grid3.Canvas.Root.Anchors[aTop] := false;
     TBitsDataPresentation(Grid3.CurrentPresent).SizeBit := TBitsDataPresentation.MAX_SIZE_BIT;
     DrawData(Grid3);
     Grid3.SetSizeGrid;
-    //Grid3.Canvas.Root.AnchorLeft := 0.0;
-    //Grid3.Canvas.Root.AnchorTop := 0.0;
 
     Grid4 := CreateGrid(TBitsDataPresentation, BS_CL_BLACK, vec2(Renderer.WindowWidth shr 1, Renderer.WindowHeight shr 1),
       vec2(Renderer.WindowWidth shr 1, Renderer.WindowHeight shr 1), false);
     Grid4.OnChangePosition := OnChangePosGrid;
-    //Grid4.Canvas.Root.Anchors[aLeft] := false;
-    //Grid4.Canvas.Root.Anchors[aTop] := false;
     TBitsDataPresentation(Grid4.CurrentPresent).SizeBit := 1;
     TBitsDataPresentation(Grid4.CurrentPresent).Color1 := BS_CL_ORANGE;
     DrawData(Grid4);
     Grid4.SetSizeGrid;
-    //Grid4.Canvas.Root.AnchorLeft := 0.0;
-    //Grid4.Canvas.Root.AnchorTop := 0.0;
 
-    end;
+  end;
   Result := true;
 
   //Grid.Font.Texture.Texture.Picture.Save('d:\fff.bmp');

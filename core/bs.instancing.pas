@@ -58,6 +58,7 @@ type
     Angle: TVec3f;
     Position: TVec3f;
     Color: TColor4f;
+    Distance: Double;
     IsVisible: boolean;
   end;
   PInstance = ^TInstance;
@@ -74,15 +75,15 @@ type
     FPrototype: TObjectVertexes;
     FCountInstance: int32;
     Instances: TListVec<TInstance>;
-    //{$ifdef GLES20}
-    Matrix: TListVec<TMatrix4f>;
-    //{$else}
-    //mvpVBO: GLuint;
-    //{$endif}
+    Matrixes: TListVec<TMatrix4f>;
+    MvpVBO: GLuint;
+    MvpAttr: PShaderParametr;
     GIMethodDefault: TDrawInstanceMethod;
     UpdateCounter: int32;
     ProtoRendererInstance: PRendererGraphicInstance;
+    OpacityUniform: PShaderParametr;
     ColorUniform: PShaderParametr;
+
     procedure GenMatrix(AIndex: int32); inline;
     procedure UpadateAllMatrix;
     procedure DrawProto(Inst: PRendererGraphicInstance);
@@ -96,6 +97,7 @@ type
     procedure SetScale(AIndex: int32; const Value: BSFloat);
     function GetColor(AIndex: int32): TColor4f;
     procedure SetColor(AIndex: int32; const Value: TColor4f);
+    procedure TryCreateMvpVbo;
   protected
     procedure SetPrototype(const Value: TObjectVertexes); virtual;
     procedure SetCountInstance(const Value: int32); virtual;
@@ -117,7 +119,7 @@ type
   TBlackSharkInstancing2d = class(TBlackSharkInstancing)
   private
     PrototypeCanvasObject: TCanvasObject;
-    FPostions2d: TListVec<TVec2f>;
+    FPositions2d: TListVec<TVec2f>;
     function GetPosition2d(AIndex: int32): TVec2f;
     procedure SetPosition2d(AIndex: int32; const AValue: TVec2f);
   public
@@ -233,10 +235,7 @@ type
       PParticle = ^TParticle;
       TParticle = record
         Position: TVec4f;
-        {$ifdef GLES30}
-        {$else}
-        //Position: TVec4f;
-        {$endif}
+        //Distance: Double;
         Data: T;
       end;
 
@@ -371,7 +370,7 @@ type
   public
     constructor Create(ARenderer: TBlackSharkRenderer; AParticleBox: TGraphicObject); override;
     destructor Destroy; override;
-    procedure Change({%H-}Index: int32; const Postion: TVec3f);
+    procedure Change({%H-}Index: int32; const Position: TVec3f);
   end;
 
   { TParticlesMultiUV
@@ -445,7 +444,7 @@ type
   public
     constructor Create(ARenderer: TBlackSharkRenderer; AParticleBox: TGraphicObject); override;
     destructor Destroy; override;
-    procedure Change(Index: int32; const Postion: TVec3f; const Rect: TTextureRect);
+    procedure Change(Index: int32; const Position: TVec3f; const Rect: TTextureRect);
     { position UV areas on texture }
     property PositionUV[index: int32]: TVec2f read GetPositionUV write SetPositionUV;
     property Rect[index: int32]: TRectBSF read GetRect write SetRect;
@@ -590,6 +589,20 @@ uses
   , bs.config
   ;
 
+function InstanceComparator(const A, B: TInstance): int8;
+var
+  delta: double;
+begin
+  delta := A.Distance - B.Distance;
+  if delta > 0 then
+    Result := -1
+  else
+  if delta < 0 then
+    Result := 1
+  else
+    Result := 0;
+end;
+
 { TBlackSharkInstansing }
 
 procedure TBlackSharkInstancing.BeginUpdate;
@@ -607,93 +620,60 @@ const
     IsVisible: (false));
 begin
   FRenderer := ARenderer;
-  Instances := TListVec<TInstance>.Create;
+  Instances := TListVec<TInstance>.Create(InstanceComparator);
   Instances.DefaultValue := INST_DEF_VAL_TRANSF;
-  //{$if defined(GLES20)}
-  Matrix := TListVec<TMatrix4f>.Create;
-  Matrix.DefaultValue := IDENTITY_MAT;
-  //{$endif}
+  Matrixes := TListVec<TMatrix4f>.Create;
+  Matrixes.DefaultValue := IDENTITY_MAT;
   Prototype := APrototype;
 end;
 
 destructor TBlackSharkInstancing.Destroy;
 begin
-  //{$if defined(GLES20)}
-  Matrix.Free;
-  //{$else}
-  //if mvpVBO > 0 then
-  //  glDeleteBuffers(1, @mvpVBO);
-  //{$endif}
+  Matrixes.Free;
+  if MvpVBO > 0 then
+    glDeleteBuffers(1, @MvpVBO);
   Instances.Free;
   inherited;
 end;
 
 procedure TBlackSharkInstancing.DrawProto(Inst: PRendererGraphicInstance);
 var
-//{$if defined(GLES20)}
   i: int32;
-//{$else}
-//  mvp_loc: GLint;
-//{$endif}
 begin
-  //{$if defined(GLES20)}
 
-  { software Instansing }
-
-//  if FPrototype.StaticObject then
-//    glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER , FPrototype.VBO_Indexes )
-//  else
-//    glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER , 0 );
-//
-  for i := 0 to FCountInstance - 1 do
+  if MvpVBO > 0 then
   begin
-    if not PInstance(Instances.ShiftData[i]).IsVisible then
-      continue;
+    { hardware Instansing }
 
-    Inst.LastMVP := Matrix.Items[i];
-    glUniform1f( TBlackSharkVertexOutShader(FPrototype.Shader).Opacity^.Location, Instances.items[i].Opacity*FPrototype.Opacity );
+    if Assigned(OpacityUniform) then
+      glUniform1f(OpacityUniform^.Location, FPrototype.Opacity);
+
     if Assigned(ColorUniform) then
-      glUniform4fv( ColorUniform^.Location, 1, @PInstance(Instances.ShiftData[i]).Color );
+      glUniform4f(ColorUniform^.Location, FPrototype.Color.r, FPrototype.Color.g, FPrototype.Color.b, FPrototype.Color.a);
 
-    GIMethodDefault(Inst);
-    //glUniform1f( TBlackSharkVertexOutShader(FPrototype.Shader).Opacity^.Location, FPrototype.Opacity );
+    //glBindBuffer(GL_ARRAY_BUFFER, MvpVBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER , FPrototype.VBO_Indexes);
+    // it does not work
+    glDrawElementsInstanced(FPrototype.Mesh.DrawingPrimitive, FPrototype.Mesh.Indexes.Count, FPrototype.Mesh.Indexes.Kind, nil, 1);  //FCountInstance
+  end else
+  begin
+    { software Instansing }
 
-    //glUniformMatrix4fv( TBlackSharkVertexOutShader(FPrototype.Shader).MVP^.Location, 1, GL_FALSE, Matrix.ShiftData[i] );
-    //if FPrototype.StaticObject then
-    //  glDrawElements (FPrototype.Mesh.DrawingPrimitive , FPrototype.Mesh.Indexes.Count, GL_UNSIGNED_SHORT, nil)
-    //else
-    //  glDrawElements (FPrototype.Mesh.DrawingPrimitive , FPrototype.Mesh.Indexes.Count, GL_UNSIGNED_SHORT, FPrototype.Mesh.Indexes.ShiftData[0]);
+    for i := 0 to FCountInstance - 1 do
+    begin
+      if not PInstance(Instances.ShiftData[i]).IsVisible then
+        continue;
+
+      Inst.LastMVP := Matrixes.Items[i];
+      if Assigned(OpacityUniform) then
+        glUniform1f(OpacityUniform^.Location, Instances.items[i].Opacity*FPrototype.Opacity);
+      if Assigned(ColorUniform) then
+        glUniform4fv(ColorUniform^.Location, 1, @PInstance(Instances.ShiftData[i]).Color);
+
+      GIMethodDefault(Inst);
+    end;
 
   end;
-  (*
-  {$else}
-
-  { hardware Instansing }
-
-   // Load the instance MVP buffer
-
-   glBindBuffer ( GL_ARRAY_BUFFER, mvpVBO );
-   mvp_loc := 2; //TBlackSharkTextureOutShader(FPrototype.Shader).MVP^.Location;
-
-   glEnableVertexAttribArray ( mvp_loc + 0 );
-   glEnableVertexAttribArray ( mvp_loc + 1 );
-   glEnableVertexAttribArray ( mvp_loc + 2 );
-   glEnableVertexAttribArray ( mvp_loc + 3 );
-
-   // Load each matrix row of the MVP.  Each row gets an increasing attribute location.
-   glVertexAttribPointer ( mvp_loc + 0, 4, GL_FLOAT, GL_FALSE, sizeof ( TMatrix4f ), nil );
-   glVertexAttribPointer ( mvp_loc + 1, 4, GL_FLOAT, GL_FALSE, sizeof ( TMatrix4f ), Pointer( sizeof ( GLfloat ) * 4 ) );
-   glVertexAttribPointer ( mvp_loc + 2, 4, GL_FLOAT, GL_FALSE, sizeof ( TMatrix4f ), Pointer ( sizeof ( GLfloat ) * 8 ) );
-   glVertexAttribPointer ( mvp_loc + 3, 4, GL_FLOAT, GL_FALSE, sizeof ( TMatrix4f ), Pointer ( sizeof ( GLfloat ) * 12 ) );
-
-   // One MVP per instance
-   glVertexAttribDivisor ( MVP_LOC + 0, 1 );
-   glVertexAttribDivisor ( MVP_LOC + 1, 1 );
-   glVertexAttribDivisor ( MVP_LOC + 2, 1 );
-   glVertexAttribDivisor ( MVP_LOC + 3, 1 );
-   glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER , FPrototype.VBO_Indexes );
-   glDrawElementsInstanced (FPrototype.Shape.DrawingPrimitive , FPrototype.Shape.Indexes.Count, GL_UNSIGNED_SHORT, nil, FCountInstance);
-  {$endif}*)
 end;
 
 procedure TBlackSharkInstancing.EndUpdate;
@@ -724,7 +704,7 @@ begin
   FPrototype.EndUpdateTransformations;
   pinst.IsVisible := ProtoRendererInstance.Visible;
   // take out MVP matrix
-  Matrix.Items[AIndex] := ProtoRendererInstance.LastMVP;
+  Matrixes.Items[AIndex] := ProtoRendererInstance.LastMVP;
 
 end;
 
@@ -765,33 +745,16 @@ end;
 
 procedure TBlackSharkInstancing.Remove(AIndex: int32);
 var
-//{$ifndef GLES20}
-//  m: PMatrix4f;
-//{$endif}
   off_end: int32;
 begin
   if AIndex >= FCountInstance then
     exit;
   off_end := FCountInstance - 1;
-  //{$if defined(GLES20)}
   if (AIndex < off_end) and (FCountInstance > 1) then
   begin
     Instances.Items[AIndex] := Instances.Items[off_end];
-    Matrix.Items[AIndex] := Matrix.Items[off_end];
+    Matrixes.Items[AIndex] := Matrixes.Items[off_end];
   end;
-  (*
-  {$else}
-  { set last item to index position (in place removed) }
-  if (index < off_end) and (FCountInstance > 1) then
-    begin
-    Instances.Items[index] := Instances.Items[off_end];
-    glBindBuffer ( GL_ARRAY_BUFFER, mvpVBO );
-    m := PMatrix4f(glMapBufferRange ( GL_ARRAY_BUFFER, 0, sizeof ( TMatrix4f ) * FCountInstance, GL_MAP_WRITE_BIT ));
-    PMatrix4f(pByte(m)+ index*sizeof ( TMatrix4f ))^ := PMatrix4f(pByte(m)+ off_end*sizeof ( TMatrix4f ))^;
-    glUnmapBuffer ( GL_ARRAY_BUFFER );
-    end;
-
-  {$endif} *)
   FCountInstance := off_end;
   Instances.Count := FCountInstance;
 end;
@@ -811,36 +774,14 @@ begin
 end;
 
 procedure TBlackSharkInstancing.SetCountInstance(const Value: int32);
-(*
-{$ifndef GLES20}
-var
-  increase: boolean;
-{$endif} *)
 begin
   if Value = FCountInstance then
     exit;
 
-  //{$ifndef GLES20}
-  //increase := Value > FCountInstance;
-  //{$endif}
-
   FCountInstance := Value;
   Instances.Count := Value;
 
-  //{$ifdef GLES20}
-  Matrix.Count := Value;
-  (*
-  {$else}
-  if increase or (mvpVBO = 0) then
-    begin
-    if mvpVBO > 0 then
-      begin
-      glDeleteBuffers(1, @mvpVBO);
-      mvpVBO := 0;
-      end;
-    mvpVBO := CreateVBO(GL_ARRAY_BUFFER, nil, SizeOf(TMatrix4f)*FCountInstance, GL_DYNAMIC_DRAW);
-    end;
-  {$endif} *)
+  Matrixes.Count := Value;
 end;
 
 procedure TBlackSharkInstancing.SetPrototype(const Value: TObjectVertexes);
@@ -851,27 +792,24 @@ begin
   if Assigned(FPrototype) then
     FPrototype.DrawInstance := GIMethodDefault;
   FPrototype := Value;
+  OpacityUniform := nil;
+  ColorUniform := nil;
+  MvpAttr := nil;
   { remember default draw instanse method }
   if Assigned(FPrototype) then
   begin
     GIMethodDefault := FPrototype.DrawInstance;
     FPrototype.DrawInstance := DrawProto;
     ProtoRendererInstance := FRenderer.SceneInstanceToRenderInstance(FPrototype.BaseInstance);
-    ColorUniform := FPrototype.Shader.Uniform['Color'];
-  end else
-    ColorUniform := nil;
 
-  //{$ifdef GLES30}
-  {if (FPrototype.Shader <> nil) then
-    begin
-    if (FPrototype.Shader.MVPasUniform) then
-      begin
-      FPrototype.Shader.MVPasUniform := false;
-      FPrototype.Shader.LinkLocations;
-      end;
-    end else }
-  //  FPrototype.Shader := FPrototype.Scene.ShaderManager.Load('Instancing', TBlackSharkTextureOutShader, false);
-  //{$endif}
+    // hardware instancing did not work, therefore it is commented
+    //if SupportsVAO and (FPrototype.VAO > 0) then
+    //  TryCreateMvpVbo;
+
+    OpacityUniform := FPrototype.Shader.Uniform['Opacity'];
+    ColorUniform := FPrototype.Shader.Uniform['Color'];
+  end;
+
 end;
 
 procedure TBlackSharkInstancing.SetOpacity(AIndex: int32; const Value: BSFloat);
@@ -887,6 +825,7 @@ begin
   if AIndex >= FCountInstance then
     exit;
   PInstance(Instances.ShiftData[AIndex]).Position := Value;
+  PInstance(Instances.ShiftData[AIndex]).Distance :=  VecLenSqr(Value - FRenderer.Frustum.Position);
   GenMatrix(AIndex);
 end;
 
@@ -898,24 +837,50 @@ begin
 end;
 
 
+procedure TBlackSharkInstancing.TryCreateMvpVbo;
+var
+  shaderNameInstanced: string;
+begin
+  shaderNameInstanced := GetFilePath(FPrototype.Shader.Name + '.Ins.vsh', 'Shaders');
+
+  if FileExists(shaderNameInstanced) then
+  begin
+    // set instanced shader, which accepts mvp as attribute of a vertex
+    FPrototype.Shader := BSShaderManager.Load(shaderNameInstanced, ExtractFilePath(shaderNameInstanced) + FPrototype.Shader.Name + '.fsh', TBlackSharkShaderClass(FPrototype.Shader.ClassType), false);
+    MvpAttr := FPrototype.Shader.Attribute['MVP'];
+    CreateVBO(mvpVBO, GL_ARRAY_BUFFER, nil, 0);
+
+    glBindVertexArray(FPrototype.VAO);
+    FPrototype.Shader.UseProgram(true);
+    FPrototype.BindVBO;
+    glBindBuffer(GL_ARRAY_BUFFER, MvpVBO);
+    glEnableVertexAttribArray(MvpAttr.Location);
+    glVertexAttribPointer( MvpAttr.Location, 16, GL_FLOAT, GL_FALSE, sizeof ( TMatrix4f ), nil);
+    // One MVP per instance
+    glVertexAttribDivisor(MvpAttr.Location, 1);
+    glBindVertexArray(GL_NONE);
+  end;
+end;
+
 procedure TBlackSharkInstancing.UpadateAllMatrix;
 var
   i: int32;
 begin
-  //{$ifdef GLES20}
-  //{$else}
-  //glBindBuffer ( GL_ARRAY_BUFFER, mvpVBO );
-  //m := PMatrix4f(glMapBufferRange ( GL_ARRAY_BUFFER, 0, sizeof ( TMatrix4f ) * FCountInstance, GL_MAP_WRITE_BIT ));
-  //{$endif}
+  Instances.Sort;
 
   for i := 0 to FCountInstance - 1 do
     GenMatrix(i);
-  //{$ifndef GLES20}
-  //glUnmapBuffer ( GL_ARRAY_BUFFER );
-  //{$endif}
+
+  if (MvpVBO > 0) and (FCountInstance > 0) then
+  begin
+    glBindVertexArray(FPrototype.VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, MvpVBO);
+    glBufferData(MvpVBO, SizeOf(TMatrix4f)*FCountInstance, Matrixes.ShiftData[0], GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(GL_NONE);
+  end;
 
 end;
-
 
 { TBlackSharkParticles }
 
@@ -1600,7 +1565,7 @@ end;
 
 { TParticlesSingleUV }
 
-procedure TParticlesSingleUV.Change(Index: int32; const Postion: TVec3f);
+procedure TParticlesSingleUV.Change(Index: int32; const Position: TVec3f);
 begin
 
 
@@ -1614,8 +1579,7 @@ end;
 
 function TParticlesSingleUV.CreateShader: TBlackSharkParticleShader;
 begin
-  Result := TParticleShader(BSShaderManager.Load(ClassName,
-    AnsiString(VSH), AnsiString(FSH), TParticleShader));
+  Result := TParticleShader(BSShaderManager.Load(ClassName, AnsiString(VSH), AnsiString(FSH), TParticleShader));
 end;
 
 destructor TParticlesSingleUV.Destroy;
@@ -1631,12 +1595,14 @@ var
 begin
   if FCountParticle = 0 then
     exit;
-  //glBindBuffer ( GL_ARRAY_BUFFER, 0 );
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // define draw method by indexes
+  Shader.UseProgram(true);
   glUniformMatrix4fv( Shader.MVP^.Location, 1, GL_FALSE, @Instance.LastMVP );
   { show bitmap from texture areas }
   BSTextureManager.UseTexture(FTexture^.Texture);
-  glUniform2fv( TParticleShader(Shader).FUV^.Location, 4, @UV );
+  glUniform2fv( TParticleShader(Shader).FUV^.Location, 4, @UV);
   //glUniform3fv( TBlackSharkParticleTextureShader(Shader).FQuad^.Location, 4, Pointer(@Quad[0]) );    // FParticlePrototype.Mesh.VertexesData
   //glVertexAttrib1f
   i := 0;
@@ -1659,7 +1625,7 @@ begin
       glDrawArrays(GL_POINTS, 0, FParticles.Count);
     end else
     begin
-      glDrawElements (GL_TRIANGLES, step*6, GL_UNSIGNED_SHORT, Indexes.ShiftData[pos_ind]);
+      glDrawElements(GL_TRIANGLES, step*6, GL_UNSIGNED_SHORT, Indexes.ShiftData[pos_ind]);
     end;
     inc(pos_ind, step * 6);
     inc(pos_ar, step shl 2);
@@ -1707,7 +1673,10 @@ begin
   // define draw method by indexes
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-  glUniformMatrix4fv( Shader.MVP^.Location, 1, GL_FALSE, @Instance.LastMVP );
+
+  Shader.UseProgram(true);
+
+  glUniformMatrix4fv(Shader.MVP^.Location, 1, GL_FALSE, @Instance.LastMVP);
   { show bitmap from texture areas }
   BSTextureManager.UseTexture(FTexture^.Texture);
   //glUniform2fv( TParticlesMultiUVConstSize.TParticlesShader(Shader).FUV^.Location, 4, @UV );
@@ -1795,8 +1764,7 @@ begin
   ptr_part[3].Data := vec2(Value.x, Value.y + size.y);
 end;
 
-procedure TParticlesMultiUV.Change(Index: int32; const Postion: TVec3f;
-  const Rect: TTextureRect);
+procedure TParticlesMultiUV.Change(Index: int32; const Position: TVec3f; const Rect: TTextureRect);
 var
   ptr_part: PParticleArray;
   i: int32;
@@ -1808,10 +1776,10 @@ begin
 
   h := Rect.Rect.Size * 0.5;
   ptr_part := FParticles.ShiftData[i];
-  ptr_part[0].Position := vec4(Postion.x - h.x, Postion.y - h.y, Postion.z, 0);
-  ptr_part[1].Position := vec4(Postion.x + h.x, Postion.y + h.y, Postion.z, 1);
-  ptr_part[2].Position := vec4(Postion.x - h.x, Postion.y + h.y, Postion.z, 2);
-  ptr_part[3].Position := vec4(Postion.x + h.x, Postion.y - h.y, Postion.z, 3);
+  ptr_part[0].Position := vec4(Position.x - h.x, Position.y - h.y, Position.z, 0);
+  ptr_part[1].Position := vec4(Position.x + h.x, Position.y + h.y, Position.z, 1);
+  ptr_part[2].Position := vec4(Position.x - h.x, Position.y + h.y, Position.z, 2);
+  ptr_part[3].Position := vec4(Position.x + h.x, Position.y - h.y, Position.z, 3);
   ptr_part[0].Data := vec2(Rect.UV.U, Rect.UV.V + Rect.UV.Height);
   ptr_part[1].Data := vec2(Rect.UV.U + Rect.UV.Width, Rect.UV.V);
   ptr_part[2].Data := Rect.UV.Position;
@@ -1882,11 +1850,14 @@ begin
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-  glUniformMatrix4fv( Shader.MVP^.Location, 1, GL_FALSE, @Instance.LastMVP );
+  Shader.UseProgram(true);
+  glUniformMatrix4fv(Shader.MVP^.Location, 1, GL_FALSE, @Instance.LastMVP);
+
   if TranslateColorAsHLS then
-    glUniform3fv( TParticlesMultiUVSingleColor.TParticlesShader(Shader).FColor^.Location, 1, @ HLS)    //FColor
+    glUniform3fv(TParticlesMultiUVSingleColor.TParticlesShader(Shader).FColor^.Location, 1, @HLS)
   else
-    glUniform3fv( TParticlesMultiUVSingleColor.TParticlesShader(Shader).FColor^.Location, 1, @ FColor);
+    glUniform3fv(TParticlesMultiUVSingleColor.TParticlesShader(Shader).FColor^.Location, 1, @FColor);
+
   { show bitmap from texture areas }
   BSTextureManager.UseTexture(FTexture^.Texture);
   i := 0;
@@ -1898,6 +1869,7 @@ begin
       step := FCountParticle - i
     else
       step := MAX_COUNT_PARTICLE_ONE_OF_FOUR;
+
     glVertexAttribPointer(Shader.FPosition.Location, 4, GL_FLOAT, GL_FALSE, SizeOf(TParticle), FParticles.ShiftData[pos_ar]);
     glVertexAttribPointer(TParticlesMultiUVSingleColor.TParticlesShader(Shader).FUVPosition.Location, 2,
       GL_FLOAT, GL_FALSE, SizeOf(TParticle), @(PParticle(FParticles.ShiftData[pos_ar])^.Data));
@@ -1914,6 +1886,7 @@ begin
     begin
       glDrawElements (GL_TRIANGLES, step * 6, GL_UNSIGNED_SHORT, Indexes.ShiftData[pos_ind]);
     end;
+
     inc(pos_ar, step shl 2);
     inc(pos_ind, step * 6);
     inc(i, step);
@@ -1962,23 +1935,23 @@ begin
   Assert(APrototype.Data.InheritsFrom(TObjectVertexes));
   inherited Create(ARenderer, TObjectVertexes(APrototype.Data));
   PrototypeCanvasObject := APrototype;
-  FPostions2d := TListVec<TVec2f>.Create;
+  FPositions2d := TListVec<TVec2f>.Create;
 end;
 
 destructor TBlackSharkInstancing2d.Destroy;
 begin
-  FPostions2d.Free;
+  FPositions2d.Free;
   inherited;
 end;
 
 function TBlackSharkInstancing2d.GetPosition2d(AIndex: int32): TVec2f;
 begin
-  Result := FPostions2d.Items[AIndex];
+  Result := FPositions2d.Items[AIndex];
 end;
 
 procedure TBlackSharkInstancing2d.SetPosition2d(AIndex: int32; const AValue: TVec2f);
 begin
-  FPostions2d.Items[AIndex] := AValue;
+  FPositions2d.Items[AIndex] := AValue;
   PrototypeCanvasObject.Position2d := AValue;
   Position[AIndex] := PrototypeCanvasObject.Data.Position;
 end;

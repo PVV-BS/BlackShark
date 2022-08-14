@@ -72,8 +72,8 @@ type
   TBlackSharkViewPort = class({$ifdef FMX}TControl{$else}TCustomControl{$endif})
   {$ifdef FMXX}
   private
-    class var
-      FWindows: THashTable<TWindow, TBlackSharkViewPort>;
+    //class var
+      //FWindows: THashTable<TWindow, TBlackSharkViewPort>;
     class var
       FDisplay: PDisplay;
     class var
@@ -84,7 +84,7 @@ type
   {$endif}
   private
   {$ifdef FMXX}
-    FWindow: TWindow;
+    //FWindow: TWindow;
   {$endif}
     FRenderer: TBlackSharkRenderer;
     FOnMouseMove: TMouseMoveEvent;
@@ -225,13 +225,17 @@ uses
     {$endif}
     {$ifdef FMX}
       FMX.Platform.Linux,
+      FMUX.Api,
+      bs.linux.gtk,
     {$endif}
   {$else}
     {$ifdef FMX}
       {$ifdef MSWINDOWS}
       FMX.Platform.Win,
-    {$endif}
+      {$endif}
 
+      {$ifdef LINUX}
+      {$endif}
 
     {$endif}
   {$endif}
@@ -295,9 +299,9 @@ var
 {$endif}
 begin
 {$ifdef FMX}
-  {$ifdef X}
-    Result := 0;
-      {$Message error 'For FMXLinux use pure Black Shark application instead it (see example in ".tests\delphi\BSApplication\")'}
+  {$ifdef X}     //gdk_window_xwindow
+    Result := 0; //FmuxGetWindowNativeHandle(FormToWnd(Application.MainForm)));
+      {.$Message error 'For FMXLinux use pure Black Shark application instead it (see example in ".tests\delphi\BSApplication\")'}
   {$else}
     Result := WindowHandleToPlatform(Application.MainForm.Handle).Wnd;
   {$endif}

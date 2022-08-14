@@ -1181,7 +1181,7 @@ begin
   //if Drawing then
   //  raise Exception.Create('called twice BlackSharkScene.Render !');
 
-  BSShaderManager.UseShader(nil);
+  BSShaderManager.UseShader(nil, false);
   BSTextureManager.UseTexture(nil);
   LastDrawGI := nil;
   for i := 0 to FPasses.Count - 1 do
@@ -2291,9 +2291,13 @@ begin
   //if (Instance.Instance.Owner.Opacity = 0) then
   //  exit;
 
-  BSShaderManager.UseShader(Instance.Instance.Owner.Shader);
+  BSShaderManager.UseShader(Instance.Instance.Owner.Shader, not SupportsVAO);
+
   if LastDrawGI <> Instance.Instance.Owner then
   begin
+    if SupportsVAO then
+      glBindVertexArray(GL_NONE);
+
     if LastCullFaceOption <> Instance.Instance.Owner.DrawSides then
     begin
       LastCullFaceOption := Instance.Instance.Owner.DrawSides;
@@ -2481,7 +2485,7 @@ begin
   SetBlendMode(TBlendMode.bmNone);
   glDisable(GL_DEPTH_TEST);
   DepthTestOn := false;
-  Pass^.Shader.UseProgram;
+  Pass^.Shader.UseProgram(true);
   glUniform1fv(TBlackSharkSmoothMSAA(Pass^.Shader).RatioResolutions^.Location, 1, @BSConfig.VoxelSize);
   glVertexAttribPointer(
     TBlackSharkSmoothMSAA(Pass^.Shader).Position^.Location,     // attribute. No particular reason for 1, but must match the layout in the shader.
@@ -2519,7 +2523,7 @@ begin
   //glClearColor(0.0, 0.0, 0.0, 0.0);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  BSShaderManager.UseShader(APass.Shader);
+  BSShaderManager.UseShader(APass.Shader, true);
 
   glVertexAttribPointer(
     TBlackSharkQUADShader(APass.Shader).Position^.Location,     // attribute. No particular reason for 1, but must match the layout in the shader.

@@ -175,10 +175,10 @@ type
     FName: string;
     // container for all shader locations; need for quick access to shader locations by name
     Params: TTableParams;
-    function GetAttribute(NameAttribute: AnsiString): PShaderParametr;
-    function GetUniform(NameUniform: AnsiString): PShaderParametr;
-    function LinkUniformLocation(UniformName: AnsiString): Glint; inline;
-    function LinkAttribLocation(AttribName: AnsiString): Glint; inline;
+    function GetAttribute(const NameAttribute: AnsiString): PShaderParametr;
+    function GetUniform(const NameUniform: AnsiString): PShaderParametr;
+    function LinkUniformLocation(const UniformName: AnsiString): Glint; inline;
+    function LinkAttribLocation(const AttribName: AnsiString): Glint; inline;
   private
     _Counter: int32;
     FProgramID: GLint;
@@ -206,23 +206,23 @@ type
     // methods to linking uniforms and attributes; call after compiled shader programm;
     // LinkLocations allow a descendants bind specific parameters by specific names
     // engage the vertex or fragment program; call befor draw with first using this shader
-    procedure UseProgram; virtual;
+    procedure UseProgram(AEnableAttrib: boolean); virtual;
     property Name: string read FName;
     property ProgramID: GLint read FProgramID;
-    property Uniform[NameUniform: AnsiString]: PShaderParametr read GetUniform;
-    property Attribute[NameAttribute: AnsiString]: PShaderParametr read GetAttribute;
+    property Uniform[const NameUniform: AnsiString]: PShaderParametr read GetUniform;
+    property Attribute[const NameAttribute: AnsiString]: PShaderParametr read GetAttribute;
     property Shader[index: TTypeShader]: AnsiString read GetShader;
     property MVPasUniform: boolean read FMVPasUniform write FMVPasUniform;
   end;
 
+  TBlackSharkShaderClass = class of TBlackSharkShader;
+
   {
     TBlackSharkVertexOutShader
-    WARNING: The class is abstract, there for don't use it in direct, only through descendants
   }
 
   TBlackSharkVertexOutShader = class abstract (TBlackSharkShader)
   private
-    { base input }
     { input uniforms }
     FMVP: PShaderParametr;
 
@@ -231,13 +231,11 @@ type
     FPosCoord: PShaderParametr;
   public
     function LinkLocations: boolean; override;
-    //procedure UseProgram; override;
     { input uniforms }
     property Opacity: PShaderParametr read FOpacity;
+    property MVP: PShaderParametr read FMVP;
     { input variables }
     property PosCoord: PShaderParametr read FPosCoord;
-    { input uniforms }
-    property MVP: PShaderParametr read FMVP;
   end;
 
   { TBlackSharkVertexOutShader }
@@ -353,7 +351,7 @@ type
   public
     constructor Create(const AName: string; const DataVertex, DataFragment: PAnsiChar); override;
     function LinkLocations: boolean; override;
-    procedure UseProgram; override;
+    procedure UseProgram(AEnableAttrib: boolean); override;
     { input uniforms }
     property TexSampler: PShaderParametr read FTexSampler;
     { input variables }
@@ -378,7 +376,7 @@ type
     constructor Create(const AName: string; const DataVertex, DataFragment: PAnsiChar); override;
     class function DefaultName: string; override;
     function LinkLocations: boolean; override;
-    procedure UseProgram; override;
+    procedure UseProgram(AEnableAttrib: boolean); override;
     { input uniforms }
     property AreaUV: PShaderParametr read FAreaUV;
     property TexSampler: PShaderParametr read FTexSampler;
@@ -399,9 +397,8 @@ type
     { color uniform }
     property Color: PShaderParametr read FColor;
   end;
-  {
 
-    Shader replaces a color texture through HLS (hue, lightness (intensity), saturation) parameters }
+  { Shader replaces a color texture through HLS (hue, lightness/intensity, saturation) parameters }
 
   TBlackSharkTexToColorHLSShader = class(TBlackSharkTextureOutShader)
   private
@@ -418,8 +415,8 @@ type
     { color uniform }
     FColor: PShaderParametr;
   public
+    constructor Create(const AName: string; const DataVertex, DataFragment: PAnsiChar); override;
     class function DefaultName: string; override;
-    function LinkLocations: boolean; override;
     { color uniform }
     property Color: PShaderParametr read FColor;
   end;
@@ -451,8 +448,6 @@ type
     { input variables }
     property ColorIndex: PShaderParametr read FColorIndex;
   end;
-
-  TBlackSharkShaderClass = class of TBlackSharkShader;
 
   { TBlackSharkSkeletonShader }
 
@@ -492,7 +487,7 @@ type
     constructor Create(const AName: string; const ADataVertex, ADataFragment: PAnsiChar); override;
     class function DefaultName: string; override;
     function LinkLocations: boolean; override;
-    procedure UseProgram; override;
+    procedure UseProgram(AEnableAttrib: boolean); override;
     { input uniforms }
     property AreaUV: PShaderParametr read FAreaUV;
     property TexSampler: PShaderParametr read FTexSampler;
@@ -509,7 +504,7 @@ type
 
   public
     constructor Create(const AName: string; const DataVertex, DataFragment: PAnsiChar); override;
-    procedure UseProgram; override;
+    procedure UseProgram(AEnableAttrib: boolean); override;
     { input uniforms }
     property Time: PShaderParametr read FTime;
     property TexSampler2: PShaderParametr read FTexSampler2;
@@ -537,7 +532,7 @@ type
     FPosition: PShaderParametr;
   public
     constructor Create(const AName: string; const DataVertex, DataFragment: PAnsiChar); override;
-    procedure UseProgram; override;
+    procedure UseProgram(AEnableAttrib: boolean); override;
     property TexSampler: PShaderParametr read FTexSampler;
     property Position: PShaderParametr read FPosition;
   end;
@@ -581,7 +576,7 @@ type
   public
     constructor Create(const AName: string; const DataVertex, DataFragment: PAnsiChar); override;
     destructor Destroy; override;
-    procedure UseProgram; override;
+    procedure UseProgram(AEnableAttrib: boolean); override;
     property ColorLoc: PShaderParametr read FColorLoc;
     property ColorLocName: AnsiString read FColorLocName write FColorLocName;
     property PosCoord: PShaderParametr read FPosCoord;
@@ -620,7 +615,7 @@ type
     class var FShadersName: THashTable<string, TBlackSharkShader>;
     class var FLastUsedShader: TBlackSharkShader;
     class procedure Add(BSShader: TBlackSharkShader);
-    class function GetShaderByName(const Name: string): TBlackSharkShader;
+    class function GetShaderByName(const Name: string; MvpAsUniform: boolean): TBlackSharkShader;
     class constructor Create;
     class destructor Destroy;
   public
@@ -633,9 +628,9 @@ type
     class function Load(const AName: string; AShaderClass: TBlackSharkShaderClass;
       AMVPasUniform: boolean = true): TBlackSharkShader; overload;
     class procedure Restore;
-    class procedure UseShader(AShader: TBlackSharkShader);
+    class procedure UseShader(AShader: TBlackSharkShader; AEnableAttrib: boolean);
     class procedure FreeShader(Shader: TBlackSharkShader);
-    class var property ShaderByName[const Name: string]: TBlackSharkShader read GetShaderByName;
+    class var property ShaderByName[const Name: string; MvpAsUniform: Boolean]: TBlackSharkShader read GetShaderByName;
   end;
 
   procedure CreateVBO(var VBO: GlUInt; Taget { GL_ARRAY_BUFFER ...}: GLInt; Data: Pointer; SizeData: int32; ModeDraw: GLEnum = GL_STATIC_DRAW); //inline;
@@ -684,7 +679,7 @@ begin
   if (SizeData > 0) then
   begin
     glBindBuffer(Taget, VBO);
-    glBufferData ( Taget, SizeData, Data, ModeDraw );
+    glBufferData(Taget, SizeData, Data, ModeDraw);
   end;
 end;
 
@@ -712,33 +707,20 @@ begin
   Result := inherited;
 end;
 
-{ TTextFromTextureShader }
-
-class function TTextFromTextureShader.DefaultName: string;
-begin
-  Result := 'TextFromTexture';
-end;
-
-function TTextFromTextureShader.LinkLocations: boolean;
-begin
-  FColor := AddUniform('Color', stVec4, tsFragment);
-  Result := inherited;
-end;
-
 { BSShaderManager }
 
 class procedure BSShaderManager.Add(BSShader: TBlackSharkShader);
 begin
-  if not FShadersName.TryAdd(BSShader.Name, BSShader) then
+  if not FShadersName.TryAdd(BSShader.Name + BoolToStr(BSShader.MVPasUniform), BSShader) then
   begin
     BSWriteMsg(String('BSShaderManager.Add'), String('Filed adding the shader, because Name = ') + String(BSShader.Name) + String(' alredy exists!'));
     exit;
   end;
 end;
 
-class function BSShaderManager.GetShaderByName(const Name: string): TBlackSharkShader;
+class function BSShaderManager.GetShaderByName(const Name: string; MvpAsUniform: boolean): TBlackSharkShader;
 begin
-  FShadersName.Find(Name, Result);
+  FShadersName.Find(Name + BoolToStr(MvpAsUniform), Result);
 end;
 
 class function BSShaderManager.Load(const AName: string; AShaderClass: TBlackSharkShaderClass; AMVPasUniform: boolean = true): TBlackSharkShader;
@@ -764,13 +746,13 @@ var
   until not FShadersName.GetNext(bucket);
 end;
 
-class procedure BSShaderManager.UseShader(AShader: TBlackSharkShader);
+class procedure BSShaderManager.UseShader(AShader: TBlackSharkShader; AEnableAttrib: boolean);
 begin
   if AShader <> FLastUsedShader then
   begin
     FLastUsedShader := AShader;
     if Assigned(FLastUsedShader) then
-      FLastUsedShader.UseProgram
+      FLastUsedShader.UseProgram(AEnableAttrib)
     else
       glUseProgram(0);
   end;
@@ -803,9 +785,9 @@ var
   w: uint16;
 begin
 
-  nu8 := ChangeFileExt(ExtractFileName(AFileNameVertex), '');
+  nu8 := ChangeFileExt(ExtractFileName(AFileNameFragment), '');
 
-  if FShadersName.Find(nu8, Result) then
+  if FShadersName.Find(nu8 + BoolToStr(AMVPasUniform), Result) then
     exit;
 
   {$ifdef DEBUG_BS}
@@ -814,12 +796,12 @@ begin
 
   {$ifdef DEBUG_BS}
   if not FileExists(AFileNameVertex) then
-    BSWriteMsg('BSShaderManager.Load: ', 'A file does not exist: ' + AFileNameVertex);
+    BSWriteMsg('BSShaderManager.Load: ', 'The file "' + AFileNameVertex + '" does not exists');
   {$endif}
 
   {$ifdef DEBUG_BS}
   if not FileExists(AFileNameFragment) then
-    BSWriteMsg('BSShaderManager.Load: ', 'A file does not exist: ' + AFileNameFragment);
+    BSWriteMsg('BSShaderManager.Load: ', 'The file "' + AFileNameFragment + '" does not exists');
   {$endif}
 
   msfs := TMemoryStream.Create;
@@ -856,9 +838,10 @@ begin
   else
     name := AName;
 
-  if FShadersName.Find(AName, Result) then
+  if FShadersName.Find(AName + BoolToStr(AMVPasUniform), Result) then
     exit;
-  UseShader(nil);
+
+  UseShader(nil, false);
 
   Result := AShaderClass.Create(name, ADataVertex, ADataFragment);
   Result.MVPasUniform := AMVPasUniform;
@@ -874,7 +857,7 @@ begin
   if Shader._Counter <= 0 then
   begin
     //FShadersID.Remove(Shader.ProgramID);
-    FShadersName.Delete(Shader.Name);
+    FShadersName.Delete(Shader.Name + BoolToStr(Shader.MVPasUniform));
     Shader.Free;
   end;
 end;
@@ -1236,42 +1219,18 @@ end;
   { TBlackSharkShader }
 
 function TBlackSharkShader.LoadShader: boolean;
-//const
-//  VER_ODOA: AnsiString =
-{$ifdef GLES}
-  {$ifdef GLES20}
-    //''AnsiString('#version 130') + AnsiString(#$0D) + AnsiString(#$0A)
-  {$else}
-    //''AnsiString('#version 300 es') + AnsiString(#$0D) + AnsiString(#$0A)
-  {$endif}
-{$else}
-//  AnsiString('#version 130') + AnsiString(#$0D) + AnsiString(#$0A)
-  {$ifdef GLES20}
-    //AnsiString('#version 130') + AnsiString(#$0D) + AnsiString(#$0A)
-  {$else}
-    //AnsiString('#version 300') + AnsiString(#$0D) + AnsiString(#$0A)
-  {$endif}
-{$endif}
-//;
 var
   VertexShaderID: GLuint;
-  VER_ODOA: AnsiString;
   FragmentShaderID: GLuint;
-  //{$ifndef GLES}
-  s: AnsiString;
   ps: PAnsiChar;
-  //{$endif}
+  len: GLInt;
 begin
-  //if VertexShaderID <> 0 then
-  //	glDeleteShader(VertexShaderID);
-  VER_ODOA := '';
 
   // Create the shaders
   VertexShaderID := glCreateShader(GL_VERTEX_SHADER);
   if (VertexShaderID = 0) then
     exit(false);
-  //if FragmentShaderID <> 0 then
-  //  glDeleteShader(FragmentShaderID);
+
   FragmentShaderID := glCreateShader(GL_FRAGMENT_SHADER);
   if (FragmentShaderID = 0) then
   begin
@@ -1280,50 +1239,44 @@ begin
   end;
 
   try
-  	// Compile Vertex Shader
-    //{$ifdef GLES}
-  	//glShaderSource(VertexShaderID, 1, PPAnsiChar(@DataVertex), nil);
-    //{$else}
-    s := VER_ODOA + FShader[TTypeShader.tsVertex];
-    ps := PAnsiChar(s);
-    glShaderSource(VertexShaderID, 1, PPAnsiChar(@ps), nil);
-    //{$endif}
+    // Compile Vertex Shader
+    ps := PAnsiChar(FShader[TTypeShader.tsVertex]);
+    len := length(FShader[TTypeShader.tsVertex]);
+    glShaderSource(VertexShaderID, 1, PPAnsiChar(@ps), @len);
   	glCompileShader(VertexShaderID);
 
   	// Check Vertex Shader
-    if (CheckErrorGL('Compile Vertex Shader', tcShader, VertexShaderID)) then
+    if (CheckErrorGL('Compile Vertex Shader: ' + Name, tcShader, VertexShaderID)) then
       exit(false);
 
-  	// Compile Fragment Shader
-    //{$ifdef GLES}
-  	//glShaderSource(FragmentShaderID, 1, PPAnsiChar(@DataFragment), nil);
-    //{$else}
-    s := VER_ODOA + FShader[TTypeShader.tsFragment];
-    ps := PAnsiChar(s);
-    glShaderSource(FragmentShaderID, 1, PPAnsiChar(@ps), nil);
-    //{$endif}
+    // Compile Fragment Shader
+    ps := PAnsiChar(FShader[TTypeShader.tsFragment]);
+    len := length(FShader[TTypeShader.tsFragment]);
+    glShaderSource(FragmentShaderID, 1, PPAnsiChar(@ps), @len);
   	glCompileShader(FragmentShaderID);
 
-  	// Check Fragment Shader
-    if (CheckErrorGL('Compile Fragment Shader', tcShader, FragmentShaderID)) then
+    // Check Fragment Shader
+    if (CheckErrorGL('Compile Fragment Shader: ' + Name, tcShader, FragmentShaderID)) then
       exit(false);
 
     // Link the program
     if FProgramID <> 0 then
       glDeleteProgram(FProgramID);
-  	FProgramID := glCreateProgram;
-  	glAttachShader(FProgramID, VertexShaderID);
-  	glAttachShader(FProgramID, FragmentShaderID);
-  	glLinkProgram(FProgramID);
+
+    FProgramID := glCreateProgram;
+    glAttachShader(FProgramID, VertexShaderID);
+    glAttachShader(FProgramID, FragmentShaderID);
+    glLinkProgram(FProgramID);
 
   	// Check the program
     if (CheckErrorGL('glLinkProgram: ', tcProgramm, FProgramID)) then
       exit(false);
 
   finally
-  	glDeleteShader(VertexShaderID);
-  	glDeleteShader(FragmentShaderID);
+    glDeleteShader(FragmentShaderID);
+    glDeleteShader(VertexShaderID);
   end;
+
   glValidateProgram(FProgramID);
   if (CheckErrorGL('glLinkProgram: ', tcProgramm, FProgramID)) then
     exit(false);
@@ -1337,24 +1290,24 @@ end;
 
 procedure TBlackSharkShader.Unload;
 begin
-  if FProgramID <> 0 then
+  if FProgramID > 0 then
   begin
     glDeleteProgram(FProgramID);
     FProgramID := 0;
   end;
 end;
 
-function TBlackSharkShader.GetAttribute(NameAttribute: AnsiString): PShaderParametr;
+function TBlackSharkShader.GetAttribute(const NameAttribute: AnsiString): PShaderParametr;
 begin
   Params.Find(NameAttribute, Result);
 end;
 
-function TBlackSharkShader.GetUniform(NameUniform: AnsiString): PShaderParametr;
+function TBlackSharkShader.GetUniform(const NameUniform: AnsiString): PShaderParametr;
 begin
   Params.Find(NameUniform, Result);
 end;
 
-function TBlackSharkShader.LinkUniformLocation(UniformName: AnsiString): Glint;
+function TBlackSharkShader.LinkUniformLocation(const UniformName: AnsiString): Glint;
 begin
   if (UniformName = '') then
   begin
@@ -1367,7 +1320,7 @@ begin
   {$endif}
 end;
 
-function TBlackSharkShader.LinkAttribLocation(AttribName: AnsiString): Glint;
+function TBlackSharkShader.LinkAttribLocation(const AttribName: AnsiString): Glint;
 begin
   if (AttribName = '') then
   begin
@@ -1428,7 +1381,7 @@ begin
     FUniforms[ts].Free;
   end;
   Params.Free;
-  glDeleteProgram(FProgramID);
+  Unload;
   {$ifdef DEBUG_BS}
   BSWriteMsg('TBlackSharkShader.Destroy', Name);
   {$endif}
@@ -1523,18 +1476,21 @@ begin
 
 end;
 
-procedure TBlackSharkShader.UseProgram;
+procedure TBlackSharkShader.UseProgram(AEnableAttrib: boolean);
 var
   i: int32;
   ts: TTypeShader;
 begin
   glUseProgram(FProgramID);
-  for ts := Low(ts) to High(ts) do
-    for i := 0 to FAttributes[ts].Count - 1 do
-      if FAttributes[ts].Items[i].Location >= 0 then
-      begin
-        glEnableVertexAttribArray( FAttributes[ts].Items[i].Location );
-      end;
+  if AEnableAttrib then
+  begin
+    for ts := Low(ts) to High(ts) do
+      for i := 0 to FAttributes[ts].Count - 1 do
+        if FAttributes[ts].Items[i].Location >= 0 then
+        begin
+          glEnableVertexAttribArray( FAttributes[ts].Items[i].Location );
+        end;
+  end;
 end;
 
 function TBlackSharkShader._AddRef: int32;
@@ -1579,7 +1535,7 @@ end;
 
 procedure TBlackSharkColorOutShader.UseProgram;
 begin
-  inherited UseProgram;
+  inherited;
   //glEnableVertexAttribArray ( FColorLoc );
 end;
 
@@ -1680,8 +1636,7 @@ end;
 
 { TSimpleTextureOutShader }
 
-constructor TSimpleTextureOutShader.Create(const AName: string;
-  const DataVertex, DataFragment: PAnsiChar);
+constructor TSimpleTextureOutShader.Create(const AName: string; const DataVertex, DataFragment: PAnsiChar);
 begin
   inherited;
   FTexCoord := AddAttribute('a_texCoord', stVec2, tsVertex);
@@ -1702,27 +1657,20 @@ begin
   glUniform1i ( FTexSampler^.Location, 0 );
 end;
 
-{ TBlackSharkTextureOutShader }
+{ TTextFromTextureShader }
 
-{
-function TBlackSharkTextureOutShader.Build: boolean;
+constructor TTextFromTextureShader.Create(const AName: string; const DataVertex, DataFragment: PAnsiChar);
 begin
-  // vertex shader
-  FMVP := AddUniform('MVP',TShaderBaseTypes.stMat4, tsVertex);
-  FPosCoord := AddAttribute('a_position',TShaderBaseTypes.stVec4, tsVertex);
-  FPosCoord^.MicroProgramm := 'gl_Position = ' + FMVP^.Name + ' * ' + FPosCoord^.Name;
-  FTexCoordIn := AddAttribute('a_texCoord',TShaderBaseTypes.stVec2, tsVertex);
-  FTexCoordOutVetex := AddVariable('v_texCoord',TShaderBaseTypes.stVec2, tsVertex);
-  FTexCoordOutVetex^.MicroProgramm := FTexCoordOutVetex^.Name + ' = ' + FTexCoordIn^.Name;
-  // fragment shader
-  FTexCoordInFragment := AddVariable('v_texCoord',TShaderBaseTypes.stVec2, tsFragment);
-  FTexSampler := AddUniform('s_texture',TShaderBaseTypes.stSampler2D, tsFragment);
-  FTexSampler^.MicroProgramm := 'gl_FragColor = texture2D(' + FTexSampler^.Name  + ', ' + FTexCoordInFragment^.Name + ')';
-
-  Result := inherited;
+  inherited;
+  FColor := AddUniform('Color', stVec4, tsFragment);
 end;
 
-}
+class function TTextFromTextureShader.DefaultName: string;
+begin
+  Result := 'TextFromTexture';
+end;
+
+{ TBlackSharkTextureOutShader }
 
 constructor TBlackSharkTextureOutShader.Create(const AName: string; const DataVertex, DataFragment: PAnsiChar);
 begin
@@ -1746,7 +1694,7 @@ end;
 
 procedure TBlackSharkTextureOutShader.UseProgram;
 begin
-  inherited UseProgram;
+  inherited;
   // Set the sampler texture unit to 0
   glUniform1i ( FTexSampler^.Location, 0 );
 end;
@@ -1763,7 +1711,7 @@ end;
 
 procedure TBlackSharkTextureAniShader.UseProgram;
 begin
-  inherited UseProgram;
+  inherited UseProgram(AEnableAttrib);
   // Set the sampler second texture unit to 1
   glUniform1i ( FTexSampler2^.Location, 1 );
 end;

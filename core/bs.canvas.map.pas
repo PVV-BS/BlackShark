@@ -149,9 +149,9 @@ var
   v: TVec3f;
 begin
   v := FParticles.Position[Index];
-    Result.x :=  BSConfig.VoxelSizeInv * v.X;
-    Result.y := -BSConfig.VoxelSizeInv * v.Y;
-  end;
+  Result.x :=  BSConfig.VoxelSizeInv * v.X;
+  Result.y := -BSConfig.VoxelSizeInv * v.Y;
+end;
 
 function TCanvasMap.GetTexture: PTextureArea;
 begin

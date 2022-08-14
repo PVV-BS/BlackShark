@@ -1,4 +1,4 @@
-unit BSApplicationExample;
+﻿unit BSApplicationExample;
 
 {$I BlackSharkCfg.inc}
 

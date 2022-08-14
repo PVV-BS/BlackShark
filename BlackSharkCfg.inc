@@ -36,8 +36,3 @@
      {$define FMXX}
    {$endif}
 {$endif}
-
-//{$define GLES}
-//
-//{$define GLES20}  // basic
-//{.$define GLES30} // advanced

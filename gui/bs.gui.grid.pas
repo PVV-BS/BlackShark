@@ -1316,8 +1316,7 @@ begin
   Result := KindPresentaions.Items[Index];
 end;
 
-procedure TBGrid.Present(const Position: TVec2i64; pData: pByte;
-  LenData: int32; BeginOffset: int8);
+procedure TBGrid.Present(const Position: TVec2i64; pData: pByte; LenData: int32; BeginOffset: int8);
 var
   w: BSFloat;
   pos: TVec2i;
@@ -1612,7 +1611,6 @@ begin
   FIntervalReader := TIntervalReader.Create;
   FColorBackground := BS_CL_MSVS_BORDER;
 
-  //CanvasObjectMap := TTextureMap.Create(FGrid, FGrid.ClipObject);
   CanvasObjectMap := TRectangle.Create(FGrid.Canvas, FGrid.ClipObject);
   CanvasObjectMap.Size := FGrid.ClipObject.Size;
   CanvasObjectMap.Fill := true;
@@ -1630,7 +1628,6 @@ destructor TGridDataPresentation.Destroy;
 begin
   Clear;
   FIntervalReader.Free;
-  //CanvasObjectMap.Data := nil;
   Instances.Texture := nil;
   Instances.Free;
   inherited;
