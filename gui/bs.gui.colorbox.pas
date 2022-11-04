@@ -115,34 +115,6 @@ begin
 end;
 
 procedure TBCustomColorBox.AfterConstruction;
-type
-  TColorValueName = record
-    Value: TGuiColor;
-    Name: String;
-  end;
-
-const
-  MAIN_COLORS: array[0..18] of TColorValueName = (
-    (Value: TGuiColors.Black; Name: 'clBlack'),
-    (Value: TGuiColors.Maroon; Name: 'clMaroon'),
-    (Value: TGuiColors.Green; Name: 'clGreen'),
-    (Value: TGuiColors.Olive; Name: 'clOlive'),
-    (Value: TGuiColors.Navy; Name: 'clNavy'),
-    (Value: TGuiColors.Purple; Name: 'clPurple'),
-    (Value: TGuiColors.Teal; Name: 'clTeal'),
-    (Value: TGuiColors.Gray; Name: 'clGray'),
-    (Value: TGuiColors.Silver; Name: 'clSilver'),
-    (Value: TGuiColors.Red; Name: 'clRed'),
-    (Value: TGuiColors.Lime; Name: 'clLime'),
-    (Value: TGuiColors.Yellow; Name: 'clYellow'),
-    (Value: TGuiColors.Blue; Name: 'clBlue'),
-    (Value: TGuiColors.Fuchsia; Name: 'clFuchsia'),
-    (Value: TGuiColors.Aqua; Name: 'clAqua'),
-    (Value: TGuiColors.White; Name: 'clWhite'),
-
-    (Value: TGuiColors.MoneyGreen; Name: 'clMoneyGreen'),
-    (Value: TGuiColors.Cream; Name: 'clCream'),
-    (Value: TGuiColors.MedGray; Name: 'clMedGray'));
 var
   i: int32;
 begin
@@ -157,8 +129,9 @@ begin
 
   AddItem(GetSentence(Lang.CUSTOM_COLOR_ITEM), Pointer($FFFFFFFF));
 
-  for i := low(MAIN_COLORS) to high(MAIN_COLORS) do
-    AddItem(MAIN_COLORS[i].Name, {%H-}Pointer(MAIN_COLORS[i].Value));
+  for i := 0 to ColorMapCount - 1 do
+    AddItem(string(GetColorMap(i).Name), {%H-}Pointer(GetColorMap(i).Color));
+
   DoSelect(0);
 end;
 

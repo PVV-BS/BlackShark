@@ -46,7 +46,7 @@ uses
 const
   PIXEL_FORMAT_TO_GL: array[TBSPixelFormat] of integer =
   (
-    0, 0, 0, GL_ALPHA, 2, 2, GL_RGBA, GL_RGBA, 0
+    0, 0, 0, GL_ALPHA, 2, 2, GL_RGB, GL_RGBA, 0
   );
 type
 

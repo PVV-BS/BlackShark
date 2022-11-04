@@ -977,7 +977,7 @@ begin
   end;
 
   FCaption.Color := FColorCaption;
-  FCaption.SceneTextData.TxtProcessor.SetOutRect(s.x, s.y);
+  FCaption.SceneTextData.TxtProcessor.ViewportWidth := s.x;
   FCaption.SceneTextData.BeginChangeProp;
   FCaption.SceneTextData.OutToWidth := s.x - 6;
   FCaption.SceneTextData.OutToHeight := s.y;
@@ -1264,7 +1264,7 @@ begin
 
   FCaption.Color := FColorCaption;
 
-  FCaption.SceneTextData.TxtProcessor.SetOutRect(Border.Size.x, Border.Size.y);
+  FCaption.SceneTextData.TxtProcessor.ViewportWidth := Border.Size.x;
   FCaption.SceneTextData.BeginChangeProp;
   FCaption.SceneTextData.OutToWidth := s.x - 10;
   FCaption.SceneTextData.OutToHeight := s.y;

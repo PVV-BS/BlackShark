@@ -800,18 +800,21 @@ constructor TBSTestCanvasFonts.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
   Canvas := TBCanvas.Create(Renderer, Self);
-  Canvas.Font := BSFontManager.GetFont('NotoSerif-Regular.ttf', TTrueTypeRasterFont);   //DejaVuSans
-
-  Canvas2 := TBCanvas.Create(Renderer, Self);
-  Canvas2.Font := BSFontManager.GetFont('NotoSerif-Regular.ttf', TTrueTypeRasterFont);   // DejaVuSans
+  Canvas.Font := BSFontManager.GetFont('NotoSerif-Regular.ttf', TTrueTypeRasterFont);   //DejaVuSans   NotoSerif-Regular
 
   // now create raster text
   RastText := TCanvasText.Create(Canvas, nil);
   RastText.Color := BS_CL_WHITE;
-  Canvas.Font.SizeInPixels := 8;
-  RastText.Text := 'It is The Black Shark Graphic Engine''s an Adaptive Raster True Type Text';
+  Canvas.Font.SizeInPixels := 10;
+  //RastText.ViewportSize := vec2(250, 0);
+  //RastText.TextAlign := TTextAlign.taClient;
+  //RastText.Wrap := true;
+
+  RastText.Text := 'It is The Black Shark Graphics Engine''s an Adaptive Raster True Type Text';
   RastText.Position2d := vec2(Renderer.WindowWidth shr 1 - RastText.Width * 0.5, int32(Renderer.WindowHeight shr 1));
 
+  Canvas2 := TBCanvas.Create(Renderer, Self);
+  Canvas2.Font := BSFontManager.GetFont('NotoSerif-Regular.ttf', TTrueTypeRasterFont);   // DejaVuSans
   Canvas2.Font.Size := 12;
 
   RastText2 := TCanvasText.Create(Canvas2, nil);

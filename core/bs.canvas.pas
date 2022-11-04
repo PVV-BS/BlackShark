@@ -314,6 +314,7 @@ type
     SizeFontFixed: BSFloat;
     ScalingFont: boolean;
     FScalableModeToFontSize: boolean;
+    FWrap: boolean;
     function GetText: string;
     procedure SetText(const AValue: string);
     function GetSceneTextData: TGraphicObjectText;
@@ -325,13 +326,36 @@ type
     procedure OnReplaceFont(const Value: BEmpty);
     procedure OnResizeViewport(const Value: BResizeEventData);
     procedure UpdateObservices;
+    function GetBold: boolean;
+    function GetBoldWeightX: BSFloat;
+    function GetBoldWeightY: BSFloat;
+    function GetItalic: boolean;
+    procedure SetBold(const Value: boolean);
+    procedure SetBoldWeightX(const Value: BSFloat);
+    procedure SetBoldWeightY(const Value: BSFloat);
+    procedure SetItalic(const Value: boolean);
+    function GetItalicWeight: BSFloat;
+    procedure SetItalicWeight(const Value: BSFloat);
+    function GetStrikethrough: boolean;
+    function GetUnderline: boolean;
+    procedure SetStrikethrough(const Value: boolean);
+    procedure SetUnderline(const Value: boolean);
+    function GetColorLine: TColor4f;
+    procedure SetColorLine(const Value: TColor4f);
+    function GetViewportPosition: TVec2f;
+    function GetViewportSize: TVec2f;
+    procedure SetViewportPosition(const Value: TVec2f);
+    procedure SetViewportSize(const Value: TVec2f);
+    function GetTextAlign: TTextAlign;
+    procedure SetTextAlign(const Value: TTextAlign);
+    procedure SetWrap(const Value: Boolean);
+    procedure UpdateWrapping;
   protected
     procedure DoResize(AWidth, AHeight: BSFloat); override;
     procedure SetBanScalableMode(const Value: boolean); override;
     function CreateGraphicObject(AParent: TGraphicObject): TGraphicObject; override;
     procedure AfterScaleModeChange; override;
     procedure DoBuild; override;
-    procedure SetAlign(const AValue: TObjectAlign); override;
   public
     constructor Create(ACanvas: TBCanvas; AParent: TCanvasObject); override;
     destructor Destroy; override;
@@ -342,6 +366,23 @@ type
     // takes the default font of canvas, but you can change it
     property FontName: string read GetFontName write SetFontName;
     property Font: IBlackSharkFont read GetFont write SetFont;
+    property ViewportSize: TVec2f read GetViewportSize write SetViewportSize;
+    property ViewportPosition: TVec2f read GetViewportPosition write SetViewportPosition;
+    { wrap text into an window with width ViewportSize.Width   }
+    property Wrap: Boolean read FWrap write SetWrap;
+    property TextAlign: TTextAlign read GetTextAlign write SetTextAlign;
+    property Bold: boolean read GetBold write SetBold;
+    property BoldWeightX: BSFloat read GetBoldWeightX write SetBoldWeightX;
+    property BoldWeightY: BSFloat read GetBoldWeightY write SetBoldWeightY;
+    property Italic: boolean read GetItalic write SetItalic;
+    property ItalicWeight: BSFloat read GetItalicWeight write SetItalicWeight;
+    property Strikethrough: boolean read GetStrikethrough write SetStrikethrough;
+    property Underline: boolean read GetUnderline write SetUnderline;
+    { color of Underline and Strikethrough }
+    property ColorLine: TColor4f read GetColorLine write SetColorLine;
+  end;
+
+  TCanvasTextMap = class(TCanvasObject)
   end;
 
   TCircle = class(TCanvasObject)
@@ -2018,7 +2059,6 @@ begin
   Data.Color := BS_CL_WHITE;
   Data.Interactive := false;
   ObsrvReplace := CreateEmptyObserver(FCanvas.OnReplaceFont, OnReplaceFont);
-  //FBanScalableMode := true;
   FScalableModeToFontSize := true;
   FBanScalableModeSize := true;
   Font := FCanvas.Font;
@@ -2032,8 +2072,8 @@ end;
 
 function TCanvasText.CreateCustomFont: IBlackSharkFont;
 begin
-  Font := BSFontManager.GetFont(FCanvas.Font.Name, TTrueTypeRasterFont);
-  Result := Font;
+  Result := BSFontManager.GetFont(FCanvas.Font.Name, TTrueTypeRasterFont);
+  Font := Result;
 end;
 
 destructor TCanvasText.Destroy;
@@ -2054,6 +2094,26 @@ begin
 
 end;
 
+function TCanvasText.GetBold: boolean;
+begin
+  Result := Font.Bold;
+end;
+
+function TCanvasText.GetBoldWeightX: BSFloat;
+begin
+  Result := Font.BoldWeightX;
+end;
+
+function TCanvasText.GetBoldWeightY: BSFloat;
+begin
+  Result := Font.BoldWeightY;
+end;
+
+function TCanvasText.GetColorLine: TColor4f;
+begin
+  Result := TGraphicObjectText(Data).ColorLine;
+end;
+
 function TCanvasText.GetFont: IBlackSharkFont;
 begin
   Result := TGraphicObjectText(Data).Font;
@@ -2064,14 +2124,49 @@ begin
   Result := TGraphicObjectText(Data).Font.Name
 end;
 
+function TCanvasText.GetItalic: boolean;
+begin
+  Result := Font.Italic;
+end;
+
+function TCanvasText.GetItalicWeight: BSFloat;
+begin
+  Result := Font.ItalicWeight;
+end;
+
 function TCanvasText.GetSceneTextData: TGraphicObjectText;
 begin
   Result := TGraphicObjectText(Data);
 end;
 
+function TCanvasText.GetStrikethrough: boolean;
+begin
+  Result := TGraphicObjectText(Data).Strikethrough;
+end;
+
 function TCanvasText.GetText: string;
 begin
   Result := TGraphicObjectText(Data).Text;
+end;
+
+function TCanvasText.GetTextAlign: TTextAlign;
+begin
+  Result := TGraphicObjectText(Data).Align;
+end;
+
+function TCanvasText.GetUnderline: boolean;
+begin
+  Result := TGraphicObjectText(Data).Underline;
+end;
+
+function TCanvasText.GetViewportPosition: TVec2f;
+begin
+  Result := vec2(TGraphicObjectText(Data).OffsetX, TGraphicObjectText(Data).OffsetY);
+end;
+
+function TCanvasText.GetViewportSize: TVec2f;
+begin
+  Result := vec2(TGraphicObjectText(Data).OutToWidth, TGraphicObjectText(Data).OutToHeight);
 end;
 
 procedure TCanvasText.OnChangeFontEvent(const Value: BEmpty);
@@ -2106,18 +2201,32 @@ begin
   end;
 end;
 
-procedure TCanvasText.SetAlign(const AValue: TObjectAlign);
-begin
-  inherited;
-  TGraphicObjectText(Data).TxtProcessor.AlignText := AValue;
-end;
-
 procedure TCanvasText.SetBanScalableMode(const Value: boolean);
 begin
   if FBanScalableMode = Value then
     exit;
   inherited SetBanScalableMode(Value);
   UpdateObservices;
+end;
+
+procedure TCanvasText.SetBold(const Value: boolean);
+begin
+  Font.Bold := Value;
+end;
+
+procedure TCanvasText.SetBoldWeightX(const Value: BSFloat);
+begin
+  Font.BoldWeightX := Value;
+end;
+
+procedure TCanvasText.SetBoldWeightY(const Value: BSFloat);
+begin
+  Font.BoldWeightY := Value;
+end;
+
+procedure TCanvasText.SetColorLine(const Value: TColor4f);
+begin
+  TGraphicObjectText(Data).ColorLine := Value;
 end;
 
 procedure TCanvasText.SetFont(const Value: IBlackSharkFont);
@@ -2135,6 +2244,21 @@ begin
   UpdateObservices;
 end;
 
+procedure TCanvasText.SetItalic(const Value: boolean);
+begin
+  Font.Italic := Value;
+end;
+
+procedure TCanvasText.SetItalicWeight(const Value: BSFloat);
+begin
+  Font.ItalicWeight := Value;
+end;
+
+procedure TCanvasText.SetStrikethrough(const Value: boolean);
+begin
+  TGraphicObjectText(Data).Strikethrough := Value;
+end;
+
 procedure TCanvasText.SetText(const AValue: string);
 var
   pos: TVec2f;
@@ -2145,6 +2269,39 @@ begin
     TryRealign
   else
     SetCanvasObjectPosition(pos.X, pos.Y, Data.BaseInstance);
+end;
+
+procedure TCanvasText.SetTextAlign(const Value: TTextAlign);
+begin
+  TGraphicObjectText(Data).Align := Value;
+end;
+
+procedure TCanvasText.SetUnderline(const Value: boolean);
+begin
+  TGraphicObjectText(Data).Underline := Value;
+end;
+
+procedure TCanvasText.SetViewportPosition(const Value: TVec2f);
+begin
+  TGraphicObjectText(Data).BeginChangeProp;
+  TGraphicObjectText(Data).OffsetX := Value.x;
+  TGraphicObjectText(Data).OffsetY := Value.y;
+  TGraphicObjectText(Data).EndChangeProp;
+end;
+
+procedure TCanvasText.SetViewportSize(const Value: TVec2f);
+begin
+  TGraphicObjectText(Data).BeginChangeProp;
+  TGraphicObjectText(Data).OutToWidth := Value.x;
+  TGraphicObjectText(Data).OutToHeight := Value.y;
+  TGraphicObjectText(Data).EndChangeProp;
+  UpdateWrapping;
+end;
+
+procedure TCanvasText.SetWrap(const Value: Boolean);
+begin
+  FWrap := Value;
+  UpdateWrapping;
 end;
 
 procedure TCanvasText.UpdateObservices;
@@ -2167,6 +2324,14 @@ begin
     ObsrvResizeVP := nil;
     ObsrvChangeFont := nil;
   end;
+end;
+
+procedure TCanvasText.UpdateWrapping;
+begin
+  if FWrap then
+    TGraphicObjectText(Data).TxtProcessor.ViewportWidth := TGraphicObjectText(Data).OutToWidth
+  else
+    TGraphicObjectText(Data).TxtProcessor.ViewportWidth := 0;
 end;
 
 { TCanvasObjectEmpty }

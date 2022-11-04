@@ -8,6 +8,7 @@ uses
   bs.test.switcher in '..\..\bs.test.switcher.pas';
 
 begin
+  ReportMemoryLeaksOnShutdown := true;
   {$ifndef ANDROID}
   ApplicationRun;
   {$endif}

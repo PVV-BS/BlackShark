@@ -166,44 +166,46 @@ var
   rsqr, drsqr: BSFloat;
 begin
 
-// Check for coincident points
-if (abs(p1.y - p2.y) < EPSILON) and (abs(p2.y - p3.y) < EPSILON) then
-  exit(false);
+  // Check for coincident points
+  if (abs(p1.y - p2.y) < EPSILON) and (abs(p2.y - p3.y) < EPSILON) then
+    exit(false);
 
-if (abs(p2.y - p1.y) < EPSILON) then
+  if (abs(p2.y - p1.y) < EPSILON) then
   begin
-  m2 := - (p3.x - p2.x) / (p3.y - p2.y);
-  md2 := (p2 + p3) * 0.5;
-  c.x := (p2.x + p1.x) * 0.5;
-  c.y := m2 * (c.x - md2.x) + md2.y;
+    m2 := - (p3.x - p2.x) / (p3.y - p2.y);
+    md2 := (p2 + p3) * 0.5;
+    c.x := (p2.x + p1.x) * 0.5;
+    c.y := m2 * (c.x - md2.x) + md2.y;
   end else
-if (abs(p3.y - p2.y) < EPSILON) then
+  if (abs(p3.y - p2.y) < EPSILON) then
   begin
-  m1 := - (p2.x - p1.x) / (p2.y - p1.y);
-  md1 := (p1 + p2) * 0.5;
-  c.x := (p3.x + p2.x) * 0.5;
-  c.y := m1 * (c.x - md1.x) + md1.y;
-  end else
-  begin
-  m1 := - (p2.x - p1.x) / (p2.y - p1.y);
-  m2 := - (p3.x - p2.x) / (p3.y - p2.y);
-  md1 := (p1 + p2) * 0.5;
-  md2 := (p2 + p3) * 0.5;
-
-  if (m1 - m2) <> 0 then  //se
-    begin
-    c.x := (m1 * md1.x - m2 * md2.x + md2.y - md1.y) / (m1 - m2);
+    m1 := - (p2.x - p1.x) / (p2.y - p1.y);
+    md1 := (p1 + p2) * 0.5;
+    c.x := (p3.x + p2.x) * 0.5;
     c.y := m1 * (c.x - md1.x) + md1.y;
+  end else
+  begin
+    m1 := - (p2.x - p1.x) / (p2.y - p1.y);
+    m2 := - (p3.x - p2.x) / (p3.y - p2.y);
+    md1 := (p1 + p2) * 0.5;
+    md2 := (p2 + p3) * 0.5;
+
+    if (m1 - m2) <> 0 then  //se
+    begin
+      c.x := (m1 * md1.x - m2 * md2.x + md2.y - md1.y) / (m1 - m2);
+      c.y := m1 * (c.x - md1.x) + md1.y;
     end else
     begin
-    c := (p1 + p2 + p3) * ONEOFTHREE;
+      c := (p1 + p2 + p3) * ONEOFTHREE;
     end;
   end;
+
   d := p2 - c;
   rsqr := d.x * d.x + d.y * d.y;
   r := sqrt(rsqr);
   d := p - c;
   drsqr := d.x * d.x + d.y * d.y;
+
   Result := (drsqr <= rsqr);
 end;
 
@@ -774,10 +776,7 @@ begin
     p0 := vec2(CurrentPoints.items[edg.index0].x, CurrentPoints.items[edg.index0].y);
     p1 := vec2(CurrentPoints.items[edg.index1].x, CurrentPoints.items[edg.index1].y);
     cont_gr := CurrentContours.Items[IndexToCont.Items[edg.index0]].Group;
-    //if ((p0.x = 794) or (p1.x = 794)) and ((p0.x = 1092)or (p1.x = 1092)) then
-    //  p0.x := p0.x;
-    //if ((edg.index0 = 46) or (edg.index1 = 46)) then // and ((edg.index1 = 84) or (edg.index1 = 98))
-    //  edg.index0 := edg.index0;
+
     selected := -1;
     for i := 0 to CurrentPoints.Count - 1 do
     begin
@@ -853,16 +852,15 @@ begin
 
     if selected < 0 then
     begin
-      selected := abs(edg.index1 - edg.index0);
-      //CurrentContours.items[j].CountPoints
-
-      if (IndexToCont.Items[edg.index0] = IndexToCont.Items[edg.index1]) and
-        ((selected = 1) or (CurrentContours.Items[IndexToCont.Items[edg.index0]].CountPoints = selected)) then
-        begin
-          if ErrorEdges <> nil then
-            ErrorEdges.Add(edg);
-          inc(Result);
-        end;
+//      selected := abs(edg.index1 - edg.index0);
+//
+//      if (IndexToCont.Items[edg.index0] = IndexToCont.Items[edg.index1]) and
+//        ((selected = 1) or (CurrentContours.Items[IndexToCont.Items[edg.index0]].CountPoints = selected)) then
+//        begin
+//          if Assigned(ErrorEdges) then
+//            ErrorEdges.Add(edg);
+//          inc(Result);
+//        end;
       continue;
     end;
 
@@ -870,25 +868,18 @@ begin
     TListIndexes.Add(OutListIndexes, edg.index0);
     TListIndexes.Add(OutListIndexes, edg.index1);
     TListIndexes.Add(OutListIndexes, selected);
-    //if CurrentOutIndexes.Count div 3 = 93 then
-    //  CurrentOutIndexes.Count := CurrentOutIndexes.Count;
     DeathEdges.TryAdd(edg.key, Pointer($FFFFFFFF));
-    //DeathEdges.Items[edg.key] := Pointer($FFFFFFFF);
     edg_inv.index0 := edg.index1; edg_inv.index1 := edg.index0;
     DeathEdges.TryAdd(edg_inv.key, Pointer($FFFFFFFF));
-    //DeathEdges.Items[edg_inv.key] := Pointer($FFFFFFFF);
-
-    {if CurrentOutIndexes.Count div 3 = 9 then
-      begin
-      CurrentOutIndexes.Count := CurrentOutIndexes.Count;
-      //break;
-      end;  }
-    {if (selected = 63) then
-      selected := selected;}
 
     // add edges so new triangle will left
-    CheckEdg(Edge(edg.index0, selected));
-    CheckEdg(Edge(selected, edg.index1));
+
+    i := abs(edg.index0 - selected);
+    if (i > 1) and ((IndexToCont.Items[edg.index0] <> IndexToCont.Items[selected]) or not (CurrentContours.Items[IndexToCont.Items[edg.index0]].CountPoints = i)) then
+      CheckEdg(Edge(edg.index0, selected));
+    i := abs(edg.index1 - selected);
+    if (i > 1) and ((IndexToCont.Items[edg.index1] <> IndexToCont.Items[selected]) or not (CurrentContours.Items[IndexToCont.Items[edg.index1]].CountPoints = i))  then
+      CheckEdg(Edge(selected, edg.index1));
   end;
 end;
 

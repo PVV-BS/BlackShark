@@ -91,7 +91,6 @@ type
     FStyle: TCustomTextStyle;
     HitAll: boolean;
     function SelectorKey(Index: int32; out Code: int32): PKeyInfo;
-    function SelectorAverageWidth(Index: int32): BSFloat;
     function GetText: string;
     procedure SetText(const Value: string);
     procedure SetDiscardBlanks(const Value: boolean);
@@ -187,7 +186,8 @@ constructor TDocItemText.Create(ADoc: TBlackSharkCustomDoc; Parent: TDocItem);
 begin
   inherited;
   //FTextObject := TGraphicObjectText.Create();
-  FTxtProcessor := TTextProcessor.Create(SelectorKey, SelectorAverageWidth);
+  FTxtProcessor := TTextProcessor.Create(SelectorKey);
+  FTxtProcessor.BlankWidth := FStyle.Font.AverageWidth;
   FText.Create;
 end;
 
@@ -202,17 +202,13 @@ end;
 procedure TDocItemText.CheckStyle;
 begin
   if FStyle = nil then
-    begin
+  begin
     FStyle := TCustomTextStyle(ParentClass(TCustomTextStyle));
     if FStyle = nil then
       FStyle := TDocViewer(FDoc).TextStyleDefault;
-    FTxtProcessor.BeginFill;
-    try
-      FTxtProcessor.LineHeight := FStyle.Font.SizeInPixels + round(FStyle.Font.SizeInPixels * 0.15);
-    finally
-      FTxtProcessor.EndFill;
-    end;
-    end;
+
+    FTxtProcessor.LineHeight := FStyle.Font.SizeInPixels + round(FStyle.Font.SizeInPixels * 0.15);
+  end;
 end;
 
 function TDocItemText.Show(const ViewPort: TRectBSf): Pointer;
@@ -236,11 +232,6 @@ procedure TDocItemText.Hide;
 begin
   HitAll := false;
   FreeAndNil(FTextObject);
-end;
-
-function TDocItemText.SelectorAverageWidth(Index: int32): BSFloat;
-begin
-  Result := FStyle.Font.AverageWidth;
 end;
 
 procedure TDocItemText.UpdatePosition(const ViewPort: TRectBSf);
@@ -273,16 +264,10 @@ end;
 procedure TDocItemText.SetText(const Value: string);
 begin
   FText := Value;
-  FTxtProcessor.BeginFill;
-  try
-    CheckStyle;
-    FTxtProcessor.CountChars := FText.Len;
-    FTxtProcessor.SetOutRect(0, FDoc.DocSize.Width);
-    Size := vec2(FTxtProcessor.Width, FTxtProcessor.Height);
-  finally
-    FTxtProcessor.EndFill;
-  end;
-  //Build;
+  CheckStyle;
+  FTxtProcessor.CountChars := FText.Len;
+  FTxtProcessor.ViewportWidth := FDoc.DocSize.Width;
+  Size := vec2(FTxtProcessor.Width, FTxtProcessor.Height);
 end;
 
 procedure TDocItemText.ShowRect(const R: TRectBSf; Force: boolean);

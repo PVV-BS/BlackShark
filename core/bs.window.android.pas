@@ -366,6 +366,15 @@ procedure bsNativeOnViewChanged(PEnv: PJNIEnv; this: JObject; Width, Height: JIn
 begin
   if not Assigned(g_NativeHandleView) or not Assigned(Application) then
     exit;
+
+  if not Assigned(Application.MainWindow) then
+  begin
+    {$ifdef DEBUG_BS}
+    BSWriteMsg('bsNativeOnViewChanged', 'Application.MainWindow is null!');
+    {$endif}
+    exit;
+  end;
+
   Application.MainWindow.Resize(Width, Height);
   {$ifdef DEBUG_BS}
   BSWriteMsg('bsNativeOnViewChanged', 'New size: width = ' + IntToStr(Width) + '; height = ' + IntToStr(Height));

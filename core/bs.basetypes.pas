@@ -1012,9 +1012,12 @@ const
   function ColorByteToFloat(const v: uint32; ResetAlpha: boolean = false): TColor4f; inline; overload;
   function Color4f(r, g, b, a: byte): TColor4f; overload; inline;
   function Color4f(r, g, b, a: BSFloat): TColor4f; overload; inline;
+  function ColorInc(const Color: TColor4f; K: BSFloat): TColor4f; inline;
+  function ColorDec(const Color: TColor4f; K: BSFloat): TColor4f; inline;
 
   function RectBS(Left, Top, Width, Height: BSFloat): TRectBSf; overload; inline;
-  function RectBSd(Left, Top, Width, Height: double): TRectBSd; inline;
+  function RectBSd(Left, Top, Width, Height: double): TRectBSd; overload; inline;
+  function RectBSd(const LeftTop, Size: TVec2d): TRectBSd; overload; inline;
   function RectBS(LeftTop: TVec2f; Width, Height: BSFloat): TRectBSf; overload; inline;
   function RectBS(LeftTop, Size: TVec2f): TRectBSf; overload; inline;
   function RectBS(Left, Top, Width, Height: int64): TRectBSi64; overload; inline;
@@ -1025,6 +1028,7 @@ const
   function RectIntersect(const Rect1, Rect2: TRectBSf): boolean; overload; inline;
   function RectIntersect(const Rect1, Rect2: TRectBSi64): boolean; overload; inline;
   function RectIntersect(const Rect1, Rect2: TRectBSd): boolean; overload; inline;
+  function RectIntersect(const Rect1: TRectBSf; const Rect2: TRectBSd): boolean; overload; inline;
   function RectContains(const RectContainsing, RectContainsed: TRectBSi): boolean; overload; inline;
   function RectContains(const RectContainsing, RectContainsed: TRectBSf): boolean; overload; inline;
   function RectContains(const RectContainsing: TRectBSf; Contained: TVec2f): boolean; overload; inline;
@@ -1350,6 +1354,22 @@ begin
   Result.g := g * ONE_OF_256;
   Result.b := b * ONE_OF_256;
   Result.a := a * ONE_OF_256;
+end;
+
+function ColorInc(const Color: TColor4f; K: BSFloat): TColor4f;
+begin
+  Result.r := bs.math.Min(1.0, Color.r + k);
+  Result.g := bs.math.Min(1.0, Color.g + k);
+  Result.b := bs.math.Min(1.0, Color.b + k);
+  Result.a := Color.a;
+end;
+
+function ColorDec(const Color: TColor4f; K: BSFloat): TColor4f;
+begin
+  Result.r := bs.math.Max(0.0, Color.r - k);
+  Result.g := bs.math.Max(0.0, Color.g - k);
+  Result.b := bs.math.Max(0.0, Color.b - k);
+  Result.a := Color.a;
 end;
 
 function Color4f(r, g, b, a: BSFloat): TColor4f;
@@ -2915,6 +2935,12 @@ begin
   Result.Height := Height;
 end;
 
+function RectBSd(const LeftTop, Size: TVec2d): TRectBSd;
+begin
+  Result.Position := LeftTop;
+  Result.Size := Size;
+end;
+
 function RectBSd(Left, Top, Width, Height: double): TRectBSd;
 begin
   Result.Left := Left;
@@ -2997,6 +3023,13 @@ begin
 end;
 
 function RectIntersect(const Rect1, Rect2: TRectBSd): boolean;
+begin
+  Result :=
+    (not ((Rect1.x + Rect1.Width < Rect2.x) or (Rect2.x + Rect2.Width < Rect1.x))) and
+    (not ((Rect1.y + Rect1.Height < Rect2.y) or (Rect2.y + Rect2.Height < Rect1.y)));
+end;
+
+function RectIntersect(const Rect1: TRectBSf; const Rect2: TRectBSd): boolean;
 begin
   Result :=
     (not ((Rect1.x + Rect1.Width < Rect2.x) or (Rect2.x + Rect2.Width < Rect1.x))) and

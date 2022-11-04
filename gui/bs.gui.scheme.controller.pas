@@ -1385,7 +1385,7 @@ var
   h: uint32;
 begin
   { }
-  h := GetHashSedgwickS(VisualClass.PresentedClass.ClassName);
+  h := GetHashBlackSharkS(VisualClass.PresentedClass.ClassName);
   VisualClasses.Add(h, VisualClass);
   FListVisualClasses.Add(VisualClass);
 end;

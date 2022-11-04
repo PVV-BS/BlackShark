@@ -2295,8 +2295,10 @@ begin
 
   if LastDrawGI <> Instance.Instance.Owner then
   begin
+    {$ifndef ultibo}
     if SupportsVAO then
       glBindVertexArray(GL_NONE);
+    {$endif}
 
     if LastCullFaceOption <> Instance.Instance.Owner.DrawSides then
     begin

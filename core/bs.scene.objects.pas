@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -31,6 +31,7 @@ interface
 
 uses
     bs.basetypes
+  , bs.align
   , bs.events
   , bs.scene
   , bs.mesh
@@ -258,9 +259,9 @@ type
     FLineWidth: BSFloat;
     FLineWidthHalf: BSFloat;
     UpdateCounter: int32;
-    Position: TVec3f;
     FCountLines: int32;
     FDrawByTriangleOnly: boolean;
+    FCurrentPosition: TVec3f;
     procedure SetLineWidth(AValue: BSFloat);
     procedure SetDrawByTriangleOnly(const Value: boolean);
   public
@@ -306,8 +307,6 @@ type
   TGraphicObjectText = class(TObjectVertexes)
   private
     ColorUniform: PShaderParametr;
-    DeltaF: BSFloat;
-    BlankWidth: BSFloat;
     SettedSize: boolean;
     FText: bs.strings.PString;
     Building: boolean;
@@ -325,8 +324,14 @@ type
     FontText: TBlackSharkTexture;
     FontTextI: IBlackSharkTexture;
     FDefaultGlyph: string;
+    FLineThickness: int32;
+    FStrikethrough: boolean;
+    FUnderline: boolean;
+    FLines: TGraphicObjectLines;
+    FFirstLinePosition: TVec3f;
+    FColorLine: TColor4f;
+    FAlign: TTextAlign;
     function SelectorKey(Index: int32; out Code: int32): PKeyInfo;
-    function SelectAverageWidth (Index: int32): BSFloat;
     procedure CalcBlankWidth;
     procedure SetText(const AValue: string);
     procedure CheckShaders;
@@ -335,7 +340,7 @@ type
     procedure SetFont(const Value: IBlackSharkFont);
     function SelectStartPos(const PropLine: PLineProp): BSFloat; inline;
     { select average width blank for oaClient align mode }
-    function SelectBlankWidth(const PropLine: PLineProp): BSFloat;
+    function SelectBlankWidth(const PropLine: PLineProp): BSFloat; inline;
     procedure OnChangeFontEvent({%H}const Value: BEmpty);
     procedure SetDiscardBlanks(const Value: boolean);
     procedure SetTxtProcessor(const Value: TTextProcessor);
@@ -347,6 +352,14 @@ type
     procedure SetOffsetY(const Value: BSFloat);
     procedure SetOutToHeight(const Value: BSFloat);
     procedure SelectFontData;
+    procedure SetStrikethrough(const Value: boolean);
+    procedure SetUnderline(const Value: boolean);
+    procedure AddLine(const APosition: TVec2f; AWidth: BSFloat); inline;
+    procedure CalcLineThickness;
+    procedure CreateLines;
+    procedure SetColorLine(const Value: TColor4f);
+    procedure UpdateTextProcessorLineHeight;
+    procedure SetAlign(const Value: TTextAlign);
   protected
     FColor: TColor4f;
     procedure SetColor(const Value: TColor4f); override;
@@ -370,11 +383,16 @@ type
     property DiscardBlanks: boolean read FDiscardBlanks write SetDiscardBlanks;
     { offset of vewport over text }
     property OffsetX: BSFloat read FOffsetX write SetOffsetX;
+    property OffsetY: BSFloat read FOffsetY write SetOffsetY;
     { a maximal width of window for out text, pixels; default 0 - not limited }
     property OutToWidth: BSFloat read FOutToWidth write SetOutToWidth;
-    property OffsetY: BSFloat read FOffsetY write SetOffsetY;
     { a maximal height of window for out text, pixels; default 0 - not limited }
     property OutToHeight: BSFloat read FOutToHeight write SetOutToHeight;
+    property Strikethrough: boolean read FStrikethrough write SetStrikethrough;
+    property Underline: boolean read FUnderline write SetUnderline;
+    { color of Underline and Strikethrough }
+    property ColorLine: TColor4f read FColorLine write SetColorLine;
+    property Align: TTextAlign read FAlign write SetAlign;
   end;
 
   { TColoredVertexesOrTextured }
@@ -456,16 +474,15 @@ implementation
 
 uses
   {$ifdef DEBUG_BS}
-    SysUtils,
     bs.log,
   {$endif}
   {$ifndef fpc}
     System.Classes,
   {$endif}
     math
+  , SysUtils
   , bs.config
   , bs.utils
-  , bs.align
   , bs.thread
   , bs.obj
   , bs.graphics
@@ -492,7 +509,7 @@ begin
     begin
       v := AKey^.Glyph^.Points.Items[AKey^.Indexes.Items[j]];
       v.x := (v.x - AKey^.Glyph.xMin) - s_half.x;
-      v.y := (v.y) - s_half.y;
+      v.y := v.y - s_half.y;
       AMesh.Indexes.Add(AMesh.CountVertex);
       AMesh.AddVertex(vec3(v.x + pos.x, v.y + pos.y, APosition.z));
     end;
@@ -505,6 +522,7 @@ begin
       v_mod.x := (v.x - AKey^.Glyph^.xMin) - s_half.x;
       v_mod.y := (v.y - AKey^.Glyph^.yMin) - s_half.y;
       v.x := v.x - s_half.x;
+
       v.y := v.y - s_half.y;
       AMesh.Indexes.Add(AMesh.CountVertex);
       AMesh.Write(
@@ -557,6 +575,7 @@ begin
         {$endif}
       end;
 
+      {$ifndef ultibo}
       if SupportsVAO and (FVBO_Indexes > 0) then
       begin
         if (FVAO = 0) then
@@ -574,6 +593,7 @@ begin
           glBindVertexArray(0);
         end;
       end;
+      {$endif}
 
       // Automticaly set visibility by depend at position Frustum
       if UpdateCount <= 0 then
@@ -600,11 +620,13 @@ begin
       FVBO_Indexes := 0;
     end;
 
+    {$ifndef ultibo}
     if FVAO > 0 then
     begin
       glDeleteVertexArrays(1, @FVAO);
       FVAO := 0;
     end;
+    {$endif}
   end;
 end;
 
@@ -623,11 +645,13 @@ begin
     FVBO_Vertexes := 0;
   end;
 
+  {$ifndef ultibo}
   if FVAO > 0 then
   begin
     glDeleteVertexArrays(1, @FVAO);
     FVAO := 0;
   end;
+  {$endif}
 end;
 
 constructor TObjectVertexes.Create(AOwner: TObject; AParent: TGraphicObject; AScene: TBScene);
@@ -722,10 +746,12 @@ end;
 
 procedure TObjectVertexes.BeforeDraw(Item: TGraphicObject);
 begin
+  {$ifndef ultibo}
   if FVAO > 0 then
   begin
     glBindVertexArray(FVAO)
   end else
+  {$endif}
   begin
     BindVBO;
   end;
@@ -756,7 +782,7 @@ constructor TTexturedVertexes.Create(AOwner: TObject; AParent: TGraphicObject; A
 begin
   inherited;
   AddBeforeDrawMethod(BeforeDrawSetData);
-  Shader := BSShaderManager.Load('', TBlackSharkTextureOutShader);
+  Shader := BSShaderManager.Load(TBlackSharkTextureOutShader);
 end;
 
 class function TTexturedVertexes.CreateMesh: TMesh;
@@ -856,7 +882,7 @@ end;
 constructor TColoredVertexes.Create(AOwner: TObject; AParent: TGraphicObject; AScene: TBScene);
 begin
   inherited;
-  Shader := BSShaderManager.Load(TBlackSharkVectorToSingleColorShader.DefaultName, TBlackSharkVectorToSingleColorShader);
+  Shader := BSShaderManager.Load(TBlackSharkVectorToSingleColorShader);
   AddBeforeDrawMethod(BeforeDrawSetData);
   FColor := BS_CL_RED;
 end;
@@ -977,15 +1003,29 @@ end;
 
 procedure TGraphicObjectLines.LineTo(const v: TVec3f);
 begin
-  Line(Position, v);
+  Line(FCurrentPosition, v);
 end;
 
 procedure TGraphicObjectLines.MoveTo(const v: TVec3f);
 begin
-  Position := v;
+  FCurrentPosition := v;
 end;
 
 { TGraphicObjectText }
+
+procedure TGraphicObjectText.AddLine(const APosition: TVec2f; AWidth: BSFloat);
+begin
+//  if FFont.IsVectoral then
+//  begin
+//    AddQuadToShape(Mesh, vec3(APosition.x + AWidth*0.5, APosition.y, 0.0), vec2(AWidth*0.5, FLineThickness*0.5));
+//  end else
+  begin
+    if FLines.CountLines = 0 then
+      FFirstLinePosition := APosition;
+    FLines.LineWidth := FLineThickness;
+    FLines.Line(vec3(APosition.x, APosition.y, 0.0), vec3((APosition.x + AWidth), APosition.y, 0.0));
+  end;
+end;
 
 procedure TGraphicObjectText.BeforeDraw(Item: TGraphicObject);
 begin
@@ -999,11 +1039,20 @@ constructor TGraphicObjectText.Create(AOwner: TObject; AParent: TGraphicObject; 
 begin
   inherited;
   Color := BS_CL_BLACK;
+  FColorLine := BS_CL_GREEN;
   SettedSize := false;
   FDiscardBlanks := true;
   AddBeforeDrawMethod(BeforeDraw);
   { default shader }
-  Shader := BSShaderManager.Load(TTextFromTextureShader.DefaultName, TTextFromTextureShader);
+  Shader := BSShaderManager.Load(TTextFromTextureShader);
+end;
+
+procedure TGraphicObjectText.CreateLines;
+begin
+  FLines := TGraphicObjectLines.Create(nil, Self, Scene);
+  FLines.ServiceScale := BSConfig.VoxelSize;
+  FLines.Interactive := false;
+  FLines.Color := FColorLine;
 end;
 
 class function TGraphicObjectText.CreateMesh: TMesh;
@@ -1017,6 +1066,7 @@ begin
   FontText := nil;
   FFont := nil;
   OnChangeFontSbscr := nil;
+  FLines.Free;
   if OwnTextProcessor then
     FTxtProcessor.Free;
   if Assigned(FText) and OwnTextData then
@@ -1049,38 +1099,38 @@ begin
   if FTxtProcessor = nil then
   begin
     OwnTextProcessor := true;
-    FTxtProcessor := TTextProcessor.Create(SelectorKey, SelectAverageWidth);
+    FTxtProcessor := TTextProcessor.Create(SelectorKey);
   end;
   Result := FTxtProcessor;
 end;
 
 procedure TGraphicObjectText.OnChangeFontEvent({%H}const Value: BEmpty);
 begin
+  CalcLineThickness;
   SelectFontData;
   CalcBlankWidth;
   Build;
-end;
-
-function TGraphicObjectText.SelectAverageWidth(Index: int32): BSFloat;
-begin
-  if FFont <> nil then
-    Result := FFont.AverageWidth
-  else
-    Result := 0.0;
 end;
 
 function TGraphicObjectText.SelectBlankWidth(const PropLine: PLineProp): BSFloat;
 var
   c_b: int32;
 begin
+
   if FDiscardBlanks then
     c_b := PropLine.InsideBlanks
   else
     c_b := PropLine.CountBlanks;
+
   if c_b = 0 then
     exit(0.0);
-  Result := c_b * BlankWidth;
-  Result := (Result + (FTxtProcessor.Width - PropLine.Width)) / c_b;
+
+  if (FOutToWidth > 0) then
+  begin
+    Result := FTxtProcessor.BlankWidth + trunc((FOutToWidth - PropLine.TrimWidth) / c_b)
+  end else
+    Result := FTxtProcessor.BlankWidth + trunc((FTxtProcessor.Width - PropLine.TrimWidth) / c_b);
+
 end;
 
 procedure TGraphicObjectText.SelectFontData;
@@ -1093,17 +1143,15 @@ begin
   CheckShaders;
 
   if Assigned(FTxtProcessor) then
-    FTxtProcessor.LineHeight := FFont.SizeInPixels;
+    UpdateTextProcessorLineHeight;
 
-  //VectorText := not FFont.IsVectoral;
-
-  if not FFont.IsVectoral then
+  if FFont.IsVectoral then
+  begin
+    FontTextI := nil;
+  end else
   begin
     FontTextI := FFont.Texture.Texture;
     FontText := FFont.Texture.Texture as TBlackSharkTexture;
-  end else
-  begin
-    FontTextI := nil;
   end;
 end;
 
@@ -1123,24 +1171,39 @@ var
   wl: BSFloat;
 begin
   if FDiscardBlanks then
-    wl := (PropLine.Width - (PropLine.CountBlanks - PropLine.InsideBlanks) * BlankWidth)
+    wl := (PropLine.Width - (PropLine.CountBlanks - PropLine.InsideBlanks) * FTxtProcessor.BlankWidth)
   else
     wl := PropLine.Width;
 
-  case FTxtProcessor.AlignText of
-    oaCenter:
+  case FAlign of
+    TTextAlign.taCenter:
       Result := (FTxtProcessor.Width - wl)*0.5;
-    oaRight:
+    TTextAlign.taRight:
       Result := (FTxtProcessor.Width - wl)
     else
       Result := 0.0;
   end;
 end;
 
+procedure TGraphicObjectText.SetAlign(const Value: TTextAlign);
+begin
+  if FAlign = Value then
+    exit;
+  FAlign := Value;
+  Build;
+end;
+
 procedure TGraphicObjectText.SetColor(const Value: TColor4f);
 begin
   inherited;
   FColor := Value;
+end;
+
+procedure TGraphicObjectText.SetColorLine(const Value: TColor4f);
+begin
+  FColorLine := Value;
+  if Assigned(FLines) then
+    FLines.Color := FColorLine;
 end;
 
 procedure TGraphicObjectText.CheckShaders;
@@ -1153,7 +1216,7 @@ begin
         Mesh.Free;
       Mesh := TMeshP.Create;
       Mesh.TypePrimitive := tpTriangles;
-      Shader := BSShaderManager.Load(TBlackSharkVectorToSingleColorShader.DefaultName, TBlackSharkVectorToSingleColorShader);
+      Shader := BSShaderManager.Load(TBlackSharkVectorToSingleColorShader);
     end;
   end else
   if Shader.Name <> TTextFromTextureShader.DefaultName then
@@ -1162,7 +1225,7 @@ begin
       Mesh.Free;
     Mesh := TMeshPT.Create;
     Mesh.TypePrimitive := tpTriangles;
-    Shader := BSShaderManager.Load(TTextFromTextureShader.DefaultName, TTextFromTextureShader);
+    Shader := BSShaderManager.Load(TTextFromTextureShader);
   end;
 end;
 
@@ -1170,9 +1233,9 @@ procedure TGraphicObjectText.CheckTextProcessor;
 begin
   if FTxtProcessor = nil then
   begin
-    FTxtProcessor := TTextProcessor.Create(SelectorKey, SelectAverageWidth);
-    if Assigned(FFont) then
-      FTxtProcessor.LineHeight := FFont.SizeInPixels;
+    FTxtProcessor := TTextProcessor.Create(SelectorKey);
+    UpdateTextProcessorLineHeight;
+    CalcLineThickness;
     OwnTextProcessor := true;
   end;
 end;
@@ -1191,6 +1254,7 @@ begin
   if Assigned(FFont) then
     OnChangeFontSbscr := CreateEmptyObserver(FFont.OnChangeEvent, OnChangeFontEvent);
   SelectFontData;
+  CheckTextProcessor;
   CalcBlankWidth;
   Build;
 end;
@@ -1210,14 +1274,14 @@ end;
 procedure TGraphicObjectText.SetOutToHeight(const Value: BSFloat);
 begin
   FOutToHeight := Value;
-  //FTxtProcessor.SetOutRect(FOutToWidth, FOutToHeight);
+  //FTxtProcessor.ViewportSize := vec2(FTxtProcessor.ViewportSize.Width, Value);
   Build;
 end;
 
 procedure TGraphicObjectText.SetOutToWidth(const Value: BSFloat);
 begin
   FOutToWidth := Value;
-  //FTxtProcessor.SetOutRect(FOutToWidth, FOutToHeight);
+  //FTxtProcessor.ViewportSize := vec2(Value, FTxtProcessor.ViewportSize.Height);
   Build;
 end;
 
@@ -1233,6 +1297,20 @@ begin
   end;
 end;
 
+procedure TGraphicObjectText.SetStrikethrough(const Value: boolean);
+begin
+  if FStrikethrough = Value then
+    exit;
+  FStrikethrough := Value;
+  if FStrikethrough then
+  begin
+    if not Assigned(FLines) then
+      CreateLines;
+  end else
+  if not FUnderline and Assigned(FLines) then
+    FreeAndNil(FLines);
+end;
+
 procedure TGraphicObjectText.CalcBlankWidth;
 var
   k: PKeyInfo;
@@ -1241,11 +1319,18 @@ begin
   begin
     k := FFont.Key[$20];
     if Assigned(k) then
-      BlankWidth := k.Rect.Width + DeltaF
+      FTxtProcessor.BlankWidth := k.Rect.Width + FTxtProcessor.Delta
     else
-      BlankWidth := FFont.AverageWidth * 0.5 + DeltaF;
+      FTxtProcessor.BlankWidth := FFont.AverageWidth * 0.5 + FTxtProcessor.Delta;
   end else
-    BlankWidth := 7;
+    FTxtProcessor.BlankWidth := 7;
+end;
+
+procedure TGraphicObjectText.CalcLineThickness;
+begin
+  FLineThickness := round(FFont.Size / 8);
+  if FLineThickness < 1 then
+    FLineThickness := 1;
 end;
 
 procedure TGraphicObjectText.BeginChangeProp;
@@ -1256,7 +1341,7 @@ end;
 procedure TGraphicObjectText.Build;
 var
   KeyInfo: PKeyInfo;
-  x, y, h: BSfloat;
+  x, y: BSfloat;
   ch: WideChar;
   w_average: BSFloat;
   h_parent: BSFloat;
@@ -1266,12 +1351,23 @@ var
   char_index: int32;
   LineProp: PLineProp;
   off_left: BSFloat;
-  w_ch: BSFloat;
+  firstCharOffset: BSFloat;
+  print_chars: int32;
+  countPrintChars: int32;
+  start_x: BSFloat;
+  offsetItalic: int32;
+  firstEmptyStrings: int32;
+  fullLineHeight: BSFloat;
+  k: int8;
 begin
+
   if CounterChange <> 0 then
     exit;
 
 	Mesh.Clear;
+  if Assigned(FLines) then
+    FLines.Clear;
+
 
   if (FText = nil) or (FText.Len = 0) or (FTxtProcessor = nil)  then
   begin
@@ -1288,11 +1384,11 @@ begin
 
   Building := true;
 
+  FTxtProcessor.CountChars := FText.Len;
+
   FFont.BeginSelectChars;
   try
-    h := (FFont.SizeInPixels + FTxtProcessor.Interligne);
 
-    DeltaF := FTxtProcessor.Delta;
     off_left := FOffsetX;
 
     if (FOutToWidth > 0) then
@@ -1312,30 +1408,61 @@ begin
     if line < 0 then
       exit;
 
-    y := (line + 1) * h;
+    fullLineHeight := FTxtProcessor.LineHeight + FTxtProcessor.Interligne;
+
+    y := (line + 1) * fullLineHeight;
 
     LineProp := FTxtProcessor.Lines.ShiftData[line];
     x := SelectStartPos(LineProp);
 
-    if FTxtProcessor.AlignText = oaClient then
+    if (FAlign = TTextAlign.taClient) and (FTxtProcessor.Lines.Count - line > 1) then
       w_average := SelectBlankWidth(LineProp)
     else
-      w_average := BlankWidth;
+      w_average := FTxtProcessor.BlankWidth;
 
     char_index := LineProp.IndexBegin;
     len_str := FText.Len - char_index + 1;
     chars := 0;
+    print_chars := 0;
+    start_x := 0;
+    firstEmptyStrings := 0;
+    countPrintChars := 0;
+
+    if Assigned(FLines) then
+      FLines.BeginUpdate;
+
+    offsetItalic := round(FFont.SizeInPixels*FFont.ItalicWeight);
+    firstCharOffset := 0;
+
     { an adjusted empty shape for a right align on parent if will be not typed symbols }
     AddQuadToShape(Mesh, vec3(0.0, h_parent, 0.0), vec2(0.0, 0.0));
+
     while len_str > 0 do
     begin
 
       inc(chars);
       if (chars > LineProp.CountChars) or ((w_parent > 0) and (x >= w_parent)) then
       begin
-        y := y + h;
+        if (print_chars > 0) then
+        begin
+          print_chars := 0;
+
+          if FStrikethrough then
+            AddLine(vec2(start_x + firstCharOffset, Floor(- y - fullLineHeight*0.5)), x - start_x - firstCharOffset);
+
+          if FUnderline then
+            AddLine(vec2(start_x + firstCharOffset, Floor(- y - fullLineHeight + FLineThickness)), x - start_x - firstCharOffset);
+
+        end else
+        if countPrintChars = 0 then
+        begin
+          inc(firstEmptyStrings);
+        end;
+
+        y := y + fullLineHeight;
         inc(line);
         chars := 1;
+        firstCharOffset := 0;
 
         if (Line >= FTxtProcessor.Lines.Count) or (y > h_parent) then
           break;
@@ -1343,9 +1470,12 @@ begin
         LineProp := FTxtProcessor.Lines.ShiftData[line];
         dec(len_str, LineProp.IndexBegin - char_index);
         char_index := LineProp.IndexBegin;
-        x := SelectStartPos(LineProp);
-        if FTxtProcessor.AlignText = oaClient then
-          w_average := SelectBlankWidth(LineProp);
+        start_x := SelectStartPos(LineProp);
+        x := start_x;
+        if (FAlign = TTextAlign.taClient) and (FTxtProcessor.Lines.Count - line > 1) then
+          w_average := SelectBlankWidth(LineProp)
+        else
+          w_average := FTxtProcessor.BlankWidth;  // last line
       end;
 
       ch := FText.CharsUnsafeW(char_index);
@@ -1358,37 +1488,79 @@ begin
 
       KeyInfo := FFont.KeyByWideChar[ch];
 
-      if ch = #$09 then
+      if (ch = #$09) or (ch = #$20) or (KeyInfo = nil) or (KeyInfo.Indexes.Count = 0) then
       begin
-        x := x + w_average * 2;
-        continue;
-      end else
-      if (ch = #$20) or (KeyInfo = nil) or (KeyInfo.Indexes.Count = 0) then
-      begin
-        x := x + w_average;
+
+        if (ch = #$09) then
+          k := 2
+        else
+          k := 1;
+
+        if (print_chars = 0) then
+        begin
+          if FAlign = TTextAlign.taClient then
+          begin
+            if Line = 0 then
+              x := x + FTxtProcessor.BlankWidth * k;
+            continue;
+          end;
+        end;
+        x := x + w_average * k;
         continue;
       end else
       if (ch = #0) then
         continue;
 
-      w_ch := KeyInfo.Rect.Width;
-
-      if off_left - (x + w_ch) >= 1.0 then
+      if off_left - (x + KeyInfo.Rect.Width) >= 1.0 then
       begin
-        x := x + DeltaF + w_ch;
+        x := x + FTxtProcessor.Delta + KeyInfo.Rect.Width;
         continue;
       end;
 
-      x := x + DeltaF + AddKeyToShape(KeyInfo, Mesh, vec2(x - off_left, h_parent - y), FFont.IsVectoral).x;
+      if print_chars = 0 then
+        firstCharOffset := x - off_left;
+
+      if FFont.Italic then
+        x := x + FTxtProcessor.Delta + AddKeyToShape(KeyInfo, Mesh, vec2(x - off_left, h_parent - y), FFont.IsVectoral).x - offsetItalic
+      else
+        x := x + FTxtProcessor.Delta + AddKeyToShape(KeyInfo, Mesh, vec2(x - off_left, h_parent - y), FFont.IsVectoral).x;
+
+      inc(print_chars);
+      inc(countPrintChars);
+    end;
+
+    if (print_chars > 0) then
+    begin
+      if FStrikethrough then
+        AddLine(vec2(start_x + firstCharOffset, Floor(- y - fullLineHeight*0.5)), x - start_x - firstCharOffset);
+
+      if FUnderline then
+        AddLine(vec2(start_x + firstCharOffset, Floor(- y - fullLineHeight + FLineThickness)), x - start_x - firstCharOffset);  // - FTxtProcessor.LineHeight*0.5
     end;
 
     Mesh.CalcBoundingBox(true);
     ChangedMesh;
+
+    if Assigned(FLines) then
+    begin
+      FLines.EndUpdate(true);
+      if FUnderline then
+      begin
+        if FStrikethrough then
+          FLines.Position := vec3(0.0,  (- firstEmptyStrings*fullLineHeight*0.5 - fullLineHeight*0.15 - FLineThickness*2)*BSConfig.VoxelSize, 0.0)
+        else
+          FLines.Position := vec3(0.0,  ((- firstEmptyStrings*fullLineHeight - fullLineHeight)*0.5 - FLineThickness)*BSConfig.VoxelSize, 0.0);
+      end else
+        // TODO: y-position set by font metric -(xheight * 0.5)
+        FLines.Position := vec3(0.0,   round(-fullLineHeight*0.15)*BSConfig.VoxelSize, 0.0);
+    end;
+
   finally
     { do not change the next strings places to avoid repeated of build }
     FFont.EndSelectChars;
     Building := false;
   end;
+
 end;
 
 procedure TGraphicObjectText.SetText(const AValue: string);
@@ -1405,7 +1577,6 @@ begin
   CheckTextProcessor;
 
   FText^ := AValue;
-  FTxtProcessor.CountChars := FText.Len;
   Build;
 end;
 
@@ -1422,15 +1593,42 @@ procedure TGraphicObjectText.SetTxtProcessor(const Value: TTextProcessor);
 begin
   if FTxtProcessor = Value then
     exit;
-  if OwnTextProcessor and (FTxtProcessor <> nil) then
+
+  if OwnTextProcessor then
     FTxtProcessor.Free;
+
   OwnTextProcessor := false;
   FTxtProcessor := Value;
-  if FTxtProcessor <> nil then
+
+  if Assigned(FTxtProcessor) then
   begin
     FTxtProcessor.OnQueryKey := SelectorKey;
-    FTxtProcessor.LineHeight := FFont.SizeInPixels;
+    UpdateTextProcessorLineHeight;
   end;
+end;
+
+procedure TGraphicObjectText.SetUnderline(const Value: boolean);
+begin
+  if FUnderline = Value then
+    exit;
+  FUnderline := Value;
+  if FUnderline then
+  begin
+    if not Assigned(FLines) then
+      CreateLines;
+  end else
+  if not FStrikethrough and Assigned(FLines) then
+    FreeAndNil(FLines);
+end;
+
+procedure TGraphicObjectText.UpdateTextProcessorLineHeight;
+begin
+  if not Assigned(FFont) then
+    exit;
+  FTxtProcessor.LineHeight := FFont.SizeInPixels;
+  FTxtProcessor.Interligne := round(FFont.SizeInPixels*0.2);
+  if FTxtProcessor.Interligne < 1 then
+    FTxtProcessor.Interligne := 1;
 end;
 
 { TGraphicObjectAxises }
@@ -1663,7 +1861,7 @@ begin
   inherited;
   FStartTime := TBTimer.CurrentTime.Low;
   AddBeforeDrawMethod(BeforeDrawFog);
-  Shader := BSShaderManager.Load(TBlackSharkFogOutShader.DefaultName, TBlackSharkFogOutShader);
+  Shader := BSShaderManager.Load(TBlackSharkFogOutShader);
 end;
 
 { TColorPatettePlane }
@@ -1784,7 +1982,7 @@ begin
   FLineWidthHalf := FLineWidth * 0.5;
   FLineColor2 := BS_CL_BLUE;
   FMesh.TypePrimitive := tpLines;
-  Shader := BSShaderManager.Load('DoubleColor', TBlackSharkVectorToDoubleColorShader);
+  Shader := BSShaderManager.Load(TBlackSharkVectorToDoubleColorShader);
   AddBeforeDrawMethod(BeforeDrawMethod);
 end;
 
@@ -1892,7 +2090,7 @@ end;
 constructor TMultiColorVertexes.Create(AOwner: TObject; AParent: TGraphicObject; AScene: TBScene);
 begin
   inherited;
-  Shader := BSShaderManager.Load(TBlackSharkColorSelectorShader.DefaultName, TBlackSharkColorSelectorShader);
+  Shader := BSShaderManager.Load(TBlackSharkColorSelectorShader);
 end;
 
 class function TMultiColorVertexes.CreateMesh: TMesh;
@@ -2016,7 +2214,7 @@ begin
   Color := BS_CL_GRAY;
   ClearBeforeDrawListMethods;
   DrawInstance := DrawLayout;
-  Shader := BSShaderManager.Load(TBlackSharkLayoutShader.DefaultName, TBlackSharkLayoutShader);
+  Shader := BSShaderManager.Load(TBlackSharkLayoutShader);
   FDrawedData.TypePrimitive := tpLines;
 end;
 
@@ -2059,8 +2257,10 @@ begin
     glDrawElements(FDrawedData.DrawingPrimitive , FDrawedData.Indexes.Count, FDrawedData.Indexes.Kind, FDrawedData.Indexes.ShiftData[0]);
   end;
 
+  {$ifndef ultibo}
   if VAO > 0 then
     glBindVertexArray(GL_NONE);
+  {$endif}
 end;
 
 procedure TLayoutObject.SetDrawOn(const Value: boolean);
@@ -2111,7 +2311,7 @@ end;
 constructor TComplexCurveObject.Create(AOwner: TObject; AParent: TGraphicObject; AScene: TBScene);
 begin
   inherited;
-  Shader := BSShaderManager.Load(TBlackSharkVectorToSingleColorShader.DefaultName, TBlackSharkVectorToSingleColorShader);
+  Shader := BSShaderManager.Load(TBlackSharkVectorToSingleColorShader);
   AddBeforeDrawMethod(BeforeDraw);
   FColor := BS_CL_RED;
 end;
@@ -2146,11 +2346,11 @@ begin
   if FMultiColor then
   begin
     m := TMeshLineMultiColored.Create;
-    Shader := BSShaderManager.Load(TBlackSharkStrokeCurveMulticoloredShader.DefaultName, TBlackSharkStrokeCurveMulticoloredShader);
+    Shader := BSShaderManager.Load(TBlackSharkStrokeCurveMulticoloredShader);
   end else
   begin
     m := TMeshLine.Create;
-    Shader := BSShaderManager.Load(TBlackSharkStrokeCurveSingleColorShader.DefaultName, TBlackSharkStrokeCurveSingleColorShader);
+    Shader := BSShaderManager.Load(TBlackSharkStrokeCurveSingleColorShader);
   end;
 
   m.CopyMesh(Mesh);

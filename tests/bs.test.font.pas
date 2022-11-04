@@ -26,7 +26,7 @@ type
   TBSTestTrueTypeFont = class(TBSTest)
   private
     const
-      TEST_SYMBOLS: array[0..0] of uint16 = (115);//($33b, $57, $AB, $4f, $BC, $2047, $19f, $3a, $40e, $2039, $23A);//
+      TEST_SYMBOLS: array[0..0] of uint16 = ($EE);//($33b, $57, $AB, $4f, $BC, $2047, $19f, $3a, $40e, $2039, $23A);//
   private
     FFont: IBlackSharkFont;
     FGlyph: PGlyph;
@@ -52,6 +52,11 @@ type
     Point1: TCanvasText;
     Point2: TCanvasText;
     Point3: TCanvasText;
+
+    Normal1: TCanvasText;
+    Normal2: TCanvasText;
+    Normal3: TCanvasText;
+
     P1: TRectangle;
     P2: TRectangle;
     P3: TRectangle;
@@ -162,6 +167,7 @@ end;
 procedure TBSTestTrueTypeFont.OnMouseEnter(const Data: BMouseData);
 var
   tri: TTriangle;
+  normal: TVec2f;
 begin
   if Running then
     exit;
@@ -186,6 +192,27 @@ begin
   Point3.Text := IntToStr(Indexes.Items[tri.Data.TagInt*3 + 2]) + ': ' + IntToStr(round((tri.C.x/kx + xMin))) + #9 + IntToStr(round((yMax - tri.C.y/ky)));
   Point3.Position2d := vec2(500, 60);
   Point3.Color := BS_CL_BLUE;
+
+  normal := FGlyph.EdgeNormals.Items[Indexes.Items[tri.Data.TagInt*3]];
+  Normal1 := TCanvasText.Create(Canvas, nil);
+  Normal1.Layer2d := 3;
+  Normal1.Text := 'n: (' + Format('%f ', [normal.x]) + '; ' + Format('%f ', [normal.y]) + ')';
+  Normal1.Position2d := vec2(500, 80);
+  Normal1.Color := BS_CL_RED;
+
+  normal := FGlyph.EdgeNormals.Items[Indexes.Items[tri.Data.TagInt*3 + 1]];
+  Normal2 := TCanvasText.Create(Canvas, nil);
+  Normal2.Layer2d := 3;
+  Normal2.Text := 'n: (' + Format('%f ', [normal.x]) + '; ' + Format('%f ', [normal.y]) + ')';
+  Normal2.Position2d := vec2(500, 100);
+  Normal2.Color := BS_CL_GREEN;
+
+  normal := FGlyph.EdgeNormals.Items[Indexes.Items[tri.Data.TagInt*3 + 2]];
+  Normal3 := TCanvasText.Create(Canvas, nil);
+  Normal3.Layer2d := 3;
+  Normal3.Text := 'n: (' + Format('%f ', [normal.x]) + '; ' + Format('%f ', [normal.y]) + ')';
+  Normal3.Position2d := vec2(500, 120);
+  Normal3.Color := BS_CL_BLUE;
 
   Triangle := TTriangle.Create(Canvas, nil);
   Triangle.Data.Interactive := false;
@@ -288,7 +315,7 @@ begin
 
   Button := TBButton.Create(ARenderer);
   Button.Caption := 'Run test';
-  Button.Position2d := vec2(90.0, 10.0);
+  Button.Position2d := vec2(90.0, 400.0);
   ObsrBtnClick := Button.OnClickEvent.CreateObserver(GUIThread, OnMouseUpBtn);
 
   //CurrentGlyphIndex := 1000;
@@ -335,15 +362,18 @@ end;
 procedure TBSTestTrueTypeFont.FreePoints;
 begin
   if Point1 <> nil then
-    begin
+  begin
     FreeAndNil(Point1);
     FreeAndNil(Point2);
     FreeAndNil(Point3);
+    FreeAndNil(Normal1);
+    FreeAndNil(Normal2);
+    FreeAndNil(Normal3);
     FreeAndNil(Triangle);
     FreeAndNil(P1);
     FreeAndNil(P2);
     FreeAndNil(P3);
-    end;
+  end;
 end;
 
 function TBSTestTrueTypeFont.Run: boolean;
@@ -363,7 +393,7 @@ begin
     FreePoints;
     Billboard.Clear();
 
-    top := 10;
+    top := 500;
 
     txt := TCanvasText.Create(Billboard, nil);
     txt.Position2d := vec2(5, top);
@@ -372,15 +402,15 @@ begin
 
     for i := 0 to length(TEST_SYMBOLS) - 1 do
       if not TestSymbol(TEST_SYMBOLS[i]) then
-        begin
+      begin
         if (FGlyph <> nil) then
-          begin
+        begin
           txt := TCanvasText.Create(Billboard, nil);
           txt.Position2d := vec2(5, top);
           txt.Text := 'The error of triangulation a symbol $' + IntToHex(TEST_SYMBOLS[i], 4) + ', bad edges: ';
           inc(top, STEP);
           for j := 0 to ErrorEdges.Count - 1 do
-            begin
+          begin
             edg := ErrorEdges.Items[j];
             txt := TCanvasText.Create(Billboard, nil);
             txt.Data.Interactive := false;
@@ -390,16 +420,16 @@ begin
             IntToStr(edg.index1) + ' (' + IntToStr(round(FGlyph.Points.Items[edg.index1].x))
                + ', ' + IntToStr(round(FGlyph.Points.Items[edg.index1].y)) + ')';
             inc(top, STEP);
-            end;
+          end;
           exit(false);
-          end else
-          begin
+        end else
+        begin
           txt := TCanvasText.Create(Billboard, nil);
           txt.Position2d := vec2(5, top);
           txt.Text := 'A symbol $' + IntToHex(TEST_SYMBOLS[i], 4) + ' do not found...';
           inc(top, STEP);
-          end;
         end;
+      end;
 
     txt := TCanvasText.Create(Billboard, nil);
     txt.Position2d := vec2(5, top);
@@ -468,6 +498,7 @@ begin
     tri.Build;
     tri.Data.TagPtr := tri;
     tri.Data.TagInt := i;
+    tri.Color := BS_CL_GRAY;
     MEnterGroup.CreateObserver(tri.Data.EventMouseEnter);
     MDownGroup.CreateObserver(tri.Data.EventMouseDown);
   end;

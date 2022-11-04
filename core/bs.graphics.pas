@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -380,14 +380,14 @@ type
   private
   type
     TPNGChunk = record
-      Size: int32;
+      Size: uint32;
       Name: uint32;
     end;
 
     TPNGHeader = packed record
       Base              : TPNGChunk;
-      Width             : int32;
-      Height            : int32;
+      Width             : uint32;
+      Height            : uint32;
       BitDepth          : byte;
       ColorType         : byte;
       CompressionMethod : byte;
@@ -412,35 +412,59 @@ type
   TSamplingKernel = (skIdentity, skBlur, skBottomSobel, skEmboss, skLeftSobel,
     skOutLine, skRightSobel, skSharpen, skTopSobel, skEdgeDetect, skEdgeEnhance);
 
+  TColorMapRec = record
+    Color: TGuiColor;
+    Name: AnsiString;
+    class function ColorMapRec(AColor: TGuiColor; const AName: AnsiString): TColorMapRec; static;
+  end;
+
+
   TGuiColors = record
   const
-    Black   = $000000;
-    White   = $FFFFFF;
-    Red     = $0000FF;
-    Green   = $008000;
-    Blue    = $FF0000;
-    Purple  = $800080;
-    Olive   = $008080;
-    Maroon  = $000080;
-    Navy    = $800000;
-    Teal    = $808000;
-    Gray    = $808080;
-    Silver  = $C0C0C0;
-    Lime    = $00FF00;
-    Yellow  = $00FFFF;
-    Fuchsia = $FF00FF;
-    Aqua    = $FFFF00;
+    Black          = $000000;
+    White          = $FFFFFF;
+    Red            = $0000FF;
+    Green          = $008000;
+    Blue           = $FF0000;
+    Purple         = $800080;
+    Olive          = $008080;
+    Maroon         = $000080;
+    Navy           = $800000;
+    Teal           = $808000;
+    Gray           = $808080;
+    Cornsilk       = $DCF8FF;
+    Blanchedalmond = $CDEBFF;
+    Bisque         = $C4E4FF;
+    Havajowhite	   = $ADDEFF;
+    Wheat          = $B3DEF5;
+    BurlyWood      = $87B8DE;
+    Tan	           = $8CB4D2;
+    Rosybrown      = $8F8FBC;
+    Sandybrown     = $60A4F4;
+    Goldenrod      = $20A5DA;
+    Peru           = $3F85CD;
+    Chocolate      = $1E69D2;
+    Saddlebrown	   = $13458B;
+    Sienna         = $2D52A0;
+    Brown          = $2A2AA5;
+    Silver         = $C0C0C0;
+    Lime           = $00FF00;
+    Yellow         = $00FFFF;
+    Fuchsia        = $FF00FF;
+    Aqua           = $FFFF00;
 
-    MoneyGreen = $C0DCC0;
-    Cream      = $F0FBFF;
-    MedGray    = $A4A0A0;
-    Skyblue    = $EBCE87;
+    MoneyGreen     = $C0DCC0;
+    Cream          = $F0FBFF;
+    MedGray        = $A4A0A0;
+    Skyblue        = $EBCE87;
 
-    Count = 20;
+    Count = 35;
   end;
 
   function ColorToString(AColor: TGuiColor): AnsiString;
-  function StringToColor(AColor: AnsiString): TGuiColor;
+  function StringToColor(const AColor: AnsiString): TGuiColor;
+  function ColorMapCount: int32;
+  function GetColorMap(AIndex: int32): TColorMapRec;
 
 var
   { This variables is setted from platform-dependency units }
@@ -521,16 +545,18 @@ const
     0, 0, 0, 1, 2, 2, 3, 4, 0
   );
 
-type
-  TColorMapRec = record
-    Color: TGuiColor;
-    Name: AnsiString;
-    class function ColorMapRec(AColor: TGuiColor; const AName: AnsiString): TColorMapRec; static;
-  end;
-
-
 var
   ColorMap: TListVec<TColorMapRec>;
+
+function ColorMapCount: int32;
+begin
+  Result := ColorMap.Count;
+end;
+
+function GetColorMap(AIndex: int32): TColorMapRec;
+begin
+  Result := ColorMap.Items[AIndex];
+end;
 
 function ColorToString(AColor: TGuiColor): AnsiString;
 var
@@ -542,7 +568,7 @@ begin
   Result := StringToAnsi(IntToHex(AColor, 8));
 end;
 
-function StringToColor(AColor: AnsiString): TGuiColor;
+function StringToColor(const AColor: AnsiString): TGuiColor;
 var
   i: int32;
 begin
@@ -1241,7 +1267,7 @@ begin
   Result := SizeOf(byte);
 end;
 
-{ flipped picture (RGB or RGBA only!) by read from down to up lines and write as RGBA colors;
+{ flipped picture (RGB or RGBA only!) by read from down to up lines;
   !!! Always exchange red and blue colors }
 procedure CopyBmp(DataOffset: int32; Source: TStream; Dest: pByte; Width, Height: int32;
   Boundary, Step: int8; Flipped: boolean = true);
@@ -1258,10 +1284,13 @@ begin
   pos_w := 0;
   TPicCodecManager.WidenBuf.Position := 0;
   TPicCodecManager.WidenBuf.Size := w;
+  s := TPicCodecManager.WidenBuf.Memory;
+  if Step < 3 then
+    raise Exception.Create('TODO');
+
   for i := 0 to Height - 1 do
   begin
     pos_r := 0;
-    s := TPicCodecManager.WidenBuf.Memory;
     if Flipped then
       Source.Position := int64(DataOffset + (Height - 1 - i) * w) {%H-}
     else
@@ -1273,13 +1302,10 @@ begin
       Dest[pos_w+1] := s[pos_r+1];
       Dest[pos_w+2] := s[pos_r];
       if Step = 4 then
-        Dest[pos_w+3] := s[pos_r+3]
-      else    //
-        Dest[pos_w+3] := 255;
-      inc(pos_w, 4);
+        Dest[pos_w+3] := s[pos_r+3];
+      inc(pos_w, Step);
       inc(pos_r, Step);
     end;
-    //dec(pos_r, (ord + Step * Width) * 2);
   end;
 end;
 
@@ -1548,8 +1574,6 @@ begin
     24: DestPic.FPixelFormat := pf24Bit;
     32: DestPic.FPixelFormat := pf32Bit;
   end;
-  //FWidth        := hdr_info.biWidth; // PInteger(@hdr[$12])^;
-  //FHeight       := hdr_info.biHeight; // PInteger(@hdr[$16])^;
   DestPic.SetSize(hdr_info.biWidth, hdr_info.biHeight);
   dataPos       := hdr.bfOffBits; // PInteger(@hdr[$0A])^;
   DestPic.Canvas.Raw.Position := 0;
@@ -1702,7 +1726,6 @@ var
   chank: TPNGChunk;
   value32: int32;
   sizeSource: int32;
-  notFirstRow: boolean;
   pixelSize: int32;
   widthBytes: int32;
   widthBytesDest: int32;
@@ -1854,19 +1877,18 @@ begin
       exit(false);
   end;
 
-  widthBytesDest := BYTES_PER_PIXEL[PixelFormat]*hdr.Width;
+  widthBytesDest := BYTES_PER_PIXEL[PixelFormat]*int32(hdr.Width);
   hdr.Base.Size := htonl(hdr.Base.Size);
   SetSize(hdr.Width, hdr.Height);
   FCanvas.Raw.Position := 0;
   // + 4 - skip CRC
   Stream.Position := Stream.Position + 4;
   rowPosition := FCanvas.Raw.Size - widthBytesDest - FCanvas.Padding;
-  notFirstRow := false;
 
   decompressor := ZLibDecompressor.Create;
 
   SetLength(prevRow, widthBytes);
-  outStream := TPicCodecManager.WidenBuf; // TWidenBuffer.Create;
+  outStream := TPicCodecManager.WidenBuf;
 
   while (sizeSource > Stream.Position) and (rowPosition >= 0) do
   begin
@@ -1875,7 +1897,7 @@ begin
 
     if chank.Name = PNG_IDAT then
     begin
-      if length({%H-}chank_buf) < chank.Size + 1 then
+      if length({%H-}chank_buf) < int32(chank.Size + 1) then
         SetLength(chank_buf, chank.Size + 1);
 
       Stream.Read(chank_buf[0], chank.Size);
@@ -1884,11 +1906,7 @@ begin
       for i := 0 to outStream.Position div (widthBytes+1) - 1 do
       begin
         value32 := i*(widthBytes+1);
-        if notFirstRow then
-        begin
-          FilterRow(@(PByte(outStream.Memory)[value32]), @prevRow[0]);
-        end else
-          notFirstRow := true;
+        FilterRow(@(PByte(outStream.Memory)[value32]), @prevRow[0]);
 
         move(PByte(outStream.Memory)[value32+1], prevRow[0], widthBytes);
         copyRowMethod(@(PByte(outStream.Memory)[value32+1]), @(PByte(FCanvas.Raw.Memory)[rowPosition]), hdr.Width);
@@ -1899,7 +1917,6 @@ begin
       value32 := outStream.Position mod (widthBytes+1);
       if value32 > 0 then
         move(pByte(outStream.Memory)[outStream.Position - value32], pByte(outStream.Memory)^, value32);
-      //f.Position := f.Position - value32;
       outStream.Position := value32;
 
       // skip CRC
@@ -2300,15 +2317,30 @@ begin
   ColorMap.Items[8] := TColorMapRec.ColorMapRec(TGuiColors.Navy, 'Navy');
   ColorMap.Items[9] := TColorMapRec.ColorMapRec(TGuiColors.Teal, 'Teal');
   ColorMap.Items[10] := TColorMapRec.ColorMapRec(TGuiColors.Gray, 'Gray');
-  ColorMap.Items[11] := TColorMapRec.ColorMapRec(TGuiColors.Silver, 'Silver');
-  ColorMap.Items[12] := TColorMapRec.ColorMapRec(TGuiColors.Lime, 'Lime');
-  ColorMap.Items[13] := TColorMapRec.ColorMapRec(TGuiColors.Yellow, 'Yellow');
-  ColorMap.Items[14] := TColorMapRec.ColorMapRec(TGuiColors.Fuchsia, 'Fuchsia');
-  ColorMap.Items[15] := TColorMapRec.ColorMapRec(TGuiColors.Aqua, 'Aqua');
-  ColorMap.Items[16] := TColorMapRec.ColorMapRec(TGuiColors.MoneyGreen, 'MoneyGreen');
-  ColorMap.Items[17] := TColorMapRec.ColorMapRec(TGuiColors.Cream, 'Cream');
-  ColorMap.Items[18] := TColorMapRec.ColorMapRec(TGuiColors.MedGray, 'MedGray');
-  ColorMap.Items[19] := TColorMapRec.ColorMapRec(TGuiColors.Skyblue, 'Skyblue');
+  ColorMap.Items[11] := TColorMapRec.ColorMapRec(TGuiColors.Cornsilk, 'Cornsilk');
+  ColorMap.Items[12] := TColorMapRec.ColorMapRec(TGuiColors.Blanchedalmond, 'Blanchedalmond');
+  ColorMap.Items[13] := TColorMapRec.ColorMapRec(TGuiColors.Bisque, 'Bisque');
+  ColorMap.Items[14] := TColorMapRec.ColorMapRec(TGuiColors.Havajowhite, 'Havajowhite');
+  ColorMap.Items[15] := TColorMapRec.ColorMapRec(TGuiColors.Wheat, 'Wheat');
+  ColorMap.Items[16] := TColorMapRec.ColorMapRec(TGuiColors.BurlyWood, 'BurlyWood');
+  ColorMap.Items[17] := TColorMapRec.ColorMapRec(TGuiColors.Tan, 'Tan');
+  ColorMap.Items[18] := TColorMapRec.ColorMapRec(TGuiColors.Rosybrown, 'Rosybrown');
+  ColorMap.Items[19] := TColorMapRec.ColorMapRec(TGuiColors.Sandybrown, 'Sandybrown');
+  ColorMap.Items[20] := TColorMapRec.ColorMapRec(TGuiColors.Goldenrod, 'Goldenrod');
+  ColorMap.Items[21] := TColorMapRec.ColorMapRec(TGuiColors.Peru, 'Peru');
+  ColorMap.Items[22] := TColorMapRec.ColorMapRec(TGuiColors.Chocolate, 'Chocolate');
+  ColorMap.Items[23] := TColorMapRec.ColorMapRec(TGuiColors.Saddlebrown, 'Saddlebrown');
+  ColorMap.Items[24] := TColorMapRec.ColorMapRec(TGuiColors.Sienna, 'Sienna');
+  ColorMap.Items[25] := TColorMapRec.ColorMapRec(TGuiColors.Brown, 'Brown');
+  ColorMap.Items[26] := TColorMapRec.ColorMapRec(TGuiColors.Silver, 'Silver');
+  ColorMap.Items[27] := TColorMapRec.ColorMapRec(TGuiColors.Lime, 'Lime');
+  ColorMap.Items[28] := TColorMapRec.ColorMapRec(TGuiColors.Yellow, 'Yellow');
+  ColorMap.Items[29] := TColorMapRec.ColorMapRec(TGuiColors.Fuchsia, 'Fuchsia');
+  ColorMap.Items[30] := TColorMapRec.ColorMapRec(TGuiColors.Aqua, 'Aqua');
+  ColorMap.Items[31] := TColorMapRec.ColorMapRec(TGuiColors.MoneyGreen, 'MoneyGreen');
+  ColorMap.Items[32] := TColorMapRec.ColorMapRec(TGuiColors.Cream, 'Cream');
+  ColorMap.Items[33] := TColorMapRec.ColorMapRec(TGuiColors.MedGray, 'MedGray');
+  ColorMap.Items[34] := TColorMapRec.ColorMapRec(TGuiColors.Skyblue, 'Skyblue');
 end;
 
 procedure UnInitColorMap;

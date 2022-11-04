@@ -1,26 +1,13 @@
 ﻿unit bs.test.canvas.primitives;
-
 {$I BlackSharkCfg.inc}
 
 interface
 
 uses
-    SysUtils
-  , bs.test
-  , bs.basetypes
-  , bs.collections
-  , bs.events
-  , bs.renderer
-  , bs.scene
-  , bs.graphics
-  , bs.texture
-  , bs.canvas
-  , bs.font
-  , bs.selectors
-  ;
+  SysUtils, bs.test, bs.basetypes, bs.collections, bs.events, bs.renderer,
+  bs.scene, bs.graphics, bs.texture, bs.canvas, bs.font, bs.selectors;
 
 type
-
   TBSTestCanvasPrimitive = class(TBSTest)
   private
     FCanvas: TBCanvas;
@@ -28,7 +15,7 @@ type
     constructor Create(ARenderer: TBlackSharkRenderer); override;
     destructor Destroy; override;
     function Run: boolean; override;
-    property Canvas: TBCanvas read FCanvas;
+    property canvas: TBCanvas read FCanvas;
   end;
 
   TBSTestCanvasTriangle = class(TBSTestCanvasPrimitive)
@@ -57,10 +44,9 @@ type
   end;
 
   TBSTestCanvasBiColoredSolidLines = class(TBSTestCanvasPrimitive)
-  private
-    const
-      COUNT_LINES = 2;
-      WIDTH_LINE = 10;
+  private const
+    COUNT_LINES = 2;
+    WIDTH_LINE = 10;
   private
     Lines: TBiColoredSolidLines;
   public
@@ -233,8 +219,10 @@ type
     SelectorsBB: TListVec<TBlackSharkSelectorBB>;
     SelectorsBBVisible: TListVec<Pointer>;
     function OnSelectInstance(Instance: PRendererGraphicInstance): Pointer;
-    procedure UnSelectInstance(Instance: PRendererGraphicInstance; Associate: Pointer);
-    procedure OnResizeObject(Instance: PGraphicInstance; const Scale: TVec3f; const Point: TBBLimitPoint);
+    procedure UnSelectInstance(Instance: PRendererGraphicInstance;
+      Associate: Pointer);
+    procedure OnResizeObject(Instance: PGraphicInstance; const Scale: TVec3f;
+      const Point: TBBLimitPoint);
     function GetSelector: TBlackSharkSelectorBB;
   public
     constructor Create(ARenderer: TBlackSharkRenderer); override;
@@ -262,25 +250,35 @@ type
     class function TestName: string; override;
   end;
 
+  TBSTestTextStyles = class(TBSTestCanvasPrimitive)
+  private
+    FBold: TCanvasText;
+    FNotBold: TCanvasText;
+    FItalic: TCanvasText;
+    FBoldItalic: TCanvasText;
+    FUnderline: TCanvasText;
+    FStrikeout: TCanvasText;
+  public
+    constructor Create(ARenderer: TBlackSharkRenderer); override;
+    destructor Destroy; override;
+    function Run: boolean; override;
+    class function TestName: string; override;
+  end;
+
 implementation
 
 uses
-    bs.config
-  , bs.align
-  , bs.utils
-  , bs.mesh.primitives
-  ;
+  bs.config, bs.align, bs.utils, bs.mesh.primitives;
 
 { TBSTestCanvasPrimitive }
-
 constructor TBSTestCanvasPrimitive.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
   Allow3dManipulationByMouse := true;
-  //Renderer.Frustum.Angle := vec3(Renderer.Frustum.Angle.x, Renderer.Frustum.Angle.y + 90, Renderer.Frustum.Angle.z);
-  FCanvas := TBCanvas.Create(Renderer, Self);
+  // Renderer.Frustum.Angle := vec3(Renderer.Frustum.Angle.x, Renderer.Frustum.Angle.y + 90, Renderer.Frustum.Angle.z);
+  FCanvas := TBCanvas.Create(renderer, Self);
   FCanvas.StickOnScreen := false;
-  //FCanvas.Scalable := true;
+  // FCanvas.Scalable := true;
 end;
 
 destructor TBSTestCanvasPrimitive.Destroy;
@@ -295,21 +293,20 @@ begin
 end;
 
 { TBSTestCanvasTriangle }
-
 constructor TBSTestCanvasTriangle.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Triangle := TTriangle.Create(Canvas, nil);
+  Triangle := TTriangle.Create(canvas, nil);
   Triangle.Color := BS_CL_SKY;
-  Triangle.Fill := True;
-  //Triangle.Data.ScaleSimple := 0.5;
+  Triangle.Fill := true;
+  // Triangle.Data.ScaleSimple := 0.5;
   Triangle.C := vec2(0, 300);
   Triangle.B := vec2(150, 0);
   Triangle.A := vec2(300, 300);
-  if Canvas.Scalable then
+  if canvas.Scalable then
     Triangle.AnchorsReset;
   Triangle.Build;
-  //Triangle.Position2d := vec2(Renderer.WindowWidth * 0.1, Renderer.WindowHeight * 0.1);
+  // Triangle.Position2d := vec2(Renderer.WindowWidth * 0.1, Renderer.WindowHeight * 0.1);
 end;
 
 class function TBSTestCanvasTriangle.TestName: string;
@@ -318,27 +315,25 @@ begin
 end;
 
 { TBSTestCanvasLine }
-
 constructor TBSTestCanvasLine.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited Create(ARenderer);
-  Line := TLine.Create(Canvas, nil);
+  Line := TLine.Create(canvas, nil);
   Line.A := vec2(10, 30);
   Line.B := vec2(230, 400);
   Line.WidthLine := 3;
-  if Canvas.Scalable then
+  if canvas.Scalable then
     Line.AnchorsReset;
   Line.Build;
   Line.Position2d := vec2(100, 100);
-
-  LineStroke := TLine.Create(Canvas, nil);
+  LineStroke := TLine.Create(canvas, nil);
   LineStroke.WidthLine := 5.0;
   LineStroke.StrokeLength := 10.0;
   LineStroke.B := vec2(110.0, 300.0);
   LineStroke.A := vec2(320.0, 60.0);
   LineStroke.Color := BS_CL_ORANGE;
   LineStroke.Build;
-  if Canvas.Scalable then
+  if canvas.Scalable then
     LineStroke.AnchorsReset;
 end;
 
@@ -348,12 +343,11 @@ begin
 end;
 
 { TBSTestCanvasGrid }
-
 constructor TBSTestCanvasGrid.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Canvas.Scalable := true;
-  Grid := TGrid.Create(Canvas, nil);
+  canvas.Scalable := true;
+  Grid := TGrid.Create(canvas, nil);
   Grid.Size := vec2(300, 300);
   Grid.StepX := 10;
   Grid.StepY := 10;
@@ -361,7 +355,7 @@ begin
   Grid.VertLines := true;
   Grid.HorLines := true;
   Grid.Closed := true;
-  if Canvas.Scalable then
+  if canvas.Scalable then
     Grid.AnchorsReset;
   Grid.Build;
 end;
@@ -372,14 +366,14 @@ begin
 end;
 
 { TBSTestCanvasBiColoredSolidLines }
-
-constructor TBSTestCanvasBiColoredSolidLines.Create(ARenderer: TBlackSharkRenderer);
+constructor TBSTestCanvasBiColoredSolidLines.Create
+  (ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Lines := TBiColoredSolidLines.Create(Canvas, nil);
+  Lines := TBiColoredSolidLines.Create(canvas, nil);
   Lines.LineWidth := WIDTH_LINE;
   Lines.Draw(200, false, COUNT_LINES);
-  if Canvas.Scalable then
+  if canvas.Scalable then
     Lines.AnchorsReset;
   Lines.Position2d := vec2(0.0, 0.0);
 end;
@@ -390,13 +384,12 @@ begin
 end;
 
 { TBSTestCanvasLines }
-
 constructor TBSTestCanvasLines.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Canvas.Scalable := false;
-  Lines := TLines.Create(Canvas, nil);
-  if Canvas.Scalable then
+  canvas.Scalable := false;
+  Lines := TLines.Create(canvas, nil);
+  if canvas.Scalable then
     Lines.AnchorsReset;
   Lines.BeginUpdate;
   Lines.AddLine(vec2(30.0, 100.0), vec2(150.0, 340.0));
@@ -410,20 +403,19 @@ begin
 end;
 
 { TBSTestCanvasPath }
-
 constructor TBSTestCanvasPath.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Path := TPath.Create(Canvas, nil);
+  Path := TPath.Create(canvas, nil);
   Path.Closed := true;
-  //Path.WidthLine := 3.0;
+  // Path.WidthLine := 3.0;
   Path.ShowPoints := true;
   Path.InterpolateSpline := TInterpolateSpline.isNone;
   Path.AddPoint(vec2(100.0, 200.0));
   Path.AddPoint(vec2(200.0, 200.0));
   Path.AddPoint(vec2(200.0, 300.0));
-  //Path.AddPoint(vec2(100.0, 300.0));
-  if Canvas.Scalable then
+  // Path.AddPoint(vec2(100.0, 300.0));
+  if canvas.Scalable then
     Path.AnchorsReset;
   Path.Build;
 end;
@@ -434,18 +426,17 @@ begin
 end;
 
 { TBSTestCanvasPathArc }
-
 constructor TBSTestCanvasPathArc.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
   Allow3dManipulationByMouse := true;
-  Renderer.Frustum.DistanceFarPlane := 200;
-  Canvas.StickOnScreen := false;
-  Path := TPath.Create(Canvas, nil);
+  renderer.Frustum.DistanceFarPlane := 200;
+  canvas.StickOnScreen := false;
+  Path := TPath.Create(canvas, nil);
   Path.WidthLine := 3.0;
   Path.InterpolateSpline := TInterpolateSpline.isNone;
-  //Path.AddPoint(vec2(0.0, 0.0));
-  //Path.AddPoint(vec2(150.0, 100.0));
+  // Path.AddPoint(vec2(0.0, 0.0));
+  // Path.AddPoint(vec2(150.0, 100.0));
   Path.AddFirstArc(vec2(140.0, 150.0), 70.0, 190.0, 30);
   Path.AddArc(100.0, 30.0);
   Path.AddArc(150.0, -60.0);
@@ -453,7 +444,7 @@ begin
   Path.AddArc(90.0, 160.0);
   Path.AddArc(120.0, 130.0);
   Path.AddArc(100.0, -130.0);
-  if Canvas.Scalable then
+  if canvas.Scalable then
     Path.AnchorsReset;
   Path.Build;
 end;
@@ -464,23 +455,23 @@ begin
 end;
 
 { TBSTestCanvasPathMultiColored }
-
-constructor TBSTestCanvasPathMultiColored.Create(ARenderer: TBlackSharkRenderer);
+constructor TBSTestCanvasPathMultiColored.Create
+  (ARenderer: TBlackSharkRenderer);
 begin
   inherited;
   Allow3dManipulationByMouse := true;
-  Renderer.Frustum.DistanceFarPlane := 200;
-  Canvas.StickOnScreen := false;
-  Path := TPath.Create(Canvas, nil);
+  renderer.Frustum.DistanceFarPlane := 200;
+  canvas.StickOnScreen := false;
+  Path := TPath.Create(canvas, nil);
   Path.InterpolateSpline := TInterpolateSpline.isNone;
-  //Path.Data.ScaleSimple := 5.0;
-  //Path.ShowPoints := true;
+  // Path.Data.ScaleSimple := 5.0;
+  // Path.ShowPoints := true;
   Path.InterpolateFactor := 0.4;
   Path.WidthLine := 1.0;
   Path.StrokeLength := 10;
   Path.Color := BS_CL_GREEN;
-  //Path.AddPoint(vec2(0.0, 0.0));
-  //Path.AddPoint(vec2(150.0, 100.0));
+  // Path.AddPoint(vec2(0.0, 0.0));
+  // Path.AddPoint(vec2(150.0, 100.0));
   Path.AddFirstArc(vec2(140.0, 150.0), 70.0, 190.0, 30, BS_CL_GREEN);
   Path.AddArc(100.0, 30.0, BS_CL_ORANGE);
   Path.AddArc(150.0, -60.0, BS_CL_YELLOW);
@@ -490,17 +481,13 @@ begin
   Path.AddArc(100.0, -130.0, BS_CL_PURPLE);
   { adding a small snippet; this trick allows to exclude long interpolates colors between segments }
   Path.AddPoint(vec2(200.0, 360.0), TGuiColors.Green);
-
   Path.AddPoint(vec2(250.0, 360.0), TGuiColors.Yellow);
   Path.AddPoint(vec2(290.0, 200.0));
-  {Path.AddPoint(vec2(290.0, 230.0));
-
-  Path.AddPoint(vec2(310.0, 250.0), TGuiColors.Navy);
-  Path.AddPoint(vec2(340.0, 260.0));  }
-
-  if Canvas.Scalable then
+  { Path.AddPoint(vec2(290.0, 230.0));
+    Path.AddPoint(vec2(310.0, 250.0), TGuiColors.Navy);
+    Path.AddPoint(vec2(340.0, 260.0)); }
+  if canvas.Scalable then
     Path.AnchorsReset;
-
   Path.Build;
 end;
 
@@ -510,19 +497,18 @@ begin
 end;
 
 { TBSTestCanvasRoundRect }
-
 constructor TBSTestCanvasRoundRect.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Canvas.Scalable := false;
-  RoundRect := TRoundRect.Create(Canvas, nil);
+  canvas.Scalable := false;
+  RoundRect := TRoundRect.Create(canvas, nil);
   RoundRect.Size := vec2(200.0, 300.0);
   RoundRect.WidthLine := 5.0;
-  //RoundRect.Fill := true;
+  // RoundRect.Fill := true;
   RoundRect.Position2d := vec2(0.0, 0.0);
-  //RoundRect.Data.Opacity := 0.3;
-  //RoundRect.RadiusRound := 0;
-  if Canvas.Scalable then
+  // RoundRect.Data.Opacity := 0.3;
+  // RoundRect.RadiusRound := 0;
+  if canvas.Scalable then
     RoundRect.AnchorsReset;
   RoundRect.Build;
 end;
@@ -533,16 +519,17 @@ begin
 end;
 
 { TBSTestCanvasRoundRectTextured }
-
-constructor TBSTestCanvasRoundRectTextured.Create(ARenderer: TBlackSharkRenderer);
+constructor TBSTestCanvasRoundRectTextured.Create
+  (ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  RoundRect := TRoundRectTextured.Create(Canvas, nil);
+  RoundRect := TRoundRectTextured.Create(canvas, nil);
   RoundRect.Size := vec2(200.0, 300.0);
   RoundRect.Fill := true;
   RoundRect.Position2d := vec2(150.0, 180.0);
-  RoundRect.Texture := BSTextureManager.GenerateTexture(BS_CL_BLUE, BS_CL_ORANGE_2, TGradientType.gtRadialSquare, 32);
-  if Canvas.Scalable then
+  RoundRect.texture := BSTextureManager.GenerateTexture(BS_CL_BLUE,
+    BS_CL_ORANGE_2, TGradientType.gtRadialSquare, 32);
+  if canvas.Scalable then
     RoundRect.AnchorsReset;
   RoundRect.Build;
 end;
@@ -553,23 +540,23 @@ begin
 end;
 
 { TBSTestCanvasTexuredCircle }
-
 constructor TBSTestCanvasTexuredCircle.Create(ARenderer: TBlackSharkRenderer);
 var
   f_tex: string;
 begin
   inherited;
-  Circle := TCircleTextured.Create(Canvas, nil);
+  Circle := TCircleTextured.Create(canvas, nil);
   Circle.Fill := true;
-  if Canvas.Scalable then
+  if canvas.Scalable then
     Circle.AnchorsReset;
   f_tex := GetFilePath('Pictures\point_red_7x7.png');
   if FileExists(f_tex) then
   begin
-    Circle.Texture := BSTextureManager.LoadTexture(f_tex, true, true);
-    Circle.Radius := round(Circle.Texture.Rect.Width) shr 1 + 1;
+    Circle.texture := BSTextureManager.LoadTexture(f_tex, true, true);
+    Circle.Radius := round(Circle.texture.Rect.Width) shr 1 + 1;
     Circle.Build;
-    Circle.Position2d := vec2(Renderer.WindowWidth shr 1, Renderer.WindowHeight shr 1);
+    Circle.Position2d := vec2(renderer.WindowWidth shr 1,
+      renderer.WindowHeight shr 1);
   end;
 end;
 
@@ -579,15 +566,14 @@ begin
 end;
 
 { TBSTestCanvasArrow }
-
 constructor TBSTestCanvasArrow.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Arrow := TArrow.Create(Canvas, nil);
+  Arrow := TArrow.Create(canvas, nil);
   Arrow.A := vec2(100.0, 150.0);
   Arrow.B := vec2(300.0, 350.0);
   Arrow.SizeTip := vec2(10.0, 20.0);
-  if Canvas.Scalable then
+  if canvas.Scalable then
     Arrow.AnchorsReset;
   Arrow.Build;
 end;
@@ -598,28 +584,26 @@ begin
 end;
 
 { TBSTestArc }
-
 constructor TBSTestArc.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Arc := TArc.Create(Canvas, nil);
+  Arc := TArc.Create(canvas, nil);
   Arc.Radius := 200.0;
   Arc.Angle := 120;
   Arc.Fill := true;
   Arc.Color := BS_CL_RED;
-  if Canvas.Scalable then
+  if canvas.Scalable then
     Arc.AnchorsReset;
   Arc.Build;
   Arc.Position2d := vec2(10.0, 10.0);
-
-  Arc := TArc.Create(Canvas, nil);
+  Arc := TArc.Create(canvas, nil);
   Arc.Radius := 100.0;
   Arc.StartAngle := 150;
   Arc.LineWidth := 5;
   Arc.Angle := 80;
   Arc.Fill := false;
   Arc.Color := BS_CL_GREEN;
-  if Canvas.Scalable then
+  if canvas.Scalable then
     Arc.AnchorsReset;
   Arc.Build;
   Arc.Position2d := vec2(300.0, 250.0);
@@ -631,30 +615,28 @@ begin
 end;
 
 { TBSTestArcPos }
-
 constructor TBSTestArcPos.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
   // TODO: autotest
-  Arc := TArc.Create(Canvas, nil);
+  Arc := TArc.Create(canvas, nil);
   Arc.InterpolateFactor := 0.98;
   Arc.Radius := 200.0;
   Arc.Angle := 120;
   Arc.StartAngle := 200;
   Arc.Fill := true;
   Arc.Color := BS_CL_RED;
-  if Canvas.Scalable then
+  if canvas.Scalable then
     Arc.AnchorsReset;
   Arc.Build;
   Arc.Position2dCenter := vec2(250.0, 160.0);
-
-  Arc := TArc.Create(Canvas, nil);
+  Arc := TArc.Create(canvas, nil);
   Arc.Radius := 200.0;
   Arc.Angle := 120;
   Arc.StartAngle := 200;
   Arc.Fill := false;
   Arc.Color := BS_CL_RED;
-  if Canvas.Scalable then
+  if canvas.Scalable then
     Arc.AnchorsReset;
   Arc.Build;
   Arc.Layer2d := 2;
@@ -668,33 +650,30 @@ begin
 end;
 
 { TBSTestBezier }
-
 constructor TBSTestBezier.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited Create(ARenderer);
-  BezierL := TBezierLine.Create(Canvas, nil);
+  BezierL := TBezierLine.Create(canvas, nil);
   BezierL.A := vec2(100.0, 100.0);
   BezierL.B := vec2(200.0, 200.0);
   BezierL.ShowPoints := true;
-  if Canvas.Scalable then
+  if canvas.Scalable then
     BezierL.AnchorsReset;
   BezierL.Build;
   BezierL.Data.Caption := 'BezierL';
   BezierL.Position2d := vec2(300, 300);
-
-  BezierQ := TBezierQuadratic.Create(Canvas, nil);
+  BezierQ := TBezierQuadratic.Create(canvas, nil);
   BezierQ.Color := BS_CL_SKY_BLUE;
   BezierQ.A := vec2(0.0, 300.0);
   BezierQ.B := vec2(200.0, 50.0);
   BezierQ.C := vec2(430.0, 300.0);
   BezierQ.Quality := 0.02;
   BezierQ.ShowPoints := true;
-  if Canvas.Scalable then
+  if canvas.Scalable then
     BezierQ.AnchorsReset;
   BezierQ.Build;
   BezierQ.Data.Caption := 'BezierQ';
-
-  BezierC := TBezierCubic.Create(Canvas, nil);
+  BezierC := TBezierCubic.Create(canvas, nil);
   BezierC.Color := BS_CL_MONEY_GREEN;
   BezierC.A := vec2(100.0, 420.0);
   BezierC.B := vec2(420.0, 350.0);
@@ -704,7 +683,7 @@ begin
   BezierC.Color := BS_CL_ORANGE_2;
   BezierC.WidthLine := 3.0;
   BezierC.ShowPoints := true;
-  if Canvas.Scalable then
+  if canvas.Scalable then
     BezierC.AnchorsReset;
   BezierC.Build;
 end;
@@ -715,17 +694,17 @@ begin
 end;
 
 { TBSTestRectTextured }
-
 constructor TBSTestRectTextured.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Rectangle := TRectangleTextured.Create(Canvas, nil);
-  Rectangle.Texture := BSTextureManager.LoadTexture(GetFilePath('Pictures\snowflake.png'), true, true);
-  Rectangle.Size := Rectangle.Texture.Rect.Size;
+  Rectangle := TRectangleTextured.Create(canvas, nil);
+  Rectangle.texture := BSTextureManager.LoadTexture
+    (GetFilePath('Pictures\snowflake.png'), true, true);
+  Rectangle.Size := Rectangle.texture.Rect.Size;
   { we can set single color for texture by two properties below }
   Rectangle.ReplaceColor := true;
   Rectangle.Color := BS_CL_ORANGE_2;
-  if Canvas.Scalable then
+  if canvas.Scalable then
     Rectangle.AnchorsReset;
   Rectangle.Build;
 end;
@@ -736,16 +715,15 @@ begin
 end;
 
 { TBSTestPicture }
-
 constructor TBSTestPicture.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  //Canvas.Scalable := true;
-  Picture := TPicture.Create(Canvas, nil);
+  // Canvas.Scalable := true;
+  Picture := TPicture.Create(canvas, nil);
   Picture.Size := vec2(300.0, 300.0);
   Picture.AutoFit := false;
   Picture.WrapReapeated := true;
-  if Canvas.Scalable then
+  if canvas.Scalable then
     Picture.AnchorsReset;
   Picture.LoadFromFile(GetFilePath('Pictures\snowflake.png'));
 end;
@@ -756,16 +734,15 @@ begin
 end;
 
 { TBSTestTrapeze }
-
 constructor TBSTestTrapeze.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Trapeze := TTrapeze.Create(Canvas, nil);
+  Trapeze := TTrapeze.Create(canvas, nil);
   Trapeze.Fill := true;
   Trapeze.UpperBase := 200.0;
   Trapeze.LowerBase := 300.0;
   Trapeze.HeightBwBases := 100.0;
-  if Canvas.Scalable then
+  if canvas.Scalable then
     Trapeze.AnchorsReset;
   Trapeze.Build;
   Trapeze.Position2d := vec2(10.0, 20.0);
@@ -777,16 +754,15 @@ begin
 end;
 
 { TBSTestTrapezeRound }
-
 constructor TBSTestTrapezeRound.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Trapeze := TRoundTrapeze.Create(Canvas, nil);
+  Trapeze := TRoundTrapeze.Create(canvas, nil);
   Trapeze.Fill := true;
   Trapeze.UpperBase := 200.0;
   Trapeze.LowerBase := 300.0;
   Trapeze.HeightBwBases := 100.0;
-  if Canvas.Scalable then
+  if canvas.Scalable then
     Trapeze.AnchorsReset;
   Trapeze.Build;
   Trapeze.Position2d := vec2(120.0, 120.0);
@@ -802,26 +778,28 @@ end;
 constructor TBSTestText.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Text := TCanvasText.Create(Canvas, nil);
+  Text := TCanvasText.Create(canvas, nil);
   Text.CreateCustomFont;
-  //Text.Text := chr($D803)+chr($DC0C);
+  //Text.Text :=chr($D803)+chr($DC0C);
   Text.Text := 'Hello, world!';
-  ObsrvChangeFont := CreateEmptyObserver(Text.Font.OnChangeEvent, OnChangeFontEvent);
-  Text2 := TCanvasText.Create(Canvas, nil);
+  ObsrvChangeFont := CreateEmptyObserver(Text.font.OnChangeEvent,
+    OnChangeFontEvent);
+  Text2 := TCanvasText.Create(canvas, nil);
   Text2.CreateCustomFont;
   Text2.Text := 'Hi, people!';
   Text2.Position2d := vec2(20, 100);
-  ObsrvChangeFont2 := CreateEmptyObserver(Text2.Font.OnChangeEvent, OnChangeFontEvent2);
+  ObsrvChangeFont2 := CreateEmptyObserver(Text2.font.OnChangeEvent,
+    OnChangeFontEvent2);
 end;
 
 procedure TBSTestText.OnChangeFontEvent(const Value: BEmpty);
 begin
-  Text.Text := 'Hello, world! (' + IntToStr(Text.Font.SizeInPixels) + ')';
+  Text.Text := 'Hello, world! (' + IntToStr(Text.font.SizeInPixels) + ')';
 end;
 
 procedure TBSTestText.OnChangeFontEvent2(const Value: BEmpty);
 begin
-  Text2.Text := 'Hi, people! (' + IntToStr(Text2.Font.SizeInPixels) + ')';
+  Text2.Text := 'Hi, people! (' + IntToStr(Text2.font.SizeInPixels) + ')';
 end;
 
 class function TBSTestText.TestName: string;
@@ -830,11 +808,10 @@ begin
 end;
 
 { TBSTestRectangle }
-
 constructor TBSTestRectangle.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Rectangle := TRectangle.Create(Canvas, nil);
+  Rectangle := TRectangle.Create(canvas, nil);
   Rectangle.Fill := false;
   Rectangle.Size := vec2(150.0, 200.0);
   Rectangle.Build;
@@ -847,15 +824,13 @@ begin
 end;
 
 { TBSTestTextScalable }
-
 constructor TBSTestTextScalable.Create(ARenderer: TBlackSharkRenderer);
 var
   Rectangle: TRectangle;
 begin
   inherited;
-  Canvas.Scalable := true;
-
-  Rectangle := TRectangle.Create(Canvas, nil);
+  canvas.Scalable := true;
+  Rectangle := TRectangle.Create(canvas, nil);
   Rectangle.Color := BS_CL_BLUE;
   Rectangle.Data.Opacity := 0.3;
   Rectangle.Fill := true;
@@ -863,14 +838,12 @@ begin
   Rectangle.Build;
   Rectangle.Data.Interactive := true;
   Rectangle.Position2d := vec2(20.0, 20.0);
-
-  Text := TCanvasText.Create(Canvas, Rectangle);
+  Text := TCanvasText.Create(canvas, Rectangle);
   Text.Text := 'Test TCanvasText in scalable mode';
   Text.Data.Interactive := true;
-  //Text.CreateCustomFont;
+  // Text.CreateCustomFont;
   Text.Position2d := vec2(40.0, 300.0);
-  //Text.ToParentCenter;
-
+  // Text.ToParentCenter;
 end;
 
 class function TBSTestTextScalable.TestName: string;
@@ -879,7 +852,6 @@ begin
 end;
 
 { TBSTestLayout }
-
 constructor TBSTestLayout.Create(ARenderer: TBlackSharkRenderer);
 var
   layout: TCanvasLayout;
@@ -887,38 +859,34 @@ var
   child: TRectangle;
 begin
   inherited;
-  Canvas.Scalable := false;
-  Selector := TBlackSharkSelectorInstances.Create(Canvas, nil);
+  canvas.Scalable := false;
+  Selector := TBlackSharkSelectorInstances.Create(canvas, nil);
   Selector.OnSelectInstance := OnSelectInstance;
   Selector.OnUnSelectInstance := UnSelectInstance;
   SelectorsBB := TListVec<TBlackSharkSelectorBB>.Create;
   SelectorsBBVisible := TListVec<Pointer>.Create(@PtrCmp);
-
-  root := TRectangle.Create(Canvas, nil);
+  root := TRectangle.Create(canvas, nil);
   root.Size := vec2(300.0, 300.0);
   root.Fill := true;
   root.Position2d := vec2(20.0, 20.0);
   root.BanScalableMode := true;
   root.Build;
-  //root.Anchors[aRight] := true;
-  //root.Anchors[aBottom] := true;
-
-  layout := TCanvasLayout.Create(Canvas, root);
+  // root.Anchors[aRight] := true;
+  // root.Anchors[aBottom] := true;
+  layout := TCanvasLayout.Create(canvas, root);
   layout.Size := vec2(120, 150);
   layout.BanScalableMode := true;
   layout.Build;
-  layout.Align := TObjectAlign.oaLeft;
-
-  child := TRectangle.Create(Canvas, layout);
+  layout.align := TObjectAlign.oaLeft;
+  child := TRectangle.Create(canvas, layout);
   child.Fill := false;
   child.WidthLine := 3;
   child.Color := BS_CL_AQUA;
   child.Size := vec2(30, 30);
   child.Build;
-  //child.Position2d := vec2(50, 60);
-  child.Align := TObjectAlign.oaTop;
-
-  child := TRectangle.Create(Canvas, layout);
+  // child.Position2d := vec2(50, 60);
+  child.align := TObjectAlign.oaTop;
+  child := TRectangle.Create(canvas, layout);
   child.Fill := false;
   child.WidthLine := 3;
   child.Size := vec2(30, 50);
@@ -926,16 +894,14 @@ begin
   child.Build;
   child.MarginTop := 5;
   child.MarginBottom := 15;
-  child.Align := TObjectAlign.oaBottom;
-
-  child := TRectangle.Create(Canvas, layout);
+  child.align := TObjectAlign.oaBottom;
+  child := TRectangle.Create(canvas, layout);
   child.Fill := false;
   child.WidthLine := 3;
   child.Size := vec2(30, 50);
   child.Color := BS_CL_OLIVE;
   child.Build;
-  child.Align := TObjectAlign.oaBottom;
-
+  child.align := TObjectAlign.oaBottom;
 end;
 
 destructor TBSTestLayout.Destroy;
@@ -943,13 +909,10 @@ var
   i: int32;
 begin
   Selector.Free;
-
   for i := SelectorsBBVisible.Count - 1 downto 0 do
     TBlackSharkSelectorBB(SelectorsBBVisible.Items[i]).SelectItem := nil;
-
   for i := 0 to SelectorsBB.Count - 1 do
     SelectorsBB.Items[i].Free;
-
   SelectorsBB.Free;
   SelectorsBBVisible.Free;
   inherited;
@@ -960,12 +923,13 @@ begin
   if SelectorsBB.Count > 0 then
     Result := SelectorsBB.Pop
   else
-    Result := TBlackSharkSelectorBB.Create(Canvas);
+    Result := TBlackSharkSelectorBB.Create(canvas);
   Result.FixOppositeSideWhenResize := true;
   Result.OnResizeGraphicObjectInstance := OnResizeObject;
 end;
 
-procedure TBSTestLayout.OnResizeObject(Instance: PGraphicInstance; const Scale: TVec3f; const Point: TBBLimitPoint);
+procedure TBSTestLayout.OnResizeObject(Instance: PGraphicInstance;
+  const Scale: TVec3f; const Point: TBBLimitPoint);
 var
   delta: TVec2f;
   new_s, Pos, pos_old: TVec2i;
@@ -973,16 +937,16 @@ var
   obj_size: TVec2f;
 begin
   co := TCanvasObject(Instance.Owner.Owner);
-  if Canvas.Scalable and not co.BanScalableMode and not co.BanScalableModeSize then
-    obj_size := vec2(co.Width*Canvas.ScaleInv, co.Height*Canvas.ScaleInv)
+  if canvas.Scalable and not co.BanScalableMode and not co.BanScalableModeSize
+  then
+    obj_size := vec2(co.Width * canvas.ScaleInv, co.Height * canvas.ScaleInv)
   else
     obj_size := vec2(co.Width, co.Height);
-
   new_s := vec2(obj_size.Width * Scale.X, obj_size.Height * Scale.Y);
   delta := new_s - vec2(obj_size.Width, obj_size.Height);
   pos_old := co.Position2d;
   co.Resize(new_s.X, new_s.Y);
-  if co.Align = TObjectAlign.oaNone then
+  if co.align = TObjectAlign.oaNone then
   begin
     if ((Point[0] = xMin) or (Point[1] = yMax)) then
     begin
@@ -990,23 +954,26 @@ begin
         Pos := vec2(pos_old.X, pos_old.Y - delta.Y)
       else if (Point[0] = xMin) and (Point[1] = yMid) then { drag to the left }
         Pos := vec2(pos_old.X - delta.X, pos_old.Y)
-      else if (Point[0] = xMax) and (Point[1] = yMax) then { drag to the up-right }
+      else if (Point[0] = xMax) and (Point[1] = yMax)
+      then { drag to the up-right }
         Pos := vec2(pos_old.X, pos_old.Y - delta.Y)
-      else if (Point[0] = xMin) and (Point[1] = yMax) then { drag to the up-left }
+      else if (Point[0] = xMin) and (Point[1] = yMax)
+      then { drag to the up-left }
         Pos := vec2(pos_old.X - delta.X, pos_old.Y - delta.Y)
-      else if (Point[0] = xMin) and (Point[1] = yMin) then { drag to the down-left }
+      else if (Point[0] = xMin) and (Point[1] = yMin)
+      then { drag to the down-left }
         Pos := vec2(pos_old.X - delta.X, pos_old.Y)
       else
         Pos := pos_old;
     end
     else
       Pos := pos_old;
-
-    co.Position2d := pos;
+    co.Position2d := Pos;
   end;
 end;
 
-function TBSTestLayout.OnSelectInstance(Instance: PRendererGraphicInstance): Pointer;
+function TBSTestLayout.OnSelectInstance
+  (Instance: PRendererGraphicInstance): Pointer;
 var
   res: TBlackSharkSelectorBB;
 begin
@@ -1022,7 +989,8 @@ begin
   Result := 'bs.canvas.TCanvasLayout test';
 end;
 
-procedure TBSTestLayout.UnSelectInstance(Instance: PRendererGraphicInstance; Associate: Pointer);
+procedure TBSTestLayout.UnSelectInstance(Instance: PRendererGraphicInstance;
+  Associate: Pointer);
 var
   sel: TBlackSharkSelectorBB;
 begin
@@ -1033,39 +1001,37 @@ begin
 end;
 
 { TBSTestFreeShapeBase }
-
 constructor TBSTestFreeShape.Create(ARenderer: TBlackSharkRenderer);
 var
   mouth: TFreeShape;
 begin
   inherited;
-  Renderer.Color := BS_CL_SKY_BLUE;
-  FreeShape := TFreeShape.Create(Canvas, nil);
+  renderer.Color := BS_CL_SKY_BLUE;
+  FreeShape := TFreeShape.Create(canvas, nil);
   FreeShape.Interpolate := TInterpolateSpline.isCubicHermite;
   // body
   FreeShape.BeginContour;
-
   {
-  FreeShape.AddPoint(vec2(60, 180));
-  FreeShape.AddPoint(vec2(70, 210));
-  FreeShape.AddPoint(vec2(90, 240));
-  FreeShape.AddPoint(vec2(100, 250));
-  FreeShape.AddPoint(vec2(120, 280));
-  FreeShape.AddPoint(vec2(150, 300));
-  FreeShape.AddPoint(vec2(170, 310));
-  FreeShape.AddPoint(vec2(190, 290));
-  FreeShape.AddPoint(vec2(210, 280));
-  FreeShape.AddPoint(vec2(240, 260));
-  FreeShape.AddPoint(vec2(200, 240));
-  FreeShape.AddPoint(vec2(220, 220));
-  FreeShape.AddPoint(vec2(240, 200));
-  FreeShape.AddPoint(vec2(280, 180));
-  FreeShape.AddPoint(vec2(300, 150));
-  FreeShape.AddPoint(vec2(250, 120));
-  FreeShape.AddPoint(vec2(200, 20));
-  FreeShape.AddPoint(vec2(120, 50));
-  FreeShape.AddPoint(vec2(50, 80));
-  FreeShape.AddPoint(vec2(25, 100));
+    FreeShape.AddPoint(vec2(60, 180));
+    FreeShape.AddPoint(vec2(70, 210));
+    FreeShape.AddPoint(vec2(90, 240));
+    FreeShape.AddPoint(vec2(100, 250));
+    FreeShape.AddPoint(vec2(120, 280));
+    FreeShape.AddPoint(vec2(150, 300));
+    FreeShape.AddPoint(vec2(170, 310));
+    FreeShape.AddPoint(vec2(190, 290));
+    FreeShape.AddPoint(vec2(210, 280));
+    FreeShape.AddPoint(vec2(240, 260));
+    FreeShape.AddPoint(vec2(200, 240));
+    FreeShape.AddPoint(vec2(220, 220));
+    FreeShape.AddPoint(vec2(240, 200));
+    FreeShape.AddPoint(vec2(280, 180));
+    FreeShape.AddPoint(vec2(300, 150));
+    FreeShape.AddPoint(vec2(250, 120));
+    FreeShape.AddPoint(vec2(200, 20));
+    FreeShape.AddPoint(vec2(120, 50));
+    FreeShape.AddPoint(vec2(50, 80));
+    FreeShape.AddPoint(vec2(25, 100));
   }
   FreeShape.AddPoint(vec2(005, 693));
   FreeShape.AddPoint(vec2(157, 600));
@@ -1085,9 +1051,8 @@ begin
   FreeShape.AddPoint(vec2(790, 680));
   FreeShape.AddPoint(vec2(475, 785));
   FreeShape.AddPoint(vec2(205, 685));
-  //FreeShape.AddPoint(vec2(005, 693));
+  // FreeShape.AddPoint(vec2(005, 693));
   FreeShape.EndContour;
-
   // eyes
   // left
   FreeShape.BeginContour;
@@ -1104,7 +1069,6 @@ begin
   FreeShape.AddPoint(vec2(374, 456));
   FreeShape.AddPoint(vec2(397, 459));
   FreeShape.EndContour;
-
   FreeShape.BeginContour;
   FreeShape.AddPoint(vec2(388, 448));
   FreeShape.AddPoint(vec2(377, 445));
@@ -1116,7 +1080,6 @@ begin
   FreeShape.AddPoint(vec2(403, 445));
   FreeShape.AddPoint(vec2(397, 447));
   FreeShape.EndContour;
-
   // right
   FreeShape.BeginContour;
   FreeShape.AddPoint(vec2(583, 480));
@@ -1134,7 +1097,6 @@ begin
   FreeShape.AddPoint(vec2(575, 463));
   FreeShape.AddPoint(vec2(576, 475));
   FreeShape.EndContour;
-
   FreeShape.BeginContour;
   FreeShape.AddPoint(vec2(603, 471));
   FreeShape.AddPoint(vec2(593, 465));
@@ -1146,53 +1108,41 @@ begin
   FreeShape.AddPoint(vec2(619, 470));
   FreeShape.AddPoint(vec2(612, 470));
   FreeShape.EndContour;
-
   FreeShape.Build;
-
   FreeShape.Color := BS_CL_BLACK;
   FreeShape.Position2d := vec2(10.0, 10.0);
-
-  mouth := TFreeShape.Create(Canvas, FreeShape);
+  mouth := TFreeShape.Create(canvas, FreeShape);
   mouth.Interpolate := TInterpolateSpline.isCubicHermite;
   mouth.BeginContour;
   mouth.AddPoint(vec2(218, 511));
   mouth.AddPoint(vec2(282, 545));
   mouth.AddPoint(vec2(365, 576));
   mouth.AddPoint(vec2(419, 591));
-
   mouth.AddPoint(vec2(498, 602));
-
   mouth.AddPoint(vec2(588, 590));
   mouth.AddPoint(vec2(689, 550));
-
   mouth.AddPoint(vec2(731, 518));
   mouth.AddPoint(vec2(691, 594));
   mouth.AddPoint(vec2(629, 678));
   mouth.AddPoint(vec2(560, 733));
   mouth.AddPoint(vec2(538, 741));
-
   mouth.AddPoint(vec2(507, 745));
-
   mouth.AddPoint(vec2(475, 743));
   mouth.AddPoint(vec2(440, 732));
   mouth.AddPoint(vec2(403, 715));
   mouth.AddPoint(vec2(317, 653));
   mouth.AddPoint(vec2(259, 585));
   mouth.AddPoint(vec2(232, 536));
-
   mouth.EndContour;
   mouth.Build;
-  //mouth.Data.ScaleSimple := 0.5;
+  // mouth.Data.ScaleSimple := 0.5;
   mouth.Color := BS_CL_RED;
-  mouth.Position2d := vec2(218-5, 511-125);
-
-  //FreeShape.Data.ScaleSimple := 0.5;
-
+  mouth.Position2d := vec2(218 - 5, 511 - 125);
+  // FreeShape.Data.ScaleSimple := 0.5;
 end;
 
 destructor TBSTestFreeShape.Destroy;
 begin
-
   inherited;
 end;
 
@@ -1207,23 +1157,22 @@ begin
 end;
 
 { TBSTestCanvasLines2 }
-
 constructor TBSTestCanvasLines2.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Lines := TLines.Create(Canvas, nil);
-  if Canvas.Scalable then
+  Lines := TLines.Create(canvas, nil);
+  if canvas.Scalable then
     Lines.AnchorsReset;
   Lines.BeginUpdate;
-  //Lines.AddLine(vec2(0.0, 2.0), vec2(5.0, 2.0));
-  //Lines.AddLine(vec2(2.0, 0.0), vec2(2.0, 5.0));
+  // Lines.AddLine(vec2(0.0, 2.0), vec2(5.0, 2.0));
+  // Lines.AddLine(vec2(2.0, 0.0), vec2(2.0, 5.0));
   Lines.LinesWidth := 10;
   Lines.AddLine(vec2(0.0, 25.0), vec2(50.0, 25.0));
   Lines.AddLine(vec2(25.0, 0.0), vec2(25.0, 50.0));
   Lines.EndUpdate;
   Lines.Position2d := vec2(10.0, 10.0);
-  //Lines.Position2d := vec2(4.0, 7.0);
-  //Lines.ToParentCenter;
+  // Lines.Position2d := vec2(4.0, 7.0);
+  // Lines.ToParentCenter;
 end;
 
 class function TBSTestCanvasLines2.TestName: string;
@@ -1232,15 +1181,13 @@ begin
 end;
 
 { TBSTestFreeShape2 }
-
 constructor TBSTestFreeShape2.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  FreeShape := TFreeShape.Create(Canvas, nil);
+  FreeShape := TFreeShape.Create(canvas, nil);
   FreeShape.Interpolate := TInterpolateSpline.isNone;
   // body
   FreeShape.BeginContour;
-
   FreeShape.AddPoint(vec2(0.0, 0.0));
   FreeShape.AddPoint(vec2(10.0, 0.0));
   FreeShape.AddPoint(vec2(10.0, 30.0));
@@ -1261,7 +1208,6 @@ begin
   FreeShape.AddPoint(vec2(10.0, 70.0));
   FreeShape.AddPoint(vec2(10.0, 100.0));
   FreeShape.AddPoint(vec2(0.0, 100.0));
-
   FreeShape.EndContour;
   FreeShape.Build;
 end;
@@ -1282,7 +1228,88 @@ begin
   Result := 'Test number 2 TFreeShape';
 end;
 
+{ TBSTestTextStyles }
+
+constructor TBSTestTextStyles.Create(ARenderer: TBlackSharkRenderer);
+begin
+  inherited;
+  FBold := TCanvasText.Create(canvas, nil);
+  FBold.Bold := true;
+  FBold.Font.Size := 24;
+
+  FNotBold := TCanvasText.Create(canvas, nil);
+  FNotBold.CreateCustomFont;
+  FNotBold.Font.Size := FBold.font.Size;
+  FNotBold.Position2d := vec2(FBold.Position2d.X, FBold.Position2d.Y + FBold.font.SizeInPixels + 30);
+
+  FItalic := TCanvasText.Create(canvas, nil);
+  FItalic.CreateCustomFont;
+  FItalic.Italic := true;
+  FItalic.Font.Size := FBold.font.Size;
+//  FItalic.ItalicWeight := 0.6;
+  FItalic.Position2d := vec2(FNotBold.Position2d.X, FNotBold.Position2d.Y + FNotBold.Font.SizeInPixels + 30);
+
+  FBoldItalic := TCanvasText.Create(canvas, nil);
+  FBoldItalic.CreateCustomFont;
+  FBoldItalic.Italic := true;
+  FBoldItalic.Bold := true;
+  FBoldItalic.Font.Size := FBold.font.Size;
+  FBoldItalic.Position2d := vec2(FItalic.Position2d.X, FItalic.Position2d.Y + FItalic.font.SizeInPixels + 30);
+
+  FUnderline := TCanvasText.Create(canvas, nil);
+  FUnderline.CreateCustomFont;
+  FUnderline.Underline := true;
+  //FUnderline.Strikethrough := true;
+  FUnderline.Font.Size := FBold.font.Size;
+  FUnderline.Position2d := vec2(FBoldItalic.Position2d.X, FBoldItalic.Position2d.Y + FBoldItalic.Font.SizeInPixels + 30);
+  FUnderline.Data.Caption := 'Underline';
+  FUnderline.Data.Interactive := true;
+
+  FStrikeout := TCanvasText.Create(canvas, nil);
+  FStrikeout.CreateCustomFont;
+  FStrikeout.Strikethrough := true;
+  FStrikeout.Font.Size := FBold.font.Size;
+  FStrikeout.ColorLine := BS_CL_RED;
+
+end;
+
+destructor TBSTestTextStyles.Destroy;
+begin
+  FBold.Free;
+  FNotBold.Free;
+  FItalic.Free;
+  FBoldItalic.Free;
+  FUnderline.Free;
+  FStrikeout.Free;
+  inherited;
+end;
+
+function TBSTestTextStyles.Run: boolean;
+begin
+  Result := true;
+  //FBold.Text := #9619;
+  FBold.Text := '  This is Bold text';
+  FNotBold.Text := '  This is not Bold text';
+  FItalic.Text := '  This is Italic text';
+  FBoldItalic.Text := '  This is Bold and Italic text';
+
+  FUnderline.Text := '  This is Underline text,' + sLineBreak
+    + 'I like Underline text,' + sLineBreak
+    + 'such as this';
+
+  FStrikeout.Text := '    This is Strikeout text,' + sLineBreak
+    + 'I hate Strikeout text,' + sLineBreak
+    + 'such as this';
+  FStrikeout.Position2d := vec2(FUnderline.Position2d.X, FUnderline.Position2d.Y + FUnderline.Height + 20);
+end;
+
+class function TBSTestTextStyles.TestName: string;
+begin
+  Result := 'Text styles';
+end;
+
 initialization
+
   RegisterTest(TBSTestCanvasTriangle);
   RegisterTest(TBSTestCanvasLine);
   RegisterTest(TBSTestCanvasGrid);
@@ -1309,7 +1336,6 @@ initialization
   RegisterTest(TBSTestLayout);
   RegisterTest(TBSTestFreeShape);
   RegisterTest(TBSTestFreeShape2);
+  RegisterTest(TBSTestTextStyles);
 
 end.
-
-

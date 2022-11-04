@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -316,10 +316,15 @@ type
     Rect: TRectBSi;
   end;
 
+  TListFontNormals = TSingleList<TVec2f>;
+
   PGlyph = ^TGlyph;
   TGlyph = record
     xMin, yMin, xMax, yMax: BSFloat;
     Points: TBlackSharkTesselator.TListPoints.TSingleListHead;
+    // normals of points
+    //Normals: TListFontNormals.TSingleListHead;
+    EdgeNormals: TListFontNormals.TSingleListHead;
     Contours: TBlackSharkTesselator.TListContours.TSingleListHead;
   end;
 
@@ -393,11 +398,6 @@ type
     property OnChangeEvent: IBEmptyEvent read GetOnChangeEvent;
   end;
 
-  { TODO: TBSFontStyle }
-  TBSFontStyle = (fsBold, fsItalic, fsUnderline, fsStrikeOut);
-
-  TBSFontStyleSet = set of TBSFontStyle;
-
   { IBlackSharkFont }
 
   IBlackSharkFont = interface
@@ -425,6 +425,17 @@ type
     function GetCodePage: TCodePage; stdcall;
     procedure SetCodePage(const Value: TCodePage); stdcall;
     function GetName: string; stdcall;
+    function GetBold: boolean;
+    function GetBoldWeightX: BSFloat;
+    function GetBoldWeightY: BSFloat;
+    function GetItalic: boolean;
+    procedure SetBold(const Value: boolean);
+    procedure SetBoldWeightX(const Value: BSFloat);
+    procedure SetBoldWeightY(const Value: BSFloat);
+    procedure SetItalic(const Value: boolean);
+    function GetItalicWeight: BSFloat;
+    procedure SetItalicWeight(const Value: BSFloat);
+
     property AverageWidth: BSFloat read GetAverageWidth;
     property AverageHeight: BSFloat read GetAverageHeight;
     property OnChangeEvent: IBEmptyEvent read GetOnChangeEvent;
@@ -437,6 +448,11 @@ type
     property CountKeys: int32 read GetCountKeys;
     property CodePage: TCodePage read GetCodePage write SetCodePage;
     property Name: string read GetName;
+    property Bold: boolean read GetBold write SetBold;
+    property BoldWeightX: BSFloat read GetBoldWeightX write SetBoldWeightX;
+    property BoldWeightY: BSFloat read GetBoldWeightY write SetBoldWeightY;
+    property Italic: boolean read GetItalic write SetItalic;
+    property ItalicWeight: BSFloat read GetItalicWeight write SetItalicWeight;
   end;
 
   TClassFont = class of TBlackSharkCustomFont;
@@ -457,10 +473,24 @@ type
     FRefCount: int32;
     FPixelsPerInch: BSFloat;
     FPixelsPerMm: BSFloat;
-    FFontStyle: TBSFontStyleSet;
     FID: uint32;
-    procedure SetPixelsPerInch(const Value: BSFloat);
-    procedure DoCreateTexture(FontSize: int32);
+    FBold: boolean;
+    FBoldWeightX: BSFloat;
+    FBoldWeightY: BSFloat;
+    FItalic: boolean;
+    FItalicWeight: BSFloat;
+    procedure SetPixelsPerInch(const AValue: BSFloat);
+    procedure DoCreateTexture;
+    function GetBoldWeightY: BSFloat;
+    procedure SetBoldWeightY(const AValue: BSFloat);
+    function GetBold: boolean;
+    function GetBoldWeightX: BSFloat;
+    function GetItalic: boolean;
+    procedure SetBold(const AValue: boolean);
+    procedure SetBoldWeightX(const AValue: BSFloat);
+    procedure SetItalic(const AValue: boolean);
+    function GetItalicWeight: BSFloat;
+    procedure SetItalicWeight(const Value: BSFloat);
   protected
     RawDataFont: TBlackSharkCustomFont;
     FTexture: IFontTexture;
@@ -475,6 +505,7 @@ type
     FSizeInPixels: int16;
     FIsVectoral: boolean;
     FOnChangeEvent: IBEmptyEvent;
+    FBoldWeight: TVec2f;
     WasTriangulated: boolean;
     Selecting: boolean;
     FCountGlyphs: int32;
@@ -532,6 +563,7 @@ type
     procedure SetCodePage(const Value: TCodePage); stdcall;
     function GetName: string; stdcall;
     procedure OnChangeTexture(const {%H-}Value: BData); virtual;
+    function FontKey: string;
   public
     constructor Create(const AName: string); virtual;
     destructor Destroy; override;
@@ -569,9 +601,12 @@ type
     property PixelsPerInch: BSFloat read FPixelsPerInch write SetPixelsPerInch;
     property CodePage: TCodePage read FCodePage write SetCodePage;
     property IsVectoral: boolean read GetIsVectoral;
+    property Bold: boolean read GetBold write SetBold;
+    property BoldWeightX: BSFloat read GetBoldWeightX write SetBoldWeightX;
+    property BoldWeightY: BSFloat read GetBoldWeightY write SetBoldWeightY;
+    property Italic: boolean read GetItalic write SetItalic;
+    property ItalicWeight: BSFloat read GetItalicWeight write SetItalicWeight;
     property ID: uint32 read FID;
-    { TODO: FontStyle }
-    property FontStyle: TBSFontStyleSet read FFontStyle write FFontStyle;
     { for debug only }
     property RawData: TBlackSharkCustomFont read RawDataFont;
     property OnChangeEvent: IBEmptyEvent read GetOnChangeEvent;
@@ -614,6 +649,7 @@ type
     procedure CalculateContour(Key: PKeyInfo);
     function GetRawGlyph(Index: int32): PGlyph;
     procedure CheckKeyRect(Key: PKeyInfo);
+    procedure CopyContours(ASource, ADest: PKeyInfo; AScaleToSelf: boolean);
   public
     // raw glyph data containig loaded point contours
     RawGlyphs: TListGlyphs;
@@ -749,10 +785,9 @@ type
     class var FDefaultFont: IBlackSharkFont;
     { here containers without counting of references on objects because contain
       classes, not interfaces }
-    class var FontNames: TBinTree<TBlackSharkCustomFont>;
-    class var Textures: TBinTree<TFontTexture>;
-    class var RawFonts: TBinTree<TBlackSharkCustomFont>;
-    class var AllFonts: TListVec<TBlackSharkCustomFont>;
+    class var FontNames: THashTable<string, TBlackSharkCustomFont>;
+    class var Textures: THashTable<string, TFontTexture>;
+    class var RawFonts: THashTable<string, TBlackSharkCustomFont>;
     class var FFonts: TListVec<string>;
 
     class function GetRawFontData(const Name: string): TBlackSharkCustomFont;
@@ -787,6 +822,11 @@ type
 
 
 const
+  DEFAULT_SIZE = 10;
+  DEFAULT_BOLD_WEIGHT_X = 0.2;
+  DEFAULT_BOLD_WEIGHT_Y = 0.0;
+  DEFAULT_ITALIC_WEIGHT = 0.2;
+
   FONT_MAIN_HEADER: TFontMainHeader = (
     Signature: 'BSFT';
     Version: 0;
@@ -1009,15 +1049,22 @@ type
   var
     FontParser: TFontParser;
 
+procedure InitGlyph(var AGlyph: TGlyph); inline;
+begin
+  AGlyph.xMin :=  MaxInt;
+  AGlyph.yMin :=  MaxInt;
+  AGlyph.xMax := -MaxInt;
+  AGlyph.yMax := -MaxInt;
+  TBlackSharkTesselator.TListContours.Create(AGlyph.Contours);
+  TBlackSharkTesselator.TListPoints.Create(AGlyph.Points);
+  //TListFontNormals.Create(AGlyph.Normals);
+  TListFontNormals.Create(AGlyph.EdgeNormals);
+end;
+
 function CreateGlyph: PGlyph; inline;
 begin
   new(Result);
-  Result^.xMin :=  MaxInt;
-  Result^.yMin :=  MaxInt;
-  Result^.xMax := -MaxInt;
-  Result^.yMax := -MaxInt;
-  TBlackSharkTesselator.TListContours.Create(Result^.Contours);
-  TBlackSharkTesselator.TListPoints.Create(Result^.Points);
+  InitGlyph(Result^);
 end;
 
 procedure FreeGlyph(Glyph: PGlyph); inline;
@@ -1162,6 +1209,9 @@ var
 
     for i := 0 to rendered_data.Glyph.Contours.Count - 1 do
     begin
+      if rendered_data.Glyph.Contours.Items[i].CountPoints < 2 then
+        continue;
+
       new(befor);
       v0 := TVec2f(rendered_data.Glyph.Points.Items[rendered_data.Glyph.Contours.Items[i].PointIndexBegin + rendered_data.Glyph.Contours.Items[i].CountPoints - 1]);
       //befor.Point.x := (v0.x - rendered_data^.Glyph^.xMin)*FScale;
@@ -1183,6 +1233,7 @@ var
         v1 := TVec2f(rendered_data.Glyph.Points.Items[j]);
         if (abs(v1.x - befor.point.x) < EPSILON) and (abs(v1.y - befor.point.y) < EPSILON) then
           continue;
+
         new(ed);
         ed.Point.x := ToSubpixels(v1.x - rendered_data^.Glyph^.xMin);
         ed.Point.y := ToSubpixels(rendered_data^.Rect.Height - (v1.y - rendered_data^.Glyph^.yMin));
@@ -1198,10 +1249,12 @@ var
         befor := ed;
         v0f := v1f;
       end;
+
       if (abs(ed.Point.x - befor.point.x) < EPSILON) and (abs(ed.Point.y - befor.point.y) < EPSILON) then
       begin
         Edges.Remove(ed, otFromEnd);
         befor := Edges.Items[Edges.Count - 1];
+
         befor.Next := first;
         befor.Tang := 0; //arctan2(first.Point.y - befor.Point.y, first.Point.x - befor.Point.x);
         dispose(ed);
@@ -1502,6 +1555,8 @@ var
   cl, cl_dest: PByte;
   point: TVec2i;
   pixel: Byte;
+  copy_rendered_data: TKeyInfo;
+  copy_rendered_glyph: TGlyph;
 begin
 
   inherited Triangulate(Key); // triangulate TrueType contours to carrent size
@@ -1510,7 +1565,18 @@ begin
     exit;
 
   rendered_data := RawDataFont.Key[ Key^.Code ];
+
   raw_src := rendered_data;
+
+  if (FBold or FItalic) and not FIsVectoral then
+  begin
+    copy_rendered_data := rendered_data^;
+    FillChar(copy_rendered_glyph, SizeOf(copy_rendered_glyph), 0);
+    copy_rendered_data.Glyph := @copy_rendered_glyph;
+    //InitGlyph(copy_rendered_glyph);
+    CopyContours(rendered_data, @copy_rendered_data, false);
+    rendered_data := @copy_rendered_data;
+  end;
 
   if rendered_data.Indexes.Count < 3 then
     exit;
@@ -1523,10 +1589,10 @@ begin
   begin
 
     sx := (rendered_data.Glyph.xMax - rendered_data.Glyph.xMin)*FScale;
+    sy := round((rendered_data.Glyph.yMax - rendered_data.Glyph.yMin)*FScale);
     if sx - trunc(sx) >= PRECISION then
       new_size.x := trunc(sx + 1);
 
-    sy := round((rendered_data.Glyph.yMax - rendered_data.Glyph.yMin)*FScale);
     //if sy - trunc(sy) >= PRECISION then
     //  sy := trunc(sy + 1);
 
@@ -1548,7 +1614,7 @@ begin
       end;
 
 
-      if FSizeInPixels < 10 then
+      if FSizeInPixels < 11 then
       begin
 
         if FRastCont = nil then
@@ -1661,8 +1727,9 @@ begin
 
       end else
       begin
-        sx := new_size.x * 16 / rendered_data.Rect.Width;
-        sy := new_size.y * 32 / rendered_data.Rect.Height;
+        sx := new_size.x * 16 / (rendered_data.Glyph.xMax - rendered_data.Glyph.xMin);
+        sy := new_size.y * 32 / (rendered_data.Glyph.yMax - rendered_data^.Glyph^.yMin);
+
         FRasterizator.SetSize((16 * new_size.x), (32 * new_size.y));
         FRasterizator.Canvas.Clear;
         for i := 0 to raw_src.Indexes.Count div 3 - 1 do
@@ -1670,9 +1737,9 @@ begin
           v0 := TVec2f(rendered_data^.Glyph^.Points.Items[raw_src.Indexes.Items[i*3  ]]);
           v1 := TVec2f(rendered_data^.Glyph^.Points.Items[raw_src.Indexes.Items[i*3+1]]);
           v2 := TVec2f(rendered_data^.Glyph^.Points.Items[raw_src.Indexes.Items[i*3+2]]);
-          v0f := vec2((v0.x - rendered_data^.Glyph^.xMin)*sx, sy*(v0.y - rendered_data^.Glyph^.yMin));
-          v1f := vec2((v1.x - rendered_data^.Glyph^.xMin)*sx, sy*(v1.y - rendered_data^.Glyph^.yMin));
-          v2f := vec2((v2.x - rendered_data^.Glyph^.xMin)*sx, sy*(v2.y - rendered_data^.Glyph^.yMin));
+          v0f := vec2((v0.x - rendered_data.Glyph.xMin)*sx, sy*(v0.y - rendered_data^.Glyph^.yMin));
+          v1f := vec2((v1.x - rendered_data.Glyph.xMin)*sx, sy*(v1.y - rendered_data^.Glyph^.yMin));
+          v2f := vec2((v2.x - rendered_data.Glyph.xMin)*sx, sy*(v2.y - rendered_data^.Glyph^.yMin));
           FRasterizator.Canvas.DrawTriangle(v0f, v1f, v2f, true);
         end;
 
@@ -1686,15 +1753,8 @@ begin
       FTexture.AddRect(Key.Code, Key.TextureRect, tsUnicodeCS2);
     end;
 
-    Key^.Glyph^.yMin := round(raw_src^.Glyph^.yMin * ToSelfScale);
-
-    { reset leading (distance bw left side and first pixel) if more 0 for reduce distance bw symbols
-    }
+    { reset leading (distance bw left side and first pixel) if more 0 for reduce distance bw symbols }
     Key^.Glyph^.xMin := 0;
-    if raw_src^.Glyph^.xMin >= 0 then
-      Key^.Glyph^.xMin := 0
-    else
-      Key^.Glyph^.xMin := round(raw_src^.Glyph^.xMin * ToSelfScale);
     Key^.Glyph^.yMax := Key^.Glyph^.yMin + Key^.Rect.Height;
     Key^.Glyph^.xMax := Key^.Glyph^.xMin + Key^.Rect.Width;
 
@@ -2037,26 +2097,26 @@ var
     c_pos: int32;
     {%H-}max_arg, {%H-}min_arg: TVec2f;
   begin
-  c_pos := pos;
-  numberOfContours := int16(ReadUInt16(GlyphPointsTable, c_pos, true));
-  // calculate sign limits for glyph
-  // Minimum x for coordinate data.
-  min_arg.x := ReadUInt16(GlyphPointsTable, c_pos, true);
-  //if g^.xMin > arg16 then
-  //  g^.xMin := arg16;
-  // Minimum y for coordinate data.
-  min_arg.y := ReadUInt16(GlyphPointsTable, c_pos, true);
-  //if g^.yMin > arg16 then
-  //  g^.yMin := arg16;
-  // Maximum x for coordinate data.
-  max_arg.x := ReadUInt16(GlyphPointsTable, c_pos, true);
-  //if g^.xMax < arg16 then
-  //  g^.xMax := arg16;
-  // Maximum y for coordinate data.
-  max_arg.y := ReadUInt16(GlyphPointsTable, c_pos, true);
-  //if g^.yMax < arg16 then
-  //  g^.yMax := arg16;
-  Result := c_pos - Pos;
+    c_pos := pos;
+    numberOfContours := int16(ReadUInt16(GlyphPointsTable, c_pos, true));
+    // calculate sign limits for glyph
+    // Minimum x for coordinate data.
+    min_arg.x := ReadUInt16(GlyphPointsTable, c_pos, true);
+    //if g^.xMin > arg16 then
+    //  g^.xMin := arg16;
+    // Minimum y for coordinate data.
+    min_arg.y := ReadUInt16(GlyphPointsTable, c_pos, true);
+    //if g^.yMin > arg16 then
+    //  g^.yMin := arg16;
+    // Maximum x for coordinate data.
+    max_arg.x := ReadUInt16(GlyphPointsTable, c_pos, true);
+    //if g^.xMax < arg16 then
+    //  g^.xMax := arg16;
+    // Maximum y for coordinate data.
+    max_arg.y := ReadUInt16(GlyphPointsTable, c_pos, true);
+    //if g^.yMax < arg16 then
+    //  g^.yMax := arg16;
+    Result := c_pos - Pos;
   end;
 
   procedure ReturnContour(start, stop: int32);
@@ -2173,8 +2233,10 @@ var
           dec(coord, ReadUInt8(GlyphPointsTable, c_pos));
       end else
       if (flag and FLAG_X_TYPE = 0) then
-        inc(coord, ReadInt16(GlyphPointsTable, c_pos, true));// else
-        //dec(coord, ReadInt16(GlyphPointsTable, c_pos, true));
+        inc(coord, ReadInt16(GlyphPointsTable, c_pos, true)){
+      else
+        dec(coord, ReadInt16(GlyphPointsTable, c_pos, true))};
+
       v.x := coord;
       v.z := 0.0;
       TBlackSharkTesselator.TListPoints.Add(g.Points, v);
@@ -2207,8 +2269,9 @@ var
           dec(coord, ReadUInt8(GlyphPointsTable, c_pos));
       end else
       if (flag and FLAG_Y_TYPE = 0) then
-        inc(coord, ReadInt16(GlyphPointsTable, c_pos, true));// else
-        //dec(coord, ReadInt16(GlyphPointsTable, c_pos, true));
+        inc(coord, ReadInt16(GlyphPointsTable, c_pos, true)){
+      else
+        dec(coord, ReadInt16(GlyphPointsTable, c_pos, true))};
 
       v := g.Points.items[cp_start+i];
       v.y := coord;
@@ -2241,10 +2304,10 @@ var
           //angle_new_sum := angle_new;
         end;
 
-        if i + cp_start = end_point then
+        if (i + cp_start = end_point) and (end_point > 1) then
         begin // new contour
           CalcAngle(angle_old_sum, angle_old, v_befor_befor, v_first - TVec2f(v));
-          CalcAngle(angle_new_sum, angle_new, TVec2f(g.Points.items[end_point - 1]) - TVec2f(g.Points.items[cp_start + i - 2]), TVec2f(g.Points.items[begin_point]) - TVec2f(g.Points.items[end_point - 1]));
+          CalcAngle(angle_new_sum, angle_new, TVec2f(g.Points.items[end_point - 1]) - TVec2f(g.Points.items[end_point - 2]), TVec2f(g.Points.items[begin_point]) - TVec2f(g.Points.items[end_point - 1]));
           g.Contours.Items[index_cont].AsClockArr := angle_new_sum < 0;
           inc(index_cont);
           // check reflection contour
@@ -2294,7 +2357,7 @@ var
   var
     off, off_: int32;
     comp_index: int32;
-    comp_flags, arg1, arg2: uint16;
+    comp_flags, arg1, arg2: int32;
   begin
     off := Pos;
     repeat
@@ -2308,8 +2371,8 @@ var
       // further read arguments in dependence from compflags
       if (comp_flags and ARG_1_AND_2_ARE_WORDS <> 0) then
       begin // words
-        arg1 := ReadUInt16(GlyphPointsTable, off, true);
-        arg2 := ReadUInt16(GlyphPointsTable, off, true);
+        arg1 := ReadInt16(GlyphPointsTable, off, true);
+        arg2 := ReadInt16(GlyphPointsTable, off, true);
       end else
       begin // bytes
         arg1 := ReadUInt8(GlyphPointsTable, off);
@@ -2808,16 +2871,25 @@ begin
   // found raw data font
   sn := ChangeFileExt(ExtractFileName(FileName), '');
   res := GetRawFontData(sn);
+  {$ifdef DEBUG_FONT}
+  BSWriteMsg('BSFontManager.GetFont: GetRawFontData');
+  {$endif}
   if (res = nil) then
   begin
     // create prototype
     res := ClassFont.Create(sn);
+    {$ifdef DEBUG_FONT}
+    BSWriteMsg('BSFontManager.GetFont: ClassFont.Create', FileName);
+    {$endif}
     if not res.Load(GetFilePath(FileName, 'Fonts')) then
     begin
       FreeAndNil(res);
       exit;
     end;
   end;
+  {$ifdef DEBUG_FONT}
+  BSWriteMsg('BSFontManager.GetFont: src := res');
+  {$endif}
   src := res;
   { inc references on raw data font (so we store as class, not as interface) }
   res._AddRef;
@@ -2870,7 +2942,7 @@ var
   res: TBlackSharkCustomFont;
 begin
   Result := nil;
-  FontNames.Find(AnsiUpperCase(Name), res);
+  FontNames.Find(Name, res);
   if res = nil then
   begin
     if ExtractFileExt(Name) = '' then
@@ -2885,7 +2957,7 @@ end;
 
 class function BSFontManager.GetRawFontData(const Name: string): TBlackSharkCustomFont;
 begin
-  RawFonts.Find(AnsiUpperCase(Name), Result);
+  RawFonts.Find(Name, Result);
 end;
 
 class function BSFontManager.GetTexture(const Name: string; FontSize: int32; CountRects: uint32): IFontTexture;
@@ -2897,47 +2969,41 @@ begin
   begin
     edge := Ceil(Sqrt(CountRects)) * FontSize;
     res := TFontTexture.Create(edge, edge, FontSize > 9, Name);
-    Textures.Add(res.Texture.Name, res);
+    Textures.Items[res.Texture.Name] := res;
     Result := res;
   end else
     Result := res;
 end;
 
 class procedure BSFontManager.OnUpdateFont(const OldShortName: string; const Font: TBlackSharkCustomFont);
-var
-  f: TBlackSharkCustomFont;
 begin
   if (OldShortName <> '') then
-    FontNames.Remove(AnsiUpperCase(OldShortName));
-  if FontNames.Find(AnsiUpperCase(Font.ShortName), f) then
-    raise Exception.Create('The font already exists!');
-  FontNames.Add(AnsiUpperCase(Font.ShortName), Font);
+    FontNames.Delete(OldShortName);
+  FontNames.Items[Font.ShortName] := Font;
 end;
 
 class procedure BSFontManager.OnCreateFont(const Font: TBlackSharkCustomFont);
 var
   res: TBlackSharkCustomFont;
 begin
-  AllFonts.Add(Font);
   if Font.RawDataFont = nil then
-    RawFonts.Add(AnsiUpperCase(Font.ShortName), Font)
+    RawFonts.Items[Font.ShortName] := Font
   else
-  if not FontNames.Find(AnsiUpperCase(Font.ShortName), res) then
-    FontNames.Add(AnsiUpperCase(Font.ShortName), Font);
+  if not FontNames.Find(Font.ShortName, res) then
+    FontNames.Items[Font.ShortName] := Font;
 end;
 
 class procedure BSFontManager.OnDestroyFont(const Font: TBlackSharkCustomFont);
 begin
 
-  AllFonts.Remove(Font, otFromEnd);
-
   if (Font.RawDataFont <> nil) then
   begin
     if (Font.RawDataFont.RefCount = 1) then
-      RawFonts.Remove(AnsiUpperCase(Font.ShortName));
+      RawFonts.Delete(Font.ShortName);
     Font.RawDataFont._Release;
   end;
-  FontNames.Remove(AnsiUpperCase(Font.ShortName));
+
+  FontNames.Delete(Font.ShortName);
 
 end;
 
@@ -3014,10 +3080,9 @@ end;
 
 class constructor BSFontManager.Create;
 begin
-  FontNames := TBinTree<TBlackSharkCustomFont>.Create;
-  RawFonts := TBinTree<TBlackSharkCustomFont>.Create;
-  AllFonts := TListVec<TBlackSharkCustomFont>.Create(@PtrCmp);
-  Textures := TBinTree<TFontTexture>.Create;
+  FontNames := THashTable<string, TBlackSharkCustomFont>.Create(GetHashBlackSharkS, StrCmpBool);
+  RawFonts := THashTable<string, TBlackSharkCustomFont>.Create(GetHashBlackSharkS, StrCmpBool);
+  Textures := THashTable<string, TFontTexture>.Create(GetHashBlackSharkS, StrCmpBool);
   InitConvertTables;
 end;
 
@@ -3026,11 +3091,11 @@ begin
 
   FFonts.Free;
   FDefaultFont := nil;
+  Textures.Clear(true);
 
-  if AllFonts.Count > 0 then
+  if FontNames.Count > 0 then
     raise Exception.Create('Not all fonts were released! It means that some objects which use fonts didn''t release');
 
-  AllFonts.Free;
   FontNames.Free;
   RawFonts.Free;
   Textures.Free;
@@ -3041,7 +3106,7 @@ class procedure BSFontManager.FreeTexture(const Texture: TFontTexture);
 begin
   if Texture = nil then
     exit;
-  Textures.Remove(Texture.Texture.Name);
+  Textures.Delete(Texture.Texture.Name);
 end;
 
 class function BSFontManager.CreateDefaultFont: IBlackSharkFont;
@@ -3056,10 +3121,13 @@ end;
 constructor TBlackSharkCustomFont.Create(const AName: string);
 begin
   inherited Create;
+  FBoldWeightX := DEFAULT_BOLD_WEIGHT_X;
+  FBoldWeightY := DEFAULT_BOLD_WEIGHT_Y;
+  FItalicWeight := DEFAULT_ITALIC_WEIGHT;
   FGlyphs := TListGlyphs.Create;
   FShortName := AName;
   FScale := 1.0;
-  FSize := 10;
+  FSize := DEFAULT_SIZE;
   FPixelsPerInch := bs.graphics.PixelsPerInch;
   FPixelsPerMm := FPixelsPerInch/25.4;
   FSizeInPixels := round(FSize*TYPOGRAPHY_POINT_EURO*FPixelsPerMm);
@@ -3075,19 +3143,19 @@ begin
   BSFontManager.OnCreateFont(Self);
 end;
 
-procedure TBlackSharkCustomFont.DoCreateTexture(FontSize: int32);
+procedure TBlackSharkCustomFont.DoCreateTexture;
 var
   s: string;
   sqwr: int32;
   edge: int32;
 begin
-  s := IntToStr(FontSize) + FFileName;
+  s := FontKey;
   if Assigned(FTexture) then
   begin
     if FTexture.Texture.Name = s then
     begin
       sqwr := FTexture.Texture.Picture.Canvas.Square;
-      edge := Ceil(Sqrt(RawDataFont.FCountGlyphs + 10)) * FontSize + 2 + SIZE_BORDER*2;
+      edge := Ceil(Sqrt(RawDataFont.FCountGlyphs + 10)) * FSizeInPixels + 2 + SIZE_BORDER*2;
       if edge*edge > sqwr then
       begin
         ObserverChangeTexture := nil;
@@ -3098,9 +3166,9 @@ begin
   end;
 
   if Assigned(RawDataFont) then
-    FTexture := BSFontManager.GetTexture(s, FontSize + 2 + SIZE_BORDER*2, RawDataFont.FCountGlyphs + 10)
+    FTexture := BSFontManager.GetTexture(s, FSizeInPixels + 2 + SIZE_BORDER*2, RawDataFont.FCountGlyphs + 10)
   else
-    FTexture := BSFontManager.GetTexture(s, FontSize + 2 + SIZE_BORDER*2, FCountGlyphs);
+    FTexture := BSFontManager.GetTexture(s, FSizeInPixels + 2 + SIZE_BORDER*2, FCountGlyphs);
 
   Map := FTexture.Texture as TBlackSharkTextureMap;
   Map.BorderWidth := 0;
@@ -3110,7 +3178,7 @@ end;
 
 procedure TBlackSharkCustomFont.CreateTexture;
 begin
-  DoCreateTexture(FSizeInPixels);
+  DoCreateTexture;
 end;
 
 function TBlackSharkCustomFont.AddPair(TableSymbols: TTableSymbols; Code: uint32; IndexToGlyph: int32): PKeyInfo;
@@ -3131,6 +3199,8 @@ end;
 procedure TBlackSharkCustomFont.AfterConstruction;
 begin
   inherited;
+  AddGlyph(0);
+  AddPair(TTableSymbols.tsUnicodeCS2, $0a, 0);
   CalcScale;
 end;
 
@@ -3153,9 +3223,7 @@ begin
         ki^.UV := Font.FKeys[ts].Items[i].UV;
       end;
   end;
-  //s := FSize / Font.Size;
-  {FMaxHeight := Font.FScale * Font.FMaxHeight;
-  FMaxWidth := Font.FScale * Font.FMaxWidth;
+  {
   FMinHeight := Font.FScale * Font.FMinHeight;
   FMinWidth := Font.FScale * Font.FMinWidth;  }
   FScale := Font.FScale;
@@ -3166,6 +3234,11 @@ begin
   FSizeInPixels := Font.FSizeInPixels;
   FFileName := Font.FFileName;
   FShortName := Font.FShortName;
+  FBold := Font.FBold;
+  FBoldWeightX := Font.FBoldWeightX;
+  FBoldWeightY := Font.FBoldWeightY;
+  FItalic := Font.FItalic;
+  FItalicWeight := Font.FItalicWeight;
   //CalcContours;
 end;
 
@@ -3188,6 +3261,21 @@ begin
   Result := FAverageWidth;
 end;
 
+function TBlackSharkCustomFont.GetBold: boolean;
+begin
+  Result := FBold;
+end;
+
+function TBlackSharkCustomFont.GetBoldWeightX: BSFloat;
+begin
+  Result := FBoldWeightX;
+end;
+
+function TBlackSharkCustomFont.GetBoldWeightY: BSFloat;
+begin
+  Result := FBoldWeightX;
+end;
+
 function TBlackSharkCustomFont.GetCodePage: TCodePage;
 begin
   Result := FCodePage;
@@ -3201,6 +3289,16 @@ end;
 function TBlackSharkCustomFont.GetIsVectoral: boolean;
 begin
   Result := FIsVectoral;
+end;
+
+function TBlackSharkCustomFont.GetItalic: boolean;
+begin
+  Result := FItalic;
+end;
+
+function TBlackSharkCustomFont.GetItalicWeight: BSFloat;
+begin
+  Result := FItalicWeight;
 end;
 
 function TBlackSharkCustomFont.GetKey(CodeUTF16: uint16): PKeyInfo;
@@ -3224,8 +3322,12 @@ begin
         Result := nil;
     end;
 
+    try
     if Assigned(Result) and (((Result.Glyph = nil) or (Result.Glyph.Points.Count = 0)) or (Result.Indexes.Count = 0)) then
       Triangulate(Result);
+    except
+      Result.Glyph := Result.Glyph;
+    end;
 
   end else
     Result := nil;
@@ -3370,19 +3472,20 @@ var
 begin
   if Selecting then
     exit;
+
+  if ToSelfScale > 0 then
+    FBoldWeight := vec2(FSizeInPixels*FBoldWeightX*0.25, FSizeInPixels*FBoldWeightY*0.25)/ToSelfScale;
+
   BeginSelectChars;
-  //CalculatingCountours := true;
   try
     for s := low(s) to high(s) do
       if FKeys[s] <> nil then
         for i := 0 to FKeys[s].Count - 1 do
         begin
           k := FKeys[s].Items[i];
-          if (k <> nil) and (k^.Glyph <> nil) and (k^.Glyph^.Points.Count > 0) then
-          //if (k <> nil) and ((k^.Glyph = nil) or (k^.Glyph^.Points.Count > 0)) then
+          if Assigned(k) and Assigned(k^.Glyph) and (k^.Glyph^.Points.Count > 0) then
           begin
-            if k^.Glyph <> nil then
-              k^.Glyph^.Points.Count := 0;
+            k^.Glyph^.Points.Count := 0;
             k^.Indexes.Count := 0;
             Triangulate(k);
           end;
@@ -3410,9 +3513,9 @@ begin
       ga := RawDataFont.FGlyphs.Items[a.GlyphIndex];
 
     if Assigned(ga) then
-      FScale := FSizeInPixels / (ga.yMax)
+      FScale := (FSizeInPixels-1) / (ga.yMax)
     else
-      FScale := FSizeInPixels / RawDataFont.AverageHeight;
+      FScale := (FSizeInPixels-1) / RawDataFont.AverageHeight;
 
     ToSelfScale := FScale/RawDataFont.FScale;
     FAverageWidth := round(FScale * RawDataFont.FAverageWidth);
@@ -3436,6 +3539,7 @@ procedure TBlackSharkCustomFont.CheckBoundary(Glyph: PGlyph);
 begin
   if Glyph.xMax > 0 then
   begin
+
     if FAverageWidth = 0 then
       FAverageWidth := Glyph.xMax
     else
@@ -3444,6 +3548,7 @@ begin
 
   if Glyph.yMax > 0 then
   begin
+
     if FAverageHeight = 0 then
       FAverageHeight := Glyph.yMax
     else
@@ -3460,6 +3565,32 @@ begin
   Change;
 end;
 
+procedure TBlackSharkCustomFont.SetBold(const AValue: boolean);
+begin
+  if FBold = AValue then
+    exit;
+  FBold := AValue;
+  CalcContours;
+end;
+
+procedure TBlackSharkCustomFont.SetBoldWeightX(const AValue: BSFloat);
+begin
+  if FBoldWeightX = AValue then
+    exit;
+
+  FBoldWeightX := AValue;
+  CalcContours;
+end;
+
+procedure TBlackSharkCustomFont.SetBoldWeightY(const AValue: BSFloat);
+begin
+  if FBoldWeightY = AValue then
+    exit;
+
+  FBoldWeightY := AValue;
+  CalcContours;
+end;
+
 procedure TBlackSharkCustomFont.SetCodePage(const Value: TCodePage);
 begin
   FCodePage := Value;
@@ -3467,15 +3598,27 @@ end;
 
 procedure TBlackSharkCustomFont.SetIsVectoral(AValue: boolean);
 begin
+  if FBold = AValue then
   FIsVectoral := AValue;
   //Change;
 end;
 
-procedure TBlackSharkCustomFont.SetPixelsPerInch(const Value: BSFloat);
+procedure TBlackSharkCustomFont.SetItalic(const AValue: boolean);
 begin
-  if FPixelsPerInch = Value then
+  FItalic := AValue;
+end;
+
+procedure TBlackSharkCustomFont.SetItalicWeight(const Value: BSFloat);
+begin
+  FItalicWeight := Value;
+end;
+
+procedure TBlackSharkCustomFont.SetPixelsPerInch(const AValue: BSFloat);
+begin
+  if FPixelsPerInch = AValue then
     exit;
-  FPixelsPerInch := Value;
+
+  FPixelsPerInch := AValue;
   if FPixelsPerInch < 72 then
     FPixelsPerInch := 72;
 
@@ -3644,6 +3787,13 @@ begin
   FFileName := FileName;
   FShortName := ChangeFileExt(ExtractFileName(FFileName), '');
   Result := true;
+end;
+
+function TBlackSharkCustomFont.FontKey: string;
+begin
+  Result := IntToStr(FSizeInPixels) + FShortName
+    + BoolToStr(FBold) + IntToStr(trunc(FBoldWeightX*100)) + IntToStr(trunc(FBoldWeightY*100))
+    + BoolToStr(FItalic) + IntToStr(trunc(FItalicWeight*100));
 end;
 
 procedure TBlackSharkCustomFont.Triangulate(Key: PKeyInfo);
@@ -3846,6 +3996,40 @@ var
   p0p1p2: array[0..2] of TVec3f;
   glyph_raw: PGlyph;
   glyph_dst: PGlyph;
+  edgeNormal: TVec2f;
+  edgeNormalBefore: TVec2f;
+  MyFile: TextFile;
+
+  procedure AddPoint(const APoint: TVec3f);
+  var
+    v0: TVec3f;
+  begin
+
+    if glyph_dst.Points.Count > cp_all then
+    begin
+      v0 := APoint - glyph_dst.Points.Items[glyph_dst.Points.Count - 1];
+      if (abs(v0.y) < EPSILON) and (abs(v0.x) < EPSILON) then
+      begin
+        if glyph_dst.EdgeNormals.Count > 0 then
+          TListFontNormals.Add(glyph_dst.EdgeNormals, glyph_dst.EdgeNormals.Items[glyph_dst.EdgeNormals.Count - 1]);
+        exit;
+      end;
+
+      edgeNormal := VecNormalize(vec2(v0.y, -v0.x));
+
+//      if glyph_dst.Points.Count - 1 > cp_all then
+//      begin
+//        glyph_dst.Normals.Items[glyph_dst.Normals.Count - 1] := (edgeNormalBefore + edgeNormal)*0.5;
+//        TListFontNormals.Add(glyph_dst.Normals, edgeNormal);
+//      end;
+
+      TListFontNormals.Add(glyph_dst.EdgeNormals, edgeNormal);
+      edgeNormalBefore := edgeNormal;
+    end;
+
+    TBlackSharkTesselator.TListPoints.Add(glyph_dst.Points, APoint);
+    CheckGlyphBoundary(glyph_dst, APoint);
+  end;
 
   procedure CalcQuadCurve;
   var
@@ -3854,17 +4038,12 @@ var
     // quadratic curve:
     // B(t) = (1-t)^2*P0 + 2t(1-t)*P1 + t^2*P2
     t := FQuality;
-    TBlackSharkTesselator.TListPoints.Add(glyph_dst.Points, p0p1p2[0]*FScale);
-    CheckGlyphBoundary(glyph_dst, glyph_dst.Points.Items[glyph_dst.Points.Count - 1]);
+    AddPoint(p0p1p2[0]*FScale);
     while t < 1 do
     begin
       t1 := 1 - t;
-      TBlackSharkTesselator.TListPoints.Add(glyph_dst.Points,
-        (p0p1p2[0] * t1 * t1 +
-        p0p1p2[1] * 2 * t * t1 +
-        p0p1p2[2] * t * t)*FScale);
+      AddPoint((p0p1p2[0] * t1 * t1 + p0p1p2[1] * 2 * t * t1 + p0p1p2[2] * t * t)*FScale);
       t := t + FQuality;
-      CheckGlyphBoundary(glyph_dst, glyph_dst.Points.Items[glyph_dst.Points.Count - 1]);
     end;
   end;
 
@@ -3875,10 +4054,13 @@ begin
   glyph_raw := GetRawGlyph(Key^.GlyphIndex);
   glyph_dst^.Contours.Count := 0;
   glyph_dst^.Points.Count := 0;
+  //glyph_dst^.Normals.Count := 0;
   glyph_dst^.xMin := glyph_raw^.xMin*FScale;
   glyph_dst^.xMax := glyph_raw^.xMax*FScale;
   glyph_dst^.yMin := glyph_raw^.yMin*FScale;
   glyph_dst^.yMax := glyph_raw^.yMax*FScale;
+  edgeNormalBefore := vec2(0.0, 0.0);
+
   // calculate curves and collect all points for all contours
   for j := 0 to glyph_raw^.Contours.Count - 1 do
   begin
@@ -3886,15 +4068,21 @@ begin
     // count collected curve point (max = 3)
     c_curve := 0;
     trig := 0;
+    //TListFontNormals.Add(glyph_dst.Normals, edgeNormalBefore);
+    TListFontNormals.Add(glyph_dst.EdgeNormals, edgeNormalBefore);
+
     for k := 0 to glyph_raw.Contours.items[j].CountPoints + 1 do
     begin
       i := glyph_raw.Contours.items[j].PointIndexBegin + k mod glyph_raw.Contours.items[j].CountPoints;
       indexes[c_curve] := i;
       inc(c_curve);
+
       if (glyph_raw.Points.items[i].z <> 0) then
         inc(trig, TRIGGERS[c_curve]);
+
       if c_curve < 3 then
         continue;
+
       case trig of
         0: begin // 000 - all off the curve
           p0p1p2[0] := (glyph_raw.Points.items[indexes[0]] + glyph_raw.Points.items[indexes[1]]) * 0.5;
@@ -3907,7 +4095,7 @@ begin
           p0p1p2[2] := (p0p1p2[1] + glyph_raw.Points.items[indexes[2]]) * 0.5;
         end;
         3: begin // 110 - 0, 1 points - on the curve - direct line, not used for calculate curve
-          TBlackSharkTesselator.TListPoints.Add(glyph_dst.Points, glyph_raw.Points.items[indexes[0]]*FScale);
+          AddPoint(glyph_raw.Points.items[indexes[0]]*FScale);
           trig := trig shr 1;
           c_curve := 2;
           indexes[0] := indexes[1];
@@ -3925,8 +4113,8 @@ begin
           p0p1p2[2] := glyph_raw.Points.items[indexes[2]];
         end;
         7: begin // 111 0, 1, 2 - on the curve - two direct line, not used for calculate curve
-          TBlackSharkTesselator.TListPoints.Add(glyph_dst.Points, glyph_raw.Points.items[indexes[0]]*FScale);
-          TBlackSharkTesselator.TListPoints.Add(glyph_dst.Points, glyph_raw.Points.items[indexes[1]]*FScale);
+          AddPoint(glyph_raw.Points.items[indexes[0]]*FScale);
+          AddPoint(glyph_raw.Points.items[indexes[1]]*FScale);
           trig := trig shr 2;
           c_curve := 1;
           indexes[0] := indexes[2];
@@ -3949,11 +4137,52 @@ begin
       CalcQuadCurve;
     end;
 
+    if j = 15 then
+      cp_all := cp_all;
+
+    // for last and first points normals
+    for k := cp_all to glyph_dst.Points.Count - 3 do
+    begin
+
+      p0p1p2[0] := glyph_dst.Points.Items[k] - glyph_dst.Points.Items[glyph_dst.Points.Count - 1];
+      if (abs(p0p1p2[0].y) < EPSILON) and (abs(p0p1p2[0].x) < EPSILON) then
+      begin
+        if glyph_dst.EdgeNormals.Count > 0 then
+          TListFontNormals.Add(glyph_dst.EdgeNormals, glyph_dst.EdgeNormals.Items[glyph_dst.EdgeNormals.Count - 1]);
+        continue;
+      end;
+
+      edgeNormal := VecNormalize(vec2(p0p1p2[0].y, -p0p1p2[0].x));
+
+      //glyph_dst.Normals.Items[glyph_dst.Normals.Count - 1] := (edgeNormalBefore + edgeNormal)*0.5;
+
+      edgeNormalBefore := edgeNormal;
+
+      glyph_dst.EdgeNormals.Items[cp_all] := edgeNormal;
+
+//      for i := k to glyph_dst.Points.Count - 3 do
+//      begin
+//
+//        p0p1p2[0] := glyph_dst.Points.Items[i + 1] - glyph_dst.Points.Items[i];
+//        if (abs(p0p1p2[0].y) < EPSILON) and (abs(p0p1p2[0].x) < EPSILON) then
+//          continue;
+//
+//        glyph_dst.Normals.Items[cp_all] := (edgeNormalBefore + VecNormalize(vec2(p0p1p2[0].y, -p0p1p2[0].x)))*0.5;
+//
+//        break;
+//
+//      end;
+
+      break;
+    end;
+
     cntr := TBlackSharkTesselator.Contour(cp_all, glyph_dst^.Points.Count - cp_all);
     cntr.Group := glyph_raw.Contours.items[j].Group;
     cntr.AsClockArr := glyph_raw.Contours.items[j].AsClockArr;
     TBlackSharkTesselator.TListContours.Add(glyph_dst.Contours, cntr);
+
   end;
+
 end;
 
 procedure TTrueTypeFont.CheckKeyRect(Key: PKeyInfo);
@@ -3991,6 +4220,90 @@ begin
   RawGlyphs.Count := 0;
 end;
 
+procedure TTrueTypeFont.CopyContours(ASource, ADest: PKeyInfo; AScaleToSelf: boolean);
+var
+  i, j, up_index: int32;
+  p: TVec3f;
+  off: TVec2f;
+  edgeNormal: TVec2f;
+  a: BSFloat;
+  s: BSFloat;
+begin
+  TBlackSharkTesselator.TListIndexes.CheckCapacity(ADest^.Indexes, ASource.Indexes.Count);
+  TBlackSharkTesselator.TListPoints.CheckCapacity(ADest^.Glyph^.Points, ASource.Glyph.Points.Count);
+  TBlackSharkTesselator.TListContours.CheckCapacity(ADest^.Glyph^.Contours, ASource.Glyph.Contours.Count);
+  ADest.Indexes.Count := ASource.Indexes.Count;
+  ADest.Glyph.Contours.Count := ASource.Glyph.Contours.Count;
+  ADest.Glyph^.Points.Count := ASource.Glyph.Points.Count;
+  move(ASource.Indexes.Items[0], ADest.Indexes.Items[0], ASource.Indexes.Count*SizeOf(BSShort));
+
+  if AScaleToSelf then
+    s := ToSelfScale
+  else
+    s := 1;
+
+  if FBold then
+  begin
+    ADest.Glyph^.xMax := round((ASource^.Glyph^.xMax + FBoldWeight.x) * s);
+    ADest.Glyph^.xMin := round((ASource^.Glyph^.xMin - FBoldWeight.x) * s);
+    ADest.Glyph^.yMax := round((ASource^.Glyph^.yMax + FBoldWeight.y) * s);
+    ADest.Glyph^.yMin := round((ASource^.Glyph^.yMin - FBoldWeight.y) * s);
+  end else
+  begin
+    ADest.Glyph^.xMax := round(ASource^.Glyph^.xMax * s);
+    ADest.Glyph^.xMin := round(ASource^.Glyph^.xMin * s);
+    ADest.Glyph^.yMax := round(ASource^.Glyph^.yMax * s);
+    ADest.Glyph^.yMin := round(ASource^.Glyph^.yMin * s);
+  end;
+
+  if FItalic then
+    ADest.Glyph^.xMax := ADest.Glyph^.xMax + (ADest^.Glyph^.yMax - ADest^.Glyph^.yMin)*FItalicWeight;
+
+  for i := 0 to ASource.Glyph.Contours.Count - 1 do
+  begin
+    ADest^.Glyph^.Contours.Items[i] := ASource.Glyph.Contours.Items[i];
+    up_index := ASource.Glyph.Contours.Items[i].PointIndexBegin + ASource.Glyph.Contours.Items[i].CountPoints - 1;
+    for j := ASource.Glyph.Contours.Items[i].PointIndexBegin to up_index do
+    begin
+      p := ASource.Glyph.Points.Items[j];
+      if FBold then
+      begin
+
+        off := ASource.Glyph.EdgeNormals.Items[j]*FBoldWeight;
+
+        if j > ASource.Glyph.Contours.Items[i].PointIndexBegin then
+        begin
+          edgeNormal := ASource.Glyph.EdgeNormals.Items[j-1];
+          edgeNormal := vec2(edgeNormal.y, -edgeNormal.x);
+          a := VecDot(edgeNormal, ASource.Glyph.EdgeNormals.Items[j]);
+
+          ADest.Glyph.Points.Items[j-1] := ADest.Glyph.Points.Items[j-1] - edgeNormal*VecLen(off)*a*s;
+
+          if j = up_index then
+            p := ADest.Glyph.Points.Items[up_index];
+        end else
+        begin
+          edgeNormal := ASource.Glyph.EdgeNormals.Items[up_index];
+          edgeNormal := vec2(edgeNormal.y, -edgeNormal.x);
+          a := VecDot(edgeNormal, ASource.Glyph.EdgeNormals.Items[j]);
+          ADest.Glyph.Points.Items[up_index] := ASource.Glyph.Points.Items[up_index] - edgeNormal*VecLen(off)*a;
+        end;
+        p := p - off;
+
+      end;
+
+      if FItalic then
+      begin
+        // TODO: where is real contours for italic?
+        p.x := p.x + (p.y - ASource^.Glyph^.yMin)*FItalicWeight;
+      end;
+
+      ADest.Glyph.Points.Items[j] := p * s;
+    end;
+
+  end;
+end;
+
 function TTrueTypeFont.Load(const FileName: string): boolean;
 begin
   inherited;
@@ -4006,10 +4319,6 @@ procedure TTrueTypeFont.Triangulate(Key: PKeyInfo);
 var
   MAX_INT: BSFloat;
   raw_k: PKeyInfo;
-  i: int32;
-  {$ifdef DEBUG_FONT}
-  t: uint32;
-  {$endif}
 begin
   WasTriangulated := true;
   if Key^.Glyph = nil then
@@ -4021,30 +4330,23 @@ begin
     dec(FTriangulatedKeys);
   end;
 
+  if Key.Glyph.Contours.Count > 30 then
+    Key.Glyph.Contours.Count := Key.Glyph.Contours.Count;
+
+  if Key^.GlyphIndex = 2118 then
+    Key^.GlyphIndex := Key^.GlyphIndex;
   // calculate contours only for raw font is sourses of data
   if (RawDataFont = nil) and (Key^.Glyph^.Points.Count = 0) then
   begin
-    {$ifdef DEBUG_FONT}
-    t := TBTimer.CurrentTime.Low;
-    {$endif}
     CalculateContour(Key);
-    {$ifdef DEBUG_FONT}
-    inc(CountCalcContours, TBTimer.CurrentTime.Low - t);
-    {$endif}
   end;
 
   // triangulate
   if (Key^.Indexes.Count = 0) and (Key^.Glyph^.Points.Count > 3) then
   begin
-    {$ifdef DEBUG_FONT}
-    t := TBTimer.CurrentTime.Low;
-    {$endif}
     Tesselator.Triangulate(Key^.Glyph^.Points, Key^.Glyph^.Contours, Key^.Indexes);
     if (Key^.Indexes.Count > 3) then
       inc(FTriangulatedKeys);
-    {$ifdef DEBUG_FONT}
-    inc(CountTimeTriangulate, TBTimer.CurrentTime.Low - t);
-    {$endif}
   end;
 
   if RawDataFont <> nil then
@@ -4056,17 +4358,7 @@ begin
   begin
     if (Key^.Glyph^.Points.Count = 0) then
     begin
-      TBlackSharkTesselator.TListIndexes.CheckCapacity(Key^.Indexes, raw_k.Indexes.Count);
-      TBlackSharkTesselator.TListPoints.CheckCapacity(Key^.Glyph^.Points, raw_k.Glyph.Points.Count);
-      Key.Indexes.Count := raw_k.Indexes.Count;
-      Key^.Glyph^.Points.Count := raw_k.Glyph.Points.Count;
-      for i := 0 to raw_k.Glyph.Points.Count - 1 do
-        Key^.Glyph.Points.Items[i] := raw_k.Glyph.Points.Items[i] * ToSelfScale;
-      move(raw_k.Indexes.Items[0], Key^.Indexes.Items[0], raw_k.Indexes.Count*SizeOf(BSShort));
-      Key^.Glyph^.xMax := round(raw_k^.Glyph^.xMax * ToSelfScale);
-      Key^.Glyph^.xMin := round(raw_k^.Glyph^.xMin * ToSelfScale);
-      Key^.Glyph^.yMax := round(raw_k^.Glyph^.yMax * ToSelfScale);
-      Key^.Glyph^.yMin := round(raw_k^.Glyph^.yMin * ToSelfScale);
+      CopyContours(raw_k, Key, true);
     end else
     begin
       Key^.Glyph^.xMax := raw_k^.Glyph^.xMax;

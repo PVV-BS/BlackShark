@@ -1327,8 +1327,10 @@ var
             SetLength(values, c+4);
         end;
         if (s[k] = '/') then
-          inc(Result)
-        else
+        begin
+          if (s[k-1] <> '/') then
+            inc(Result);
+        end else
         if (s[k] = ' ') then
         begin
           inc(CountGroups);
@@ -1427,7 +1429,10 @@ begin
         for j := 0 to count_groups - 1 do
         begin
           // index vertex
-          index := StrToInt(values[j*groupe_size])-1;
+          if not TryStrToInt(values[j*groupe_size], index) then
+            continue;
+
+          dec(index);
           begin
             index_vert := Result.AddVertex(Vertexes.Items[index]);
             if (uv_load) and (values[j*groupe_size+1] <> '') then

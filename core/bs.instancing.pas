@@ -97,7 +97,7 @@ type
     procedure SetScale(AIndex: int32; const Value: BSFloat);
     function GetColor(AIndex: int32): TColor4f;
     procedure SetColor(AIndex: int32; const Value: TColor4f);
-    procedure TryCreateMvpVbo;
+    //procedure TryCreateMvpVbo;
   protected
     procedure SetPrototype(const Value: TObjectVertexes); virtual;
     procedure SetCountInstance(const Value: int32); virtual;
@@ -617,7 +617,7 @@ const
     Angle: (x:0.0; y: 0.0; z: 0.0);
     Position: (x:0.0; y: 0.0; z: 0.0);
     Color: (x:1.0; y:0.5; z:0.0; a:1.0);
-    IsVisible: (false));
+    IsVisible: false);
 begin
   FRenderer := ARenderer;
   Instances := TListVec<TInstance>.Create(InstanceComparator);
@@ -641,6 +641,7 @@ var
   i: int32;
 begin
 
+  {$ifndef ultibo}
   if MvpVBO > 0 then
   begin
     { hardware Instansing }
@@ -656,6 +657,7 @@ begin
     // it does not work
     glDrawElementsInstanced(FPrototype.Mesh.DrawingPrimitive, FPrototype.Mesh.Indexes.Count, FPrototype.Mesh.Indexes.Kind, nil, 1);  //FCountInstance
   end else
+  {$endif}
   begin
     { software Instansing }
 
@@ -837,31 +839,33 @@ begin
 end;
 
 
-procedure TBlackSharkInstancing.TryCreateMvpVbo;
-var
-  shaderNameInstanced: string;
-begin
-  shaderNameInstanced := GetFilePath(FPrototype.Shader.Name + '.Ins.vsh', 'Shaders');
-
-  if FileExists(shaderNameInstanced) then
-  begin
-    // set instanced shader, which accepts mvp as attribute of a vertex
-    FPrototype.Shader := BSShaderManager.Load(shaderNameInstanced, ExtractFilePath(shaderNameInstanced) + FPrototype.Shader.Name + '.fsh', TBlackSharkShaderClass(FPrototype.Shader.ClassType), false);
-    MvpAttr := FPrototype.Shader.Attribute['MVP'];
-    CreateVBO(mvpVBO, GL_ARRAY_BUFFER, nil, 0);
-
-    glBindVertexArray(FPrototype.VAO);
-    FPrototype.Shader.UseProgram(true);
-    FPrototype.BindVBO;
-    glBindBuffer(GL_ARRAY_BUFFER, MvpVBO);
-    glEnableVertexAttribArray(MvpAttr.Location);
-    glVertexAttribPointer( MvpAttr.Location, 16, GL_FLOAT, GL_FALSE, sizeof ( TMatrix4f ), nil);
-    // One MVP per instance
-    glVertexAttribDivisor(MvpAttr.Location, 1);
-    glBindVertexArray(GL_NONE);
-  end;
-end;
-
+//procedure TBlackSharkInstancing.TryCreateMvpVbo;
+//var
+//  shaderNameInstanced: string;
+//begin
+//  shaderNameInstanced := GetFilePath(FPrototype.Shader.Name + '.Ins.vsh', 'Shaders');
+//
+//  {$ifndef ultibo}
+//  if FileExists(shaderNameInstanced) then
+//  begin
+//    // set instanced shader, which accepts mvp as attribute of a vertex
+//    FPrototype.Shader := BSShaderManager.Load(shaderNameInstanced, ExtractFilePath(shaderNameInstanced) + FPrototype.Shader.Name + '.fsh', TBlackSharkShaderClass(FPrototype.Shader.ClassType), false);
+//    MvpAttr := FPrototype.Shader.Attribute['MVP'];
+//    CreateVBO(mvpVBO, GL_ARRAY_BUFFER, nil, 0);
+//
+//    glBindVertexArray(FPrototype.VAO);
+//    FPrototype.Shader.UseProgram(true);
+//    FPrototype.BindVBO;
+//    glBindBuffer(GL_ARRAY_BUFFER, MvpVBO);
+//    glEnableVertexAttribArray(MvpAttr.Location);
+//    glVertexAttribPointer( MvpAttr.Location, 16, GL_FLOAT, GL_FALSE, sizeof ( TMatrix4f ), nil);
+//    // One MVP per instance
+//    glVertexAttribDivisor(MvpAttr.Location, 1);
+//    glBindVertexArray(GL_NONE);
+//  end;
+//  {$endif}
+//end;
+//
 procedure TBlackSharkInstancing.UpadateAllMatrix;
 var
   i: int32;
@@ -871,6 +875,7 @@ begin
   for i := 0 to FCountInstance - 1 do
     GenMatrix(i);
 
+  {$ifndef ultibo}
   if (MvpVBO > 0) and (FCountInstance > 0) then
   begin
     glBindVertexArray(FPrototype.VAO);
@@ -879,6 +884,7 @@ begin
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(GL_NONE);
   end;
+  {$endif}
 
 end;
 

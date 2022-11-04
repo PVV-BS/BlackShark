@@ -53,7 +53,7 @@ type
     const
       LEFT_MARGIN_DEFAULT: int8 = 4;
       CURSOR_TOP_ALIGN: int8 = 3;
-      FONT_SIZE_IN_PIXELS_DEFAULT: int8 = 9;
+      FONT_SIZE_IN_PIXELS_DEFAULT: int8 = 10;
 
       DEFAULT_WIDTH = 60;
       DEFAULT_HEIGHT = 21;
@@ -104,7 +104,6 @@ type
     procedure InsertSymbol(Symbol: WideChar);
     function GetText: string;
     procedure DrawBack(Instance: PRendererGraphicInstance);
-    function GetVertPosText: BSFloat;
     procedure SetTextViewPosition;
     { remove all selected symbols or in the left from the cursor position }
     procedure DeleteSymbol;
@@ -644,11 +643,6 @@ begin
   Result := FText;
 end;
 
-function TBCustomEdit.GetVertPosText: BSFloat;
-begin
-  Result := (Height - FTextView.Font.SizeInPixels) * 0.5 - 2;
-end;
-
 procedure TBCustomEdit.IncCursor;
 var
   pk: PKeyInfo;
@@ -1001,7 +995,7 @@ end;
 
 procedure TBCustomEdit.SetTextViewPosition;
 begin
-  FTextView.Position2d := vec2(LeftMargin, GetVertPosText);
+  FTextView.Position2d := vec2(LeftMargin, trunc((Back.Height - FTextView.Font.SizeInPixels - FTextView.SceneTextData.TxtProcessor.Interligne)*0.5));
 end;
 
 procedure TBCustomEdit.SetVisible(const AValue: boolean);
