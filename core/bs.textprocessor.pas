@@ -33,7 +33,6 @@ uses
     bs.baseTypes
   , bs.font
   , bs.collections
-  , bs.align
   ;
 
 type
@@ -43,6 +42,7 @@ type
     { line width }
     Width: BSFloat;
     Height: BSFloat;
+    TrimWidth: BSFloat;
     { count blanks }
     CountBlanks: int32;
     { count chars }
@@ -50,6 +50,7 @@ type
     { blanks in lines b/w words }
     InsideBlanks: int32;
     IndexBegin: int32;
+    Words: int32;
   end;
 
   TSelectorKey = function (Index: int32; out Code: int32): PKeyInfo of object;
@@ -60,31 +61,26 @@ type
     FDelta: int8;
     FWidth: BSFloat;
     FInterligne: int16;
-    FAlignText: TObjectAlign;
     FHeight: BSFloat;
     FillCount: int32;
-    RectSize: TVec2f;
+    FViewportWidth: BSFloat;
     FLines: TListVec<TLineProp>;
-    FAllowBrakeWords: boolean;
+    FAllowBreakWords: boolean;
     FOnQueryKey: TSelectorKey;
     FCountChars: int32;
     FLineHeight: int32;
-    FOnQueryAverageWidthForCurrentPos: TQueryAverageWidth;
-    procedure SetAlignText(const Value: TObjectAlign);
+    FBlankWidth: BSFloat;
     procedure SetDelta(const Value: int8);
     procedure SetInterligne(const Value: int16);
-    procedure SetAllowBrakeWords(const Value: boolean);
+    procedure SetAllowBreakWords(const Value: boolean);
     procedure SetCountChars(const Value: int32);
     procedure SetLineHeight(const Value: int32);
+    procedure SetViewportWidth(const Value: BSFloat);
   public
-    constructor Create(AKeySelector: TSelectorKey; AQueryAverageWidth: TQueryAverageWidth);
+    constructor Create(AKeySelector: TSelectorKey);
     destructor Destroy; override;
-    procedure Build(PositionBegin: int32 = 1);
-    procedure Add;
-    procedure BeginFill;
-    procedure EndFill;
+    procedure Build(PositionBegin: int32 = 1); virtual;
     function GetCharWidth(Key: PKeyInfo): int32;
-    procedure SetOutRect(Width, Height: BSFloat);
     function GetIndexLineFromIndexChar(IndexChar: int32): int32;
     function GetIndexLineFromOffsetY(OffsetY: BSFloat): int32;
     property CountChars: int32 read FCountChars write SetCountChars;
@@ -95,12 +91,12 @@ type
     property Delta: int8 read FDelta write SetDelta;
     { distance b/w lines }
     property Interligne: int16 read FInterligne write SetInterligne;
-    property AlignText: TObjectAlign read FAlignText write SetAlignText;
-    property AllowBrakeWords: boolean read FAllowBrakeWords write SetAllowBrakeWords;
+    property AllowBreakWords: boolean read FAllowBreakWords write SetAllowBreakWords;
     property OnQueryKey: TSelectorKey read FOnQueryKey write FOnQueryKey;
-    property OnQueryAverageWidthForCurrentPos: TQueryAverageWidth read FOnQueryAverageWidthForCurrentPos write FOnQueryAverageWidthForCurrentPos;
     property LineHeight: int32 read FLineHeight write SetLineHeight;
     property Lines: TListVec<TLineProp> read FLines;
+    property ViewportWidth: BSFloat read FViewportWidth write SetViewportWidth;
+    property BlankWidth: BSFloat read FBlankWidth write FBlankWidth;
   end;
 
 implementation
@@ -118,18 +114,6 @@ uses
 
 { TTextProcessor }
 
-procedure TTextProcessor.Add;
-begin
-  inc(FCountChars);
-  if FillCount = 0 then
-    Build(FCountChars);
-end;
-
-procedure TTextProcessor.BeginFill;
-begin
-  inc(FillCount);
-end;
-
 procedure TTextProcessor.Build(PositionBegin: int32 = 1);
 var
   i: int32;
@@ -140,24 +124,25 @@ var
   prop: TLineProp;
   word_width: BSFloat;
   out_width: BSFloat;
-  sum_width: BSFloat;
   add: BSFloat;
   KeyInfo: PKeyInfo;
   first_word: boolean;
   word_reads: boolean;
   code: int32;
-  avr_width_ch: BSFloat;
 begin
-  if (FAlignText <> TObjectAlign.oaLeft) and (RectSize.x > 0) then
-    out_width := RectSize.x
+  if (ViewportWidth > 0) then
+    out_width := ViewportWidth
   else
     out_width := MaxSingle;
+
   prop.Width := 0.0;
+  prop.TrimWidth := 0.0;
   prop.Height := 0.0;
   prop.CountChars := 0;
   prop.CountBlanks := 0;
   prop.InsideBlanks := 0;
   prop.IndexBegin := PositionBegin;
+  prop.Words := 0;
   word_width := 0.0;
   chars := 0;
   blanks_befor_word := 0;
@@ -186,15 +171,14 @@ begin
   begin
     FLines.Count := 0;
   end;
+
   prop.IndexBegin := PositionBegin;
-  { it sets var "add" and "sum_width" to avoid warning }
-  //add := 0.0;
-  //sum_width := 0.0;
-  avr_width_ch := FOnQueryAverageWidthForCurrentPos(PositionBegin);
+  prop.Width := 0.0;
+
   for i := PositionBegin to FCountChars do
   begin
     inc(prop.CountChars);
-    KeyInfo := FOnQueryKey(i, code); //FMap.Items[i];
+    KeyInfo := FOnQueryKey(i, code);
     if code = $09 then
     begin
       if word_reads then
@@ -202,12 +186,12 @@ begin
         blanks_befor_word := 0;
         word_reads := false;
       end;
-      add := avr_width_ch;
+      add := FBlankWidth*2;
       inc(prop.CountBlanks, 2);
       inc(blanks_befor_word, 2);
-      //word_width := 0;
       chars := 0;
-      sum_width := add;
+      if not first_word then
+        prop.TrimWidth := prop.Width + add;
     end else
     if (code = $20) then
     begin
@@ -218,17 +202,20 @@ begin
       end;
       inc(prop.CountBlanks);
       inc(blanks_befor_word);
-      add := avr_width_ch * 0.5;
+      add := FBlankWidth;
       chars := 0;
-      sum_width := add;
+      if not first_word then
+        prop.TrimWidth := prop.Width + add;
     end else
     if (KeyInfo = nil) then
     begin
       continue;
     end else
+    if (code <> $0a) or (code <> $0d) then
     begin
       if (not word_reads) then
       begin
+        inc(prop.Words);
         if not first_word then
           inc(prop.InsideBlanks, blanks_befor_word);
         //blanks := 0;
@@ -236,41 +223,53 @@ begin
         word_reads := true;
       end;
       first_word := false;
-      sum_width := KeyInfo^.Rect.Width;
-      add := sum_width + FDelta;
+      add := KeyInfo^.Rect.Width + FDelta;
       word_width := word_width + add;
+      prop.TrimWidth := prop.TrimWidth + add;
       inc(chars);
-    end;
+    end else
+      add := 0;
 
     if (KeyInfo <> nil) and (KeyInfo.Rect.Height > prop.Height) then
       prop.Height := KeyInfo.Rect.Height;
 
     prop.Width := prop.Width + add;
 
-    if (code = $0d) or (prop.Width + sum_width > out_width) then
+    if (code = $0a) or (prop.Width + 2 >= out_width) then
     begin
-      if FAllowBrakeWords or (code = $0d) or (code = $20) or (code = $09) then
+      if FAllowBreakWords or (code = $0a) or (code = $20) or (code = $09) then
       begin
         if prop.Width > FWidth then
           FWidth := prop.Width;
+
         if FLineHeight = 0 then
           FHeight := FHeight + prop.Height + FInterligne;
 
+        prop.TrimWidth := prop.TrimWidth - blanks_befor_word * FBlankWidth;
         FLines.Add(prop);
-        prop.Width := 0.0;
         prop.Height := 0.0;
-        prop.CountChars := 1;
-        prop.IndexBegin := i;
+        prop.CountChars := 0;
+
+        prop.IndexBegin := i+1;
+        prop.Width := 0;
+        prop.TrimWidth := 0.0;
         chars := 0;
         word_width := 0.0;
         word_reads := false;
+        first_word := true;
       end else
       //if word_width + add < out_width then
       begin // roll back on one word
+        if word_reads then
+          dec(prop.Words);
+
         dec(prop.CountChars, chars);
         prop.Width := prop.Width - word_width;
+        prop.TrimWidth := prop.TrimWidth - blanks_befor_word * FBlankWidth - word_width;
+        dec(prop.InsideBlanks, blanks_befor_word);
         if prop.Width > FWidth then
           FWidth := prop.Width;
+
         if FLineHeight = 0 then
           FHeight := FHeight + prop.Height + FInterligne;
 
@@ -279,13 +278,16 @@ begin
 
         prop.IndexBegin := i - chars + 1;
         prop.Width := word_width;
+        prop.TrimWidth := word_width;
         prop.CountChars := chars;
+        prop.Words := 1;
+        prop.CountBlanks := 0;
         word_reads := true;
-        //continue;
+       //continue;
       end;
       blanks_befor_word := 0;
       prop.InsideBlanks := 0;
-      prop.CountBlanks := 0;
+      prop.CountBlanks := blanks_befor_word;
     end;
   end;
 
@@ -303,14 +305,13 @@ begin
 
 end;
 
-constructor TTextProcessor.Create(AKeySelector: TSelectorKey; AQueryAverageWidth: TQueryAverageWidth);
+constructor TTextProcessor.Create(AKeySelector: TSelectorKey);
 begin
   Assert(Assigned(AKeySelector), 'A parameter AKeySelector must be valid!');
   FDelta := 1;
   FInterligne := 3;
-  FAllowBrakeWords := false;
+  FAllowBreakWords := false;
   FOnQueryKey := AKeySelector;
-  FOnQueryAverageWidthForCurrentPos := AQueryAverageWidth;
   FLines := TListVec<TLineProp>.Create;
 end;
 
@@ -318,15 +319,6 @@ destructor TTextProcessor.Destroy;
 begin
   FLines.Free;
   inherited;
-end;
-
-procedure TTextProcessor.EndFill;
-begin
-  dec(FillCount);
-  if FillCount < 0 then
-    FillCount := 0;
-  if FillCount = 0 then
-    Build(1);
 end;
 
 function TTextProcessor.GetCharWidth(Key: PKeyInfo): int32;
@@ -369,16 +361,9 @@ begin
     Result := -1;
 end;
 
-procedure TTextProcessor.SetAlignText(const Value: TObjectAlign);
+procedure TTextProcessor.SetAllowBreakWords(const Value: boolean);
 begin
-  FAlignText := Value;
-  if FillCount = 0 then
-    Build(1);
-end;
-
-procedure TTextProcessor.SetAllowBrakeWords(const Value: boolean);
-begin
-  FAllowBrakeWords := Value;
+  FAllowBreakWords := Value;
   if FillCount = 0 then
     Build(1);
 end;
@@ -411,10 +396,9 @@ begin
     Build(1);
 end;
 
-procedure TTextProcessor.SetOutRect(Width, Height: BSFloat);
+procedure TTextProcessor.SetViewportWidth(const Value: BSFloat);
 begin
-  RectSize.x := Width;
-  RectSize.y := Height;
+  FViewportWidth := Value;
   if FillCount = 0 then
     Build(1);
 end;

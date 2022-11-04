@@ -58,13 +58,13 @@ type
     FBorder: TRoundRect;
     FText: TCanvasText;
     FHintData: TGraphicObjectText;
-    FAllowBrakeWords: boolean;
+    FAllowBreakWords: boolean;
     function GetText: string;
     procedure AlignTextPosition;
     procedure SetText(const Value: string);
-    function GetTextAlign: TObjectAlign;
-    procedure SetTextAlign(const Value: TObjectAlign);
-    procedure SetAllowBrakeWords(const Value: boolean);
+    function GetTextAlign: TTextAlign;
+    procedure SetTextAlign(const Value: TTextAlign);
+    procedure SetAllowBreakWords(const Value: boolean);
   public
     constructor Create(ACanvas: TBCanvas); override;
     procedure AfterConstruction; override;
@@ -72,8 +72,8 @@ type
     procedure BuildView; override;
     function DefaultSize: TVec2f; override;
     property Text: string read GetText write SetText;
-    property AlignHintText: TObjectAlign read GetTextAlign write SetTextAlign;
-    property AllowBrakeWords: boolean read FAllowBrakeWords write SetAllowBrakeWords;
+    property AlignHintText: TTextAlign read GetTextAlign write SetTextAlign;
+    property AllowBreakWords: boolean read FAllowBreakWords write SetAllowBreakWords;
   end;
 
 implementation
@@ -87,14 +87,14 @@ uses
 procedure TBlackSharkHint.AfterConstruction;
 begin
   inherited;
-  FHintData.TxtProcessor.AlignText := oaCenter;
+  FHintData.Align := TTextAlign.taCenter;
 end;
 
 procedure TBlackSharkHint.AlignTextPosition;
 begin
-  case FHintData.TxtProcessor.AlignText of
-    oaCenter: FText.ToParentCenter;
-    oaRight: FText.Position2d := vec2(FRect.Width - TGraphicObjectText(FText.Data).TxtProcessor.Interligne - FText.Width, TGraphicObjectText(FText.Data).TxtProcessor.Interligne);
+  case FHintData.Align of
+    TTextAlign.taCenter: FText.ToParentCenter;
+    TTextAlign.taRight: FText.Position2d := vec2(FRect.Width - TGraphicObjectText(FText.Data).TxtProcessor.Interligne - FText.Width, TGraphicObjectText(FText.Data).TxtProcessor.Interligne);
     //oaBottom: FText.Position2d := vec2(TGraphicObjectText(FText.Data).TxtProcessor.Interligne, FRect.Height - FText.Height)
      else
       FText.Position2d := vec2(TGraphicObjectText(FText.Data).TxtProcessor.Interligne, TGraphicObjectText(FText.Data).TxtProcessor.Interligne);
@@ -150,15 +150,15 @@ begin
   Result := FText.Text;
 end;
 
-function TBlackSharkHint.GetTextAlign: TObjectAlign;
+function TBlackSharkHint.GetTextAlign: TTextAlign;
 begin
-  Result := FHintData.TxtProcessor.AlignText;
+  Result := FHintData.Align;
 end;
 
-procedure TBlackSharkHint.SetAllowBrakeWords(const Value: boolean);
+procedure TBlackSharkHint.SetAllowBreakWords(const Value: boolean);
 begin
-  FAllowBrakeWords := Value;
-  FHintData.TxtProcessor.AllowBrakeWords := FAllowBrakeWords;
+  FAllowBreakWords := Value;
+  FHintData.TxtProcessor.AllowBreakWords := FAllowBreakWords;
 end;
 
 procedure TBlackSharkHint.SetText(const Value: string);
@@ -169,9 +169,9 @@ begin
   BuildView;
 end;
 
-procedure TBlackSharkHint.SetTextAlign(const Value: TObjectAlign);
+procedure TBlackSharkHint.SetTextAlign(const Value: TTextAlign);
 begin
-  FHintData.TxtProcessor.AlignText := Value;
+  FHintData.Align := Value;
   AlignTextPosition;
 end;
 

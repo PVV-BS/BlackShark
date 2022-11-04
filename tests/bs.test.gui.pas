@@ -1370,7 +1370,6 @@ begin
   inherited;
   { the button scales relative of the size screen }
   ButtonScal := TBButton.Create(ARenderer);
-  ButtonScal.Canvas.Font.Size := 7;
   ButtonScal.Scalable := true;
   ButtonScal.RoundRadius := 0.0;
   ButtonScal.Resize(170*ToHiDpiScale, 40*ToHiDpiScale);
@@ -1529,16 +1528,9 @@ constructor TBSTestHint.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
   Hint := TBlackSharkHint.Create(ARenderer);
-  Hint.AlignHintText := oaCenter;
-  Hint.AllowBrakeWords := false;
-  Hint.Text := 'Some a clue; This is Black Shark hint!';
-
-  {Hint2 := TBlackSharkHint.Create(ARenderer);
-  Hint2.AlignHintText := oaClient;
-  Hint2.AllowBrakeWords := false;
-  //Hint2.Text := 'Some a clue 2; This is Black Shark hint!';
-  Hint2.Text := 'W';
-  Hint2.Position2d := vec2(300, 300);}
+  Hint.AlignHintText := taCenter;
+  Hint.AllowBreakWords := false;
+  Hint.Text := 'A some clue!';
 end;
 
 destructor TBSTestHint.Destroy;

@@ -660,6 +660,7 @@ var
   comp: TVertexComponent;
   compVal: Pointer;
 begin
+  components := nil;
   for comp := Low(TVertexComponent) to High(TVertexComponent) do
   begin
     if ASource.HasComponent(comp) and (HasComponent(comp)) then

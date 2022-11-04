@@ -523,6 +523,7 @@ begin
   FreeAndNil(FMainWindow);
   ObserverOnCreateContext := nil;
   ObserverOnRemoveWindow := nil;
+  FreeAndNil(FApplicationSystem);
   inherited;
 end;
 

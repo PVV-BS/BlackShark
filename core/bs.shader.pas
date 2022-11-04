@@ -627,6 +627,7 @@ type
       AShaderClass: TBlackSharkShaderClass; AMVPasUniform: boolean = true): TBlackSharkShader; overload;
     class function Load(const AName: string; AShaderClass: TBlackSharkShaderClass;
       AMVPasUniform: boolean = true): TBlackSharkShader; overload;
+    class function Load(AShaderClass: TBlackSharkShaderClass; AMVPasUniform: boolean = true): TBlackSharkShader; overload;
     class procedure Restore;
     class procedure UseShader(AShader: TBlackSharkShader; AEnableAttrib: boolean);
     class procedure FreeShader(Shader: TBlackSharkShader);
@@ -721,6 +722,11 @@ end;
 class function BSShaderManager.GetShaderByName(const Name: string; MvpAsUniform: boolean): TBlackSharkShader;
 begin
   FShadersName.Find(Name + BoolToStr(MvpAsUniform), Result);
+end;
+
+class function BSShaderManager.Load(AShaderClass: TBlackSharkShaderClass; AMVPasUniform: boolean): TBlackSharkShader;
+begin
+  Result := Load(AShaderClass.DefaultName, AShaderClass, AMVPasUniform);
 end;
 
 class function BSShaderManager.Load(const AName: string; AShaderClass: TBlackSharkShaderClass; AMVPasUniform: boolean = true): TBlackSharkShader;

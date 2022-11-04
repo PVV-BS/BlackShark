@@ -35,6 +35,7 @@ type
 
   TAnchor = (aLeft, aRight, aTop, aBottom);
   TObjectAlign = (oaNone, oaLeft, oaCenter, oaRight, oaClient, oaTop, oaBottom);
+  TTextAlign = (taLeft, taCenter, taClient, taRight);
 
   TPattenAlign = class
   private

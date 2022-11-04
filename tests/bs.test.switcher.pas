@@ -25,7 +25,7 @@ uses
   ;
 
 initialization
-  { uncomment a need class test for available select in combobox }
+  { uncomment a need class test to register it }
 
   //RegisterTest(TBSTestResample);
 
@@ -76,6 +76,7 @@ initialization
     RegisterTest(TBSTestTrueTypeFont);
     //RegisterTest(TBSTestTrueTypeSmiles);
     RegisterTest(TBSTestCanvasMap);
+    RegisterTest(TBSTestStringMap);
     RegisterTest(TBSTestCanvasLines);
 
   { Animation }

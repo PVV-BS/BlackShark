@@ -213,7 +213,9 @@ type
 
   TSplitDimensionNotify = procedure(ADem: int32; AVectorMinMax: PBoxMinMax; ABoundary: double) of object;
 
-  TBlackSharkKDTree = class
+  { TBlackSharkKDTree }
+
+  TBlackSharkKDTree<T> = class
   private
   type
     TDimensionItem = record
@@ -223,13 +225,15 @@ type
       Right: int32;
       // count items in Data;
       Count: int32;
-      Data: array of Pointer;
+      Data: array of T;
     end;
     TDimensionItems = array of TDimensionItem;
     TKeys = array of double;
+    TOnDeleteNotify = procedure(const AData: T) of object;
   private
     FDimension: TDimension;
     FDimensionDouble: TDimension;
+    FComparatorForEquality: TKeyComparatorEqual<T>;
 
     CashDimItems: TListVec<int32>;
     FDimensionItems: TDimensionItems;
@@ -248,38 +252,49 @@ type
     FNodes: int32;
     FCount: int32;
     FOnSplitDimension: TSplitDimensionNotify;
+    FOnDelete: TOnDeleteNotify;
+
     function GetDimensionItemDo(AParentDem: int32; ADimension: int32; AMin, AMax: double): int32; inline;
     function GetDimensionItem(AParentDem: int32; ADimension: int32; AMin, AMax: double): int32; inline;
     procedure SplitNode(ANode: int32; ADimension: int32; ABoundary: double);
     { it is invoked only if AData fits into ANode; that is if ANode has children Dimensions
       then not need to check them, because AData doesn't hit }
-    function Insert(ANode: int32; AData: Pointer; AVectorMinMax: PBoxMinMax; OldPosition: int32): int32; inline;
+    function Insert(ANode: int32; const AData: T; AVectorMinMax: PBoxMinMax; OldPosition: int32): int32; inline;
     procedure Init;
-    procedure DoDelete(ADem: int32; AData: Pointer); inline;
-    function DoAdd(AData: Pointer; AVectorMinMax: PBoxMinMax; OldPosition: int32 = -1): int32; inline;
+    procedure DoDelete(ADem: int32; const AData: T); //inline;
+    function DoAdd(const AData: T; AVectorMinMax: PBoxMinMax; OldPosition: int32 = -1): int32; inline;
+  protected
+    class function GetComparator: TKeyComparatorEqual<T>; virtual;
   public
     constructor Create(AMinSize: double; ADimension: TDimension = TDimension3D); overload;
     constructor Create(ADimension: TDimension = TDimension3D); overload;
     destructor Destroy; override;
     procedure Clear; virtual;
-    function AddBB(AData: Pointer; AVectorMinMax: PBoxMinMax): int32; overload;
-    { and again; because delphi doesn't support templates (and mathematical operations in them)
+    function AddBB(const AData: T; AVectorMinMax: PBoxMinMax): int32; overload;
+    { and again; because delphi doesn't support templates (and mathematical operations by them)
       we created overloaded methods for 3d float type }
-    function AddBB(AData: Pointer; const AVectorMinMax: TBox3f): int32; overload;
+    function AddBB(const AData: T; const AVectorMinMax: TBox3f): int32; overload;
+    function AddBB(const AData: T; const AVectorMinMax: TBox3d): int32; overload;
     {$ifdef DEBUG_ST}
     function GetNodeAttributes(ANode: int32; out ABox: PBoxMinMax; out ADimensionSplit: int32; out ABoundarySplit: double;
       out ALeft, ARight: int32): boolean;
     {$endif}
-    function UpdatePositionBB(AData: Pointer; VectorMinMax: PBoxMinMax; OldPosition: int32): int32; overload;
-    function UpdatePositionBB(AData: Pointer; const AVectorMinMax: TBox3f; OldPosition: int32): int32; overload;
-    procedure Remove(APosition: int32; AData: Pointer);
-    procedure Select(ABox: PBoxMinMax; AList: TListVec<Pointer>); overload;
-    procedure Select(const AVectorMinMax: TBox3f; AList: TListVec<Pointer>); overload;
+    function UpdatePositionBB(const AData: T; VectorMinMax: PBoxMinMax; OldPosition: int32): int32; overload;
+    function UpdatePositionBB(const AData: T; const AVectorMinMax: TBox3f; OldPosition: int32): int32; overload;
+    function UpdatePositionBB(const AData: T; const AVectorMinMax: TBox3d; OldPosition: int32): int32; overload;
+    procedure Remove(APosition: int32; const AData: T);
+    procedure Select(ABox: PBoxMinMax; AList: TListVec<T>); overload;
+    procedure Select(const AVectorMinMax: TBox3f; AList: TListVec<T>); overload;
+
     { count of Dimensions: 1, 2, 3... }
     property Dimension: TDimension read FDimension;
+    property ComparatorForEquality: TKeyComparatorEqual<T> read FComparatorForEquality write FComparatorForEquality;
     property MinSize: double read FMinSize;
     property Nodes: int32 read FNodes;
     property Count: int32 read FCount;
+
+    property OnDelete: TOnDeleteNotify read FOnDelete write FOnDelete;
+
     { for debug only }
     {$ifdef DEBUG_ST}
     property Root: int32 read FRoot;
@@ -287,6 +302,16 @@ type
     {$endif}
   end;
 
+  TBlackSharkKDTreePointer = TBlackSharkKDTree<Pointer>;
+
+	{ default KD-tree }
+
+  TBlackSharkKDTree = class(TBlackSharkKDTreePointer)
+  private
+    class function Compare(const Key1, Key2: Pointer): boolean; static;
+  protected
+    class function GetComparator: TKeyComparatorEqual<Pointer>; override;
+  end;
   {
     TAreaMarker
 
@@ -2692,14 +2717,14 @@ begin
   ListNodesSelect.Sort;
 end;
 
-{ TBlackSharkKDTree }
+{ TBlackSharkKDTree<T> }
 
-function TBlackSharkKDTree.AddBB(AData: Pointer; AVectorMinMax: PBoxMinMax): int32;
+function TBlackSharkKDTree<T>.AddBB(const AData: T; AVectorMinMax: PBoxMinMax): int32;
 begin
   Result := DoAdd(AData, AVectorMinMax);
 end;
 
-function TBlackSharkKDTree.AddBB(AData: Pointer; const AVectorMinMax: TBox3f): int32;
+function TBlackSharkKDTree<T>.AddBB(const AData: T; const AVectorMinMax: TBox3f): int32;
 var
   min_max: array[0..1] of TVec3d;
 begin
@@ -2708,7 +2733,12 @@ begin
   Result := DoAdd(AData, @min_max);
 end;
 
-procedure TBlackSharkKDTree.Clear;
+function TBlackSharkKDTree<T>.AddBB(const AData: T; const AVectorMinMax: TBox3d): int32;
+begin
+  Result := DoAdd(AData, @AVectorMinMax.Min);
+end;
+
+procedure TBlackSharkKDTree<T>.Clear;
 var
   i, j: int32;
 begin
@@ -2727,12 +2757,12 @@ begin
   Init;
 end;
 
-constructor TBlackSharkKDTree.Create(ADimension: TDimension = TDimension3D);
+constructor TBlackSharkKDTree<T>.Create(ADimension: TDimension = TDimension3D);
 begin
   Create(1.0, ADimension);
 end;
 
-constructor TBlackSharkKDTree.Create(AMinSize: double; ADimension: TDimension = TDimension3D);
+constructor TBlackSharkKDTree<T>.Create(AMinSize: double; ADimension: TDimension = TDimension3D);
 var
   i: int32;
 begin
@@ -2752,17 +2782,18 @@ begin
   SetLength(FKeys, CashDimItems.Count*FDimension*2);
   Stack := TListVec<int32>.Create;
   FRoot := -1;
+  FComparatorForEquality := GetComparator();
   Init;
 end;
 
-destructor TBlackSharkKDTree.Destroy;
+destructor TBlackSharkKDTree<T>.Destroy;
 begin
   CashDimItems.Free;
   Stack.Free;
   inherited;
 end;
 
-function TBlackSharkKDTree.DoAdd(AData: Pointer; AVectorMinMax: PBoxMinMax; OldPosition: int32): int32;
+function TBlackSharkKDTree<T>.DoAdd(const AData: T; AVectorMinMax: PBoxMinMax; OldPosition: int32): int32;
 var
   cur_node: int32;
   mx, mn: double;
@@ -2809,7 +2840,7 @@ begin
   //Result := -1;
 end;
 
-procedure TBlackSharkKDTree.DoDelete(ADem: int32; AData: Pointer);
+procedure TBlackSharkKDTree<T>.DoDelete(ADem: int32; const AData: T);
 var
   i: int32;
   opposite: int32;
@@ -2828,7 +2859,7 @@ begin
   {$endif}
   for i := 0 to FDimensionItems[ADem].Count - 1 do
   begin
-    if FDimensionItems[ADem].Data[i] = AData then
+    if FComparatorForEquality(FDimensionItems[ADem].Data[i], AData) then
     begin
       {$ifdef DEBUG}
       found := true;
@@ -2878,9 +2909,18 @@ begin
         break;
     end;
   end;
+
+  if Assigned(FOnDelete) then
+    FOnDelete(AData);
+
 end;
 
-function TBlackSharkKDTree.GetDimensionItem(AParentDem: int32; ADimension: int32; AMin, AMax: double): int32;
+class function TBlackSharkKDTree<T>.GetComparator: TKeyComparatorEqual<T>;
+begin
+	Result := nil;
+end;
+
+function TBlackSharkKDTree<T>.GetDimensionItem(AParentDem: int32; ADimension: int32; AMin, AMax: double): int32;
 const
   STEP = 8192;
 var
@@ -2899,7 +2939,7 @@ begin
   Result := GetDimensionItemDo(AParentDem, ADimension, AMin, AMax);
 end;
 
-function TBlackSharkKDTree.GetDimensionItemDo(AParentDem, ADimension: int32; AMin, AMax: double): int32;
+function TBlackSharkKDTree<T>.GetDimensionItemDo(AParentDem, ADimension: int32; AMin, AMax: double): int32;
 begin
   Result := CashDimItems.Pop;
   FDimensionItems[Result].ParentDem := AParentDem;
@@ -2913,7 +2953,7 @@ begin
 end;
 
 {$ifdef DEBUG_ST}
-function TBlackSharkKDTree.GetNodeAttributes(ANode: int32; out ABox: PBoxMinMax; out ADimensionSplit: int32;
+function TBlackSharkKDTree<T>.GetNodeAttributes(ANode: int32; out ABox: PBoxMinMax; out ADimensionSplit: int32;
   out ABoundarySplit: double; out ALeft, ARight: int32): boolean;
 begin
   if ANode < 0 then
@@ -2930,7 +2970,7 @@ begin
 end;
 {$endif}
 
-procedure TBlackSharkKDTree.Init;
+procedure TBlackSharkKDTree<T>.Init;
 var
   i, j: int32;
   c: int32;
@@ -2971,7 +3011,7 @@ begin
   Stack.Count := 0;
 end;
 
-function TBlackSharkKDTree.Insert(ANode: int32; AData: Pointer; AVectorMinMax: PBoxMinMax; OldPosition: int32): int32;
+function TBlackSharkKDTree<T>.Insert(ANode: int32; const AData: T; AVectorMinMax: PBoxMinMax; OldPosition: int32): int32;
 var
   d: int32;
   //mn: double;
@@ -3074,14 +3114,14 @@ begin
   inc(FCount);
 end;
 
-procedure TBlackSharkKDTree.Remove(APosition: int32; AData: Pointer);
+procedure TBlackSharkKDTree<T>.Remove(APosition: int32; const AData: T);
 begin
   if APosition < 0 then
     exit;
   DoDelete(APosition, AData);
 end;
 
-procedure TBlackSharkKDTree.Select(ABox: PBoxMinMax; AList: TListVec<Pointer>);
+procedure TBlackSharkKDTree<T>.Select(ABox: PBoxMinMax; AList: TListVec<T>);
 var
   node: int32;
   mn, mx: double;
@@ -3111,7 +3151,7 @@ begin
   end;
 end;
 
-procedure TBlackSharkKDTree.Select(const AVectorMinMax: TBox3f; AList: TListVec<Pointer>);
+procedure TBlackSharkKDTree<T>.Select(const AVectorMinMax: TBox3f; AList: TListVec<T>);
 var
   min_max: array[0..1] of TVec3d;
 begin
@@ -3120,7 +3160,7 @@ begin
   Select(@min_max, AList);
 end;
 
-procedure TBlackSharkKDTree.SplitNode(ANode: int32; ADimension: int32; ABoundary: double);
+procedure TBlackSharkKDTree<T>.SplitNode(ANode: int32; ADimension: int32; ABoundary: double);
 var
   i: int32;
   min, max: double;
@@ -3147,7 +3187,12 @@ begin                                                                // min     
   {$endif}
 end;
 
-function TBlackSharkKDTree.UpdatePositionBB(AData: Pointer; const AVectorMinMax: TBox3f; OldPosition: int32): int32;
+function TBlackSharkKDTree<T>.UpdatePositionBB(const AData: T; const AVectorMinMax: TBox3d; OldPosition: int32): int32;
+begin
+  Result := DoAdd(AData, @AVectorMinMax.Min, OldPosition);
+end;
+
+function TBlackSharkKDTree<T>.UpdatePositionBB(const AData: T; const AVectorMinMax: TBox3f; OldPosition: int32): int32;
 var
   min_max: array[0..1] of TVec3d;
 begin
@@ -3156,9 +3201,21 @@ begin
   Result := DoAdd(AData, @min_max, OldPosition);
 end;
 
-function TBlackSharkKDTree.UpdatePositionBB(AData: Pointer; VectorMinMax: PBoxMinMax; OldPosition: int32): int32;
+function TBlackSharkKDTree<T>.UpdatePositionBB(const AData: T; VectorMinMax: PBoxMinMax; OldPosition: int32): int32;
 begin
   Result := DoAdd(AData, VectorMinMax, OldPosition);
+end;
+
+{ TBlackSharkKDTree }
+
+class function TBlackSharkKDTree.Compare(const Key1, Key2: Pointer): boolean;
+begin
+  Result := Key1 = Key2;
+end;
+
+class function TBlackSharkKDTree.GetComparator: TKeyComparatorEqual<Pointer>;
+begin
+  Result := Compare;
 end;
 
 end.

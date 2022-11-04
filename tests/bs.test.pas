@@ -138,6 +138,7 @@ begin
   Anim.IntervalUpdate := 0;
   AniObserver := CreateAniFloatLivearObsrv(Anim, OnMove);
 end;
+
 destructor TBSTest.Destroy;
 begin
   Anim.Stop;

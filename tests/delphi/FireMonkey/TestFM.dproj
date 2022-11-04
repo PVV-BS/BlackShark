@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{71EDE5B1-4783-435B-AD52-85470C1428FB}</ProjectGuid>
-        <ProjectVersion>19.2</ProjectVersion>
+        <ProjectVersion>19.3</ProjectVersion>
         <FrameworkType>FMX</FrameworkType>
         <MainSource>TestFM.dpr</MainSource>
         <Base>True</Base>
@@ -189,15 +189,15 @@
         </DCCReference>
         <DCCReference Include="..\..\bs.test.switcher.pas"/>
         <DCCReference Include="..\..\..\core\bs.viewport.pas"/>
-        <BuildConfiguration Include="Release">
-            <Key>Cfg_2</Key>
-            <CfgParent>Base</CfgParent>
-        </BuildConfiguration>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
     </ItemGroup>
@@ -215,159 +215,10 @@
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">
-                <DeployFile LocalName="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Fonts</RemoteDir>
-                        <RemoteName>NotoEmoji-Regular.ttf</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SkeletonTextured.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SkeletonTextured.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Models\Obj\aquafish02n.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Models\Obj</RemoteDir>
-                        <RemoteName>aquafish02n.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\Smooth.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>Smooth.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ColoredVertexes.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ColoredVertexes.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothFXAA2.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SmoothFXAA2.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoints2d.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesPoints2d.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\TexToColor.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>TexToColor.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Linux64\Debug\TestFM" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\</RemoteDir>
-                        <RemoteName>TestFM</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoint2.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesPoint2.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\earth\moonmap1k2.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\Textures\earth</RemoteDir>
-                        <RemoteName>moonmap1k2.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\OSingleColor.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>OSingleColor.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothSSAA.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SmoothSSAA.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_on.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad3.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesQuad3.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Fonts\cpCyrillicToUTF16.txt" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Fonts</RemoteDir>
-                        <RemoteName>cpCyrillicToUTF16.txt</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SingleColor.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SingleColor.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libcgunwind.1.0.dylib" Class="DependencyModule">
-                    <Platform Name="iOSSimulator">
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Pictures\controls\Black Shark2.png" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Pictures\controls</RemoteDir>
                         <RemoteName>Black Shark2.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Fonts\NotoSerif-Regular.ttf" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Fonts</RemoteDir>
-                        <RemoteName>NotoSerif-Regular.ttf</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\Bin\TestFM.exe" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Win32">
-                        <RemoteName>TestFM.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="$(BDS)\Redist\osx32\libcgunwind.1.0.dylib" Class="DependencyModule">
-                    <Platform Name="OSX32">
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Models\Obj\aquafish01.obj" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Models\Obj</RemoteDir>
-                        <RemoteName>aquafish01.obj</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -378,335 +229,10 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Fonts\Noto-LICENSE_OFL.txt" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Fonts</RemoteDir>
-                        <RemoteName>Noto-LICENSE_OFL.txt</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on10x10.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_on10x10.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on10x10L.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_on10x10L.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\TextureAni.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>TextureAni.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\TransparentBack.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures</RemoteDir>
-                        <RemoteName>TransparentBack.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\QUAD.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>QUAD.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\Bin\TestFM.exe" Configuration="Debug" Class="ProjectOutput"/>
-                <DeployFile LocalName="..\..\..\bin\Shaders\TextureAni.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>TextureAni.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off10x10_.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_off10x10_.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\2d AABB.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures</RemoteDir>
-                        <RemoteName>2d AABB.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off8x8.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_off8x8.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothFXAA.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SmoothFXAA.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad4.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesQuad4.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="$(BDS)\Redist\iossim32\libcgunwind.1.0.dylib" Class="DependencyModule"/>
-                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libPCRE.dylib" Class="DependencyModule"/>
-                <DeployFile LocalName="..\..\..\bin\Shaders\LightPointNormalMap.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>LightPointNormalMap.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off8x8_black.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_off8x8_black.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesQuad.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\Instancing.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>Instancing.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\point_red_7x7.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures</RemoteDir>
-                        <RemoteName>point_red_7x7.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\Textures\block_text.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\Textures</RemoteDir>
-                        <RemoteName>block_text.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Fonts\DejaVuSans.ttf" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Fonts</RemoteDir>
-                        <RemoteName>DejaVuSans.ttf</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off6x6.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_off6x6.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on10x10_.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_on10x10_.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\snowflake.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures</RemoteDir>
-                        <RemoteName>snowflake.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleSingleColor.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SimpleSingleColor.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Fonts\DejaVuSans.ttf_0.20.ind" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Fonts</RemoteDir>
-                        <RemoteName>DejaVuSans.ttf_0.20.ind</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad3.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesQuad3.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\earth\earth.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\Textures\earth</RemoteDir>
-                        <RemoteName>earth.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesQuad.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\sel_point.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures</RemoteDir>
-                        <RemoteName>sel_point.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoints2d.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesPoints2d.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\Particles.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>Particles.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\Instancing.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>Instancing.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\earth\earthmap1k.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\Textures\earth</RemoteDir>
-                        <RemoteName>earthmap1k.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\DoubleColor.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>DoubleColor.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleWire.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SimpleWire.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\folder_orange_24_ttf.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures</RemoteDir>
-                        <RemoteName>folder_orange_24_ttf.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\earth\earthcloudmapcolortrans.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\Textures\earth</RemoteDir>
-                        <RemoteName>earthcloudmapcolortrans.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on10x10gs.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_on10x10gs.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothByKernelMSAA.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SmoothByKernelMSAA.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\rot_point.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures</RemoteDir>
-                        <RemoteName>rot_point.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothFXAA2.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SmoothFXAA2.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\Fog.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>Fog.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\TextureReplaceColor.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>TextureReplaceColor.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\Fog.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>Fog.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Fonts\NotoSerif-Regular.ttf_0.50.ind" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Fonts</RemoteDir>
                         <RemoteName>NotoSerif-Regular.ttf_0.50.ind</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad5.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesQuad5.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf_0.50.ind" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Fonts</RemoteDir>
-                        <RemoteName>NotoEmoji-Regular.ttf_0.50.ind</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SingleColor.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SingleColor.vsh</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -717,297 +243,10 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\earth\sky.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\Textures\earth</RemoteDir>
-                        <RemoteName>sky.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Models\Obj\aquafish01.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Models\Obj</RemoteDir>
-                        <RemoteName>aquafish01.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothByKernelMSAA.vsh" Configuration="Debug" Class="File">
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoints2d.vsh" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SmoothByKernelMSAA.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\sel_point_mid.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures</RemoteDir>
-                        <RemoteName>sel_point_mid.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothSSAA.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SmoothSSAA.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Fonts\NotoSans-Regular.ttf" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Fonts</RemoteDir>
-                        <RemoteName>NotoSans-Regular.ttf</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\controls\TBScrollBar.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\controls</RemoteDir>
-                        <RemoteName>TBScrollBar.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothSSAA2.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SmoothSSAA2.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad4_hls_max.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesQuad4_hls_max.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoint.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesPoint.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\LightPoint.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>LightPoint.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on10x10___.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_on10x10___.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on12x12_.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_on12x12_.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad4.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesQuad4.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\Smooth.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>Smooth.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\DepthMap.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>DepthMap.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\controls\Black Shark 24.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\controls</RemoteDir>
-                        <RemoteName>Black Shark 24.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\DoubleColor.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>DoubleColor.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\OSingleColor.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>OSingleColor.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothFXAA.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SmoothFXAA.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off10x10.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_off10x10.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\LightPointNormalMap.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>LightPointNormalMap.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothMSAA.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SmoothMSAA.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad2.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesQuad2.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\earth\moonmap1k.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\Textures\earth</RemoteDir>
-                        <RemoteName>moonmap1k.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleTexture.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SimpleTexture.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad4_no_hls_max.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesQuad4_no_hls_max.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\Particles.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>Particles.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off2.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_off2.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleTexture.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SimpleTexture.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Models\Obj\aquafish01n.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Models\Obj</RemoteDir>
-                        <RemoteName>aquafish01n.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothMSAA.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SmoothMSAA.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\TextFromTexture.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>TextFromTexture.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Fonts\DejaVuSans.txt" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Fonts</RemoteDir>
-                        <RemoteName>DejaVuSans.txt</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothSSAA2.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SmoothSSAA2.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\Layout.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>Layout.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\flame.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures</RemoteDir>
-                        <RemoteName>flame.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on10x10__.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_on10x10__.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad2.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesQuad2.fsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Lang\lang.en" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Lang</RemoteDir>
-                        <RemoteName>lang.en</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad5.vsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesQuad5.vsh</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleSingleColor.fsh" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SimpleSingleColor.fsh</RemoteName>
+                        <RemoteName>ParticlesPoints2d.vsh</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -1018,17 +257,10 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_off.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleWire.vsh" Configuration="Debug" Class="File">
+                <DeployFile LocalName="..\..\..\bin\Shaders\TextureReplaceColor.fsh" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>SimpleWire.vsh</RemoteName>
+                        <RemoteName>TextureReplaceColor.fsh</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -1039,64 +271,38 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\TextureReplaceColor.fsh" Configuration="Debug" Class="File">
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad5.fsh" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>TextureReplaceColor.fsh</RemoteName>
+                        <RemoteName>ParticlesQuad5.fsh</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libpcre.dylib" Class="DependencyModule">
-                    <Platform Name="iOSSimulator">
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on8x8.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_on8x8.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ColoredVertexes.fsh" Configuration="Debug" Class="File">
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad3.vsh" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ColoredVertexes.fsh</RemoteName>
+                        <RemoteName>ParticlesQuad3.vsh</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\earth\moonmap2.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\Textures\earth</RemoteDir>
-                        <RemoteName>moonmap2.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on8x8_.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_on8x8_.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\Layout.vsh" Configuration="Debug" Class="File">
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad.fsh" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>Layout.vsh</RemoteName>
+                        <RemoteName>ParticlesQuad.fsh</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoint2.vsh" Configuration="Debug" Class="File">
+                <DeployFile LocalName="..\..\..\bin\Shaders\OSingleColor.vsh" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>ParticlesPoint2.vsh</RemoteName>
+                        <RemoteName>OSingleColor.vsh</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\folder_orange_24_ttf_2.png" Configuration="Debug" Class="File">
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad4.vsh" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures</RemoteDir>
-                        <RemoteName>folder_orange_24_ttf_2.png</RemoteName>
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesQuad4.vsh</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -1107,31 +313,109 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\LightPoint.fsh" Configuration="Debug" Class="File">
+                <DeployFile LocalName="..\..\..\bin\Shaders\Particles.vsh" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>LightPoint.fsh</RemoteName>
+                        <RemoteName>Particles.vsh</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on12x12.png" Configuration="Debug" Class="File">
+                <DeployFile LocalName="Linux64\Debug\TestFM" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_on12x12.png</RemoteName>
+                        <RemoteDir>.\</RemoteDir>
+                        <RemoteName>TestFM</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off12x12.png" Configuration="Debug" Class="File">
-                    <Platform Name="Linux64">
-                        <RemoteDir>.\Pictures\bits</RemoteDir>
-                        <RemoteName>bit_off12x12.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\bin\Shaders\TextFromTexture.vsh" Configuration="Debug" Class="File">
+                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleSingleColor.vsh" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Shaders</RemoteDir>
-                        <RemoteName>TextFromTexture.vsh</RemoteName>
+                        <RemoteName>SimpleSingleColor.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ColoredVertexes.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ColoredVertexes.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\controls\Black Shark 24.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\controls</RemoteDir>
+                        <RemoteName>Black Shark 24.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off10x10.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_off10x10.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\2d AABB.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>2d AABB.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Fonts\DejaVuSans.ttf" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>DejaVuSans.ttf</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Models\Obj\aquafish01n.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Models\Obj</RemoteDir>
+                        <RemoteName>aquafish01n.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoint2.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesPoint2.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothMSAA.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SmoothMSAA.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libPCRE.dylib" Class="DependencyModule"/>
+                <DeployFile LocalName="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf_0.50.ind" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>NotoEmoji-Regular.ttf_0.50.ind</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothSSAA.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SmoothSSAA.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Models\Obj\aquafish01.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Models\Obj</RemoteDir>
+                        <RemoteName>aquafish01.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothFXAA.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SmoothFXAA.fsh</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -1142,6 +426,638 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on8x8_.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_on8x8_.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on10x10__.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_on10x10__.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\Layout.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>Layout.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\Instancing.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>Instancing.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libcgunwind.1.0.dylib" Class="DependencyModule">
+                    <Platform Name="iOSSimulator">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad2.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesQuad2.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothSSAA2.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SmoothSSAA2.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\sel_point.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>sel_point.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\TextureAni.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>TextureAni.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\LightPoint.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>LightPoint.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\LightPointNormalMap.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>LightPointNormalMap.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\point_red_7x7.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>point_red_7x7.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleWire.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SimpleWire.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_on.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleTexture.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SimpleTexture.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SkeletonTextured.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SkeletonTextured.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Fonts\cpCyrillicToUTF16.txt" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>cpCyrillicToUTF16.txt</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothByKernelMSAA.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SmoothByKernelMSAA.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\TextureReplaceColor.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>TextureReplaceColor.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\Bin\TestFM.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>TestFM.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SingleColor.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SingleColor.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on10x10.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_on10x10.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\Smooth.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>Smooth.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\DoubleColor.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>DoubleColor.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on10x10L.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_on10x10L.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\earth\earthcloudmapcolortrans.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\Textures\earth</RemoteDir>
+                        <RemoteName>earthcloudmapcolortrans.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\earth\sky.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\Textures\earth</RemoteDir>
+                        <RemoteName>sky.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\TextFromTexture.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>TextFromTexture.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\OSingleColor.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>OSingleColor.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\QUAD.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>QUAD.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad5.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesQuad5.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libpcre.dylib" Class="DependencyModule">
+                    <Platform Name="iOSSimulator">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\DepthMap.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>DepthMap.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\earth\moonmap1k.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\Textures\earth</RemoteDir>
+                        <RemoteName>moonmap1k.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\earth\earthmap1k.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\Textures\earth</RemoteDir>
+                        <RemoteName>earthmap1k.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleSingleColor.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SimpleSingleColor.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\sel_point_mid.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>sel_point_mid.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off10x10_.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_off10x10_.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\controls\TBScrollBar.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\controls</RemoteDir>
+                        <RemoteName>TBScrollBar.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off8x8.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_off8x8.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off6x6.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_off6x6.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad4_no_hls_max.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesQuad4_no_hls_max.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesQuad.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Fonts\NotoSerif-Regular.ttf" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>NotoSerif-Regular.ttf</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\snowflake.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>snowflake.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\flame.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>flame.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\Instancing.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>Instancing.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad2.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesQuad2.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_off.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\Particles.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>Particles.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Fonts\DejaVuSans.ttf_0.20.ind" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>DejaVuSans.ttf_0.20.ind</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Models\Obj\aquafish02n.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Models\Obj</RemoteDir>
+                        <RemoteName>aquafish02n.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\Redist\iossim32\libcgunwind.1.0.dylib" Class="DependencyModule"/>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoints2d.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesPoints2d.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\folder_orange_24_ttf.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>folder_orange_24_ttf.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoint2.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesPoint2.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\folder_orange_24_ttf_2.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>folder_orange_24_ttf_2.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesPoint.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesPoint.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\TexToColor.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>TexToColor.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothSSAA.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SmoothSSAA.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\earth\earth.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\Textures\earth</RemoteDir>
+                        <RemoteName>earth.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleWire.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SimpleWire.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothByKernelMSAA.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SmoothByKernelMSAA.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothFXAA2.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SmoothFXAA2.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Models\Obj\aquafish01.obj" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Models\Obj</RemoteDir>
+                        <RemoteName>aquafish01.obj</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\Fog.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>Fog.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ColoredVertexes.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ColoredVertexes.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off2.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_off2.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off12x12.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_off12x12.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on10x10___.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_on10x10___.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on8x8.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_on8x8.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad4_hls_max.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesQuad4_hls_max.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Fonts\DejaVuSans.txt" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>DejaVuSans.txt</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\earth\moonmap2.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\Textures\earth</RemoteDir>
+                        <RemoteName>moonmap2.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on12x12_.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_on12x12_.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\LightPoint.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>LightPoint.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothFXAA.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SmoothFXAA.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\TransparentBack.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>TransparentBack.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad3.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesQuad3.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\ParticlesQuad4.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>ParticlesQuad4.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on10x10gs.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_on10x10gs.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SingleColor.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SingleColor.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\DoubleColor.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>DoubleColor.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on12x12.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_on12x12.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\TextFromTexture.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>TextFromTexture.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\Bin\TestFM.exe" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="..\..\..\bin\Fonts\NotoEmoji-Regular.ttf" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>NotoEmoji-Regular.ttf</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Fonts\Noto-LICENSE_OFL.txt" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>Noto-LICENSE_OFL.txt</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\Textures\block_text.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\Textures</RemoteDir>
+                        <RemoteName>block_text.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\rot_point.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures</RemoteDir>
+                        <RemoteName>rot_point.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothMSAA.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SmoothMSAA.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\Redist\osx32\libcgunwind.1.0.dylib" Class="DependencyModule">
+                    <Platform Name="OSX32">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Lang\lang.en" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Lang</RemoteDir>
+                        <RemoteName>lang.en</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Shaders\QUAD.fsh" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Shaders</RemoteDir>
@@ -1149,10 +1065,94 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SimpleTexture.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SimpleTexture.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\Layout.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>Layout.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_on10x10_.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_on10x10_.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\Smooth.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>Smooth.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\earth\moonmap1k2.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\Textures\earth</RemoteDir>
+                        <RemoteName>moonmap1k2.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothSSAA2.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SmoothSSAA2.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\SmoothFXAA2.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>SmoothFXAA2.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\Fog.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>Fog.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\TextureAni.vsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>TextureAni.vsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="..\..\..\bin\Pictures\earth\moonmap1k3.png" Configuration="Debug" Class="File">
                     <Platform Name="Linux64">
                         <RemoteDir>.\Pictures\Textures\earth</RemoteDir>
                         <RemoteName>moonmap1k3.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Fonts\NotoSans-Regular.ttf" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Fonts</RemoteDir>
+                        <RemoteName>NotoSans-Regular.ttf</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Shaders\LightPointNormalMap.fsh" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Shaders</RemoteDir>
+                        <RemoteName>LightPointNormalMap.fsh</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bin\Pictures\bits\bit_off8x8_black.png" Configuration="Debug" Class="File">
+                    <Platform Name="Linux64">
+                        <RemoteDir>.\Pictures\bits</RemoteDir>
+                        <RemoteName>bit_off8x8_black.png</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -1166,6 +1166,16 @@
                     </Platform>
                     <Platform Name="Win32">
                         <Operation>0</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidClasses">
+                    <Platform Name="Android">
+                        <RemoteDir>classes</RemoteDir>
+                        <Operation>64</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>classes</RemoteDir>
+                        <Operation>64</Operation>
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="AndroidClassesDexFile">
@@ -1469,6 +1479,11 @@
                         <Operation>1</Operation>
                         <Extensions>.framework</Extensions>
                     </Platform>
+                    <Platform Name="OSXARM64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                        <Extensions>.framework</Extensions>
+                    </Platform>
                     <Platform Name="Win32">
                         <Operation>0</Operation>
                     </Platform>
@@ -1492,6 +1507,11 @@
                         <Extensions>.dylib</Extensions>
                     </Platform>
                     <Platform Name="OSX64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="OSXARM64">
                         <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
@@ -1524,6 +1544,11 @@
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
                     </Platform>
+                    <Platform Name="OSXARM64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
                     <Platform Name="Win32">
                         <Operation>0</Operation>
                         <Extensions>.bpl</Extensions>
@@ -1550,6 +1575,10 @@
                         <Operation>0</Operation>
                     </Platform>
                     <Platform Name="OSX64">
+                        <RemoteDir>Contents\Resources\StartUp\</RemoteDir>
+                        <Operation>0</Operation>
+                    </Platform>
+                    <Platform Name="OSXARM64">
                         <RemoteDir>Contents\Resources\StartUp\</RemoteDir>
                         <Operation>0</Operation>
                     </Platform>
@@ -2090,6 +2119,10 @@
                         <RemoteDir>..\$(PROJECTNAME).app.dSYM\Contents\Resources\DWARF</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
+                    <Platform Name="OSXARM64">
+                        <RemoteDir>..\$(PROJECTNAME).app.dSYM\Contents\Resources\DWARF</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
                 </DeployClass>
                 <DeployClass Name="ProjectOSXEntitlements">
                     <Platform Name="OSX32">
@@ -2097,6 +2130,10 @@
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="OSX64">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSXARM64">
                         <RemoteDir>..\</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
@@ -2110,6 +2147,10 @@
                         <RemoteDir>Contents</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
+                    <Platform Name="OSXARM64">
+                        <RemoteDir>Contents</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
                 </DeployClass>
                 <DeployClass Name="ProjectOSXResource">
                     <Platform Name="OSX32">
@@ -2117,6 +2158,10 @@
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="OSX64">
+                        <RemoteDir>Contents\Resources</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSXARM64">
                         <RemoteDir>Contents\Resources</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
@@ -2147,6 +2192,10 @@
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="OSX64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSXARM64">
                         <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
@@ -2188,16 +2237,17 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
-                <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
-                <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="Linux64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME).app"/>
-                <ProjectRoot Platform="Android" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="OSX64" Name="$(PROJECTNAME).app"/>
-                <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Android64" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="Android" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="OSXARM64" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="Linux64" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
             </Deployment>
             <Platforms>
                 <Platform value="Android">False</Platform>

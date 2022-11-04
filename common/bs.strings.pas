@@ -201,13 +201,14 @@ var
 begin
   if (Index > Length(FText)) or (Index < 1) or (Count <= 0) then
     exit;
-  if Index + Count - 1 > Length(FText) then
-    l := Length(FText) - Index + 1 else
-    begin
+  if Index + Count - 1 >= Length(FText) then
+    l := Length(FText) - Index + 1
+  else
+  begin
     l := Count;
     if Length(FText) <> l then
       Move(FText[Index + l], FText[Index], (Length(FText) - Index - l + 1) * SizeOf(WideChar));
-    end;
+  end;
   SetLength(FText, Length(FText) - l);
 end;
 
@@ -275,14 +276,15 @@ begin
   if Value = '' then
     exit;
   if Index < 1 then
-    Index := 1;
+    Index := 1
+  else
   if Index - 1 > Len then
     Index := Len;
 
   w_str := StringToWide(Value);
   ch_count := Length(w_str);
   SetLength(FText, Len + ch_count);
-  if Index <= Len then
+  if Index < Len then
     Move(FText[Index], FText[Index + ch_count], (Len - Index + 1) * SizeOf(WideChar));
   move(w_str[1], FText[Index], ch_count * SizeOf(WideChar));
 end;
