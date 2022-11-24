@@ -551,11 +551,14 @@ type
     constructor Create(ACanvas: TBCanvas; AParent: TCanvasObject); override; deprecated 'Use TLinesSequence instead TBaseLine';
   end;
 
+  { TLinesSequenceStroke }
+
   TLinesSequenceStroke = class abstract(TLinesSequence)
   private
     LastOrigin: TVec2f;
     SumRemainder: BSFloat;
     StartStroke: TVec2f;
+    function GetColorsCount: int32;
     procedure SetStrokeLength(const Value: BSFloat);
     function GetColors(Index: int32): TColor4f;
     function GetStrokeLength: BSFloat;
@@ -571,9 +574,11 @@ type
     destructor Destroy; override;
     procedure Build; override;
     procedure Clear; override;
+    procedure WriteColorToPoint(AIndexPoint: int32; const AValue: TColor4f);
     { if it is more 0 then the line has strokes }
     property StrokeLength: BSFloat read GetStrokeLength write SetStrokeLength;
     property Colors[Index: int32]: TColor4f read GetColors;
+    property ColorsCount: int32 read GetColorsCount;
   end;
 
   TLine = class(TLinesSequenceStroke)
@@ -3247,6 +3252,22 @@ begin
   inherited;
   SumRemainder := 0.0;
   FColors.Clear;
+  FColorDistances.Clear;
+end;
+
+procedure TLinesSequenceStroke.WriteColorToPoint(AIndexPoint: int32; const AValue: TColor4f);
+begin
+  if Data.Mesh.TypePrimitive in [TTypePrimitive.tpLines, TTypePrimitive.tpLineStrip] then
+  begin
+    Data.Mesh.Write(AIndexPoint, vcColor, AValue);
+    Data.Mesh.Write(AIndexPoint+1, vcColor, AValue);
+  end else
+  begin
+    Data.Mesh.Write(AIndexPoint shl 1, vcColor, AValue);
+    Data.Mesh.Write((AIndexPoint shl 1)+1, vcColor, AValue);
+    Data.Mesh.Write((AIndexPoint + 1) shl 1, vcColor, AValue);
+    Data.Mesh.Write(((AIndexPoint + 1) shl 1)+1, vcColor, AValue);
+  end;
 end;
 
 function TLinesSequenceStroke.CreateGraphicObject(AParent: TGraphicObject): TGraphicObject;
@@ -3300,7 +3321,6 @@ begin
       if l = StrokeLength then
       begin
         SumRemainder := 0.0;
-        //FStrokePoints.Add(Point);
       end;
 
     end else
@@ -3335,6 +3355,11 @@ end;
 procedure TLinesSequenceStroke.SetStrokeLength(const Value: BSFloat);
 begin
   TComplexCurveObject(Data).StrokeLength := Value;
+end;
+
+function TLinesSequenceStroke.GetColorsCount: int32;
+begin
+  Result := FColors.Count;
 end;
 
 { TPath }
@@ -3499,7 +3524,7 @@ begin
     AddPoint(FOrigins.Items[FOrigins.Count - 1]);
   if not TComplexCurveObject(Data).MultiColor then
     TComplexCurveObject(Data).MultiColor := true;
-    FColors.Add(AColor);
+  FColors.Add(AColor);
 end;
 
 procedure TPath.AddFirstArc(const APositionCenter: TVec2f; ARadius, AAngle, AStartAngle: BSFloat; const AColor: TGuiColor);

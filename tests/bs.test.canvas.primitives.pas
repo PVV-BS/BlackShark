@@ -1,4 +1,5 @@
 ﻿unit bs.test.canvas.primitives;
+
 {$I BlackSharkCfg.inc}
 
 interface
@@ -86,9 +87,25 @@ type
     class function TestName: string; override;
   end;
 
+  { TBSTestCanvasPathMultiColored }
+
   TBSTestCanvasPathMultiColored = class(TBSTestCanvasPrimitive)
   private
     Path: TPath;
+  public
+    constructor Create(ARenderer: TBlackSharkRenderer); override;
+    class function TestName: string; override;
+  end;
+
+  { TBSTestCanvasSplineMultiColored }
+
+  TBSTestCanvasSplineMultiColored = class(TBSTestCanvasPrimitive)
+  private
+    Path: TPath;
+    IndexColor: int32;
+    ColorEnum: int32;
+  protected
+    procedure OnMouseDown(const AData: BMouseData); override;
   public
     constructor Create(ARenderer: TBlackSharkRenderer); override;
     class function TestName: string; override;
@@ -455,8 +472,8 @@ begin
 end;
 
 { TBSTestCanvasPathMultiColored }
-constructor TBSTestCanvasPathMultiColored.Create
-  (ARenderer: TBlackSharkRenderer);
+
+constructor TBSTestCanvasPathMultiColored.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
   Allow3dManipulationByMouse := true;
@@ -470,8 +487,6 @@ begin
   Path.WidthLine := 1.0;
   Path.StrokeLength := 10;
   Path.Color := BS_CL_GREEN;
-  // Path.AddPoint(vec2(0.0, 0.0));
-  // Path.AddPoint(vec2(150.0, 100.0));
   Path.AddFirstArc(vec2(140.0, 150.0), 70.0, 190.0, 30, BS_CL_GREEN);
   Path.AddArc(100.0, 30.0, BS_CL_ORANGE);
   Path.AddArc(150.0, -60.0, BS_CL_YELLOW);
@@ -483,9 +498,6 @@ begin
   Path.AddPoint(vec2(200.0, 360.0), TGuiColors.Green);
   Path.AddPoint(vec2(250.0, 360.0), TGuiColors.Yellow);
   Path.AddPoint(vec2(290.0, 200.0));
-  { Path.AddPoint(vec2(290.0, 230.0));
-    Path.AddPoint(vec2(310.0, 250.0), TGuiColors.Navy);
-    Path.AddPoint(vec2(340.0, 260.0)); }
   if canvas.Scalable then
     Path.AnchorsReset;
   Path.Build;
@@ -496,7 +508,52 @@ begin
   Result := 'Test bs.canvas.TPathMulticolored';
 end;
 
+{ TBSTestCanvasSplineMultiColored }
+
+procedure TBSTestCanvasSplineMultiColored.OnMouseDown(const AData: BMouseData);
+begin
+	inherited OnMouseDown(AData);
+  Path.WriteColorToPoint(IndexColor, TColor4f(GetColorMap(ColorEnum).Color));
+  inc(ColorEnum);
+  inc(IndexColor, 2);
+  ColorEnum := ColorEnum mod ColorMapCount;
+  IndexColor := IndexColor mod Path.CountPoints;
+  if IndexColor = 0 then
+  	IndexColor := 1;
+  Path.Data.ChangedMesh;
+end;
+
+constructor TBSTestCanvasSplineMultiColored.Create(ARenderer: TBlackSharkRenderer);
+begin
+  inherited Create(ARenderer);
+  IndexColor := 1;
+  Allow3dManipulationByMouse := true;
+  renderer.Frustum.DistanceFarPlane := 200;
+  canvas.StickOnScreen := false;
+  Path := TPath.Create(canvas, nil);
+  Path.InterpolateSpline := TInterpolateSpline.isNone;
+  Path.WidthLine := 1.0;
+  Path.Color := BS_CL_GREEN;
+  Path.AddPoint(vec2(50.0, 90.0), BS_CL_ORANGE);
+  Path.AddPoint(vec2(150.0, 100.0), BS_CL_YELLOW);
+  Path.AddPoint(vec2(180.0, 200.0), BS_CL_SILVER);
+  Path.AddPoint(vec2(560.0, 400.0), BS_CL_OLIVE);
+  { adding a small snippet; this trick allows to exclude long interpolates colors between segments }
+  Path.AddPoint(vec2(200.0, 360.0), TGuiColors.Green);
+  Path.AddPoint(vec2(250.0, 360.0), TGuiColors.Yellow);
+  Path.AddPoint(vec2(290.0, 200.0));
+  if canvas.Scalable then
+    Path.AnchorsReset;
+  Path.Build;
+end;
+
+class function TBSTestCanvasSplineMultiColored.TestName: string;
+begin
+  Result := 'TBSTestCanvasSplineMultiColored';
+end;
+
 { TBSTestCanvasRoundRect }
+
 constructor TBSTestCanvasRoundRect.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
@@ -1319,6 +1376,7 @@ initialization
   RegisterTest(TBSTestCanvasPath);
   RegisterTest(TBSTestCanvasPathArc);
   RegisterTest(TBSTestCanvasPathMultiColored);
+  RegisterTest(TBSTestCanvasSplineMultiColored);
   RegisterTest(TBSTestRectangle);
   RegisterTest(TBSTestCanvasRoundRect);
   RegisterTest(TBSTestCanvasRoundRectTextured);
