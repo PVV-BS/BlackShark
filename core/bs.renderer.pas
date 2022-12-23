@@ -2291,15 +2291,14 @@ begin
   //if (Instance.Instance.Owner.Opacity = 0) then
   //  exit;
 
-  BSShaderManager.UseShader(Instance.Instance.Owner.Shader, not SupportsVAO);
+  {$ifndef ultibo}
+  if SupportsVAO then
+    glBindVertexArray(GL_NONE);
+  {$endif}
 
+  BSShaderManager.UseShader(Instance.Instance.Owner.Shader, not SupportsVAO or not Instance.Instance.Owner.StaticObject);
   if LastDrawGI <> Instance.Instance.Owner then
   begin
-    {$ifndef ultibo}
-    if SupportsVAO then
-      glBindVertexArray(GL_NONE);
-    {$endif}
-
     if LastCullFaceOption <> Instance.Instance.Owner.DrawSides then
     begin
       LastCullFaceOption := Instance.Instance.Owner.DrawSides;

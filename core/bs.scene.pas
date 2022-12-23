@@ -440,7 +440,7 @@ type
       of instances of the object doesn't calculate, only when instances moving itself;
       for example, it property can be usefull when we know that an object alwas is visible
       and then we don't want to overload scene by space area detection for the object;
-      the property default equal "true" }
+      the property default equal "false" }
     property SceneSpaceTreeClient: boolean read FSceneSpaceTreeClient write SetSceneSpaceTreeClient;
     { service scale for internal use }
     property ServiceScale: BSFloat read FServiceScale write SetServiceScale;

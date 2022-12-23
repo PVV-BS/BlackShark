@@ -1474,7 +1474,7 @@ begin
   Node.Volume := Box3Volume(Node.BB);
   {$ifdef DEBUG_ST}
   if (Node.__PosInList = nil) then
-    begin
+  begin
     if Box3Collision(FViewPort, Node.BB) then
       begin
       //InVisibleList(Node);
@@ -1482,22 +1482,21 @@ begin
       if Assigned(FOnShowNoLeafNode) then
         FOnShowNoLeafNode(Node);
       end;
-    end else
+  end else
   if Box3Collision(FViewPort, Node.BB) then
-    begin
+  begin
     if Assigned(FOnChangeSizeNoLeafNode) then
       FOnChangeSizeNoLeafNode(Node);
-    end else
-    begin
+  end else
+  begin
     FVisibleNoLeafNodes.Remove(Node.__PosInList);
     if Assigned(FOnHideNoLeafNode) then
       FOnHideNoLeafNode(Node);
-    end;
+  end;
   {$endif}
 end;
 
-function TBlackSharkSpaceTree.PickNearesLeaf(const P0, P1, P2, P3: TVec3f;
-  out Distance: BSFloat): PNodeSpaceTree;
+function TBlackSharkSpaceTree.PickNearesLeaf(const P0, P1, P2, P3: TVec3f; out Distance: BSFloat): PNodeSpaceTree;
 {var
   tri1, tri2: TTriangle3f;
   b: TBox3d;

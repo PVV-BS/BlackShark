@@ -4041,10 +4041,10 @@ begin
 end;
 
 function Box2Collision(const Box1, Box2: TBox2d): boolean;
-{var
-  _max, _min: double;  }
+var
+  _max, _min: double;
 begin
-  {_min := bs.math.Max(Box1.Min.x, Box2.Min.x);
+  _min := bs.math.Max(Box1.Min.x, Box2.Min.x);
   _max := bs.math.Min(Box1.Max.x, Box2.Max.x);
   if (_min >= _max) then
     exit(false);
@@ -4052,17 +4052,14 @@ begin
   _max := bs.math.Min(Box1.Max.y, Box2.Max.y);
   if (_min >= _max) then
     exit(false);
-  Result := true;  }
-  Result :=
-    (not ((Box1.Max.x < Box2.Min.x) or (Box2.Max.x < Box1.Min.x))) and
-    (not ((Box1.Max.y < Box2.Min.y) or (Box2.Max.y < Box1.Min.y)));
+  Result := true;
 end;
 
 function Box3Collision(const Box1, Box2: TBox3f): boolean;
-{var
-  _max, _min: double;}
+var
+  _max, _min: double;
 begin
-  {_min := bs.math.Max(Box1.Min.x, Box2.Min.x);
+  _min := bs.math.Max(Box1.Min.x, Box2.Min.x);
   _max := bs.math.Min(Box1.Max.x, Box2.Max.x);
   if (_min >= _max) then
     exit(false);
@@ -4074,18 +4071,14 @@ begin
   _max := bs.math.Min(Box1.Max.z, Box2.Max.z);
   if (_min >= _max) then
     exit(false);
-  Result := true;   }
-  Result :=
-    (not ((Box1.x_max < Box2.x_min) or (Box2.x_max < Box1.x_min))) and
-    (not ((Box1.y_max < Box2.y_min) or (Box2.y_max < Box1.y_min))) and
-    (not ((Box1.z_max < Box2.z_min) or (Box2.z_max < Box1.z_min)));
+  Result := true;
 end;
 
 function Box3Collision(const Box1, Box2: TBox3d): boolean;
-{var
-  _max, _min: double;     }
+var
+  _max, _min: double;
 begin
-  {_min := bs.math.Max(Box1.Min.x, Box2.Min.x);
+  _min := bs.math.Max(Box1.Min.x, Box2.Min.x);
   _max := bs.math.Min(Box1.Max.x, Box2.Max.x);
   if (_min >= _max) then
     exit(false);
@@ -4097,11 +4090,7 @@ begin
   _max := bs.math.Min(Box1.Max.z, Box2.Max.z);
   if (_min >= _max) then
     exit(false);
-  Result := true;  }
-  Result :=
-    (not ((Box1.x_max < Box2.x_min) or (Box2.x_max < Box1.x_min))) and
-    (not ((Box1.y_max < Box2.y_min) or (Box2.y_max < Box1.y_min))) and
-    (not ((Box1.z_max < Box2.z_min) or (Box2.z_max < Box1.z_min)));
+  Result := true;
 end;
 
 function Box3Inside(const Box, BoxInside: TBox3f): boolean;

@@ -614,6 +614,7 @@ type
   private
     class var FShadersName: THashTable<string, TBlackSharkShader>;
     class var FLastUsedShader: TBlackSharkShader;
+    class var FLastUsedShaderAttrEnabled: boolean;
     class procedure Add(BSShader: TBlackSharkShader);
     class function GetShaderByName(const Name: string; MvpAsUniform: boolean): TBlackSharkShader;
     class constructor Create;
@@ -754,9 +755,10 @@ end;
 
 class procedure BSShaderManager.UseShader(AShader: TBlackSharkShader; AEnableAttrib: boolean);
 begin
-  if AShader <> FLastUsedShader then
+  if (AShader <> FLastUsedShader) or (FLastUsedShaderAttrEnabled <> AEnableAttrib) then
   begin
     FLastUsedShader := AShader;
+    FLastUsedShaderAttrEnabled := AEnableAttrib;
     if Assigned(FLastUsedShader) then
       FLastUsedShader.UseProgram(AEnableAttrib)
     else

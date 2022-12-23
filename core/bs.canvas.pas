@@ -101,6 +101,7 @@ type
     FPaddingRight: BSFloat;
     FPaddingBottom: BSFloat;
 
+    function GetIsVisible: boolean;
     procedure SetLayer2d(const Value: int32);
     procedure SetMinHeight(const Value: BSFloat);
     procedure SetMinWidth(const Value: BSFloat);
@@ -252,6 +253,7 @@ type
     property BanScalableModeSize: boolean read FBanScalableModeSize write FBanScalableModeSize;
     { a partial ban of the scalable mode - if true then position is not scalable, only size }
     property BanScalableModePos: boolean read FBanScalableModePos write FBanScalableModePos;
+    property IsVisible: boolean read GetIsVisible;
   end;
 
   TCanvasObjectEmpty = class(TCanvasObject)
@@ -493,8 +495,11 @@ type
 
   { A base for sequentially linked points }
 
+  { TLinesSequence }
+
   TLinesSequence = class abstract(TCanvasObject)
   private
+    FDirectionY: int8;
     FShowPoints: boolean;
     FColorPoints: TColor4f;
     FWidthLine: BSFloat;
@@ -506,6 +511,7 @@ type
     FPointsG: TListVec<TCircle>;
     FOriginPos: TVec2f;
     procedure OnDrag(const Value: BDragDropData);
+    procedure SetDirectionY(AValue: int8);
     procedure SetShowPoints(const Value: boolean);
     function GetPointG(Index: int32): TCircle;
     procedure OnBeforeCanvasClear(const AData: BEmpty);
@@ -544,6 +550,10 @@ type
     property CountPoints: int32 read GetCountPoint;
     property Points[Index: int32]: TVec2f read GetPoint;
     property CurrentLength: double read FCurrentLength;
+    { minimal 2d origin point }
+    property OriginPosition: TVec2f read FOriginPosition;
+    { direction of Y = [-1; 1] }
+    property DirectionY: int8 read FDirectionY write SetDirectionY;
   end;
 
   TBaseLine = class(TLinesSequence)
@@ -1501,10 +1511,12 @@ begin
     ps := GetParentSize;
     FPosition2d.x := round(ps.Width  * 0.5 + vp.x);
     FPosition2d.y := round(ps.Height * 0.5 - vp.y);
+    //FPositionZ := Parent.PositionZ-(vp.z+d)*BSConfig.VoxelSizeInv;
   end else
   begin
     FPosition2d.x := round(FCanvas.Renderer.WindowWidth  * 0.5 + vp.x);
     FPosition2d.y := round(FCanvas.Renderer.WindowHeight * 0.5 - vp.y);
+    //FPositionZ := (vp.z+d)*BSConfig.VoxelSizeInv;
   end;
 
   if not FIsBuilding and (FAlign <> TObjectAlign.oaNone) then
@@ -1617,6 +1629,11 @@ begin
   FLayer2d := Value;
   if Assigned(FData) then
     SetCanvasObjectPosition(FPosition2d.X, FPosition2d.Y, FData.BaseInstance);
+end;
+
+function TCanvasObject.GetIsVisible: boolean;
+begin
+  Result := Assigned(FData) and FCanvas.Renderer.SceneInstanceToRenderInstance(FData.BaseInstance).Visible;
 end;
 
 procedure TCanvasObject.SetMarginBottom(const Value: BSFloat);
@@ -1828,10 +1845,11 @@ end;
 
 procedure TCanvasObject.Reload;
 begin
-  if FData.StaticObject then
-    FData.ChangedMesh
-  else
-    CalcBB;
+  FData.ChangedMesh;
+  //if FData.StaticObject then
+  //	FData.ChangedMesh
+  //else
+  //  CalcBB;
 end;
 
 procedure TCanvasObject.ReloadAnchorsAlign;
@@ -2956,7 +2974,6 @@ begin
     FCurrentLength := FCurrentLength + VecLen(FOrigins.Items[FOrigins.Count - 1] - Point);
 
   FOrigins.Add(Point);
-  FPoints.Add(Canvas.Renderer.ScreenPositionToScene(Point));
 
   FOriginPosition.x := bs.math.Min(FOriginPosition.x, Point.x);
   FOriginPosition.y := bs.math.Min(FOriginPosition.y, Point.y);
@@ -2986,6 +3003,17 @@ begin
   end else
     FOrigins.Items[p.Data.TagInt] := p.Position2d;
   Build;
+end;
+
+procedure TLinesSequence.SetDirectionY(AValue: int8);
+begin
+  if FDirectionY = AValue then 
+    exit;
+
+  if AValue < 0 then
+    FDirectionY := -1
+  else
+    FDirectionY := 1;
 end;
 
 function TLinesSequence.GetPoint(Index: int32): TVec2f;
@@ -3046,6 +3074,7 @@ begin
   inherited;
   FPoints := TListVec3f.Create;
   FOrigins := TListVec2f.Create;
+  FDirectionY 	:= 1;
   FWidthLine    := 1;
   FRadiusPoints := 5;
   FOriginPosition.x := 65535.0;
@@ -3097,7 +3126,7 @@ end;
 
 function TLinesSequence.GetCountPoint: int32;
 begin
-  Result := FPoints.Count;
+  Result := FOrigins.Count;
 end;
 
 procedure TLinesSequence.SetWidthLine(const Value: BSFloat);
@@ -3113,13 +3142,16 @@ end;
 procedure TLinesSequence.SetPosition2d(const AValue: TVec2f);
 var
   i: int32;
+  delta: TVec2f;
 begin
 
   if not IsBuilding then
   begin
+    delta := FOriginPosition - AValue;
     for i := 0 to FOrigins.Count - 1 do
-      FOrigins.Items[i] := FOrigins.Items[i] - FOriginPosition + AValue;
+      FOrigins.Items[i] := FOrigins.Items[i] - delta;
 
+    FOriginPosition := AValue;
     CalcOriginPos;
   end;
 
@@ -3164,7 +3196,10 @@ begin
   for i := 0 to FOrigins.Count - 1 do
   begin
     origin := FOrigins.Items[i];
-    FPoints.Items[i] := vec3(origin.x, par_size.y-origin.y, 0.0);
+    if FDirectionY > 0 then
+    	FPoints.Items[i] := vec3(origin.x, par_size.y - origin.y, 0.0)
+    else
+    	FPoints.Items[i] := vec3(origin.x, origin.y - par_size.y, 0.0);
     FOriginPos.x := bs.math.Min(FOriginPos.x, origin.x);
     FOriginPos.y := bs.math.Min(FOriginPos.y, origin.y);
     max_pos.x := bs.math.Max(max_pos.x, origin.x);
