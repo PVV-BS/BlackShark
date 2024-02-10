@@ -435,16 +435,16 @@ type
     Cornsilk       = $DCF8FF;
     Blanchedalmond = $CDEBFF;
     Bisque         = $C4E4FF;
-    Havajowhite	   = $ADDEFF;
+    Havajowhite    = $ADDEFF;
     Wheat          = $B3DEF5;
     BurlyWood      = $87B8DE;
-    Tan	           = $8CB4D2;
+    Tan            = $8CB4D2;
     Rosybrown      = $8F8FBC;
     Sandybrown     = $60A4F4;
     Goldenrod      = $20A5DA;
     Peru           = $3F85CD;
     Chocolate      = $1E69D2;
-    Saddlebrown	   = $13458B;
+    Saddlebrown    = $13458B;
     Sienna         = $2D52A0;
     Brown          = $2A2AA5;
     Silver         = $C0C0C0;
@@ -609,42 +609,41 @@ var
   weight: Single;
 begin
   if Scale < 1 then
-    begin
+  begin
     MapContainer.Count := Ceil(FilterWidth*2);
     left  :=  Floor(-FilterWidth);
     right :=  Ceil(FilterWidth);
     for j := Left to Right do
-      begin
+    begin
       weight := FFilter((j shl 1) * Scale);
       if weight <> 0 then
         MapContainer.Items[round(j+FilterWidth)] := weight;
-      end;
-    end else // scale > 1
-    begin
+    end;
+  end else // scale > 1
+  begin
     MapContainer.Count := FWindowSize;
     { TODO: resample to increase }
     {for i := 0 to ClipW - 1 do
-      begin
+     begin
       Center := SrcLo + (I - DstLo + ClipLo) * Scale;
       left := Floor(Center - FWindowSize);
       right := Ceil(Center + FWindowSize);
       for j := left to right do
-        begin
+      begin
         weight := FFilter(Center - j);
         if weight <> 0 then
-          begin
+        begin
           k := Length(Result[I]);
           SetLength(Result[I], k + 1);
           Result[I][K].Pos := Constrain(j, SrcLo, SrcHi - 1);
           Result[I][K].Weight := weight;
-          end;
         end;
-      end;}
-    end;
+      end;
+     end;}
+  end;
 end;
 
-procedure TSamplerFilter.Resample(const NewSize: TVec2i;
-  const BorderSize: int32);
+procedure TSamplerFilter.Resample(const NewSize: TVec2i; const BorderSize: int32);
 var
   i, j, px, py: int32;
   wx, wy: int16; // scan window position
@@ -674,17 +673,17 @@ begin
   until not ((tmp.y > 1) and (Ceil((NewSize.y-1) * scale_inv.y) < FCanvas.Height));
 
   if FilterAssigned then
-    begin
+  begin
     Map(MapX, CarrentScale.x, CarrentFilterWidth.x);
     Map(MapY, CarrentScale.y, CarrentFilterWidth.y);
-    end;
+  end;
+
   border_double := BorderSize*2;
   CurrentResampleSize := vec2(int32(NewSize.x + border_double), int32(NewSize.y + border_double));
   sample_size := SizeOfSample;
   NewPadding := 4 - ((NewSize.x + border_double)*sample_size) mod 4;
   if NewPadding = 4 then
     NewPadding := 0;
-  //buf.Size {%H-}:= (NewSize.x + border_double) * (NewSize.x + border_double) * sample_size;
 
   if NewSize.x > FCanvas.Height then
     buf.Size {%H-}:= ((NewSize.x + border_double) * sample_size + NewPadding) * (NewSize.x + border_double)
@@ -703,7 +702,8 @@ begin
         if (px < 0) or (px >= FCanvas.Width) then
           continue;
         if FilterAssigned then
-          PrepareSampleHor(px, i, MapX.Items[wx + fs_rounded.x]) else
+          PrepareSampleHor(px, i, MapX.Items[wx + fs_rounded.x])
+        else
           PrepareSampleHor(px, i, 1.0);
       end;
       EndPreparedSample(j + BorderSize, i + BorderSize);
@@ -721,7 +721,8 @@ begin
         if (py < 0) or (py >= FCanvas.Height) then
           continue;
         if FilterAssigned then
-          PrepareSampleVert(j + BorderSize, py + BorderSize, MapY.Items[wy + fs_rounded.y]) else
+          PrepareSampleVert(j + BorderSize, py + BorderSize, MapY.Items[wy + fs_rounded.y])
+        else
           PrepareSampleVert(j + BorderSize, py + BorderSize, 1.0);
       end;
       EndPreparedSample(j + BorderSize, i + BorderSize);
@@ -756,9 +757,9 @@ begin
       FFilter := CubicInterpolation;
       end;
     imLanczos: begin
-    { for Lanczos filter size window set default 6 }
-    FWindowSize := 6;
-    FFilter := Lanczos3Interpolation;
+      { for Lanczos filter size window set default 6 }
+      FWindowSize := 6;
+      FFilter := Lanczos3Interpolation;
     end;
   end;
   FilterAssigned := Assigned(FFilter);

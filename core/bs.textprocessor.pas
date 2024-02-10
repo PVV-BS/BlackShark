@@ -42,6 +42,7 @@ type
     { line width }
     Width: BSFloat;
     Height: BSFloat;
+    IsParagraphBeginning: boolean;
     TrimWidth: BSFloat;
     { count blanks }
     CountBlanks: int32;
@@ -49,6 +50,7 @@ type
     CountChars: int32;
     { blanks in lines b/w words }
     InsideBlanks: int32;
+    EndBlanks: int32;
     IndexBegin: int32;
     Words: int32;
   end;
@@ -143,6 +145,7 @@ begin
   prop.InsideBlanks := 0;
   prop.IndexBegin := PositionBegin;
   prop.Words := 0;
+  prop.EndBlanks := 0;
   word_width := 0.0;
   chars := 0;
   blanks_befor_word := 0;
@@ -174,35 +177,30 @@ begin
 
   prop.IndexBegin := PositionBegin;
   prop.Width := 0.0;
+  prop.IsParagraphBeginning := true;
 
   for i := PositionBegin to FCountChars do
   begin
     inc(prop.CountChars);
     KeyInfo := FOnQueryKey(i, code);
-    if code = $09 then
+    if (code = $09) or (code = $20) then
     begin
       if word_reads then
       begin
         blanks_befor_word := 0;
         word_reads := false;
       end;
-      add := FBlankWidth*2;
-      inc(prop.CountBlanks, 2);
-      inc(blanks_befor_word, 2);
-      chars := 0;
-      if not first_word then
-        prop.TrimWidth := prop.Width + add;
-    end else
-    if (code = $20) then
-    begin
-      if word_reads then
+      if code = $09 then
       begin
-        blanks_befor_word := 0;
-        word_reads := false;
+        add := FBlankWidth*2;
+        inc(prop.CountBlanks, 2);
+        inc(blanks_befor_word, 2);
+      end else
+      begin
+        add := FBlankWidth;
+        inc(prop.CountBlanks);
+        inc(blanks_befor_word);
       end;
-      inc(prop.CountBlanks);
-      inc(blanks_befor_word);
-      add := FBlankWidth;
       chars := 0;
       if not first_word then
         prop.TrimWidth := prop.Width + add;
@@ -221,9 +219,11 @@ begin
         //blanks := 0;
         word_width := 0;
         word_reads := true;
-      end;
+        add := KeyInfo^.Rect.Width;
+      end else
+        add := KeyInfo^.Rect.Width + FDelta;
+
       first_word := false;
-      add := KeyInfo^.Rect.Width + FDelta;
       word_width := word_width + add;
       prop.TrimWidth := prop.TrimWidth + add;
       inc(chars);
@@ -235,7 +235,7 @@ begin
 
     prop.Width := prop.Width + add;
 
-    if (code = $0a) or (prop.Width + 2 >= out_width) then
+    if (code = $0a) or (prop.Width + 3 > out_width) then
     begin
       if FAllowBreakWords or (code = $0a) or (code = $20) or (code = $09) then
       begin
@@ -245,12 +245,14 @@ begin
         if FLineHeight = 0 then
           FHeight := FHeight + prop.Height + FInterligne;
 
+        prop.EndBlanks := blanks_befor_word;
         prop.TrimWidth := prop.TrimWidth - blanks_befor_word * FBlankWidth;
         FLines.Add(prop);
+        prop.IsParagraphBeginning := (code = $0a);
         prop.Height := 0.0;
         prop.CountChars := 0;
 
-        prop.IndexBegin := i+1;
+        prop.IndexBegin := i + 1;
         prop.Width := 0;
         prop.TrimWidth := 0.0;
         chars := 0;
@@ -288,6 +290,7 @@ begin
       blanks_befor_word := 0;
       prop.InsideBlanks := 0;
       prop.CountBlanks := blanks_befor_word;
+      prop.EndBlanks := 0;
     end;
   end;
 

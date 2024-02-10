@@ -696,7 +696,7 @@ var
   i: int32;
 begin
   inherited;
-  Renderer.Frustum.OrtogonalProjection := true;
+  Renderer.Frustum.OrthogonalProjection := true;
   Data := TListVec<AnsiString>.Create;
   for i := 0 to 10 do
   begin
@@ -1915,7 +1915,7 @@ end;
 constructor TBSTestEdit.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Renderer.Frustum.OrtogonalProjection := true;
+  Renderer.Frustum.OrthogonalProjection := true;
   //Viewport.Width := 800;
   //Canvas := TBCanvas.Create(ARenderer, nil);
   //Canvas.Scalable := true;
@@ -1964,7 +1964,7 @@ end;
 constructor TBSTestObjectInspector.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Renderer.Frustum.OrtogonalProjection := true;
+  Renderer.Frustum.OrthogonalProjection := true;
   Inspector := TObjectInspector.Create(ARenderer);
   Inspector.MainBody.Data.DragResolve := true;
   //Inspector.Position2d := vec2(10.0, 10.0);
@@ -2059,7 +2059,7 @@ end;
 constructor TBSTestTable.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Renderer.Frustum.OrtogonalProjection := true;
+  Renderer.Frustum.OrthogonalProjection := true;
   CheckBoxData := TListVec<string>.Create;
   LastIndex := -1;
 end;
@@ -2301,7 +2301,7 @@ end;
 constructor TBSTestColorBox.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Renderer.Frustum.OrtogonalProjection := true;
+  Renderer.Frustum.OrthogonalProjection := true;
   ColorBox := TBColorBox.Create(ARenderer);
 end;
 

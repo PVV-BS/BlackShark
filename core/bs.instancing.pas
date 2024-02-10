@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -48,6 +48,7 @@ uses
   , bs.mesh
   , bs.mesh.primitives
   , bs.canvas
+  , bs.events
   ;
 
 type
@@ -76,13 +77,17 @@ type
     FCountInstance: int32;
     Instances: TListVec<TInstance>;
     Matrixes: TListVec<TMatrix4f>;
+    {$ifndef ultibo}
     MvpVBO: GLuint;
+    {$endif}
     MvpAttr: PShaderParametr;
     GIMethodDefault: TDrawInstanceMethod;
     UpdateCounter: int32;
+    FUpdatedIndex: int32;
     ProtoRendererInstance: PRendererGraphicInstance;
     OpacityUniform: PShaderParametr;
     ColorUniform: PShaderParametr;
+    HandleCMVP: IBChangeMVPEventObserver;
 
     procedure GenMatrix(AIndex: int32); inline;
     procedure UpadateAllMatrix;
@@ -97,6 +102,7 @@ type
     procedure SetScale(AIndex: int32; const Value: BSFloat);
     function GetColor(AIndex: int32): TColor4f;
     procedure SetColor(AIndex: int32; const Value: TColor4f);
+    procedure OnChangeMVP({%H}const Value: BTransformData); virtual;
     //procedure TryCreateMvpVbo;
   protected
     procedure SetPrototype(const Value: TObjectVertexes); virtual;
@@ -104,7 +110,7 @@ type
   public
     constructor Create(ARenderer: TBlackSharkRenderer; APrototype: TObjectVertexes);
     destructor Destroy; override;
-    procedure BeginUpdate;
+    procedure BeginUpdate(AIndex: int32 = -1);
     procedure EndUpdate;
     procedure Remove(AIndex: int32);
     property Prototype: TObjectVertexes read FPrototype write SetPrototype;
@@ -118,7 +124,7 @@ type
 
   TBlackSharkInstancing2d = class(TBlackSharkInstancing)
   private
-    PrototypeCanvasObject: TCanvasObject;
+    FPrototypeCanvasObject: TCanvasObject;
     FPositions2d: TListVec<TVec2f>;
     function GetPosition2d(AIndex: int32): TVec2f;
     procedure SetPosition2d(AIndex: int32; const AValue: TVec2f);
@@ -126,6 +132,7 @@ type
     constructor Create(ARenderer: TBlackSharkRenderer; APrototype: TCanvasObject);
     destructor Destroy; override;
     property Position2d[index: int32]: TVec2f read GetPosition2d write SetPosition2d;
+    property PrototypeCanvasObject: TCanvasObject read FPrototypeCanvasObject;
   end;
 
   TBlackSharkParticleShader = class(TBlackSharkShader)
@@ -605,8 +612,9 @@ end;
 
 { TBlackSharkInstansing }
 
-procedure TBlackSharkInstancing.BeginUpdate;
+procedure TBlackSharkInstancing.BeginUpdate(AIndex: int32 = -1);
 begin
+  FUpdatedIndex := AIndex;
   inc(UpdateCounter);
 end;
 
@@ -619,6 +627,7 @@ const
     Color: (x:1.0; y:0.5; z:0.0; a:1.0);
     IsVisible: false);
 begin
+  FUpdatedIndex := -1;
   FRenderer := ARenderer;
   Instances := TListVec<TInstance>.Create(InstanceComparator);
   Instances.DefaultValue := INST_DEF_VAL_TRANSF;
@@ -629,9 +638,14 @@ end;
 
 destructor TBlackSharkInstancing.Destroy;
 begin
+  if Assigned(FPrototype) then
+    FPrototype.DrawInstance := GIMethodDefault;
+  HandleCMVP := nil;
   Matrixes.Free;
+  {$ifndef ultibo}
   if MvpVBO > 0 then
     glDeleteBuffers(1, @MvpVBO);
+  {$endif}
   Instances.Free;
   inherited;
 end;
@@ -639,6 +653,7 @@ end;
 procedure TBlackSharkInstancing.DrawProto(Inst: PRendererGraphicInstance);
 var
   i: int32;
+  instData: PInstance;
 begin
 
   {$ifndef ultibo}
@@ -663,14 +678,16 @@ begin
 
     for i := 0 to FCountInstance - 1 do
     begin
-      if not PInstance(Instances.ShiftData[i]).IsVisible then
+      instData := PInstance(Instances.ShiftData[i]);
+      if not instData.IsVisible then
         continue;
 
       Inst.LastMVP := Matrixes.Items[i];
       if Assigned(OpacityUniform) then
-        glUniform1f(OpacityUniform^.Location, Instances.items[i].Opacity*FPrototype.Opacity);
+        glUniform1f(OpacityUniform^.Location, instData.Opacity*FPrototype.Opacity);
+
       if Assigned(ColorUniform) then
-        glUniform4fv(ColorUniform^.Location, 1, @PInstance(Instances.ShiftData[i]).Color);
+        glUniform4fv(ColorUniform^.Location, 1, @instData.Color);
 
       GIMethodDefault(Inst);
     end;
@@ -682,7 +699,13 @@ procedure TBlackSharkInstancing.EndUpdate;
 begin
   dec(UpdateCounter);
   if UpdateCounter = 0 then
-    UpadateAllMatrix;
+  begin
+    if FUpdatedIndex < 0 then
+      UpadateAllMatrix
+    else
+      GenMatrix(FUpdatedIndex);
+    FUpdatedIndex := -1;
+  end;
 end;
 
 procedure TBlackSharkInstancing.GenMatrix(AIndex: int32);
@@ -745,6 +768,11 @@ begin
   Result := PInstance(Instances.ShiftData[AIndex])^.Scale;
 end;
 
+procedure TBlackSharkInstancing.OnChangeMVP(const Value: BTransformData);
+begin
+  UpadateAllMatrix;
+end;
+
 procedure TBlackSharkInstancing.Remove(AIndex: int32);
 var
   off_end: int32;
@@ -766,6 +794,8 @@ begin
   if AIndex >= FCountInstance then
     exit;
   PInstance(Instances.ShiftData[AIndex]).Angle := AngleEulerClamp3d(Value);
+  if FUpdatedIndex < 0 then
+    GenMatrix(AIndex);
 end;
 
 procedure TBlackSharkInstancing.SetColor(AIndex: int32; const Value: TColor4f);
@@ -800,6 +830,10 @@ begin
   { remember default draw instanse method }
   if Assigned(FPrototype) then
   begin
+    if Assigned(FPrototype.Parent) then
+      HandleCMVP := FPrototype.Parent.EventChangeMVP.CreateObserver(OnChangeMVP)
+    else
+      HandleCMVP := nil;
     GIMethodDefault := FPrototype.DrawInstance;
     FPrototype.DrawInstance := DrawProto;
     ProtoRendererInstance := FRenderer.SceneInstanceToRenderInstance(FPrototype.BaseInstance);
@@ -819,7 +853,8 @@ begin
   if AIndex >= FCountInstance then
     exit;
   PInstance(Instances.ShiftData[AIndex]).Opacity := Value;
-  GenMatrix(AIndex)
+  if FUpdatedIndex < 0 then
+    GenMatrix(AIndex);
 end;
 
 procedure TBlackSharkInstancing.SetPosition(AIndex: int32; const Value: TVec3f);
@@ -828,7 +863,8 @@ begin
     exit;
   PInstance(Instances.ShiftData[AIndex]).Position := Value;
   PInstance(Instances.ShiftData[AIndex]).Distance :=  VecLenSqr(Value - FRenderer.Frustum.Position);
-  GenMatrix(AIndex);
+  if FUpdatedIndex < 0 then
+    GenMatrix(AIndex);
 end;
 
 procedure TBlackSharkInstancing.SetScale(AIndex: int32; const Value: BSFloat);
@@ -836,6 +872,8 @@ begin
   if AIndex >= FCountInstance then
     exit;
   PInstance(Instances.ShiftData[AIndex]).Scale := Value;
+  if FUpdatedIndex < 0 then
+    GenMatrix(AIndex);
 end;
 
 
@@ -1940,7 +1978,7 @@ constructor TBlackSharkInstancing2d.Create(ARenderer: TBlackSharkRenderer; AProt
 begin
   Assert(APrototype.Data.InheritsFrom(TObjectVertexes));
   inherited Create(ARenderer, TObjectVertexes(APrototype.Data));
-  PrototypeCanvasObject := APrototype;
+  FPrototypeCanvasObject := APrototype;
   FPositions2d := TListVec<TVec2f>.Create;
 end;
 

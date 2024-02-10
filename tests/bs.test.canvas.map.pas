@@ -247,7 +247,7 @@ begin
   AniLaw.Duration := 10000;
   AniLaw.StartValue := 0.0;
   AniLaw.StopValue := 1.0;
-  ARenderer.Frustum.OrtogonalProjection := true;
+  ARenderer.Frustum.OrthogonalProjection := true;
 end;
 
 destructor TBSTestStringMap.Destroy;

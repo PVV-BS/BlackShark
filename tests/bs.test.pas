@@ -115,7 +115,7 @@ begin
   FEventMuseDownRequest := CreateMouseEvent;
 
   Renderer.Frustum.BeginUpdate;
-  Renderer.Frustum.OrtogonalProjection := false;
+  Renderer.Frustum.OrthogonalProjection := false;
   Renderer.Frustum.Angle := Renderer.Frustum.DEFAULT_DIRECT_ANGLE;
   Renderer.Frustum.Position := Renderer.Frustum.DEFAULT_POSITION;
   Renderer.Frustum.EndUpdate;

@@ -1406,8 +1406,11 @@ begin
   dh := AHeight - h;
 
   FClientRect.Inflate(0, 0, dw, dh);
+  dw := AWidth - FWidth;
+  dh := AHeight - FHeight;
   FWidth := w;
   FHeight := h;
+  FClientRect.Inflate(0, 0, dw, dh);
   if not FFromOSEventChanged then
     Application.ApplicationSystem.DoResize(Self, FWidth, FHeight);
   CheckSizeRendererWindow;

@@ -22,6 +22,12 @@ type
     CommandLineParam: string;
     FCanvas: TBCanvas;
     FpsOut: TCanvasText;
+    ObsrvResizeRequest: IBResizeWindowEventObserver;
+    ObsrvRepaintRequest: IBEmptyEventObserver;
+    ObsrvMouseDownRequest: IBMouseEventObserver;
+    procedure OnResizeRequest(const AData: BResizeEventData);
+    procedure OnRepaintRequest(const AData: BEmpty);
+    procedure OnMouseDownRequest(const AData: BMouseData);
   protected
     { Important: initialize graphics objects only here or after it event }
     procedure OnCreateGlContext(AWindow: BSWindow); override;
@@ -72,7 +78,7 @@ begin
   if CommandLineParam = '' then
   	{$endif}
   {$endif}
-    CommandLineParam := 'TBSTestWindows'; //TBSTestWindows TBSTestEarth TBSTestCanvasImages TBSTestEdit TBSTestButton TBSTestTable TBSTestWindows TBSTestSimple TBSTestCollada  TBSTestCanvas
+    CommandLineParam := 'TBSTestTextStyles'; //TBSTestTextStyles TBSTestWindows TBSTestEarth TBSTestCanvasImages TBSTestEdit TBSTestButton TBSTestTable TBSTestWindows TBSTestSimple TBSTestCollada  TBSTestCanvas
 end;
 
 destructor TBSApplicationExample.Destroy;
@@ -100,6 +106,9 @@ begin
         BSWriteMsg('TBSApplicationExample.OnCreateGlContext', 'the run of the test is beginning...');
         {$endif}
         TestScene := ClassTest.Create(AWindow.Renderer);
+        ObsrvResizeRequest := TestScene.EventResizeRequest.CreateObserver(OnResizeRequest);
+        ObsrvRepaintRequest := TestScene.EventRepaintRequest.CreateObserver(OnRepaintRequest);
+        ObsrvMouseDownRequest := TestScene.EventMuseDownRequest.CreateObserver(OnMouseDownRequest);
         TestScene.Run;
         {$ifdef DEBUG_BS}
         BSWriteMsg('TBSApplicationExample.OnCreateGlContext', 'the test was run...');
@@ -134,6 +143,18 @@ begin
   inherited;
 end;
 
+procedure TBSApplicationExample.OnRepaintRequest(const AData: BEmpty);
+begin
+  MainWindow.Draw;
+end;
+
+procedure TBSApplicationExample.OnResizeRequest(const AData: BResizeEventData);
+begin
+{$ifndef ANDROID}
+  MainWindow.Resize(AData.NewWidth, AData.NewHeight);
+{$endif}
+end;
+
 procedure TBSApplicationExample.DoUpdateFps;
 begin
   inherited;
@@ -146,6 +167,17 @@ end;
 procedure TBSApplicationExample.OnGLContextLost;
 begin
   inherited OnGLContextLost;
+end;
+
+procedure TBSApplicationExample.OnMouseDownRequest(const AData: BMouseData);
+begin
+  if TBSMouseButton.mbBsLeft in AData.Button then
+    MainWindow.MouseDown(TBSMouseButton.mbBsLeft, AData.X, AData.Y, AData.ShiftState)
+  else
+  if TBSMouseButton.mbBsRight in AData.Button then
+    MainWindow.MouseDown(TBSMouseButton.mbBsRight, AData.X, AData.Y, AData.ShiftState)
+  else
+    MainWindow.MouseDown(TBSMouseButton.mbBsRight, AData.X, AData.Y, AData.ShiftState);
 end;
 
 initialization

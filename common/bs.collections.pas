@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -1385,8 +1385,8 @@ Begin
   a := 63689;
   for i := 0 to Len shr 1 - 1 do
   begin
-    Result := Result * a + PWordArray(Data)[i];
-    a := a * 378551;
+    Result := (uint64(Result * a) + PWordArray(Data)[i]) and $FFFFFFFF;
+    a := uint64(a * 378551) and $FFFFFFFF;
   end;
 end;
 

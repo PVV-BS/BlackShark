@@ -331,6 +331,7 @@ type
     FFirstLinePosition: TVec3f;
     FColorLine: TColor4f;
     FAlign: TTextAlign;
+    FIndexLastStringInViewport: int32;
     function SelectorKey(Index: int32; out Code: int32): PKeyInfo;
     procedure CalcBlankWidth;
     procedure SetText(const AValue: string);
@@ -338,9 +339,9 @@ type
     procedure CheckTextProcessor;
     procedure BeforeDraw({%H-}Item: TGraphicObject);
     procedure SetFont(const Value: IBlackSharkFont);
-    function SelectStartPos(const PropLine: PLineProp): BSFloat; inline;
+    function SelectStartPos(PropLine: PLineProp): BSFloat; inline;
     { select average width blank for oaClient align mode }
-    function SelectBlankWidth(const PropLine: PLineProp): BSFloat; inline;
+    function SelectBlankWidth(PropLine: PLineProp): BSFloat; inline;
     procedure OnChangeFontEvent({%H}const Value: BEmpty);
     procedure SetDiscardBlanks(const Value: boolean);
     procedure SetTxtProcessor(const Value: TTextProcessor);
@@ -373,6 +374,7 @@ type
     procedure Build;
     procedure BeginChangeProp;
     procedure EndChangeProp;
+
     property Text: string read GetText write SetText;
     property DefaultGlyph: string read FDefaultGlyph write FDefaultGlyph;
     property TextData: bs.strings.PString read FText write SetTextData;
@@ -380,6 +382,9 @@ type
     property TxtProcessor: TTextProcessor read GetTxtProcessor write SetTxtProcessor;
     { drawed a font; assigned only outside }
     property Font: IBlackSharkFont read FFont write SetFont;
+    { after build it defines which row from array of strings was showed
+      (array of strings see in TxtProcessor property) }
+    property IndexLastStringInViewport: int32 read FIndexLastStringInViewport;
     property DiscardBlanks: boolean read FDiscardBlanks write SetDiscardBlanks;
     { offset of vewport over text }
     property OffsetX: BSFloat read FOffsetX write SetOffsetX;
@@ -666,6 +671,7 @@ procedure TObjectVertexes.DrawVertexs(Instance: PRendererGraphicInstance);
 begin
   if Assigned(MVPUniform) then
     glUniformMatrix4fv(MVPUniform.Location, 1, GL_FALSE, @Instance.LastMVP);
+
   if StaticObject then
   begin
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VBO_Indexes );
@@ -1112,7 +1118,7 @@ begin
   Build;
 end;
 
-function TGraphicObjectText.SelectBlankWidth(const PropLine: PLineProp): BSFloat;
+function TGraphicObjectText.SelectBlankWidth(PropLine: PLineProp): BSFloat;
 var
   c_b: int32;
 begin
@@ -1127,9 +1133,15 @@ begin
 
   if (FOutToWidth > 0) then
   begin
-    Result := FTxtProcessor.BlankWidth + trunc((FOutToWidth - PropLine.TrimWidth) / c_b)
+    if FDiscardBlanks then
+      Result := FTxtProcessor.BlankWidth + trunc((FOutToWidth - PropLine.TrimWidth) / c_b)
+    else
+      Result := FTxtProcessor.BlankWidth + trunc((FOutToWidth - PropLine.Width) / c_b)
   end else
-    Result := FTxtProcessor.BlankWidth + trunc((FTxtProcessor.Width - PropLine.TrimWidth) / c_b);
+  if FDiscardBlanks then
+    Result := FTxtProcessor.BlankWidth + trunc((FTxtProcessor.Width - PropLine.TrimWidth) / c_b)
+  else
+    Result := FTxtProcessor.BlankWidth + trunc((FTxtProcessor.Width - PropLine.Width) / c_b);
 
 end;
 
@@ -1166,21 +1178,33 @@ begin
   Result := FFont.Key[Code];
 end;
 
-function TGraphicObjectText.SelectStartPos(const PropLine: PLineProp): BSFloat;
+function TGraphicObjectText.SelectStartPos(PropLine: PLineProp): BSFloat;
 var
   wl: BSFloat;
 begin
-  if FDiscardBlanks then
-    wl := (PropLine.Width - (PropLine.CountBlanks - PropLine.InsideBlanks) * FTxtProcessor.BlankWidth)
-  else
-    wl := PropLine.Width;
 
   case FAlign of
-    TTextAlign.taCenter:
-      Result := (FTxtProcessor.Width - wl)*0.5;
-    TTextAlign.taRight:
-      Result := (FTxtProcessor.Width - wl)
-    else
+    TTextAlign.taCenter, TTextAlign.taRight: begin
+
+      if FDiscardBlanks then
+        wl := PropLine.Width - (PropLine.CountBlanks - PropLine.InsideBlanks) * FTxtProcessor.BlankWidth
+      else
+        wl := PropLine.Width;
+
+      if FOutToWidth > FTxtProcessor.Width then
+        Result := (FOutToWidth - wl)
+      else
+        Result := (FTxtProcessor.Width - wl);
+
+      if FAlign = TTextAlign.taCenter then
+        Result := Result * 0.5;
+    end;
+    TTextAlign.taClient: begin
+//      if PropLine.IsParagraphBeginning then // remain first blanks if the line is beginning of a paragraph
+//        Result := (PropLine.CountBlanks - PropLine.InsideBlanks - PropLine.EndBlanks) * FTxtProcessor.BlankWidth
+//      else
+        Result := 0.0;
+    end else
       Result := 0.0;
   end;
 end;
@@ -1346,7 +1370,7 @@ var
   w_average: BSFloat;
   h_parent: BSFloat;
   w_parent: BSFloat;
-  line, chars: int32;
+  chars: int32;
   len_str: int32;
   char_index: int32;
   LineProp: PLineProp;
@@ -1364,12 +1388,14 @@ begin
   if CounterChange <> 0 then
     exit;
 
-	Mesh.Clear;
+  FIndexLastStringInViewport := 0;
+
+  Mesh.Clear;
   if Assigned(FLines) then
     FLines.Clear;
 
 
-  if (FText = nil) or (FText.Len = 0) or (FTxtProcessor = nil)  then
+  if (FText = nil) or (FText.Len = 0) or (FTxtProcessor = nil) then
   begin
     if not Mesh.FBoundingBox.IsPoint then
     begin
@@ -1401,21 +1427,21 @@ begin
     else
       h_parent := FTxtProcessor.Height;
 
-    if FTxtProcessor.Lines.Count = 0 then
+    if (FTxtProcessor.Lines.Count = 0) or (h_parent < FTxtProcessor.LineHeight) then
       exit;
 
-    line := FTxtProcessor.GetIndexLineFromOffsetY(FOffsetY);
-    if line < 0 then
+    FIndexLastStringInViewport := FTxtProcessor.GetIndexLineFromOffsetY(FOffsetY);
+    if FIndexLastStringInViewport < 0 then
       exit;
 
     fullLineHeight := FTxtProcessor.LineHeight + FTxtProcessor.Interligne;
 
-    y := (line + 1) * fullLineHeight;
+    y := (FIndexLastStringInViewport + 1) * fullLineHeight;
 
-    LineProp := FTxtProcessor.Lines.ShiftData[line];
+    LineProp := FTxtProcessor.Lines.ShiftData[FIndexLastStringInViewport];
     x := SelectStartPos(LineProp);
 
-    if (FAlign = TTextAlign.taClient) and (FTxtProcessor.Lines.Count - line > 1) then
+    if (FAlign = TTextAlign.taClient) and (FTxtProcessor.Lines.Count - FIndexLastStringInViewport > 1) then
       w_average := SelectBlankWidth(LineProp)
     else
       w_average := FTxtProcessor.BlankWidth;
@@ -1460,19 +1486,19 @@ begin
         end;
 
         y := y + fullLineHeight;
-        inc(line);
+        inc(FIndexLastStringInViewport);
         chars := 1;
         firstCharOffset := 0;
 
-        if (Line >= FTxtProcessor.Lines.Count) or (y > h_parent) then
+        if (FIndexLastStringInViewport >= FTxtProcessor.Lines.Count) or (y > h_parent) then
           break;
 
-        LineProp := FTxtProcessor.Lines.ShiftData[line];
+        LineProp := FTxtProcessor.Lines.ShiftData[FIndexLastStringInViewport];
         dec(len_str, LineProp.IndexBegin - char_index);
         char_index := LineProp.IndexBegin;
         start_x := SelectStartPos(LineProp);
         x := start_x;
-        if (FAlign = TTextAlign.taClient) and (FTxtProcessor.Lines.Count - line > 1) then
+        if (FAlign = TTextAlign.taClient) and (FTxtProcessor.Lines.Count - FIndexLastStringInViewport > 1) then
           w_average := SelectBlankWidth(LineProp)
         else
           w_average := FTxtProcessor.BlankWidth;  // last line
@@ -1500,7 +1526,7 @@ begin
         begin
           if FAlign = TTextAlign.taClient then
           begin
-            if Line = 0 then
+            if FIndexLastStringInViewport = 0 then
               x := x + FTxtProcessor.BlankWidth * k;
             continue;
           end;
@@ -1538,9 +1564,6 @@ begin
         AddLine(vec2(start_x + firstCharOffset, Floor(- y - fullLineHeight + FLineThickness)), x - start_x - firstCharOffset);  // - FTxtProcessor.LineHeight*0.5
     end;
 
-    Mesh.CalcBoundingBox(true);
-    ChangedMesh;
-
     if Assigned(FLines) then
     begin
       FLines.EndUpdate(true);
@@ -1559,6 +1582,8 @@ begin
     { do not change the next strings places to avoid repeated of build }
     FFont.EndSelectChars;
     Building := false;
+    Mesh.CalcBoundingBox(true);
+    ChangedMesh;
   end;
 
 end;

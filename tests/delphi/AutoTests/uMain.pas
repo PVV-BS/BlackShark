@@ -30,7 +30,7 @@ type
     ObsrvResizeRequest: IBResizeWindowEventObserver;
     ObsrvRepaintRequest: IBEmptyEventObserver;
     ObsrvMouseDownRequest: IBMouseEventObserver;
-    procedure AfterCreateContextEvent (Sender: TBlackSharkContext);
+    procedure AfterCreateContextEvent (Sender: TObject);
     procedure RunTests;
     procedure RunTest(AClassTest: TBSTestClass);
     procedure OnResizeRequest(const AData: BResizeEventData);
@@ -51,7 +51,7 @@ uses
 
 {$R *.dfm}
 
-procedure TMainForm.AfterCreateContextEvent(Sender: TBlackSharkContext);
+procedure TMainForm.AfterCreateContextEvent(Sender: TObject);
 begin
   Timer.Enabled := true;
 end;

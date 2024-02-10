@@ -85,7 +85,7 @@ type
   end;
 
   TItemQueue<T> = record
-    { ! Importantly ! do not swap with Value; the trick allows to translate data
+    { ! Importantly ! do not swap with Value; the trick allows to translate a data
       from untyped to generic }
     Connection: TItemConnection<T>;
     Value: T;

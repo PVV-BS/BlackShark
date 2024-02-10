@@ -281,6 +281,7 @@ type
   TPlane = TVec4f;
 
   PVec2f = ^TVec2f;
+  PVec2d = ^TVec2d;
   PVec3f = ^TVec3f;
   PVec4f = ^TVec4f;
   PVec2i = ^TVec2i;
@@ -921,6 +922,7 @@ type
   function Vec4d(x, y, z, w: Double): TVec4d; overload; inline;
 
   function Box2Collision(const Box1, Box2: TBox2d): boolean; overload; inline;
+  function Box2(const MinX, MinY, MaxX, MaxY: double): TBox2d; overload; inline;
   function Box3(const MinV, MaxV: TVec3f): TBox3f; overload; inline;
   function Box3(const MinV, MaxV: TVec3d): TBox3d; overload; inline;
   function Box3(const Rect: TRectBSf): TBox3f; overload; inline;
@@ -2557,12 +2559,10 @@ function PlaneCrossProduct(const Plane: TVec4f; const OriginVector: TVec3f;
   const DirNormal: TVec3f; out Intersect: boolean; out Distance: BSFloat
   ): TVec3f;
 var
-  v: TVec3f;
   cos, l: BSFloat;
 begin
-  v := TVec3f(Plane);
-  cos := VecDot(v, DirNormal);
-  Intersect := abs(cos) > EPSILON;
+  cos := VecDot(TVec3f(Plane), DirNormal);
+  Intersect := cos > EPSILON;
   if Intersect then
   begin
     Distance := PlaneDotProduct(Plane, OriginVector);
@@ -4046,11 +4046,11 @@ var
 begin
   _min := bs.math.Max(Box1.Min.x, Box2.Min.x);
   _max := bs.math.Min(Box1.Max.x, Box2.Max.x);
-  if (_min >= _max) then
+  if (_min > _max) then
     exit(false);
   _min := bs.math.Max(Box1.Min.y, Box2.Min.y);
   _max := bs.math.Min(Box1.Max.y, Box2.Max.y);
-  if (_min >= _max) then
+  if (_min > _max) then
     exit(false);
   Result := true;
 end;
@@ -4061,15 +4061,15 @@ var
 begin
   _min := bs.math.Max(Box1.Min.x, Box2.Min.x);
   _max := bs.math.Min(Box1.Max.x, Box2.Max.x);
-  if (_min >= _max) then
+  if (_min > _max) then
     exit(false);
   _min := bs.math.Max(Box1.Min.y, Box2.Min.y);
   _max := bs.math.Min(Box1.Max.y, Box2.Max.y);
-  if (_min >= _max) then
+  if (_min > _max) then
     exit(false);
   _min := bs.math.Max(Box1.Min.z, Box2.Min.z);
   _max := bs.math.Min(Box1.Max.z, Box2.Max.z);
-  if (_min >= _max) then
+  if (_min > _max) then
     exit(false);
   Result := true;
 end;
@@ -4080,15 +4080,15 @@ var
 begin
   _min := bs.math.Max(Box1.Min.x, Box2.Min.x);
   _max := bs.math.Min(Box1.Max.x, Box2.Max.x);
-  if (_min >= _max) then
+  if (_min > _max) then
     exit(false);
   _min := bs.math.Max(Box1.Min.y, Box2.Min.y);
   _max := bs.math.Min(Box1.Max.y, Box2.Max.y);
-  if (_min >= _max) then
+  if (_min > _max) then
     exit(false);
   _min := bs.math.Max(Box1.Min.z, Box2.Min.z);
   _max := bs.math.Min(Box1.Max.z, Box2.Max.z);
-  if (_min >= _max) then
+  if (_min > _max) then
     exit(false);
   Result := true;
 end;
@@ -4558,6 +4558,13 @@ begin
     swap(Min.y, Max.y);
   if Min.z > Max.z then
     swap(Min.z, Max.z);
+end;
+
+function Box2(const MinX, MinY, MaxX, MaxY: double): TBox2d;
+begin
+  Result.Min := vec2(MinX, MinY);
+  Result.Max := vec2(MaxX, MaxY);
+  Result.Mid := vec2((MinX + MaxX)*0.5, (MinY + MaxY)*0.5);
 end;
 
 function Box3(const MinV, MaxV: TVec3f): TBox3f;

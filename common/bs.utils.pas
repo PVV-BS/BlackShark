@@ -68,9 +68,6 @@ var
 implementation
 
 uses
-  {$ifdef FPC}
-  //  LazUTF8,
-  {$endif}
     bs.log
   , bs.strings
   ;

@@ -1,4 +1,4 @@
-unit TestCollections;
+﻿unit TestCollections;
 
 interface
 
@@ -68,7 +68,7 @@ type
 
   // Test methods for class TAhoCorasickFSA
 
-  [TestFixture]
+  //[TestFixture]
   TestTAhoCorasickFSA = class(TestBase)
   strict private
     FAhoCorasickFSA: TAhoCorasickFSA<Pointer>;

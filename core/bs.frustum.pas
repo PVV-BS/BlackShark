@@ -55,12 +55,13 @@ type
     FScaleRatio: TVec2f;
     RealSize: TVec2f;
     RealSizeHalf: TVec2f;
-    FOrtogonalProjection: boolean;
+    FOrthogonalProjection: boolean;
     UpdateCount: int32;
     FAngle: TVec3f;
     // Matrixes transformations
     // shape frustum
     FProjectionMatrix: TMatrix4f;
+    FOrthoProjectionMatrix: TMatrix4f;
     // orientation frustum
     FRotateMatrix: TMatrix4f;
     FRotateMatrixInv: TMatrix4f;
@@ -76,6 +77,7 @@ type
     { FViewMatrix * FProjectionMatrix; need for calculate ending MVP matrix for
       all models }
     FLastViewProjMat: TMatrix4f;
+    FLastOrthoViewProjMat: TMatrix4f;
     FDirection: TVec3f;
     FDistanceFarPlane: BSFloat;
     FDistanceFarPlaneHalf: BSFloat;
@@ -95,6 +97,7 @@ type
     FEdgeNearLeftNormalize: TVec3f;
     FUp: TVec3f;
     FRight: TVec3f;
+    FOnAdjustFrustum: TOnChangeFrustumNotify;
     //FNearPlaneNormalized: TPlane;
     procedure GenPerspective;
     procedure GenRotateMatrix;
@@ -105,14 +108,14 @@ type
     procedure SetDistanceNearPlane(AValue: BSFloat);
     procedure SetAngle(AValue: TVec3f);
     procedure SetPosition(AValue: TVec3f);
-    procedure SetOrtogonalProjection(const Value: boolean);
+    procedure SetOrthogonalProjection(const Value: boolean);
     procedure SetQuaternion(const Value: TQuaternion);
   public
     const
       // distance from projection plane to fake screen
-      DISTANCE_2D_SCREEN      = 0.001;
+      DISTANCE_2D_SCREEN      = 0.01;
       // distance between 2 layers on fake 2d screen
-      DISTANCE_2D_BW_LAYERS   = 0.00001;
+      DISTANCE_2D_BW_LAYERS   = 0.0001;
       MAX_COUNT_LAYERS = DISTANCE_2D_SCREEN / DISTANCE_2D_BW_LAYERS;
       FOV_DEFAULT = 30.0;
 
@@ -161,6 +164,7 @@ type
     property ViewMatrix: TMatrix4f read FViewMatrix;
     property ViewMatrixInv: TMatrix4f read FViewMatrixInv;
     property LastViewProjMat: TMatrix4f read FLastViewProjMat;
+    property LastOrthoViewProjMat: TMatrix4f read FLastOrthoViewProjMat;
     property RotateMatrixInv: TMatrix4f read FRotateMatrixInv;
     property RotateMatrix: TMatrix4f read FRotateMatrix;
 
@@ -184,11 +188,12 @@ type
     property NearPlaneHalfHeight: BSFloat read FNearPlaneHalfHeight;
     property FarPlaneWidth: BSFloat read FFarPlaneWidth;
     property FarPlaneHeight: BSFloat read FFarPlaneHeight;
+    { if you have only 2d scene, then better set it true, otherwise can be visible little distortions }
+    property OrthogonalProjection: boolean read FOrthogonalProjection write SetOrthogonalProjection;
     // event for optimization to find all objects hit into frustum
     property OnChangeFrustum: TOnChangeFrustumNotify read FOnChangeFrustum write FOnChangeFrustum;
     property OnMoveFrustum: TOnChangeFrustumNotify read FOnMoveFrustum write FOnMoveFrustum;
-    { if you have only 2d scene, then better set it true, otherwise can be visible little distortions }
-    property OrtogonalProjection: boolean read FOrtogonalProjection write SetOrtogonalProjection;
+    property OnAdjustFrustum: TOnChangeFrustumNotify read FOnAdjustFrustum write FOnAdjustFrustum;
   end;
 
 
@@ -313,6 +318,8 @@ begin
   GenPerspective;
   if UpdateCount = 0 then
     GenerateFrustum;
+  if Assigned(FOnAdjustFrustum) then
+    FOnAdjustFrustum();
 end;
 
 procedure TBlackSharkFrustum.SetDistanceFarPlane(AValue: BSFloat);
@@ -323,6 +330,8 @@ begin
   GenPerspective;
   if UpdateCount = 0 then
     GenerateFrustum;
+  if Assigned(FOnAdjustFrustum) then
+    FOnAdjustFrustum();
 end;
 
 procedure TBlackSharkFrustum.SetDistanceNearPlane(AValue: BSFloat);
@@ -332,11 +341,13 @@ begin
   GenPerspective;
   if UpdateCount = 0 then
     GenerateFrustum;
+  if Assigned(FOnAdjustFrustum) then
+    FOnAdjustFrustum();
 end;
 
-procedure TBlackSharkFrustum.SetOrtogonalProjection(const Value: boolean);
+procedure TBlackSharkFrustum.SetOrthogonalProjection(const Value: boolean);
 begin
-  FOrtogonalProjection := Value;
+  FOrthogonalProjection := Value;
   GenPerspective;
   if UpdateCount = 0 then
     GenerateFrustum;
@@ -353,12 +364,18 @@ end;}
 procedure TBlackSharkFrustum.GenPerspective;
 begin
   FProjectionMatrix := IDENTITY_MAT;
+  FOrthoProjectionMatrix := IDENTITY_MAT;
   RealSize := vec2(1.0, 1.0) * FScaleRatio;
   RealSizeHalf := RealSize*0.5;
-  if FOrtogonalProjection then
-    MatrixOrtho(FProjectionMatrix, -RealSizeHalf.x, RealSizeHalf.x, -RealSizeHalf.y, RealSizeHalf.y, FDistanceNearPlane, FDistanceFarPlane)
-  else
+  if FOrthogonalProjection then
+  begin
+    MatrixOrtho(FProjectionMatrix, -RealSizeHalf.x, RealSizeHalf.x, -RealSizeHalf.y, RealSizeHalf.y, FDistanceNearPlane, FDistanceFarPlane);
+    FOrthoProjectionMatrix := FProjectionMatrix;
+  end else
+  begin
+    MatrixOrtho(FOrthoProjectionMatrix, -RealSizeHalf.x, RealSizeHalf.x, -RealSizeHalf.y, RealSizeHalf.y, FDistanceNearPlane, FDistanceFarPlane);
     MatrixPerspective(FProjectionMatrix, -RealSizeHalf.x, RealSizeHalf.x, -RealSizeHalf.y, RealSizeHalf.y, FDistanceNearPlane, FDistanceFarPlane);
+  end;
 end;
 
 {procedure TBlackSharkFrustum.NormalizePlanes;
@@ -404,6 +421,10 @@ var
 begin
   FLastProjViewMat :=  FTranslateMatrix * FRotateMatrix * FProjectionMatrix;
   FLastViewProjMat := FViewMatrix * FProjectionMatrix;
+  if FOrthogonalProjection then
+    FLastOrthoViewProjMat := FLastViewProjMat
+  else
+    FLastOrthoViewProjMat := FViewMatrix * FOrthoProjectionMatrix;
   // Find A, B, C, D for Right Plane
   FFrustum.M[bpRight,  0] := FLastProjViewMat.V[ 3] - FLastProjViewMat.V[ 0];
   FFrustum.M[bpRight,  1] := FLastProjViewMat.V[ 7] - FLastProjViewMat.V[ 4];
@@ -648,6 +669,9 @@ begin
     inc(c);
   if abs(DistanceNearPlane) > abs(d) then
     DistanceNearPlane := d;
+//  if (DistanceNearPlane > FDistanceFarPlane) then
+//    Result := coOutside
+//  else
   if c = 8 then
     Result := coInside
   else
@@ -684,6 +708,9 @@ begin
       inc(c);
     if abs(DistanceNearPlane) > abs(d) then
       DistanceNearPlane := d;
+//    if (DistanceNearPlane > FDistanceFarPlane) then
+//      Result := coOutside
+//    else
     if c = 4 then
       Result := coInside else
     if c = 0 then
@@ -711,6 +738,9 @@ begin
       inc(c);
     if abs(DistanceNearPlane) > abs(d) then
       DistanceNearPlane := d;
+//    if (DistanceNearPlane > FDistanceFarPlane) then
+//      Result := coOutside
+//    else
     if c = 4 then
       Result := coInside
     else
@@ -739,8 +769,12 @@ begin
       inc(c);
     if abs(DistanceNearPlane) > abs(d) then
       DistanceNearPlane := d;
+//    if (DistanceNearPlane > FDistanceFarPlane) then
+//      Result := coOutside
+//    else
     if c = 4 then
-      Result := coInside else
+      Result := coInside
+    else
     if c = 0 then
     begin
       if Box3Collision(BoxRealInSpace, FBB) or Box3Inside(BoxRealInSpace, FBB) or PointInFrustum(BoxRealInSpace.Middle) then

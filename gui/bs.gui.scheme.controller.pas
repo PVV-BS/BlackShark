@@ -225,7 +225,7 @@ type
     FViewportPositions: TBinTreeTemplate<TSchemeBlock, TVec2f>;
     FEventAfterLoadLevel: IBEmptyEvent;
   private
-    class var VisualClasses: TBinTreeTemplate<uint32, ISchemeItemVisualClass>;
+    class var VisualClasses: THashTable<string, ISchemeItemVisualClass>;
     class var FListVisualClasses: TListVec<ISchemeItemVisualClass>;
     class constructor Create;
     class destructor Destroy;
@@ -1381,12 +1381,8 @@ begin
 end;
 
 class procedure ISchemeRenderer.RegisterVisualItem(VisualClass: ISchemeItemVisualClass);
-var
-  h: uint32;
 begin
-  { }
-  h := GetHashBlackSharkS(VisualClass.PresentedClass.ClassName);
-  VisualClasses.Add(h, VisualClass);
+  VisualClasses.Items[VisualClass.PresentedClass.ClassName] := VisualClass;
   FListVisualClasses.Add(VisualClass);
 end;
 
@@ -2232,11 +2228,8 @@ begin
 end;
 
 class function ISchemeRenderer.GetClassVisualItem(const ClassNameSchemItem: string): ISchemeItemVisualClass;
-var
-  h: uint32;
 begin
-  h := GetHashSedgwickS(ClassNameSchemItem);
-  VisualClasses.find(h, Result);
+  Result := VisualClasses.Items[ClassNameSchemItem];
 end;
 
 function ISchemeRenderer.GetColorGrid: TGuiColor;
@@ -2335,7 +2328,7 @@ end;
 
 class constructor ISchemeRenderer.Create;
 begin
-  VisualClasses := TBinTreeTemplate<uint32, ISchemeItemVisualClass>.Create(@Uint32Cmp);
+  VisualClasses := THashTable<string, ISchemeItemVisualClass>.Create(@GetHashBlackSharkS, @StrCmpBool);
   FListVisualClasses := TListVec<ISchemeItemVisualClass>.Create;
 end;
 

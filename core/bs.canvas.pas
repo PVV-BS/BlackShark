@@ -184,8 +184,8 @@ type
       TODO: redefine the method (where it need) in inheritors }
     procedure Resize(AWidth, AHeight: BSFloat); virtual;
     function Get3dPositionInsideSelf(X, Y: BSFloat): TVec3f;
-    { calculate 2d position on shape in local (self) coordinates relative 2d shape size }
-    function GetPosFromScene2dToScreen2d(SceneX, SceneY: BSFloat): TVec2f;
+    function Get2dPositionInsideSelf(ScreenX, ScreenY: int32): TVec2f; overload;
+    function Get2dPositionInsideSelf(ScreenX, ScreenY: int32; out IsHit: boolean): TVec2f; overload;
     { place child with combine 2d point on self (ToPosition) and on a child (OnChildPosition) }
     procedure ConnectChild(const ToPosition, OnChildPosition: TVec2f; Child: TCanvasObject);
     { it returns size of a nearest parent; if parent is nil, then return size viewport renderer }
@@ -196,6 +196,9 @@ type
     { all anchors reset to false }
     procedure AnchorsReset;
     function Center: TVec2f;
+    procedure Hide(AReleaseGraphicsData: boolean);
+    procedure Show;
+
     { a some object of Scene }
     property Data: TGraphicObject read FData;
     property Canvas: TBCanvas read FCanvas;
@@ -297,7 +300,6 @@ type
     procedure SetHeight(const Value: BSFloat); override;
     procedure SetWidth(const Value: BSFloat); override;
   public
-    procedure Build; override;
     property Size: TVec2f read GetSize write SetSize;
     property IsVisible: boolean read GetIsVisible write SetIsVisible;
   end;
@@ -352,6 +354,7 @@ type
     procedure SetTextAlign(const Value: TTextAlign);
     procedure SetWrap(const Value: Boolean);
     procedure UpdateWrapping;
+    function GetIndexLastStringInViewport: int32;
   protected
     procedure DoResize(AWidth, AHeight: BSFloat); override;
     procedure SetBanScalableMode(const Value: boolean); override;
@@ -368,6 +371,8 @@ type
     // takes the default font of canvas, but you can change it
     property FontName: string read GetFontName write SetFontName;
     property Font: IBlackSharkFont read GetFont write SetFont;
+    { wrapper of TGraphicObjectText.IndexLastStringInViewport }
+    property IndexLastStringInViewport: int32 read GetIndexLastStringInViewport;
     property ViewportSize: TVec2f read GetViewportSize write SetViewportSize;
     property ViewportPosition: TVec2f read GetViewportPosition write SetViewportPosition;
     { wrap text into an window with width ViewportSize.Width   }
@@ -1378,6 +1383,30 @@ begin
   Result.z := -FPositionZ + (FLayer2d + 1) * FCanvas.FRenderer.Frustum.DISTANCE_2D_BW_LAYERS;
 end;
 
+function TCanvasObject.Get2dPositionInsideSelf(ScreenX, ScreenY: int32): TVec2f;
+var
+  isHit: boolean;
+begin
+  Result := Get2dPositionInsideSelf(ScreenX, ScreenY, isHit);
+end;
+
+function TCanvasObject.Get2dPositionInsideSelf(ScreenX, ScreenY: int32; out IsHit: boolean): TVec2f;
+var
+  point: TVec3f;
+  point2d: TVec2f;
+  absPos2d: TVec2f;
+begin
+  Result := vec2(0.0, 0.0);
+  if FCanvas.Renderer.HitTestInstance(ScreenX, ScreenY, FData.BaseInstance, point) then
+  begin
+    IsHit := true;
+    point2d := FCanvas.Renderer.ScenePositionToScreenf(point);
+    absPos2d := AbsolutePosition2d;
+    Result := vec2(point2d.x - absPos2d.x, point2d.y - absPos2d.y);
+  end else
+    IsHit := false;
+end;
+
 function TCanvasObject.GetParent: TCanvasObject;
 begin
   if Assigned(FData.Parent) and (FData.Parent <> FCanvas.FRootObject) then
@@ -1403,19 +1432,6 @@ begin
     Result := vec2(FCanvas.Renderer.WindowWidth, FCanvas.Renderer.WindowHeight);
 end;
 
-function TCanvasObject.GetPosFromScene2dToScreen2d(SceneX, SceneY: BSFloat): TVec2f;
-begin
-  if Assigned(FData.Mesh) then
-  begin
-    Result.X := BSConfig.VoxelSizeInv * (FData.Mesh.FBoundingBox.x_max + SceneX);
-    Result.Y := BSConfig.VoxelSizeInv * (FData.Mesh.FBoundingBox.y_max - SceneY);
-  end else
-  begin
-    Result.X := BSConfig.VoxelSizeInv * SceneX;
-    Result.Y := BSConfig.VoxelSizeInv * SceneY;
-  end;
-end;
-
 function TCanvasObject.HasAncestor(Ancestor: TCanvasObject): boolean;
 var
   p: TCanvasObject;
@@ -1428,6 +1444,14 @@ begin
     p := p.Parent;
   end;
   Result := false;
+end;
+
+procedure TCanvasObject.Hide(AReleaseGraphicsData: boolean);
+begin
+  if AReleaseGraphicsData then
+    FData.Clear
+  else
+    FData.Hidden := true;
 end;
 
 procedure TCanvasObject.CalcBB;
@@ -1454,7 +1478,7 @@ begin
         // to zero position relative frustum; that is allow see real projection BB
         // (with all distortions) on frustum plane in zero position: (0.0, 0.0, 1.0);
         // on the way we can calculate left/top position relative renderer's viewport (screen)
-        Box3Recalc(FModelBB, FCanvas.Renderer.Frustum.ViewMatrix*m);
+        Box3Recalc(FModelBB, m*FCanvas.Renderer.Frustum.ViewMatrix);
       end;
     end;
     // left/top position relative renderer's viewport in scene
@@ -1780,6 +1804,13 @@ end;
 procedure TCanvasObject.SetWidth(const Value: BSFloat);
 begin
   FWidth := Value;
+end;
+
+procedure TCanvasObject.Show;
+begin
+  FData.Hidden := false;
+  if Assigned(FData.Mesh) and (FData.Mesh.CountVertex = 0) then
+    Build;
 end;
 
 procedure TCanvasObject.SubscribeMvpChangeEvent;
@@ -2145,6 +2176,11 @@ end;
 function TCanvasText.GetFontName: string;
 begin
   Result := TGraphicObjectText(Data).Font.Name
+end;
+
+function TCanvasText.GetIndexLastStringInViewport: int32;
+begin
+  Result := TGraphicObjectText(Data).IndexLastStringInViewport;
 end;
 
 function TCanvasText.GetItalic: boolean;
@@ -3963,10 +3999,7 @@ begin
     s_pix := Size;
   end;
 
-  if FAutoFit or (Size.X = 0) or (Size.Y = 0) then
-    TBlackSharkFactoryShapesPT.GeneratePlane(Data.Mesh, TTexturedVertexes(Data).Texture.Rect.Size)
-  else
-    TBlackSharkFactoryShapesPT.GeneratePlane(Data.Mesh, FSize);
+  TBlackSharkFactoryShapesPT.GeneratePlane(Data.Mesh, s_pix);
 
   if FWrap then
   begin
@@ -4769,11 +4802,6 @@ begin
 end;
 
 { TCanvasLayout }
-
-procedure TCanvasLayout.Build;
-begin
-  inherited;
-end;
 
 function TCanvasLayout.CreateGraphicObject(AParent: TGraphicObject): TGraphicObject;
 begin

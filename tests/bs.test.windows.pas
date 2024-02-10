@@ -158,7 +158,7 @@ begin
 
   wrapperMainWindow := TWindowWrapper.Create(Application.MainWindow, Self);
   Application.MainWindow.Owner := wrapperMainWindow;
-  Application.MainWindow.Renderer.Frustum.OrtogonalProjection := true;
+  Application.MainWindow.Renderer.Frustum.OrthogonalProjection := true;
   Application.MainWindow.Caption := 'Main window';
 
   Button := TBButton.Create(ARenderer);

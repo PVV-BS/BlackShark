@@ -24,7 +24,7 @@ type
   private
     ViewPort: TBlackSharkViewPort;
     BCanvas: TBCanvas;
-    procedure AfterCreateContextEvent (Sender: TBlackSharkContext);
+    procedure AfterCreateContextEvent(Sender: TObject);
   public
 
   end;
@@ -52,7 +52,7 @@ begin
   BCanvas.Free;
 end;
 
-procedure TFrmMain.AfterCreateContextEvent(Sender: TBlackSharkContext);
+procedure TFrmMain.AfterCreateContextEvent(Sender: TObject);
 var
   txt: TCanvasText;
   arc: TArc;

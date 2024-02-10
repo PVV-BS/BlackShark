@@ -280,7 +280,7 @@ type
   TSchemeModel = class(TSchemeBlock)
   private
     type
-      TSchemClasses        = TBinTreeTemplate<AnsiString, TSchemeShapeClass>;
+      TSchemClasses        = THashTable<AnsiString, TSchemeShapeClass>;
       TSchemClassesDicLoad = TBinTreeTemplate<int32, TSchemeShapeClass>;
       TSchemClassesDicSave = TBinTreeTemplate<TSchemeShapeClass, int32>;
   private
@@ -752,7 +752,7 @@ end;
 
 class constructor TSchemeModel.Create;
 begin
-  RegistredSchemeClasses := TSchemClasses.Create(StrCmpA);
+  RegistredSchemeClasses := TSchemClasses.Create(@GetHashBlackSharkS, @StrCmpBool);
 end;
 
 procedure TSchemeModel.DeleteEmptyChildSchemeRegions(SchemeShape: TSchemeShape;
@@ -796,16 +796,16 @@ end;
 procedure TSchemeModel.FillDicSave;
 var
   cl_id: int32;
-  cl_sh: TSchemeShapeClass;
+  cl_sh: TSchemClasses.TBucket;
 begin
   { fill dictionary classes; 0 is always TSchemeModel }
   SaveDic.Add(TSchemeModel, 0);
   cl_id := 1;
-  if RegistredSchemeClasses.Iterator.SetToBegin(cl_sh) then
-    repeat
-    SaveDic.Add(cl_sh, cl_id);
+  if RegistredSchemeClasses.GetFirst(cl_sh) then
+  repeat
+    SaveDic.Add(cl_sh.Value, cl_id);
     inc(cl_id);
-    until not RegistredSchemeClasses.Iterator.Next(cl_sh);
+  until not RegistredSchemeClasses.GetNext(cl_sh);
 end;
 
 function TSchemeModel.FindItem(InSource: TSchemeShape;
@@ -1104,7 +1104,7 @@ var
 begin
   n := StringToAnsi(SchemeClass.ClassName);
   if not RegistredSchemeClasses.Exists(n) then
-    RegistredSchemeClasses.Add(n, SchemeClass);
+    RegistredSchemeClasses.Items[n] := SchemeClass;
 end;
 
 procedure TSchemeModel.Remove(Item: TSchemeShape);
