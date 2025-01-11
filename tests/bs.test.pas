@@ -121,7 +121,7 @@ begin
   Renderer.Frustum.EndUpdate;
   Renderer.Color := vec4(0.1764, 0.1764, 0.1764, 0.598);
   ObsrvRsize := ARenderer.EventResize.CreateObserver(GUIThread, OnResizeViewport);
-  ObsrvMoveCamera := ARenderer.EventMoveFrustum.CreateObserver(GUIThread, OnMoveCamera);
+  ObsrvMoveCamera := ARenderer.EventAfterEventMoveFrustum.CreateObserver(GUIThread, OnMoveCamera);
   ObsrvKeyDown := ARenderer.EventKeyDown.CreateObserver(GUIThread, OnKeyDown);
   ObsrvKeyUp := ARenderer.EventKeyUp.CreateObserver(GUIThread, OnKeyUp);
   ObsrvMouseWeel := ARenderer.EventMouseWeel.CreateObserver(GUIThread, OnMouseWeel);

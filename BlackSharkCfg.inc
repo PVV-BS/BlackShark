@@ -1,4 +1,4 @@
-{.$define DEBUG_BS}
+{$define DEBUG_BS}
 
 {$ifdef ANDROID}
   {$define DBG_IO}

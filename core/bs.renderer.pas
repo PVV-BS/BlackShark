@@ -184,6 +184,7 @@ type
     FEventEventFocus: IBEmptyEvent;
     FEventResize: IBResizeWindowEvent;
     FEventMoveFrustum: IBEmptyEvent;
+    FEventAfterEventMoveFrustum: IBEmptyEvent;
     { this mouse events to happen when the mouse cursor not hit to any of
     	PGraphicInstance, else call event for item under cursor }
     FEventMouseDown: IBMouseDownEvent;
@@ -221,7 +222,7 @@ type
     FReleases: boolean;
     FBanResetSelected: boolean;
     FKeyMultiSelectAllows: byte;
-    BBSelectList: TListVec<Pointer>;
+    FLastCountSelectedByTree: uint32;
     FCountVisibleInstancesInSpaceTree: int32;
     procedure DoEventInstanceBeforeKeyChange(Instance: PRendererGraphicInstance); inline;
     procedure DoEventInstanceAfterKeyChange(Instance: PRendererGraphicInstance); inline;
@@ -245,6 +246,7 @@ type
     procedure UpdateAllLastMVP;
     procedure CalcFPS; inline;
     procedure CheckUnderMouseInstance(ANewInstance: PRendererGraphicInstance; X, Y: int32; Shift: TBSShiftState; Buttons: TBSMouseButtons);
+    function StrictHitTest(const AData: PGraphicInstance): boolean;
   private
     { common method for a pass rendering; invoke from public method
     	TBlackSharkRenderer.Render }
@@ -266,11 +268,12 @@ type
     function GetCountVisibleGI: int32;
     function GetScreen2dCentre: TVec2i;
     { enumerator graphic items on change frustum }
-    procedure EnumSingleVisibleObjectsByBVH (AInstance: PGraphicInstance; Distance: BSFloat);
+    procedure EnumSingleVisibleObjectsByBVH(AInstance: PGraphicInstance; Distance: BSFloat);
     procedure SetSmoothMSAA(AValue: boolean);
  {$ifndef DEBUG_BS} inline; {$endif}
     procedure SetVisibleInstance(Instance: PRendererGraphicInstance; AValue: boolean); {$ifndef DEBUG_BS} inline; {$endif}
     procedure OnChangeFrustum;
+    procedure OnAdjustFrustum;
     procedure SetBlendMode(AValue: TBlendMode); // inline;
 //    procedure CreateFBOSharkSSAA;
     //function GetNextFBO(Width, Height: int32; Attachments: TAttachmentsFBO; ColorFormat: int32): TBlackSharkFBO;
@@ -436,6 +439,7 @@ type
     property EventEventFocus: IBEmptyEvent read FEventEventFocus;
     property EventResize: IBResizeWindowEvent read FEventResize;
     property EventMoveFrustum: IBEmptyEvent read FEventMoveFrustum;
+    property EventAfterEventMoveFrustum: IBEmptyEvent read FEventAfterEventMoveFrustum;
     { this mouse events to happen when the mouse cursor no hit to any of
     	PGraphicInstance, else call event for item under cursor }
     property EventMouseDblClick: IBMouseDblClickEvent read FEventMouseDblClick;
@@ -453,6 +457,7 @@ type
     property EventEndDrag: IBDragDropEvent read FEventEndDrag;
     property FPS: uint16 read FFPS;
     property Caption: string read FCaption write FCaption;
+    property LastCountSelectedByTree: uint32 read FLastCountSelectedByTree;
 
   end;
 
@@ -568,7 +573,6 @@ constructor TBlackSharkRenderer.Create;
 begin
   FLastUpdate := TBTimer.CurrentTime.Low;
   FInstances := TListVec<PRendererGraphicInstance>.Create;
-  BBSelectList := TListVec<Pointer>.Create;
   FExactMesureDistanceToBB := false;
   FAutoSelect := true;
   FKeyMultiSelectAllows := VK_BS_CONTROL;
@@ -586,10 +590,12 @@ begin
   FVisibleGI               := TListRendererInstances.Create;
   FFrustum                 := TBlackSharkFrustum.Create;
   FFrustum.OnChangeFrustum := OnChangeFrustum;
+  FFrustum.OnAdjustFrustum := OnAdjustFrustum;
 
   FEventEventFocus    := CreateEmptyEvent;
 
   FEventMoveFrustum   := CreateEmptyEvent;
+  FEventAfterEventMoveFrustum := CreateEmptyEvent;
   FEventResize        := CreateResizeWindowEvent;
 
   FEventMouseDblClick := CreateMouseEvent;
@@ -612,6 +618,7 @@ begin
   FKernelSSAA := skOutLine;
   FBlendMode := bmAlpha;
   FScene := TBScene.Create;
+  FScene.StrictHitTest := StrictHitTest;
   FOwnScene := True;
   LinkSceneEvents;
   RendererInit;
@@ -643,6 +650,7 @@ begin
   FEventEventFocus := nil;
 
   FEventMoveFrustum := nil;
+  FEventAfterEventMoveFrustum := nil;
   FEventResize := nil;
 
   FEventMouseDblClick := nil;
@@ -667,7 +675,6 @@ begin
   TListRendererPasses.Free(FPasses);
 
   FFrustum.Free;
-  BBSelectList.Free;
   FListGIinFrustum[false].Free;
   FListGIinFrustum[true].Free;
   FVisibleGI.Free;
@@ -967,7 +974,12 @@ begin
   FScene := AScene;
 
   if Assigned(FScene) then
+  begin
+    FScene.StrictHitTest := StrictHitTest;
+    OnAdjustFrustum;
     LinkSceneEvents;
+  end;
+
   if FScene.GraphicObjects.GetFirst(bucket) then
   repeat
     DoEventInstanceTransform(DoEventInstanceCreate(bucket.Value.BaseInstance));
@@ -1345,8 +1357,10 @@ begin
       else
         SetVisibleInstance(Instance, true);
     end;
+    {$ifdef debug}
     if IsNan(Instance^.DistanceToScreen) then
       raise Exception.Create('Instance.DistanceToScreen is equal NAN! Check algorithm for calculate an object position!');
+    {$endif}
   end else
     Result := false;
 end;
@@ -1967,6 +1981,23 @@ begin
   end;
 end;
 
+function TBlackSharkRenderer.StrictHitTest(const AData: PGraphicInstance): boolean;
+var
+  d: BSFloat;
+begin
+  Result := FFrustum.BoxInFrustum(AData.BoundingBox);
+  if Result then
+  begin
+    inc(FLastCountSelectedByTree);
+    if FExactMesureDistanceToBB then
+      { more exact }
+      d := PlaneMaxDistanceToBB(FFrustum.Frustum.P[TBoxPlanes.bpNear], @AData.BoundingBox)
+    else
+      d := PlaneDotProduct(FFrustum.Frustum.P[TBoxPlanes.bpNear], TVec3f(AData.BoundingBox.Middle));
+    EnumSingleVisibleObjectsByBVH(AData, d);
+  end;
+end;
+
 procedure TBlackSharkRenderer.UpdateAllLastMVP;
 var
   i: int32;
@@ -2006,6 +2037,9 @@ begin
     mvp.M3 := AInstance.Instance.ProdStackModelMatrix.M3;
     AInstance.LastMVP := mvp * FFrustum.LastViewProjMat;
   end else  }
+  if AInstance.Instance.Owner.OrthogonalProjection then
+    AInstance.LastMVP := AInstance.Instance.ProdStackModelMatrix * FFrustum.LastOrthoViewProjMat
+  else
     AInstance.LastMVP := AInstance.Instance.ProdStackModelMatrix * FFrustum.LastViewProjMat;
 end;
 
@@ -2291,14 +2325,14 @@ begin
   //if (Instance.Instance.Owner.Opacity = 0) then
   //  exit;
 
-  {$ifndef ultibo}
-  if SupportsVAO then
-    glBindVertexArray(GL_NONE);
-  {$endif}
-
-  BSShaderManager.UseShader(Instance.Instance.Owner.Shader, not SupportsVAO or not Instance.Instance.Owner.StaticObject);
   if LastDrawGI <> Instance.Instance.Owner then
   begin
+    {$ifndef ultibo}
+    if SupportsVAO then
+      glBindVertexArray(GL_NONE);
+    {$endif}
+
+    BSShaderManager.UseShader(Instance.Instance.Owner.Shader, not SupportsVAO or not Instance.Instance.Owner.StaticObject);
     if LastCullFaceOption <> Instance.Instance.Owner.DrawSides then
     begin
       LastCullFaceOption := Instance.Instance.Owner.DrawSides;
@@ -2311,8 +2345,9 @@ begin
           //glDisable(GL_DEPTH_TEST);
           glEnable(GL_CULL_FACE);
           glCullFace(GL_BACK);
-          {if Instance^.Owner.FClockWiseCullFace then
-            glFrontFace(GL_CW) else
+          {if Instance^.Owner.ClockWiseCullFace then
+            glFrontFace(GL_CW)
+          else
             glFrontFace(GL_CCW);}
           //glCullFace(GL_FRONT_AND_BACK);
         end;
@@ -2321,8 +2356,9 @@ begin
           //glDisable(GL_DEPTH_TEST);
           glEnable(GL_CULL_FACE);
           glCullFace(GL_FRONT);
-          {if Instance^.Owner.FClockWiseCullFace then
-            glFrontFace(GL_CW) else
+          {if Instance^.Owner.ClockWiseCullFace then
+            glFrontFace(GL_CW)
+          else
             glFrontFace(GL_CCW);}
           //glFrontFace(GL_CW);
           //glCullFace(GL_FRONT_AND_BACK);
@@ -2603,11 +2639,12 @@ end;
 //  {$endif}
 //end;
 
+procedure TBlackSharkRenderer.OnAdjustFrustum;
+begin
+  FScene.Granularity := FFrustum.DistanceFarPlane - FFrustum.DistanceNearPlane;
+end;
+
 procedure TBlackSharkRenderer.OnChangeFrustum;
-var
-  i: Integer;
-  inst: PGraphicInstance;
-  d: BSFloat;
 begin
   //if Drawing then
   //  raise Exception.Create('Call OnChangeFrustum and Draw simultaneously');
@@ -2615,22 +2652,10 @@ begin
   { query all objects to hited into frustum; when generated event EnumListVisibleObjectsByOctTree or
     EnumSingleVisibleObjectsByOctTree, already visible objects remove from FVisibleGI }
 
-  BBSelectList.Count := 0;
-  FScene.Select(Frustum.BB, BBSelectList);
-  for i := 0 to BBSelectList.Count - 1 do
-  begin
-    inst := PGraphicInstance(BBSelectList.Items[i]);
-    if not FFrustum.BoxInFrustum(inst.BoundingBox) then
-      continue;
-    if FExactMesureDistanceToBB then
-      { more exact }
-      d := PlaneMaxDistanceToBB(FFrustum.Frustum.P[TBoxPlanes.bpNear], @inst.BoundingBox)
-    else
-      d := PlaneDotProduct(FFrustum.Frustum.P[TBoxPlanes.bpNear], TVec3f(inst.BoundingBox.Middle));
-    EnumSingleVisibleObjectsByBVH(inst, d);
-  end;
+  FLastCountSelectedByTree := 0;
+  FScene.Select(Frustum.BB);
 
-  { now remain only objects which not hit into Frustum and to have property Visible = true;
+  { now remained only objects which not hit into Frustum and to have property Visible = true;
     set Visible = false }
   while FVisibleGI.Count > 0 do
   begin
@@ -2646,6 +2671,7 @@ begin
   end;
 
   FEventMoveFrustum.Send(Self);
+  FEventAfterEventMoveFrustum.Send(Self);
 end;
 
 function TBlackSharkRenderer.ScenePositionToScreen3D(const v: TVec3f): TVec3f;

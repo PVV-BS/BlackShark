@@ -8,77 +8,46 @@
         <CompatibilityMode Value="True"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
-      <Title Value="LazTests"/>
+      <Title Value="BSTest"/>
       <Scaled Value="True"/>
       <ResourceType Value="res"/>
       <UseXPManifest Value="True"/>
       <XPManifest>
         <DpiAware Value="True"/>
       </XPManifest>
-      <Icon Value="0"/>
     </General>
-    <BuildModes Count="3">
-      <Item1 Name="Win32" Default="True"/>
-      <Item2 Name="Win64">
+    <BuildModes Count="2">
+      <Item1 Name="BS4.1" Default="True"/>
+      <Item2 Name="Win32">
         <CompilerOptions>
           <Version Value="11"/>
           <PathDelim Value="\"/>
           <Target>
-            <Filename Value="..\..\bin\LazTests"/>
+            <Filename Value="..\..\..\Bin\BSTest"/>
           </Target>
           <SearchPaths>
-            <IncludeFiles Value="$(ProjOutDir);..\..;..\..\core;..\..\gui;..\..\common"/>
-            <OtherUnitFiles Value="..\..;..;..\..\core;..\..\gui;..\..\common"/>
-            <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+            <IncludeFiles Value="$(ProjOutDir);..\..\.."/>
+            <OtherUnitFiles Value="..\..\..\common;..\..\..\gui;..\..\..\core;..\..\.."/>
           </SearchPaths>
           <CodeGeneration>
-            <TargetCPU Value="x86_64"/>
-            <TargetOS Value="win64"/>
+            <TargetCPU Value="i386"/>
+            <TargetOS Value="win32"/>
           </CodeGeneration>
           <Linking>
+            <Debugging>
+              <DebugInfoType Value="dsDwarf3"/>
+            </Debugging>
             <Options>
               <Win32>
                 <GraphicApplication Value="True"/>
               </Win32>
             </Options>
           </Linking>
-          <Other>
-            <CompilerMessages>
-              <IgnoredMessages idx6058="True" idx3104="True"/>
-            </CompilerMessages>
-          </Other>
         </CompilerOptions>
       </Item2>
-      <Item3 Name="Linux86-64">
-        <CompilerOptions>
-          <Version Value="11"/>
-          <PathDelim Value="\"/>
-          <Target>
-            <Filename Value="..\..\bin\LazTests"/>
-          </Target>
-          <SearchPaths>
-            <IncludeFiles Value="$(ProjOutDir);..\..;..\..\core;..\..\gui;..\..\common"/>
-            <OtherUnitFiles Value="..\..;..;..\..\core;..\..\gui;..\..\common"/>
-            <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
-          </SearchPaths>
-          <CodeGeneration>
-            <TargetCPU Value="x86_64"/>
-            <TargetOS Value="linux"/>
-          </CodeGeneration>
-          <Linking>
-            <Options>
-              <Win32>
-                <GraphicApplication Value="True"/>
-              </Win32>
-            </Options>
-          </Linking>
-          <Other>
-            <CompilerMessages>
-              <IgnoredMessages idx6058="True" idx3104="True"/>
-            </CompilerMessages>
-          </Other>
-        </CompilerOptions>
-      </Item3>
+      <SharedMatrixOptions Count="1">
+        <Item1 ID="413913526270" Type="IDEMacro" MacroName="LCLWidgetType" Value="qt5"/>
+      </SharedMatrixOptions>
     </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
@@ -94,19 +63,19 @@
     </RequiredPackages>
     <Units Count="3">
       <Unit0>
-        <Filename Value="LazTests.lpr"/>
+        <Filename Value="BSTest.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit0>
       <Unit1>
-        <Filename Value="umain.pas"/>
+        <Filename Value="mainwin.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="FrmMain"/>
+        <ComponentName Value="MainW"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="uMain"/>
+        <UnitName Value="MainWin"/>
       </Unit1>
       <Unit2>
-        <Filename Value="..\bs.test.switcher.pas"/>
+        <Filename Value="Layout4.inc"/>
         <IsPartOfProject Value="True"/>
       </Unit2>
     </Units>
@@ -115,13 +84,17 @@
     <Version Value="11"/>
     <PathDelim Value="\"/>
     <Target>
-      <Filename Value="..\..\bin\LazTests"/>
+      <Filename Value="BSTest"/>
     </Target>
     <SearchPaths>
-      <IncludeFiles Value="$(ProjOutDir);..\..;..\..\core;..\..\gui;..\..\common"/>
-      <OtherUnitFiles Value="..\..;..;..\..\core;..\..\gui;..\..\common"/>
+      <IncludeFiles Value="$(ProjOutDir);..\..\.."/>
+      <OtherUnitFiles Value="..\..\..\common;..\..\..\gui;..\..\..\core;..\..\.."/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
+    <CodeGeneration>
+      <TargetCPU Value="x86_64"/>
+      <TargetOS Value="linux"/>
+    </CodeGeneration>
     <Linking>
       <Debugging>
         <DebugInfoType Value="dsDwarf3"/>
@@ -132,11 +105,6 @@
         </Win32>
       </Options>
     </Linking>
-    <Other>
-      <CompilerMessages>
-        <IgnoredMessages idx6058="True" idx3104="True"/>
-      </CompilerMessages>
-    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions Count="3">

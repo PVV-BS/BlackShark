@@ -205,6 +205,7 @@ type
     FCaption: string;
     {.$endif}
     FBanDraw: boolean;
+    FOrthogonalProjection: boolean;
     function GetAbsolutePosition: TVec3f;
     procedure GenerateProdStackMatrix(Instance: PGraphicInstance);{$ifndef DEBUG_BS} inline; {$endif}
     procedure GenerateModelMatrixFromAllTransformations(Instance: PGraphicInstance; ASendEvent: boolean); {$ifndef DEBUG_BS} inline; {$endif}
@@ -493,6 +494,7 @@ type
     {.$ifdef DEBUG_BS}
     property Caption: string read FCaption write FCaption;
     {.$endif}
+    property OrthogonalProjection: boolean read FOrthogonalProjection write FOrthogonalProjection;
   public
     { events }
     { be careful when use the events and Selected property or release objects
@@ -533,7 +535,7 @@ type
 
   { TBScene }
 
-  TBScene = class(TBlackSharkKDTree)
+  TBScene = class(TBlackSharkKDTree<PGraphicInstance>)
   private
     StackGI: TListVecInstances;
     { all Graphics Items in scene }
@@ -552,6 +554,8 @@ type
     FEventInstanceAfterChangeKey: IBEmptyEvent;
     FEventInstanceBeginDrag: IBDragDropEvent;
   protected
+    class function Compare(const Key1, Key2: PGraphicInstance): boolean; static;
+    class function GetComparator: TKeyComparatorEqual<PGraphicInstance>; override;
     procedure ObjectAdd(AItem: TGraphicObject); overload;
     procedure ObjectDelete(AItem: TGraphicObject);
     procedure ObjectIncStencilUse(AObject: TGraphicObject);
@@ -569,10 +573,9 @@ type
     procedure Clear; override;
     function ObjectAdd(AClassGraphicObject: TGraphicObjectClass; AParent: TGraphicObject; AOwner: TObject): TGraphicObject; overload;
     procedure InstanceSetSelected(Instance: PGraphicInstance; Selected: boolean);
-  public
-    property GraphicObjects: THashTableGraphicObjects read FGraphicObjects;
-
     procedure InstanceTransform(Instance: PGraphicInstance; IsMeshShapeTransform: boolean);
+
+    property GraphicObjects: THashTableGraphicObjects read FGraphicObjects;
 
     property EventInstanceSelect: TEventInstanceSelect read FEventInstanceSelect;
     property EventInstanceTransform: IBEmptyEvent read FEventInstanceTransform;
@@ -2091,7 +2094,7 @@ begin
       i := FInstances.ItemListLast;
       while Assigned(i) do
       begin
-        Scene.Remove(i.Item.BVHNode, i);
+        Scene.Remove(i.Item.BVHNode, i.Item);
         Scene.InstanceSceneSpaceTreeClientChanged(i.Item);
         i := i.Prev;
       end;
@@ -2159,6 +2162,11 @@ begin
 end;
 
 { TBScene }
+
+class function TBScene.Compare(const Key1, Key2: PGraphicInstance): boolean;
+begin
+  Result := Key1 = Key2;
+end;
 
 constructor TBScene.Create;
 begin
@@ -2237,6 +2245,11 @@ begin
   StackGI.Free;
   FGraphicObjects.Free;
   inherited Destroy;
+end;
+
+class function TBScene.GetComparator: TKeyComparatorEqual<PGraphicInstance>;
+begin
+  Result := Compare;
 end;
 
 procedure TBScene.Clear;

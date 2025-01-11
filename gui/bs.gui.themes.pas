@@ -847,6 +847,7 @@ class procedure TPropValueAccessProvider<T>.SetPropValue(Instance: TObject;
     PropInfo: PPropInfo; const Value: T; Index: int32 = -1);
 var
   m: TMethod;
+  name: AnsiString;
 begin
   if IsFieldSetProc(PropInfo) then
   begin
@@ -854,6 +855,7 @@ begin
   end else
   begin
     m.Code := GetCodePointerSet(Instance, PropInfo);
+    name := TObject.MethodName(m.Code);
     if Assigned(m.Code) then
     begin
       m.Data := Instance;

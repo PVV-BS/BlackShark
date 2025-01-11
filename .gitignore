@@ -110,3 +110,4 @@
 /.idea
 *.res
 *.local
+/tests/lazarus/BSIntersect/lib/

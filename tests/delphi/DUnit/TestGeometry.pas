@@ -23,6 +23,7 @@ type
     FData: TListVec<PSomeData>;
     FKDTree: TBlackSharkKDTree;
     procedure GenData;
+    procedure GenData2;
     procedure GenRandom(ACount: int32);
     procedure ClearData;
     procedure MainTest(WorldSize: int32; ViewportWidth: int32);
@@ -33,12 +34,13 @@ type
     procedure Setup;
     [TearDown]
     procedure TearDown;
-    [Test]
+    //[Test]
     procedure Test1;
     // Test with TestCase Attribute to supply parameters.
-    //[Test]
-    [TestCase('TestA','100000')]
+    [TestCase('TestA','1000000')]
     procedure Test2(const ACount: Integer);
+    //[Test]
+    procedure Test3;
   end;
 
 implementation
@@ -64,7 +66,7 @@ end;
 constructor TGeometryKDTreeTest.Create;
 begin
   FData := TListVec<PSomeData>.Create;
-  FKDTree := TBlackSharkKDTree.Create(TDimension2D);
+  FKDTree := TBlackSharkKDTree.Create(10000, TDimension2D, 10000000);
   Randomize;
 end;
 
@@ -80,43 +82,109 @@ procedure TGeometryKDTreeTest.GenData;
 var
   d: PSomeData;
 begin
-  new(d);
-  d.Box.Min := vec2(-5.0, 4.0);
-  d.Box.Max := vec2(-3.0, 8.0);
-  FData.Add(d);
-  d.Index := FKDTree.AddBB(d, @d.Box);
-  {
-  new(d);
-  d.Box.Min := vec2(3.0, 4.0);
-  d.Box.Max := vec2(3.0, 8.0);
-  FData.Add(d);
-  d.Index := FKDTree.AddBB(d, @d.Box);
-  new(d);
-  d.Box.Min := vec2(10.0, 7.0);
-  d.Box.Max := vec2(15.0, 11.0);
-  FData.Add(d);
-  d.Index := FKDTree.AddBB(d, @d.Box);
-  new(d);
-  d.Box.Min := vec2(14.0, 17.0);
-  d.Box.Max := vec2(15.0, 21.0);
-  FData.Add(d);
-  d.Index := FKDTree.AddBB(d, @d.Box);
-  new(d);
-  d.Box.Min := vec2(11.0, 6.0);
-  d.Box.Max := vec2(17.0, 13.0);
-  FData.Add(d);
-  d.Index := FKDTree.AddBB(d, @d.Box);
-  new(d);
-  d.Box.Min := vec2(9.0, 3.0);
-  d.Box.Max := vec2(16.0, 6.0);
-  FData.Add(d);
-  d.Index := FKDTree.AddBB(d, @d.Box);
-  new(d);
-  d.Box.Min := vec2(1.0, 3.0);
-  d.Box.Max := vec2(5.0, 5.0);
-  FData.Add(d);
-  d.Index := FKDTree.AddBB(d, @d.Box);  }
+//  new(d);
+//  d.Box.Min := vec2(4.0, 4.0);
+//  d.Box.Max := vec2(5.0, 5.0);
+//  FData.Add(d);
+//  d.Index := FKDTree.AddBB(d, @d.Box);
 
+  new(d);
+  d.Box.Min := vec2(5.0, 8.0);
+  d.Box.Max := vec2(7.0, 15.0);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
+  new(d);
+  d.Box.Min := vec2(2.0, 3.0);
+  d.Box.Max := vec2(5.0, 3.0);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
+  new(d);
+  d.Box.Min := vec2(1.0, 5.0);
+  d.Box.Max := vec2(8.0, 8.0);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
+  new(d);
+  d.Box.Min := vec2(0.0, 7.0);
+  d.Box.Max := vec2(2.0, 9.0);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
+  new(d);
+  d.Box.Min := vec2(3.0, 7.0);
+  d.Box.Max := vec2(4.0, 13.0);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
+
+  new(d);
+  d.Box.Min := vec2(5.0, 8.0);
+  d.Box.Max := vec2(5.0, 12.0);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
+  new(d);
+  d.Box.Min := vec2(5.0, 7.0);
+  d.Box.Max := vec2(10.0, 10.0);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
+  new(d);
+  d.Box.Min := vec2(3.0, 2.0);
+  d.Box.Max := vec2(4.0, 4.0);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
+  new(d);
+  d.Box.Min := vec2(7.0, 1.0);
+  d.Box.Max := vec2(10.0, 7.0);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
+  new(d);
+  d.Box.Min := vec2(3.0, 3.0);
+  d.Box.Max := vec2(12.0, 3.0);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
+end;
+
+procedure TGeometryKDTreeTest.GenData2;
+var
+  d: PSomeData;
+begin
+  new(d);
+  d.Box := Box2(0, 4, 1, 12);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
+  new(d);
+  d.Box := Box2(4, 3, 7, 3);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
+  new(d);
+  d.Box := Box2(9, 1, 10, 9);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
+  new(d);
+  d.Box := Box2(0, 9, 8, 15);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
+  new(d);
+  d.Box := Box2(3, 3, 9, 4);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
+  new(d);
+  d.Box := Box2(0, 1, 1, 2);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
+  new(d);
+  d.Box := Box2(6, 9, 9, 13);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
+  new(d);
+  d.Box := Box2(5, 5, 7, 9);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
+  new(d);
+  d.Box := Box2(8, 0, 14, 3);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
+  new(d);
+  d.Box := Box2(9, 2, 9, 3);
+  FData.Add(d);
+  d.Index := FKDTree.AddBB(d, @d.Box);
 end;
 
 procedure TGeometryKDTreeTest.GenRandom(ACount: int32);
@@ -146,13 +214,18 @@ var
   start_time: uint32;
   real_count: int32;
   viewport: TBox2d;
+  nodeMinMax: PKDMinMax;
+  dem: Integer;
+  boundary: Double;
+  left, right: Integer;
 begin
+  System.WriteLn('KD-Tree MainTest has run...');
   Selected := TListVec<Pointer>.Create;
   start_time := TThread.GetTickCount;
   for i := 0 to FData.Count - 1 do
   begin
     d := FData.Items[i];
-    FKDTree.Select(@d.Box, Selected);
+    FKDTree.Select(PKDMinMax(@d.Box), Selected);
     if Selected.Count = 0 then
     begin
       Assert.Fail('Doesn''t find a box!');
@@ -173,6 +246,9 @@ begin
         break;
       end;
     end;
+    FKDTree.GetNodeAttributes(d.Index, nodeMinMax, dem, boundary, left, right);
+    Assert.IsTrue(nodeMinMax[0] < nodeMinMax[2]);
+    Assert.IsTrue(nodeMinMax[1] < nodeMinMax[3]);
   end;
   System.WriteLn('Spend time for select all objects: ' + IntToStr(TThread.GetTickCount - start_time) + ', ms...');
 
@@ -195,7 +271,7 @@ begin
   Selected.Count := 0;
   start_time := TThread.GetTickCount;
   // select objects which contain areas intersected with viewport
-  FKDTree.Select(@viewport, Selected);
+  FKDTree.Select(PKDMinMax(@viewport), Selected);
   start_time := TThread.GetTickCount - start_time;
   // calculate objects intersects with viewport
   real_count := 0;
@@ -205,14 +281,24 @@ begin
     if Box2Collision(d.Box, viewport) then
       inc(real_count);
   end;
+
   System.WriteLn('Spend time for select to viewport: ' + IntToStr(start_time) + ', ms, selected ' +
    IntToStr(Selected.Count) + ' objects, really intersect viewport ' + IntToStr(real_count) + ' objects');
 
+  System.WriteLn('Select iterations, boundary errors: ' + IntToStr(FKDTree.SelectIterations) + ', ' + IntToStr(FKDTree.BoundaryErrors));
   if real_count <> MustSelected.Count then
   begin
+    System.WriteLn('Must selected: ');
     for i := 0 to MustSelected.Count - 1 do
     begin
       d := MustSelected.Items[i];
+      System.WriteLn('d.Box := Box2(' + IntToStr(trunc(d.Box.Min.x)) + ', ' +
+        IntToStr(trunc(d.Box.Min.y)) + ', ' + IntToStr(trunc(d.Box.Max.x)) + ', ' + IntToStr(trunc(d.Box.Max.y)) + ');');
+    end;
+    System.WriteLn('Really selected: ');
+    for i := 0 to Selected.Count - 1 do
+    begin
+      d := Selected.Items[i];
       System.WriteLn('Box: x_min = ' + IntToStr(trunc(d.Box.Min.x)) + ', y_min = ' +
         IntToStr(trunc(d.Box.Min.y)) + ', x_max = ' + IntToStr(trunc(d.Box.Max.x)) + ', y_max = ' + IntToStr(trunc(d.Box.Max.y)));
     end;
@@ -245,7 +331,13 @@ begin
   //GenData;
   System.WriteLn('Generated ' + IntToStr(FData.Count) + ' objects...');
   //MainTest(20);
-  MainTest(ACount, 100);
+  MainTest(ACount div 5, trunc(FKDTree.ViewPortSize));
+end;
+
+procedure TGeometryKDTreeTest.Test3;
+begin
+  GenData2;
+  MainTest(10, trunc(FKDTree.ViewPortSize));
 end;
 
 initialization

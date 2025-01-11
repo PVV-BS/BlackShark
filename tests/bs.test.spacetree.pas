@@ -122,13 +122,13 @@ type
   TBSTestSceneKDTree = class(TBSTest)
   private
     const
-      //COUNT_OBJECTS = 10;
-      //WORLD_BOUNDARY_MAX =  20;
-      //WORLD_BOUNDARY_MIN = -20;
-      COUNT_OBJECTS = 10000;
-      WORLD_BOUNDARY_MAX =  300;
-      WORLD_BOUNDARY_MIN = -300;
-
+//      COUNT_OBJECTS = 2;
+//      WORLD_BOUNDARY_MAX =  30;
+//      WORLD_BOUNDARY_MIN = -30;
+      COUNT_OBJECTS = 1000000;
+      WORLD_BOUNDARY_MAX =  600;
+      WORLD_BOUNDARY_MIN = -600;
+//
   private
     Billboard: TBCanvas;
     BillboardPanel: TRectangle;
@@ -136,6 +136,8 @@ type
     CountHideItems: TCanvasText;
     CountNodes: TCanvasText;
     CountAllItems: TCanvasText;
+    CountSelectIter: TCanvasText;
+    LastCountSelectedByKDTree: TCanvasText;
     ViewPortPos: TCanvasText;
     FPS: TCanvasText;
     EventUpdate: IBAnimationLinearFloat;
@@ -155,7 +157,7 @@ type
     {$endif}
     procedure OnUpdate(const AValue: BSFloat);
     procedure UpdateBillboard;
-    procedure OnSplitNode(ADem: int32; AVectorMinMax: PBoxMinMax; ABoundary: double);
+    procedure OnSplitNode(ADem: int32; ABox: PKDMinMax; ABoundary: double);
     procedure OnMoveObjectsClick(ASender: TObject);
     //procedure OnChangeMVP(const AData: BEmpty);
     procedure OnClickDrawLines(ASender: TObject);
@@ -581,15 +583,11 @@ var
   p_txt: TRectangle;
 begin
   inherited;
+  //ARenderer.Frustum.OrthogonalProjection := true;
   Allow3dManipulationByMouse := true;
   AllowMoveCameraByKeyboard := true;
-  ARenderer.Frustum.DistanceFarPlane := 90;
+  ARenderer.Frustum.DistanceFarPlane := 50;
   ARenderer.Frustum.Position := vec3(0.0, 0.0, 5.0);
-  chbDrawLines := TBCheckBox.Create(ARenderer);
-  chbDrawLines.Canvas.Font.SizeInPixels := 12;
-  chbDrawLines.OnCheck := OnClickDrawLines;
-  chbDrawLines.Text := 'Draw KD-tree';
-
   EventUpdate := CreateAniFloatLinear(GUIThread);
   EventUpdate.StartValue := 0.0;
   EventUpdate.StopValue := 1.0;
@@ -601,15 +599,16 @@ begin
   EventUpdateObserver := CreateAniFloatLivearObsrv(EventUpdate, OnUpdate);
 
   Axex := TGraphicObjectAxises.Create(Self, nil, Renderer.Scene);
-  Axex.AxelX.SceneSpaceTreeClient := true;
-  Axex.AxelY.SceneSpaceTreeClient := true;
-  Axex.AxelZ.SceneSpaceTreeClient := true;
+  //Axex.AxelX.SceneSpaceTreeClient := true;
+  //Axex.AxelY.SceneSpaceTreeClient := true;
+  //Axex.AxelZ.SceneSpaceTreeClient := true;
 
   Billboard := TBCanvas.Create(Renderer, Self);
+  Billboard.OrthogonalProjection := true;
   Billboard.Font.SizeInPixels := 10;
   BillboardPanel := TRectangle.Create(Billboard, nil);
   BillboardPanel.Fill := true;
-  BillboardPanel.Size := vec2(250, 122);
+  BillboardPanel.Size := vec2(250.0, 157.0);
   BillboardPanel.Color := BS_CL_MSVS_PANEL;
   BillboardPanel.Build;
   BillboardPanel.Position2d := vec2(10, 10);
@@ -623,12 +622,16 @@ begin
   Button.Caption := 'Run/Stop a moving';
   Button.Position2d := vec2(BillboardPanel.Position2d.x, BillboardPanel.Position2d.y + BillboardPanel.Height + 10);
   }
-  chbMoveObjects := TBCheckBox.Create(ARenderer);
+  chbMoveObjects := TBCheckBox.Create(Billboard);
   chbMoveObjects.Canvas.Font.SizeInPixels := 12;
   chbMoveObjects.Text := 'Motion of objects';
   chbMoveObjects.Position2d := vec2(BillboardPanel.Position2d.x, BillboardPanel.Position2d.y + BillboardPanel.Height + 10);
   chbMoveObjects.OnCheck := OnMoveObjectsClick;
 
+  chbDrawLines := TBCheckBox.Create(Billboard);
+  chbDrawLines.Canvas.Font.SizeInPixels := 12;
+  chbDrawLines.OnCheck := OnClickDrawLines;
+  chbDrawLines.Text := 'Draw KD-tree';
   chbDrawLines.Position2d := vec2(chbMoveObjects.Position2d.x, chbMoveObjects.Position2d.y + chbMoveObjects.Height + 5);
 
   p_txt := TRectangle.Create(Billboard, BillboardPanel);
@@ -654,10 +657,22 @@ begin
   CountNodes.Text := 'Count nodes: 0';
   CountNodes.Data.Interactive := false;
   CountNodes.Position2d := vec2(10, 61);
+  LastCountSelectedByKDTree := TCanvasText.Create(Billboard, p_txt);
+  LastCountSelectedByKDTree.Text := 'Count selected by tree: 0';
+  LastCountSelectedByKDTree.Data.Interactive := false;
+  LastCountSelectedByKDTree.Position2d := vec2(10, 78);
   FPS := TCanvasText.Create(Billboard, p_txt);
   FPS.Text := 'FPS: 0';
   FPS.Data.Interactive := false;
-  FPS.Position2d := vec2(10, 78);
+  FPS.Position2d := vec2(10, 95);
+  ViewPortPos := TCanvasText.Create(Billboard, p_txt);
+  ViewPortPos.Text := 'Camera: x:0; y:0; z:0;';
+  ViewPortPos.Position2d := vec2(10, 112);
+  CountSelectIter := TCanvasText.Create(Billboard, p_txt);
+  CountSelectIter.Text := 'Select iterations: 0';
+  CountSelectIter.Data.Interactive := false;
+  CountSelectIter.Position2d := vec2(10, 129);
+
 
   CountAllItems.Layer2d := 3;
   CountVisibleItems.Layer2d := 3;
@@ -667,13 +682,10 @@ begin
 
   Lines := TGraphicObjectLines.Create(Self, nil, Renderer.Scene);
   Lines.Caption := 'Lines';
-  Lines.SceneSpaceTreeClient := true;
+  //Lines.SceneSpaceTreeClient := true;
   Lines.Interactive := false;
   Lines.DrawAsTransparent := true;
 
-  ViewPortPos := TCanvasText.Create(Billboard, p_txt);
-  ViewPortPos.Text := 'Camera: x:0; y:0; z:0;';
-  ViewPortPos.Position2d := vec2(10, 95);
   CreateHelpPanel;
 
   Directions := TListVec<TVec3f>.Create;
@@ -759,7 +771,7 @@ procedure TBSTestSceneKDTree.DrawAlreadyExistNodes;
 var
   Stack: TListVec<int32>;
   node, left, right: int32;
-  box: PBoxMinMax;
+  box: PKDMinMax;
   dimension: int32;
   boundary: double;
 begin
@@ -792,6 +804,7 @@ begin
   DrawAlreadyExistNodes;
   {$endif}
   Lines.EndUpdate(false);
+  Lines.Position := vec3(0.0, 0.0, 0.0);
 end;
 
 procedure TBSTestSceneKDTree.GenerateScene;
@@ -873,7 +886,7 @@ begin
   UpdateBillboard;
 end;
 
-procedure TBSTestSceneKDTree.OnSplitNode(ADem: int32; AVectorMinMax: PBoxMinMax; ABoundary: double);
+procedure TBSTestSceneKDTree.OnSplitNode(ADem: int32; ABox: PKDMinMax; ABoundary: double);
 var
   min: TVec3f;
   max: TVec3f;
@@ -890,13 +903,13 @@ begin
       IncCountLineContainers;
   end;  }
 
-  min.x := bs.math.Max(AVectorMinMax^[0], WORLD_BOUNDARY_MIN);
-  min.y := bs.math.Max(AVectorMinMax^[1], WORLD_BOUNDARY_MIN);
-  min.z := bs.math.Max(AVectorMinMax^[2], WORLD_BOUNDARY_MIN);
-  max.x := bs.math.Min(AVectorMinMax^[3], WORLD_BOUNDARY_MAX);
-  max.y := bs.math.Min(AVectorMinMax^[4], WORLD_BOUNDARY_MAX);
-  max.z := bs.math.Min(AVectorMinMax^[5], WORLD_BOUNDARY_MAX);
 
+  min.x := bs.math.Max(ABox^[0], WORLD_BOUNDARY_MIN);
+  min.y := bs.math.Max(ABox^[1], WORLD_BOUNDARY_MIN);
+  min.z := bs.math.Max(ABox^[2], WORLD_BOUNDARY_MIN);
+  max.x := bs.math.Min(ABox^[3], WORLD_BOUNDARY_MAX);
+  max.y := bs.math.Min(ABox^[4], WORLD_BOUNDARY_MAX);
+  max.z := bs.math.Min(ABox^[5], WORLD_BOUNDARY_MAX);
   if (max.x - min.x <= EPSILON) and (max.y - min.y <= EPSILON) and (max.z - min.z <= EPSILON) then
     exit;
 
@@ -920,6 +933,20 @@ begin
       Lines.Line(vec3(min.x, min.y, ABoundary), vec3(min.x, max.y, ABoundary));
     end;
   end;
+//  case ADem of
+//    0: begin //x
+//      Lines.Line(vec3(ABoundary, bs.math.Max(ABox^[1], WORLD_BOUNDARY_MIN), bs.math.Max(ABox^[2], WORLD_BOUNDARY_MAX)),
+//        vec3(ABoundary, bs.math.Min(ABox^[4], WORLD_BOUNDARY_MAX), bs.math.Min(ABox^[5], WORLD_BOUNDARY_MAX)));
+//    end;
+//    1: begin //y
+//      Lines.Line(vec3(bs.math.Max(ABox^[0], WORLD_BOUNDARY_MIN), ABoundary, bs.math.Max(ABox^[2], WORLD_BOUNDARY_MAX)),
+//        vec3(bs.math.Min(ABox^[3], WORLD_BOUNDARY_MAX), ABoundary, bs.math.Min(ABox^[5], WORLD_BOUNDARY_MAX)));
+//    end;
+//    2: begin //z
+//      Lines.Line(vec3(bs.math.Max(ABox^[0], WORLD_BOUNDARY_MIN), bs.math.Max(ABox^[2], WORLD_BOUNDARY_MAX), ABoundary),
+//        vec3(bs.math.Min(ABox^[3], WORLD_BOUNDARY_MAX), bs.math.Min(ABox^[4], WORLD_BOUNDARY_MAX), ABoundary));
+//    end;
+//  end;
 end;
 
 procedure TBSTestSceneKDTree.OnUpdate(const AValue: BSFloat);
@@ -1020,9 +1047,11 @@ begin
   CountVisibleItems.Text := 'Count visible items: ' + IntToStr(Renderer.CountVisibleInstancesInSpaceTree);
   CountHideItems.Text := 'Count hide items: ' + IntToStr(Renderer.Scene.Count - Renderer.CountVisibleInstancesInSpaceTree);
   CountNodes.Text := 'Count nodes: ' + IntToStr(Renderer.Scene.Nodes);
+  LastCountSelectedByKDTree.Text := 'Count selected by tree: ' + IntToStr(Renderer.LastCountSelectedByTree);
   FPS.Text := 'FPS: ' + IntToStr(Renderer.FPS);
-  ViewPortPos.Text := 'Viewport pos: x:' + IntToStr(round(Renderer.Frustum.Position.x)) + '; y:' +
+  ViewPortPos.Text := 'Camera: x:' + IntToStr(round(Renderer.Frustum.Position.x)) + '; y:' +
     IntToStr(round(Renderer.Frustum.Position.y)) + '; z:' + IntToStr(round(Renderer.Frustum.Position.z)) + ';';
+  //CountSelectIter.Text := 'Select iterations: ' + IntToStr(Renderer.Scene.SelectIterations);
 end;
 
 initialization

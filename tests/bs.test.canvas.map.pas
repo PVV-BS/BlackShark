@@ -1,4 +1,4 @@
-unit bs.test.canvas.map;
+﻿unit bs.test.canvas.map;
 
 {$I BlackSharkCfg.inc}
 
@@ -10,6 +10,7 @@ uses
   , bs.scene
   , bs.renderer
   , bs.test
+  , bs.events
   , bs.canvas
   , bs.canvas.map
   , bs.font
@@ -46,15 +47,20 @@ type
   TBSTestStringMap = class(TBSTest)
   private
     FCanvas: TBCanvas;
-    FMap: TCanvasTextMap;
+    FMap: TCanvasObjectsMap;
+    //FStencilBackground: TRectangle;
     FBackground: TPicture;
     FModels: TStringList;
     AniLaw: IBAnimationLinearFloat;
     AniLawObsr: IBAnimationLinearFloatObsrv;
+    FMethodStencilDraw: TDrawInstanceMethod;
+    procedure DrawStancilBack(Instance: PRendererGraphicInstance);
     procedure LoadBackground;
     procedure LoadBook;
     procedure LoadModels;
     procedure OnUpdateValue(const Value: BSFloat);
+  protected
+    procedure OnMouseWeel(const AData: BMouseData); override;
   public
     constructor Create(ARenderer: TBlackSharkRenderer); override;
     destructor Destroy; override;
@@ -69,6 +75,11 @@ uses
   , bs.config
   , bs.align
   , bs.utils
+  {$ifdef ultibo}
+  , gles20
+  {$else}
+  , bs.gl.es
+  {$endif}
   ;
 
 { TBSTestCanvasMap }
@@ -238,8 +249,9 @@ end;
 constructor TBSTestStringMap.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  FCanvas := TBCanvas.Create(ARenderer, nil);
-  FMap := TCanvasTextMap.Create(FCanvas, nil);
+  Renderer.Frustum.OrthogonalProjection := true;
+  FCanvas := TBCanvas.Create(Renderer, nil);
+  FMap := TCanvasObjectsMap.Create(FCanvas, nil);
   FModels := TStringList.Create;
   AniLaw := CreateAniFloatLinear(NextExecutor);
   AniLawObsr := AniLaw.CreateObserver(OnUpdateValue);
@@ -247,7 +259,7 @@ begin
   AniLaw.Duration := 10000;
   AniLaw.StartValue := 0.0;
   AniLaw.StopValue := 1.0;
-  ARenderer.Frustum.OrthogonalProjection := true;
+  LoadModels;
 end;
 
 destructor TBSTestStringMap.Destroy;
@@ -256,80 +268,234 @@ begin
   AniLawObsr := nil;
   FMap.Free;
   FBackground.Free;
+  //FStencilBackground.Free;
   FCanvas.Free;
   FModels.Free;
   inherited;
 end;
 
-procedure TBSTestStringMap.LoadBackground;
-var
-  monteCristo: TPicture;
-  caption: TCanvasText;
-  author: TCanvasText;
+procedure TBSTestStringMap.DrawStancilBack(Instance: PRendererGraphicInstance);
 begin
-  FBackground := TPicture.Create(FCanvas, nil);
+  { fill the shape Back as the stencil for ban draw outside him }
+  glClearStencil(0);
+  glStencilFunc(GL_ALWAYS, 1, $FF);
+  glStencilOp(GL_ZERO, GL_ZERO, GL_REPLACE);
+  FMethodStencilDraw(Instance);
+  glStencilFunc(GL_EQUAL, 1, $FF);
+  FMethodStencilDraw(Instance);
+end;
+
+procedure TBSTestStringMap.LoadBackground;
+//var
+//  monteCristo: TPicture;
+//  caption: TCanvasText;
+//  author: TCanvasText;
+begin
+  // for not full screen application need stencil
+//  FStencilBackground := TRectangle.Create(FCanvas, nil);
+//  FStencilBackground.Size := vec2(492, 605);
+//  FStencilBackground.Fill := true;
+//  FStencilBackground.Data.AsStencil := true;
+//  FStencilBackground.Data.Opacity := 0.5;
+//  FMethodStencilDraw := FStencilBackground.Data.DrawInstance;
+//  FStencilBackground.Data.DrawInstance := DrawStancilBack;
+//  FStencilBackground.Build;
+//  FStencilBackground.Position2d := vec2((Renderer.WindowWidth - FStencilBackground.Size.x)*0.5, Renderer.WindowHeight*0.05);
+
+  FBackground := TPicture.Create(FCanvas, nil);//FStencilBackground
   FBackground.AutoFit := false;
-  FBackground.Size := vec2(Renderer.WindowWidth, Renderer.WindowHeight*0.9);
+  FBackground.Data.Interactive := false;
+  FBackground.Data.Opacity := 0.1;
+  //FBackground.Size := vec2(Renderer.WindowWidth, Renderer.WindowHeight*0.9);
+  FBackground.Size := vec2(492, 605);//FStencilBackground.Size*1.1;
   FBackground.LoadFromFile('/TestData/StringsMap/background.png');
-  FBackground.Position2d := vec2(0.0, Renderer.WindowHeight*0.05);
-  //FBackground.Data.AsStencil := true;
+  FBackground.Position2d := vec2(0.0, 0.0);//-FStencilBackground.Size*0.05;
 
   FMap.Parent := FBackground;
   //FMap.ViewPortPosition := vec2(FBackground.Size.x*0.5, FBackground.Size.y*0.05);
-  FMap.ViewPortSize := vec2(FBackground.Size.x*0.45, FBackground.Size.y*0.9);
-  FMap.ViewPort.Position2d := vec2(FBackground.Size.x*0.5, FBackground.Size.y*0.05);
-  FMap.TextStyle.Wrap := true;
-  FMap.TextStyle.Bold := true;
-  FMap.TextStyle.BoldWeightX := 0.1;
+  FMap.ViewPortSize := FBackground.Size*0.95; //vec2(FBackground.Width*0.925, FBackground.Height*0.925);
+  FMap.ViewPortPosition := vec2(FBackground.Width*0.025, FBackground.Height*0.025);
+  FMap.TextMapper.TextStyle.Wrap := true;
+  FMap.TextMapper.TextStyle.Bold := true;
+  FMap.TextMapper.TextStyle.BoldWeightX := 0.1;
 
-  monteCristo := TPicture.Create(FCanvas, FBackground);
-  monteCristo.AutoFit := false;
-  monteCristo.LoadFromFile('/TestData/StringsMap/MONTE-CRISTO.png');
-  monteCristo.Size := vec2(monteCristo.Image.Width * 0.6, monteCristo.Image.Height*0.6);
-  monteCristo.Position2d := FBackground.Size*0.25 - monteCristo.Size*0.5;
-  monteCristo.Data.Opacity := 0.8;
-  monteCristo.Build;
-
-  caption := TCanvasText.Create(FCanvas, FBackground);
-  caption.CreateCustomFont;
-  //caption.SceneTextData.TxtProcessor.ViewportSize := vec2(monteCristo.Width, 0);
-  caption.TextAlign := TTextAlign.taCenter;
-  caption.Italic := true;
-  caption.Bold := true;
-  caption.Font.Size := 14;
-  caption.TextAlign := TTextAlign.taCenter;
-  caption.Text := 'LE COMTE' + sLineBreak + 'DE MONTE-CRISTO';
-  caption.Color := ColorDec(BS_CL_GRAY, 0.25);
-
-  caption.Position2d := monteCristo.Position2d + vec2((monteCristo.Width - caption.Width) *0.5, monteCristo.Height + 20.0) ;
-
-  author := TCanvasText.Create(FCanvas, FBackground);
-  author.CreateCustomFont;
-  author.Font.Size := 14;
-  //author.Bold := true;
-  author.Text := 'Alexandre Dumas';
-  author.Color :=  ColorDec(BS_CL_GRAY, 0.25);
-
-  author.Position2d := monteCristo.Position2d + vec2((monteCristo.Width - author.Width) *0.5, caption.Position2d.y + caption.Height  + 30.0) ;
+//  monteCristo := TPicture.Create(FCanvas, FBackground);
+//  monteCristo.AutoFit := false;
+//  monteCristo.LoadFromFile('/TestData/StringsMap/MONTE-CRISTO.png');
+//  monteCristo.Size := vec2(monteCristo.Image.Width * 0.6, monteCristo.Image.Height*0.6);
+//  monteCristo.Position2d := FBackground.Size*0.25 - monteCristo.Size*0.5;
+//  monteCristo.Data.Opacity := 0.8;
+//  monteCristo.Build;
+//
+//  caption := TCanvasText.Create(FCanvas, FBackground);
+//  caption.CreateCustomFont;
+//  //caption.SceneTextData.TxtProcessor.ViewportSize := vec2(monteCristo.Width, 0);
+//  caption.TextAlign := TTextAlign.taCenter;
+//  caption.Italic := true;
+//  caption.Bold := true;
+//  caption.Font.Size := 14;
+//  caption.TextAlign := TTextAlign.taCenter;
+//  caption.Text := 'LE COMTE' + sLineBreak + 'DE MONTE-CRISTO';
+//  caption.Color := ColorDec(BS_CL_GRAY, 0.25);
+//
+//  caption.Position2d := monteCristo.Position2d + vec2((monteCristo.Width - caption.Width) *0.5, monteCristo.Height + 20.0) ;
+//
+//  author := TCanvasText.Create(FCanvas, FBackground);
+//  author.CreateCustomFont;
+//  author.Font.Size := 14;
+//  //author.Bold := true;
+//  author.Text := 'Alexandre Dumas';
+//  author.Color :=  ColorDec(BS_CL_GRAY, 0.25);
+//
+//  author.Position2d := monteCristo.Position2d + vec2((monteCristo.Width - author.Width) *0.5, caption.Position2d.y + caption.Height  + 30.0) ;
 end;
 
 procedure TBSTestStringMap.LoadBook;
+type
+  TMdTags = (None, Header0, Header1, Header2, Header3, Link, Picture);
+
+var
+  pathPicture: string;
+  text: string;
+
+  function GetMdTag(const AText: string): TMdTags;
+  var
+    i: int32;
+    c: Char;
+    pos0, pos1: int32;
+  begin
+    Result := None;
+    for i := 1 to length(AText) do
+    begin
+      c := AText[i];
+      if c = '#' then
+      begin
+        text := Copy(AText, 1, i-1);
+        Result := Header0;
+        if (i + 1 <= length(AText)) and (AText[i+1] = '#') then
+        begin
+          Result := Header1;
+          if (i + 2 <= length(AText)) and (AText[i+2] = '#') then
+          begin
+            Result := Header2;
+            if (i + 3 <= length(AText)) and (AText[i+3] = '#') then
+            begin
+              Result := Header3;
+              text := text + Copy(AText, i + 4, length(AText) - i - 3);
+            end else
+              text := text + Copy(AText, i + 3, length(AText) - i - 2);
+          end else
+            text := text + Copy(AText, i + 2, length(AText) - i - 1);
+
+        end else
+          text := text + Copy(AText, i + 1, length(AText) - i);
+
+        break;
+      end else
+      if c = '!' then
+      begin
+        if (i + 1 <= length(AText)) and (AText[i + 1] = '[') then
+        begin
+          pos0 := pos('](', AText, i + 1);
+          if (pos0 > 0) then
+          begin
+            pos1 := pos(')', AText, pos0 + 2);
+            if pos1 > 0 then
+            begin
+              pathPicture := Copy(AText, pos0 + 2, pos1 - pos0 - 2);
+              exit(Picture);
+            end;
+          end;
+        end;
+      end else
+      if c = '[' then
+      begin // todo: link
+
+      end;
+    end;
+  end;
+
+const
+  HEADER_SIZE: array[0..4] of int32 = (10, 18, 16, 14, 12);
+  BOOK_PATH = 'TestData/StringsMap/';
+
 var
   i: int32;
   pos: TVec2d;
-  inlineData: PInlineStyle;
+  size: TVec2f;
+  mdTag: TMdTags;
+  str: string;
+  //pageOrd: int8;
+  pageCount: int32;
+  pageStartPos: TVec2d;
+  padding: BSFloat;
+  model: PModelHolder;
 begin
-  FModels.LoadFromFile(GetFilePath('/TestData/StringsMap/LE COMTE DE MONTE-CRISTO.md')); // test.txt surrogate2.txt
-  FMap.ApplyStyle(FMap.TextStyle, FMap.Prototype);
-  pos := FMap.ViewPortPosition;
-  for i := 0 to FModels.Count - 1 do
+  FModels.LoadFromFile(GetFilePath(BOOK_PATH + 'test.txt')); //LE COMTE DE MONTE-CRISTO.md  surrogate2.txt
+  FMap.TextMapper.Trim := false;
+  FMap.TextMapper.ApplyTextStyle(FMap.TextMapper.TextStyle, FMap.TextMapper.Prototype);
+  padding := FMap.ViewPortSize.Width*0.025;
+  pos := vec2(padding, FMap.ViewPortSize.Height * 0.5);
+  pageStartPos := pos;
+  //pageOrd := 0;
+  pageCount := 0;
+  i := 0;
+  while i < FModels.Count do
   begin
-    if FModels.Strings[i] <> '' then
+    str := trim(FModels.Strings[i]);
+    if str <> '' then
     begin
-      inlineData := FMap.DrawText(FModels.Strings[i], RectBSd(pos, vec2d(FMap.ViewPortSize.Width, 0)), TTextAlign.taClient);
-      pos.y := pos.y + inlineData.Rect.Height + 2;
+      mdTag := GetMdTag(str);
+
+      case mdTag of
+        None: begin
+          FMap.TextMapper.TextStyle.Bold := false;
+          FMap.TextMapper.TextStyle.Size := HEADER_SIZE[0];
+          FMap.DrawText(FModels.Strings[i], RectBSd(pos, vec2d(FMap.ViewPortSize.Width - padding, 0.0)), TTextAlign.taClient); //FMap.ViewPortSize.Height - (pos.y - pageStartPos.y)
+          pos.y := pos.y + FMap.TextMapper.Prototype.Height + 2;
+//          if FMap.TextMapper.Prototype.IndexLastStringInViewport < FMap.TextMapper.Prototype.SceneTextData.TxtProcessor.Lines.Count - 1 then
+//          begin
+//
+//          end;
+        end;
+        Header0,
+        Header1,
+        Header2,
+        Header3: begin
+          FMap.TextMapper.TextStyle.Bold := true;
+          FMap.TextMapper.TextStyle.Size := HEADER_SIZE[int32(mdTag)];
+          FMap.DrawText(trim(text), RectBSd(pos, vec2d(FMap.ViewPortSize.Width - padding, 0.0)), TTextAlign.taCenter); //FMap.ViewPortSize.Height - (pos.y - pageStartPos.y)
+          pos.y := pos.y + FMap.TextMapper.Prototype.Height + 2;
+          //break;
+        end;
+        Link: ;
+        Picture: begin
+//          size := vec2(listWidthClient, FBackground.Height*0.5);
+//          model := FMap.DrawPicture(GetFilePath(BOOK_PATH + pathPicture), vec2(pos.x, pos.y), size, 0.8);
+//          size := PPictureModel(model.Model).Size;
+//          FMap.Update(vec2((FBackground.Width - size.Width)*0.5, pos.y), size, model);
+//          pos.y := pos.y + size.y;
+        end;
+      end;
+
     end else
-      pos.y := pos.y + FMap.Prototype.Font.SizeInPixels + FMap.Prototype.SceneTextData.TxtProcessor.Interligne;
+      pos.y := pos.y + FMap.TextMapper.Prototype.Font.SizeInPixels + FMap.TextMapper.Prototype.SceneTextData.TxtProcessor.Interligne;
+
+    if round(pos.y) >= round((pageCount+ 1)*FMap.ViewPortSize.Height) then
+    begin
+      inc(pageCount);
+//      if pageCount mod 2 > 0 then
+//      begin
+//        pos.x := listWidth + padding;
+//        pos.y := pageStartPos.y;
+//      end else
+      begin
+        pos := vec2(padding, pageCount*FMap.ViewPortSize.Height);
+        pageStartPos := pos;
+      end;
+    end;
+
+    inc(i);
   end;
 end;
 
@@ -339,6 +505,11 @@ begin
   LoadBook;
 end;
 
+procedure TBSTestStringMap.OnMouseWeel(const AData: BMouseData);
+begin
+  FMap.ViewPortPosition := vec2(FMap.ViewPortPosition.x, FMap.ViewPortPosition.y + AData.DeltaWeel);
+end;
+
 procedure TBSTestStringMap.OnUpdateValue(const Value: BSFloat);
 begin
 
@@ -346,12 +517,13 @@ end;
 
 function TBSTestStringMap.Run: boolean;
 begin
-  LoadModels;
+  EventResizeRequest.Send(Self, 540, 700, 0.0, 0.0);
+
   Result := true;
-  FMap.TextStyle.BeginUpdate;
-  FMap.TextStyle.Size := 10;
-  FMap.TextStyle.Color := ColorDec(BS_CL_GRAY, 0.3);
-  FMap.TextStyle.EndUpdate;
+//  FMap.TextMapper.TextStyle.BeginUpdate;
+//  FMap.TextMapper.TextStyle.Size := 10;
+//  FMap.TextMapper.Prototype.Color := ColorDec(BS_CL_GRAY, 0.3);
+//  FMap.TextMapper.TextStyle.EndUpdate;
   //FMap.DrawText('ABCDEF', vec2(100.0, 200.0));
 
 //  FMap.TextStyle.BeginUpdate;

@@ -1,0 +1,171 @@
+object MainW: TMainW
+  Left = 401
+  Height = 568
+  Top = 285
+  Width = 1026
+  Caption = 'Black Shark Graphics Engine: Hello world!'
+  ClientHeight = 568
+  ClientWidth = 1026
+  OnClose = FormClose
+  OnCreate = FormCreate
+  LCLVersion = '2.2.0.4'
+  object PanelScreen: TPanel
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = Owner
+    AnchorSideRight.Control = CreateBtn
+    AnchorSideBottom.Control = StatusBar1
+    Left = 0
+    Height = 545
+    Top = 0
+    Width = 939
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    DoubleBuffered = False
+    ParentDoubleBuffered = False
+    ParentFont = False
+    TabOrder = 0
+  end
+  object CreateBtn: TButton
+    AnchorSideTop.Control = Owner
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    Left = 945
+    Height = 25
+    Hint = 'Создание раскладки'
+    Top = 6
+    Width = 75
+    Anchors = [akTop, akRight]
+    BorderSpacing.Around = 6
+    Caption = 'Create'
+    OnClick = CreateClick
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 1
+  end
+  object ZPlusBtn: TButton
+    AnchorSideTop.Control = YMinusBtn
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    Left = 945
+    Height = 25
+    Top = 334
+    Width = 75
+    Anchors = [akTop, akRight]
+    BorderSpacing.Around = 6
+    Caption = 'Z+'
+    OnClick = ZPlusBtnClick
+    TabOrder = 2
+  end
+  object ZMinusBtn: TButton
+    AnchorSideTop.Control = ZPlusBtn
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    Left = 945
+    Height = 25
+    Top = 365
+    Width = 75
+    Anchors = [akTop, akRight]
+    BorderSpacing.Around = 6
+    Caption = 'Z-'
+    OnClick = ZMinusBtnClick
+    TabOrder = 3
+  end
+  object XPlusBtn: TButton
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    Left = 945
+    Height = 25
+    Top = 210
+    Width = 75
+    Anchors = [akTop, akRight]
+    BorderSpacing.Top = 39
+    BorderSpacing.Around = 6
+    Caption = 'X+'
+    OnClick = XPlusBtnClick
+    TabOrder = 4
+  end
+  object XMinusBtn: TButton
+    AnchorSideTop.Control = XPlusBtn
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    Left = 945
+    Height = 25
+    Top = 241
+    Width = 75
+    Anchors = [akTop, akRight]
+    BorderSpacing.Around = 6
+    Caption = 'X-'
+    OnClick = XMinusBtnClick
+    TabOrder = 5
+  end
+  object YPlusBtn: TButton
+    AnchorSideTop.Control = XMinusBtn
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    Left = 945
+    Height = 25
+    Top = 272
+    Width = 75
+    Anchors = [akTop, akRight]
+    BorderSpacing.Around = 6
+    Caption = 'Y+'
+    OnClick = YPlusBtnClick
+    TabOrder = 6
+  end
+  object YMinusBtn: TButton
+    AnchorSideTop.Control = YPlusBtn
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    Left = 945
+    Height = 25
+    Top = 303
+    Width = 75
+    Anchors = [akTop, akRight]
+    BorderSpacing.Around = 6
+    Caption = 'Y-'
+    OnClick = YMinusBtnClick
+    TabOrder = 7
+  end
+  object AutoBtn: TButton
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    Left = 945
+    Height = 25
+    Hint = 'Автомасштаб'
+    Top = 109
+    Width = 75
+    Anchors = [akTop, akRight]
+    BorderSpacing.Top = 40
+    BorderSpacing.Around = 6
+    Caption = 'Auto'
+    OnClick = AutoBtnClick
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 8
+  end
+  object StatusBar1: TStatusBar
+    AnchorSideLeft.Control = Owner
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = Owner
+    AnchorSideBottom.Side = asrBottom
+    Left = 0
+    Height = 23
+    Top = 545
+    Width = 1026
+    Panels = <>
+  end
+  object RepaintTimer: TTimer
+    Enabled = False
+    Interval = 50
+    OnTimer = RepaintTimerTimer
+    Left = 1568
+    Top = 851
+  end
+end

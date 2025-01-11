@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -208,10 +208,10 @@ type
   end;
 
   { for 1024 Dimensions }
-  TBoxMinMax = array[0..1023] of double;
-  PBoxMinMax = ^TBoxMinMax;
+  TKDMinMax = array[0..1023] of double;
+  PKDMinMax = ^TKDMinMax;
 
-  TSplitDimensionNotify = procedure(ADem: int32; AVectorMinMax: PBoxMinMax; ABoundary: double) of object;
+  TSplitDimensionNotify = procedure(ADem: int32; AVectorMinMax: PKDMinMax; ABoundary: double) of object;
 
   { TBlackSharkKDTree }
 
@@ -219,80 +219,117 @@ type
   private
   type
     TDimensionItem = record
-      ParentDem: int32;
-      Dimension: int32;
       Left: int32;
       Right: int32;
+      ParentNode: int32;
+      Min: double;
+      Max: double;
+      // boundary of division on left and right nodes
+      Boundary: double;
+      Dimension: int32;
       // count items in Data;
       Count: int32;
+      DataVolume: double;
       Data: array of T;
+      Deleted: boolean;
     end;
+    PDimensionItem = ^TDimensionItem;
     TDimensionItems = array of TDimensionItem;
     TKeys = array of double;
     TOnDeleteNotify = procedure(const AData: T) of object;
+    TStrictHitTest = function (const AData: T): boolean of object;
   private
     FDimension: TDimension;
-    FDimensionDouble: TDimension;
+    FDoubleDimension: TDimension;
     FComparatorForEquality: TKeyComparatorEqual<T>;
+    FStrictHitTest: TStrictHitTest;
 
     CashDimItems: TListVec<int32>;
     FDimensionItems: TDimensionItems;
-    { all keys are storing to FKeys because Delphi doesn't support templates, and in depend on
-      FDimension are doing a request of memory in an apropriate quantity;
-      a position of a key is defined by index of TDimensionItem in FDimensionItems: FKeys[index*FDimensionDouble];
-      every key consists of Min and Max for every Dimension; }
-    FKeys: TKeys;
 
     FRoot: int32;
     Stack: TListVec<int32>;
-    FMinSize: double;
-    FMinSize2x: double;
-    FMinSize10x: double;
-    FMinSize100x: double;
+    DeleteCandidates: TListVec<int32>;
+    FGranularity: double;
+    FMaxSize: double;
+    FGranularityQuad: double;
+    FGranularityHalf: double;
+    FGranularity2x: double;
+    FGranularity5x: double;
+    FGranularity10x: double;
+    FGranularity50x: double;
+    FGranularity25x: double;
+    FGranularity100x: double;
+    FGranularity200x: double;
     FNodes: int32;
     FCount: int32;
     FOnSplitDimension: TSplitDimensionNotify;
     FOnDelete: TOnDeleteNotify;
+    FCurrentBoundaries: PKDMinMax;
+    FCurrentParents: TArray<int32>;
+    FRootMinMax: PKDMinMax;
+    //FAlignedBoundaries: PKDMinMax;
+    {$ifdef DEBUG}
+    FSelectIterations: int32;
+    FBoundaryErrors: int32;
+    {$endif}
 
-    function GetDimensionItemDo(AParentDem: int32; ADimension: int32; AMin, AMax: double): int32; inline;
-    function GetDimensionItem(AParentDem: int32; ADimension: int32; AMin, AMax: double): int32; inline;
-    procedure SplitNode(ANode: int32; ADimension: int32; ABoundary: double);
+    procedure GrowCapacity(ANewCapacity: int32);
+    function GetDimensionItemDo(AParentNode: int32; ADimension: int32): int32; //inline;
+    function GetDimensionItem(AParentNode: int32; ADimension: int32): int32; //inline;
+    // the main function of selecting the partition boundary
+    function SelectSplitBoundary(ANode: int32; AObjectMin, AObjectMax: double; out ABoundary: double): boolean;
+    function CanInsertIntoNode(ANode: int32; AObjectMin, AObjectMax: double): boolean; //inline;
+    function CanSplitNode(ANode: int32; AObjectMin, AObjectMax: double): boolean; //inline;
+    procedure SplitNode(ANode: int32; ADimension: int32; ABoundary: double; AMax, AMin: double);
     { it is invoked only if AData fits into ANode; that is if ANode has children Dimensions
       then not need to check them, because AData doesn't hit }
-    function Insert(ANode: int32; const AData: T; AVectorMinMax: PBoxMinMax; OldPosition: int32): int32; inline;
-    procedure Init;
-    procedure DoDelete(ADem: int32; const AData: T); //inline;
-    function DoAdd(const AData: T; AVectorMinMax: PBoxMinMax; OldPosition: int32 = -1): int32; inline;
+    function Insert(ANode: int32; const AData: T; AVectorMinMax: PKDMinMax; OldPosition: int32): int32; //inline;
+    //function InsertIntoDimenstion(ANode: int32; const AData: T; AVectorMinMax: PKDMinMax): int32; inline;
+    procedure DoDelete(APosition: int32; const AData: T; AMakeEvent: boolean); //inline;
+    function DoAdd(const AData: T; AVectorMinMax: PKDMinMax; AOldPosition: int32 = -1): int32; //inline;
+    function IsLeft(ANode: int32): boolean; inline;
+    //procedure AlignKDMinMax(AMinMax: PKDMinMax);
+    procedure SetGranularity(const Value: double);
   protected
     class function GetComparator: TKeyComparatorEqual<T>; virtual;
   public
-    constructor Create(AMinSize: double; ADimension: TDimension = TDimension3D); overload;
+    constructor Create(AGranularity: double; ADimension: TDimension = TDimension3D; ACapacity: int32 = 100000); overload;
     constructor Create(ADimension: TDimension = TDimension3D); overload;
     destructor Destroy; override;
     procedure Clear; virtual;
-    function AddBB(const AData: T; AVectorMinMax: PBoxMinMax): int32; overload;
+    function AddBB(const AData: T; AVectorMinMax: PKDMinMax): int32; overload;
     { and again; because delphi doesn't support templates (and mathematical operations by them)
       we created overloaded methods for 3d float type }
     function AddBB(const AData: T; const AVectorMinMax: TBox3f): int32; overload;
     function AddBB(const AData: T; const AVectorMinMax: TBox3d): int32; overload;
-    {$ifdef DEBUG_ST}
-    function GetNodeAttributes(ANode: int32; out ABox: PBoxMinMax; out ADimensionSplit: int32; out ABoundarySplit: double;
+    function GetNodeAttributes(ANode: int32; out ABox: PKDMinMax; out ADimensionSplit: int32; out ABoundarySplit: double;
       out ALeft, ARight: int32): boolean;
-    {$endif}
-    function UpdatePositionBB(const AData: T; VectorMinMax: PBoxMinMax; OldPosition: int32): int32; overload;
+    function GetNodeBoundaries(ANode: int32): PKDMinMax;
+    function UpdatePositionBB(const AData: T; AVectorMinMax: PKDMinMax; OldPosition: int32): int32; overload;
     function UpdatePositionBB(const AData: T; const AVectorMinMax: TBox3f; OldPosition: int32): int32; overload;
     function UpdatePositionBB(const AData: T; const AVectorMinMax: TBox3d; OldPosition: int32): int32; overload;
     procedure Remove(APosition: int32; const AData: T);
-    procedure Select(ABox: PBoxMinMax; AList: TListVec<T>); overload;
+    procedure Select(ABox: PKDMinMax); overload;
+    procedure Select(ABox: PKDMinMax; AList: TListVec<T>); overload;
+    procedure Select(const AVectorMinMax: TBox3f); overload;
     procedure Select(const AVectorMinMax: TBox3f; AList: TListVec<T>); overload;
+    procedure Select(const AVectorMinMax: TBox2d; AList: TListVec<T>); overload;
+    procedure Select(const AVectorMinMax: PVec2d; AList: TListVec<T>); overload;
 
     { count of Dimensions: 1, 2, 3... }
     property Dimension: TDimension read FDimension;
     property ComparatorForEquality: TKeyComparatorEqual<T> read FComparatorForEquality write FComparatorForEquality;
-    property MinSize: double read FMinSize;
+
+    { for granularity only }
+    property Granularity: double read FGranularity write SetGranularity;
     property Nodes: int32 read FNodes;
     property Count: int32 read FCount;
-
+    {$ifdef DEBUG}
+    property SelectIterations: int32 read FSelectIterations;
+    property BoundaryErrors: int32 read FBoundaryErrors;
+    {$endif}
+    property StrictHitTest: TStrictHitTest read FStrictHitTest write FStrictHitTest;
     property OnDelete: TOnDeleteNotify read FOnDelete write FOnDelete;
 
     { for debug only }
@@ -312,6 +349,7 @@ type
   protected
     class function GetComparator: TKeyComparatorEqual<Pointer>; override;
   end;
+
   {
     TAreaMarker
 
@@ -415,6 +453,7 @@ implementation
 
 uses
     Math
+  , bs.exceptions
   ;
 
 function PointBetween(const P00, P01, Point: TVec3f): boolean;
@@ -1694,29 +1733,29 @@ var
   n: PNodeSpaceTree;
 begin
   if List = nil then
-    begin
+  begin
     List := TmpList;
     TmpList.Count := 0;
-    end;
+  end;
   if (FRoot.Childs <> nil) and Box3Collision(FRoot.BB, BB) then
-    begin
+  begin
     Stack.Add(FRoot.Childs);
     while Stack.Count > 0 do
-      begin
+    begin
       n := Stack.Pop;
       while n <> nil do
-        begin
+      begin
         if Box3Collision(BB, n.BB) then
-          begin
+        begin
           if (n.CountChilds = 0) then
             List.Add(n);
           if n.Childs <> nil then
             Stack.Add(n.Childs);
-          end;
-        n := n.Next;
         end;
+        n := n.Next;
       end;
     end;
+  end;
 end;
 
 procedure TBlackSharkSpaceTree.ToCashNode(Node: PNodeSpaceTree);
@@ -2718,8 +2757,9 @@ end;
 
 { TBlackSharkKDTree<T> }
 
-function TBlackSharkKDTree<T>.AddBB(const AData: T; AVectorMinMax: PBoxMinMax): int32;
+function TBlackSharkKDTree<T>.AddBB(const AData: T; AVectorMinMax: PKDMinMax): int32;
 begin
+  //AlignKDMinMax(AVectorMinMax);
   Result := DoAdd(AData, AVectorMinMax);
 end;
 
@@ -2729,31 +2769,69 @@ var
 begin
   min_max[0] := AVectorMinMax.Min;
   min_max[1] := AVectorMinMax.Max;
+  //AlignKDMinMax(@min_max);
   Result := DoAdd(AData, @min_max);
 end;
 
 function TBlackSharkKDTree<T>.AddBB(const AData: T; const AVectorMinMax: TBox3d): int32;
 begin
+  //AlignKDMinMax(@AVectorMinMax.Min);
   Result := DoAdd(AData, @AVectorMinMax.Min);
+end;
+
+//procedure TBlackSharkKDTree<T>.AlignKDMinMax(AMinMax: PKDMinMax);
+//var
+//  i: int16;
+//begin
+////  move(AMinMax^, FAlignedBoundaries^, FDoubleDimension*SizeOf(double));
+//  for i := 0 to FDimension - 1 do
+//  begin
+//    if FGranularity <> 1.0 then
+//    begin
+//      FAlignedBoundaries[i] := floor(AMinMax^[i] / FGranularity) * FGranularity;
+//      FAlignedBoundaries[i + FDimension] := ceil(AMinMax^[i + FDimension] / FGranularity) * FGranularity;
+//    end else
+//    begin
+//      FAlignedBoundaries[i] := floor(AMinMax^[i]);
+//      FAlignedBoundaries[i + FDimension] := ceil(AMinMax^[i + FDimension]);
+//    end;
+//  end;
+//end;
+
+function TBlackSharkKDTree<T>.CanInsertIntoNode(ANode: int32; AObjectMin, AObjectMax: double): boolean;
+begin
+  Result := (FDimensionItems[ANode].Max > AObjectMax) and (FDimensionItems[ANode].Min <= AObjectMin);
+end;
+
+function TBlackSharkKDTree<T>.CanSplitNode(ANode: int32; AObjectMin, AObjectMax: double): boolean;
+begin
+  Result := (FDimensionItems[ANode].Left < 0) and CanInsertIntoNode(ANode, AObjectMin, AObjectMax) and ((abs(FDimensionItems[ANode].Max - AObjectMax) > FGranularityQuad)
+     or (abs(AObjectMin - FDimensionItems[ANode].Min) > FGranularityQuad));
 end;
 
 procedure TBlackSharkKDTree<T>.Clear;
 var
   i, j: int32;
+  tmpStack: TListVec<int32>;
 begin
-  if FRoot >= 0 then
-    Stack.Add(FRoot);
-  while Stack.Count > 0 do
-  begin
-    i := Stack.Pop;
-    if FDimensionItems[i].Left >= 0 then
-      Stack.Add(FDimensionItems[i].Left);
-    if FDimensionItems[i].Right >= 0 then
-      Stack.Add(FDimensionItems[i].Right);
-    for j := 0 to FDimensionItems[i].Count - 1 do
-      DoDelete(i, FDimensionItems[i].Data[j]);
+  tmpStack := TListVec<int32>.Create;
+  try
+    if FRoot >= 0 then
+      tmpStack.Add(FRoot);
+    while tmpStack.Count > 0 do
+    begin
+      i := tmpStack.Pop;
+      if FDimensionItems[i].Left > 0 then
+      begin
+        tmpStack.Add(FDimensionItems[i].Left);
+        tmpStack.Add(FDimensionItems[i].Right);
+      end;
+      for j := FDimensionItems[i].Count - 1 downto 0 do
+        DoDelete(i, FDimensionItems[i].Data[j], true);
+    end;
+  finally
+    tmpStack.Free;
   end;
-  Init;
 end;
 
 constructor TBlackSharkKDTree<T>.Create(ADimension: TDimension = TDimension3D);
@@ -2761,115 +2839,127 @@ begin
   Create(1.0, ADimension);
 end;
 
-constructor TBlackSharkKDTree<T>.Create(AMinSize: double; ADimension: TDimension = TDimension3D);
+constructor TBlackSharkKDTree<T>.Create(AGranularity: double; ADimension: TDimension = TDimension3D; ACapacity: int32 = 100000);
 var
   i: int32;
 begin
-  FMinSize := AMinSize;
-  FMinSize2x := AMinSize*2;
-  FMinSize10x  := FMinSize*10;
-  FMinSize100x := FMinSize*100;
+  Granularity := AGranularity;
   FDimension := ADimension;
-  FDimensionDouble := FDimension*2;
+  FDoubleDimension := FDimension shl 1;
   CashDimItems := TListVec<int32>.Create;
-  CashDimItems.Count := 100000;
-  SetLength(FDimensionItems, CashDimItems.Count);
-  for i := CashDimItems.Count - 1 downto 0 do
-  begin
-    CashDimItems.Items[CashDimItems.Count - 1 - i] := i;
-  end;
-  SetLength(FKeys, CashDimItems.Count*FDimension*2);
   Stack := TListVec<int32>.Create;
-  FRoot := -1;
+  DeleteCandidates := TListVec<int32>.Create;
   FComparatorForEquality := GetComparator();
-  Init;
+  FCurrentBoundaries := SysGetMem(SizeOf(double) * FDoubleDimension);
+  FRootMinMax := SysGetMem(SizeOf(double) * FDoubleDimension);
+  //FAlignedBoundaries := SysGetMem(SizeOf(double) * FDoubleDimension);
+  SetLength(FCurrentParents, FDimension);
+  FMaxSize := 9223372036854775807;
+  FRoot := 0;
+  FNodes := 1;
+  // set root (x)
+  SetLength(FDimensionItems, 1);
+  FDimensionItems[FRoot].Min := -FMaxSize;
+  FDimensionItems[FRoot].Max :=  FMaxSize;
+  FDimensionItems[FRoot].Boundary := -FMaxSize;
+  FDimensionItems[FRoot].ParentNode := -1;
+  FDimensionItems[FRoot].Dimension := 0;
+  FDimensionItems[FRoot].Left := -1;
+  FDimensionItems[FRoot].Right := -1;
+  FDimensionItems[FRoot].Count := 0;
+  for i := 0 to FDimension - 1 do
+  begin
+    FRootMinMax[i] := -FMaxSize;
+    FRootMinMax[i + FDimension] := FMaxSize;
+  end;
+  GrowCapacity(ACapacity*FDimension);
 end;
 
 destructor TBlackSharkKDTree<T>.Destroy;
 begin
   CashDimItems.Free;
   Stack.Free;
+  DeleteCandidates.Free;
+  SysFreeMem(FCurrentBoundaries);
+  SysFreeMem(FRootMinMax);
+  //SysFreeMem(FAlignedBoundaries);
   inherited;
 end;
 
-function TBlackSharkKDTree<T>.DoAdd(const AData: T; AVectorMinMax: PBoxMinMax; OldPosition: int32): int32;
+function TBlackSharkKDTree<T>.DoAdd(const AData: T; AVectorMinMax: PKDMinMax; AOldPosition: int32): int32;
 var
   cur_node: int32;
   mx, mn: double;
+  n: PDimensionItem;
 begin
   cur_node := FRoot;
+  move(FRootMinMax^, FCurrentBoundaries^, SizeOf(double) * FDoubleDimension);
+  FillChar(FCurrentParents[0], FDimension*SizeOf(Int32), 0);
   while true do
   begin
 
-    mn := bs.math.Max(FKeys[cur_node*FDimensionDouble+FDimensionItems[cur_node].Dimension],
-      AVectorMinMax^[FDimensionItems[cur_node].Dimension]);
-    mx := bs.math.Min(FKeys[cur_node*FDimensionDouble+FDimensionItems[cur_node].Dimension+FDimension],
-      AVectorMinMax^[FDimensionItems[cur_node].Dimension+FDimension]);
-
-    if (mx = AVectorMinMax^[FDimensionItems[cur_node].Dimension+FDimension]) and (mn = AVectorMinMax^[FDimensionItems[cur_node].Dimension]) then // it doesn't fit into cur_node
-    begin // inside
-      if (FDimensionItems[cur_node].Left > 0) and (FKeys[FDimensionItems[cur_node].Left*FDimensionDouble+FDimensionItems[FDimensionItems[cur_node].Left].Dimension+FDimension] >
-        AVectorMinMax^[FDimensionItems[FDimensionItems[cur_node].Left].Dimension]) then
-          cur_node := FDimensionItems[cur_node].Left
-      else
-      if (FDimensionItems[cur_node].Right > 0) then
-        cur_node := FDimensionItems[cur_node].Right
-      else
-      if OldPosition <> cur_node then
-      begin
-        Result := Insert(cur_node, AData, AVectorMinMax, OldPosition);
-        if (OldPosition >= 0) and (OldPosition <> Result) then
-          DoDelete(OldPosition, AData);
-        exit;
-      end else
-        exit(OldPosition);
-    end else
-    //if (mn >= mx) then // it condition is false for object which interset with boundary
+    n := @FDimensionItems[cur_node];
+    FCurrentParents[n.Dimension] := cur_node;
+    if (n.Right > 0) then
     begin
-      if OldPosition <> FDimensionItems[cur_node].ParentDem then
-      begin
-        Result := Insert(FDimensionItems[cur_node].ParentDem, AData, AVectorMinMax, OldPosition);
-        if (OldPosition >= 0) and (OldPosition <> Result) then
-          DoDelete(OldPosition, AData);
-        exit;
+      if n.Boundary <= AVectorMinMax^[n.Dimension] then
+      begin // right
+        FCurrentBoundaries^[n.Dimension] := n.Boundary;
+        if CanInsertIntoNode(n.Right, AVectorMinMax^[FDimensionItems[n.Right].Dimension], AVectorMinMax^[FDimensionItems[n.Right].Dimension+FDimension]) then
+          cur_node := n.Right
+        else
+          break;
       end else
-        exit(OldPosition);
-    end;
+      if n.Boundary > AVectorMinMax^[n.Dimension + FDimension] then
+      begin // left
+        FCurrentBoundaries^[n.Dimension + FDimension] := n.Boundary;
+        if CanInsertIntoNode(n.Left, AVectorMinMax^[FDimensionItems[n.Right].Dimension], AVectorMinMax^[FDimensionItems[n.Right].Dimension+FDimension]) then
+          cur_node := n.Left
+        else
+          break;
+      end else
+        break;
+    end else
+      break;
   end;
-  //Result := -1;
+
+  Result := Insert(cur_node, AData, AVectorMinMax, AOldPosition);
+  if (AOldPosition >= 0) and (AOldPosition <> Result) then
+    DoDelete(AOldPosition, AData, false);
 end;
 
-procedure TBlackSharkKDTree<T>.DoDelete(ADem: int32; const AData: T);
+procedure TBlackSharkKDTree<T>.DoDelete(APosition: int32; const AData: T; AMakeEvent: boolean);
 var
   i: int32;
   opposite: int32;
   dem: int32;
+  haveData: boolean;
   {$ifdef DEBUG}
   found: boolean;
   {$endif}
 begin
   {$ifdef DEBUG}
-  if FDimensionItems[ADem].Count = 0 then
+  if FDimensionItems[APosition].Count = 0 then
     raise Exception.Create('A logic error!');
   {$endif}
 
   {$ifdef DEBUG}
   found := false;
   {$endif}
-  for i := 0 to FDimensionItems[ADem].Count - 1 do
+  for i := 0 to FDimensionItems[APosition].Count - 1 do
   begin
-    if FComparatorForEquality(FDimensionItems[ADem].Data[i], AData) then
+    if FComparatorForEquality(FDimensionItems[APosition].Data[i], AData) then
     begin
       {$ifdef DEBUG}
       found := true;
       {$endif}
-      if (i < FDimensionItems[ADem].Count - 1) then
-        FDimensionItems[ADem].Data[i] := FDimensionItems[ADem].Data[FDimensionItems[ADem].Count - 1];
+      if (i < FDimensionItems[APosition].Count - 1) then
+        FDimensionItems[APosition].Data[i] := FDimensionItems[APosition].Data[FDimensionItems[APosition].Count - 1];
       break;
     end;
   end;
 
-  dec(FDimensionItems[ADem].Count);
+  dec(FDimensionItems[APosition].Count);
   dec(FCount);
 
   {$ifdef DEBUG}
@@ -2877,39 +2967,64 @@ begin
     raise Exception.Create('A logic error!');
   {$endif}
 
-
-  if (FDimensionItems[ADem].Count = 0) then
+  if (FDimensionItems[APosition].Count = 0) then
   begin
-    SetLength(FDimensionItems[ADem].Data, 0);
-    dem := ADem;
-    while (FDimensionItems[dem].ParentDem >= 0) do
+    SetLength(FDimensionItems[APosition].Data, 0);
+    Stack.Add(APosition);
+    DeleteCandidates.Add(APosition);
+    haveData := false;
+    while Stack.Count > 0 do
     begin
-      if (FDimensionItems[FDimensionItems[dem].ParentDem].Left <> dem) then
-        opposite := FDimensionItems[FDimensionItems[dem].ParentDem].Left
-      else
-        opposite := FDimensionItems[FDimensionItems[dem].ParentDem].Right;
-
-      {$ifdef DEBUG}
-      if dem = opposite then
-        raise Exception.Create('A logic error!');
-      {$endif}
-
-      if (FDimensionItems[opposite].Count = 0) and (FDimensionItems[dem].Count = 0) and
-        (FDimensionItems[opposite].Left < 0) and (FDimensionItems[opposite].Right < 0) and
-        (FDimensionItems[dem].Left < 0) and (FDimensionItems[dem].Right < 0) then
+      dem := Stack.Pop;
+      if FDimensionItems[dem].Count > 0 then
       begin
-        FDimensionItems[FDimensionItems[dem].ParentDem].Left := -1;
-        FDimensionItems[FDimensionItems[dem].ParentDem].Right := -1;
-        CashDimItems.Add(dem);
-        CashDimItems.Add(opposite);
-        dem := FDimensionItems[dem].ParentDem;
-        dec(FNodes, 2);
-      end else
+        haveData := true;
         break;
+      end;
+      if (FDimensionItems[dem].Left > 0) then
+      begin
+        Stack.Add(FDimensionItems[dem].Left);
+        Stack.Add(FDimensionItems[dem].Right);
+      end;
+    end;
+    if not haveData then
+    begin
+      while DeleteCandidates.Count > 0 do
+      begin
+        dem := DeleteCandidates.Pop;
+        while (FDimensionItems[dem].ParentNode >= 0) do
+        begin
+          if (FDimensionItems[FDimensionItems[dem].ParentNode].Left <> dem) then
+            opposite := FDimensionItems[FDimensionItems[dem].ParentNode].Left
+          else
+            opposite := FDimensionItems[FDimensionItems[dem].ParentNode].Right;
+
+          {$ifdef DEBUG}
+          if dem = opposite then
+            raise Exception.Create('A logic error!');
+          {$endif}
+
+          if (opposite > 0) and not (FDimensionItems[opposite].Deleted) and
+            (FDimensionItems[opposite].Count = 0) and (FDimensionItems[dem].Count = 0) and
+            (FDimensionItems[opposite].Left < 0) and (FDimensionItems[opposite].Right < 0) and
+            (FDimensionItems[dem].Left < 0) and (FDimensionItems[dem].Right < 0) then
+          begin
+            FDimensionItems[FDimensionItems[dem].ParentNode].Left := -1;
+            FDimensionItems[FDimensionItems[dem].ParentNode].Right := -1;
+            CashDimItems.Add(dem);
+            CashDimItems.Add(opposite);
+            FDimensionItems[opposite].Deleted := true;
+            FDimensionItems[dem].Deleted := true;
+            dem := FDimensionItems[dem].ParentNode;
+            dec(FNodes, 2);
+          end else
+            break;
+        end;
+      end;
     end;
   end;
 
-  if Assigned(FOnDelete) then
+  if AMakeEvent and Assigned(FOnDelete) then
     FOnDelete(AData);
 
 end;
@@ -2919,186 +3034,132 @@ begin
 	Result := nil;
 end;
 
-function TBlackSharkKDTree<T>.GetDimensionItem(AParentDem: int32; ADimension: int32; AMin, AMax: double): int32;
-const
-  STEP = 8192;
-var
-  i: int32;
-  old: int32;
+function TBlackSharkKDTree<T>.GetDimensionItem(AParentNode: int32; ADimension: int32): int32;
 begin
   if CashDimItems.Count = 0 then
   begin
-    old := length(FDimensionItems);
-    SetLength(FDimensionItems, old + STEP);
-    SetLength(FKeys, (old + STEP)*FDimension*2);
-    CashDimItems.Count := STEP;
-    for i := length(FDimensionItems) - 1 downto old do
-      CashDimItems.Items[length(FDimensionItems) - 1 - i] := i;
+    GrowCapacity(length(FDimensionItems) shl 1);
   end;
-  Result := GetDimensionItemDo(AParentDem, ADimension, AMin, AMax);
+  Result := GetDimensionItemDo(AParentNode, ADimension);
 end;
 
-function TBlackSharkKDTree<T>.GetDimensionItemDo(AParentDem, ADimension: int32; AMin, AMax: double): int32;
+function TBlackSharkKDTree<T>.GetDimensionItemDo(AParentNode, ADimension: int32): int32;
+var
+  n: PDimensionItem;
 begin
   Result := CashDimItems.Pop;
-  FDimensionItems[Result].ParentDem := AParentDem;
-  FDimensionItems[Result].Left := -1;
-  FDimensionItems[Result].Right := -1;
-  FDimensionItems[Result].Count := 0;
-  FDimensionItems[Result].Dimension := ADimension;
-  FKeys[Result*FDimensionDouble+ADimension] := AMin;
-  FKeys[Result*FDimensionDouble+ADimension+FDimension] := AMax;
+  n := @FDimensionItems[Result];
+  n.ParentNode := AParentNode;
+  n.Left := -1;
+  n.Right := -1;
+  n.Count := 0;
+  n.Deleted := false;
+  n.Dimension := ADimension;
+  n.Boundary := 0;
   inc(FNodes);
 end;
 
-{$ifdef DEBUG_ST}
-function TBlackSharkKDTree<T>.GetNodeAttributes(ANode: int32; out ABox: PBoxMinMax; out ADimensionSplit: int32;
+function TBlackSharkKDTree<T>.GetNodeAttributes(ANode: int32; out ABox: PKDMinMax; out ADimensionSplit: int32;
   out ABoundarySplit: double; out ALeft, ARight: int32): boolean;
+var
+  d, n: int32;
 begin
   if ANode < 0 then
     exit(false);
   Result := true;
-  ABox := @FKeys[ANode*FDimensionDouble];
+  move(FRootMinMax^, FCurrentBoundaries^, SizeOf(double) * FDoubleDimension);
+  n := ANode;
+  for d := FDimension - 1 downto 0 do
+  begin
+    FCurrentBoundaries[FDimensionItems[n].Dimension] := FDimensionItems[n].Min;
+    FCurrentBoundaries[FDimensionItems[n].Dimension + FDimension] := FDimensionItems[n].Max;
+    n := FDimensionItems[n].ParentNode;
+    if n < 0 then
+      break;
+  end;
+
   ALeft := FDimensionItems[ANode].Left;
   ARight := FDimensionItems[ANode].Right;
-  if (ALeft >= 0) and (ARight >= 0) then
-  begin
-    ADimensionSplit := FDimensionItems[ARight].Dimension;
-    ABoundarySplit := FKeys[ARight*FDimensionDouble + ADimensionSplit];
-  end;
+  ABox := FCurrentBoundaries;
+  ADimensionSplit := FDimensionItems[ANode].Dimension;
+  ABoundarySplit := FDimensionItems[ANode].Boundary;
 end;
-{$endif}
 
-procedure TBlackSharkKDTree<T>.Init;
+function TBlackSharkKDTree<T>.GetNodeBoundaries(ANode: int32): PKDMinMax;
 var
-  i, j: int32;
-  c: int32;
-  nodes: array of integer;
-  root2: int32;
+  n, d: int32;
 begin
-  // endless root of the world
-  FRoot := GetDimensionItemDo(-1, 0, -MaxSingle+1.0, MaxSingle-1.0);
-  for i := 1 to FDimension - 1 do
+  move(FRootMinMax^, FCurrentBoundaries^, SizeOf(double) * FDoubleDimension);
+  n := ANode;
+  for d := 0 to FDimension - 1 do
   begin
-    FKeys[FRoot*FDimensionDouble+i] := -MaxSingle+1.0;
-    FKeys[FRoot*FDimensionDouble+i+FDimension] := MaxSingle-1.0;
+    if IsLeft(n) then // max
+      FCurrentBoundaries[(FDimensionItems[n].Dimension + d) mod FDimension + FDoubleDimension] := FDimensionItems[n].Boundary
+    else // min
+      FCurrentBoundaries[(FDimensionItems[n].Dimension + d) mod FDimension] := FDimensionItems[n].Boundary;
+    n := FDimensionItems[n].ParentNode;
   end;
-
-  // select center to FMinSize100x volume
-  root2 := GetDimensionItemDo(FRoot, 0, -FMinSize100x, FMinSize100x);
-  for i := 1 to FDimension - 1 do
-  begin
-    FKeys[root2*FDimensionDouble+i] := -FMinSize10x;
-    FKeys[root2*FDimensionDouble+i+FDimension] := FMinSize10x;
-  end;
-  Stack.Count := 0;
-  Stack.Add(root2);
-  SetLength(nodes, sqr(FDimension));
-  for i := 0 to FDimension - 1 do
-  begin
-    for j := 0 to Stack.Count - 1 do
-    begin
-      SplitNode(Stack.Items[j], i, 0.0);
-      nodes[j shl 1] := FDimensionItems[Stack.Items[j]].Left;
-      nodes[(j shl 1) + 1] := FDimensionItems[Stack.Items[j]].Right;
-    end;
-    c := Stack.Count shl 1;
-    Stack.Count := 0;
-    for j := 0 to c - 1 do
-      Stack.Add(nodes[j]);
-  end;
-  Stack.Count := 0;
+  Result := FCurrentBoundaries;
 end;
 
-function TBlackSharkKDTree<T>.Insert(ANode: int32; const AData: T; AVectorMinMax: PBoxMinMax; OldPosition: int32): int32;
+function TBlackSharkKDTree<T>.Insert(ANode: int32; const AData: T; AVectorMinMax: PKDMinMax; OldPosition: int32): int32;
 var
-  d: int32;
-  //mn: double;
-  aligned_min: double;
+  i_min, i_max, d: int32;
   mx: double;
-  aligned_max: double;
   width: double;
   new_boundary: double;
 begin
   Result := ANode;
-  // try to split the node
-  if (FDimensionItems[ANode].Left < 0) or (FDimensionItems[ANode].Right < 0) then
+  while true do
   begin
-    for d := 0 to FDimension - 1 do
+    i_min := FDimensionItems[Result].Dimension;
+    i_max := i_min + FDimension;
+//    if FDimensionItems[Result].Count > 1000 then
+//      FDimensionItems[Result].Count := FDimensionItems[Result].Count;
+    if (FDimensionItems[Result].Left < 0) then
     begin
-      if FMinSize <> 1.0 then
+      // try to split the node
+      if SelectSplitBoundary(Result, AVectorMinMax^[i_min], AVectorMinMax^[i_max], new_boundary) and ((Result < FDimension)
+        or (FDimensionItems[FCurrentParents[i_min]].Boundary <> new_boundary)) then
       begin
-        aligned_min := floor(AVectorMinMax^[d] / FMinSize) * FMinSize;
-        aligned_max := ceil(AVectorMinMax^[d+FDimension] / FMinSize) * FMinSize;
-      end else
-      begin
-        aligned_min := floor(AVectorMinMax^[d]);
-        aligned_max := ceil(AVectorMinMax^[d+FDimension]);
-      end;
-
-      width := FKeys[Result*FDimensionDouble+FDimension+d] - FKeys[Result*FDimensionDouble+d];
-      if (FMinSize10x*2 < width) and (aligned_max - aligned_min <= FMinSize10x) then
-      begin
-        if FKeys[Result*FDimensionDouble+d] < 0 then
+        FCurrentParents[i_min] := Result;
+        d := (i_min + 1) mod FDimension;
+        SplitNode(Result, d, new_boundary, FCurrentBoundaries^[d + FDimension], FCurrentBoundaries^[d]);
+        if (AVectorMinMax^[i_max] < new_boundary) then
         begin
-          new_boundary := FKeys[Result*FDimensionDouble+FDimension+d] - FMinSize10x;
-          if aligned_min < new_boundary then
-            new_boundary := aligned_min;
-          SplitNode(Result, d, new_boundary);
-          Result := FDimensionItems[Result].Right;
+          FCurrentBoundaries^[i_max] := new_boundary;
+          Result := FDimensionItems[Result].Left;
         end else
         begin
-          new_boundary := FKeys[Result*FDimensionDouble+d] + FMinSize10x;
-          if aligned_max > new_boundary then
-            new_boundary := aligned_max;
-          SplitNode(Result, d, new_boundary);
-          Result := FDimensionItems[Result].Left;
-        end;
-
-      end else
-      if (FMinSize100x*2 < width) and (aligned_max - aligned_min <= FMinSize100x) then
-      begin
-        if FKeys[Result*FDimensionDouble+d] < 0 then
-        begin
-          new_boundary := FKeys[Result*FDimensionDouble+FDimension+d] - FMinSize100x;
-          if aligned_min < new_boundary then
-            new_boundary := aligned_min;
-          SplitNode(Result, d, new_boundary);
-          Result := FDimensionItems[Result].Right;
-        end else
-        begin
-          new_boundary := FKeys[Result*FDimensionDouble+d] + FMinSize100x;
-          if aligned_max > new_boundary then
-            new_boundary := aligned_max;
-          SplitNode(Result, d, new_boundary);
-          Result := FDimensionItems[Result].Left;
-        end;
-        SplitNode(Result, d, new_boundary);
-        Result := FDimensionItems[Result].Left;
-      end;
-
-      {mn := aligned_min - FKeys[Result*FDimensionDouble+d];
-      if mn >= FMinSize2x then
-      begin
-        SplitNode(Result, d, aligned_min);
-        Result := FDimensionItems[Result].Right;
-      end;}
-      if FKeys[Result*FDimensionDouble+d] < 0 then
-      begin
-        mx := FKeys[Result*FDimensionDouble+FDimension+d] - aligned_min;
-        if mx >= FMinSize2x then
-        begin
-          SplitNode(Result, d, aligned_min-FMinSize);
+          FCurrentBoundaries^[i_min] := new_boundary;
           Result := FDimensionItems[Result].Right;
         end;
       end else
+        break;
+    end else
+    begin
+      FCurrentParents[i_min] := Result;
+      if AVectorMinMax^[i_max] < FDimensionItems[Result].Boundary then
       begin
-        mx := FKeys[Result*FDimensionDouble+FDimension+d] - aligned_max;
-        if mx >= FMinSize2x then
-        begin
-          SplitNode(Result, d, aligned_max+FMinSize);
-          Result := FDimensionItems[Result].Left;
-        end;
+        FCurrentBoundaries^[i_max] := new_boundary;
+        if CanInsertIntoNode(FDimensionItems[Result].Left, AVectorMinMax^[i_min], AVectorMinMax^[i_max]) then
+          Result := FDimensionItems[Result].Left
+        else
+          break;
+      end else
+      if AVectorMinMax^[i_min] >= FDimensionItems[Result].Boundary then
+      begin
+        FCurrentBoundaries^[i_min] := new_boundary;
+        if CanInsertIntoNode(FDimensionItems[Result].Right, AVectorMinMax^[i_min], AVectorMinMax^[i_max]) then
+          Result := FDimensionItems[Result].Right
+        else
+          break;
+      end else
+      begin
+        {$ifdef DEBUG}
+        inc(FBoundaryErrors);
+        {$endif}
+        break;
       end;
     end;
   end;
@@ -3106,48 +3167,77 @@ begin
   if OldPosition = Result then
     exit;
 
+//  if FDimensionItems[Result].Count > 1000 then
+//    FDimensionItems[Result].Count := FDimensionItems[Result].Count;
+
   if FDimensionItems[Result].Count = Length(FDimensionItems[Result].Data) then
-    SetLength(FDimensionItems[Result].Data, Length(FDimensionItems[Result].Data)+4);
+  begin
+    if Length(FDimensionItems[Result].Data) = 0 then
+      SetLength(FDimensionItems[Result].Data, 8)
+    else
+      SetLength(FDimensionItems[Result].Data, Length(FDimensionItems[Result].Data) * 2);
+  end;
+
   FDimensionItems[Result].Data[FDimensionItems[Result].Count] := AData;
   inc(FDimensionItems[Result].Count);
   inc(FCount);
+end;
+
+function TBlackSharkKDTree<T>.IsLeft(ANode: int32): boolean;
+begin
+  if ANode > 0 then
+    Result := FDimensionItems[FDimensionItems[ANode].ParentNode].Left = ANode
+  else
+    Result := true;
 end;
 
 procedure TBlackSharkKDTree<T>.Remove(APosition: int32; const AData: T);
 begin
   if APosition < 0 then
     exit;
-  DoDelete(APosition, AData);
+  DoDelete(APosition, AData, true);
 end;
 
-procedure TBlackSharkKDTree<T>.Select(ABox: PBoxMinMax; AList: TListVec<T>);
+procedure TBlackSharkKDTree<T>.Select(ABox: PKDMinMax; AList: TListVec<T>);
 var
-  node: int32;
-  mn, mx: double;
-  i: Integer;
+  node, i: int32;
 begin
   Stack.Add(FRoot);
+  {$ifdef DEBUG}
+  FSelectIterations := 0;
+  {$endif}
+  //move(FRootMinMax^, FCurrentBoundaries^, SizeOf(double) * FDoubleDimension);
   while Stack.Count > 0 do
   begin
     node := Stack.Pop;
-    if node < 0 then
-      raise Exception.Create('A logic error!');
-    mn := bs.math.Max(FKeys[node*FDimensionDouble+FDimensionItems[node].Dimension],
-      ABox^[FDimensionItems[node].Dimension]);
-    mx := bs.math.Min(FKeys[node*FDimensionDouble+FDimensionItems[node].Dimension+FDimension],
-      ABox^[FDimensionItems[node].Dimension+FDimension]);
 
-    if (mn > mx) or ((mn = mx) and (ABox^[FDimensionItems[node].Dimension] <> ABox^[FDimensionItems[node].Dimension+FDimension])) then
-    //if (mn >= ABox^[FDimensionItems[node].Dimension+FDimension]) and (mx < ABox^[FDimensionItems[node].Dimension]) then // it doesn't fit into cur_node
-      continue;
+    {$ifdef DEBUG}
+    inc(FSelectIterations);
+    {$endif}
 
     for i := 0 to FDimensionItems[node].Count - 1 do
-      AList.Add(FDimensionItems[node].Data[i]);
-    if FDimensionItems[node].Left >= 0 then
-      Stack.Add(FDimensionItems[node].Left);
-    if FDimensionItems[node].Right >= 0 then
+    begin
+      if not Assigned(FStrictHitTest) or FStrictHitTest(FDimensionItems[node].Data[i]) then
+        AList.Add(FDimensionItems[node].Data[i]);
+    end;
+
+    if FDimensionItems[node].Left < 0 then
+      continue;
+
+    if ABox^[FDimensionItems[node].Dimension] >= FDimensionItems[node].Boundary then
+    begin
       Stack.Add(FDimensionItems[node].Right);
+    end else
+    if ABox^[FDimension + FDimensionItems[node].Dimension] < FDimensionItems[node].Boundary then
+    begin
+      Stack.Add(FDimensionItems[node].Left);
+    end else
+    begin
+      Stack.Add(FDimensionItems[node].Left);
+      Stack.Add(FDimensionItems[node].Right);
+    end;
   end;
+
 end;
 
 procedure TBlackSharkKDTree<T>.Select(const AVectorMinMax: TBox3f; AList: TListVec<T>);
@@ -3156,38 +3246,196 @@ var
 begin
   min_max[0] := AVectorMinMax.Min;
   min_max[1] := AVectorMinMax.Max;
-  Select(@min_max, AList);
+  Select(PKDMinMax(@min_max), AList);
 end;
 
-procedure TBlackSharkKDTree<T>.SplitNode(ANode: int32; ADimension: int32; ABoundary: double);
+procedure TBlackSharkKDTree<T>.Select(const AVectorMinMax: TBox2d; AList: TListVec<T>);
+begin
+  Select(PKDMinMax(@AVectorMinMax.Min), AList);
+end;
+
+procedure TBlackSharkKDTree<T>.Select(const AVectorMinMax: PVec2d; AList: TListVec<T>);
+begin
+  Select(PKDMinMax(AVectorMinMax), AList);
+end;
+
+procedure TBlackSharkKDTree<T>.Select(const AVectorMinMax: TBox3f);
+var
+  min_max: array[0..1] of TVec3d;
+begin
+  min_max[0] := AVectorMinMax.Min;
+  min_max[1] := AVectorMinMax.Max;
+  Select(PKDMinMax(@min_max));
+end;
+
+procedure TBlackSharkKDTree<T>.Select(ABox: PKDMinMax);
+var
+  node, i: int32;
+begin
+  Stack.Add(FRoot);
+  {$ifdef DEBUG}
+  FSelectIterations := 0;
+  {$endif}
+  //move(FRootMinMax^, FCurrentBoundaries^, SizeOf(double) * FDoubleDimension);
+  while Stack.Count > 0 do
+  begin
+    node := Stack.Pop;
+
+    {$ifdef DEBUG}
+    inc(FSelectIterations);
+    {$endif}
+
+    for i := 0 to FDimensionItems[node].Count - 1 do
+    begin
+      FStrictHitTest(FDimensionItems[node].Data[i]);
+    end;
+
+    if FDimensionItems[node].Left < 0 then
+      continue;
+
+    if ABox^[FDimensionItems[node].Dimension] >= FDimensionItems[node].Boundary then
+    begin
+      Stack.Add(FDimensionItems[node].Right);
+    end else
+    if ABox^[FDimension + FDimensionItems[node].Dimension] < FDimensionItems[node].Boundary then
+    begin
+      Stack.Add(FDimensionItems[node].Left);
+    end else
+    begin
+      Stack.Add(FDimensionItems[node].Left);
+      Stack.Add(FDimensionItems[node].Right);
+    end;
+  end;
+end;
+
+function TBlackSharkKDTree<T>.SelectSplitBoundary(ANode: int32; AObjectMin, AObjectMax: double; out ABoundary: double): boolean;
+var
+  objectWidth: double;
+  delta: double;
+  deltaLeft: double;
+  deltaRight: double;
+  offset: double;
+  s: int8;
+begin
+  if not CanSplitNode(ANode, AObjectMin, AObjectMax) then
+    exit(false);
+
+  objectWidth := AObjectMax - AObjectMin;
+  deltaLeft := AObjectMin - FDimensionItems[ANode].Min;
+  deltaRight := FDimensionItems[ANode].Max - AObjectMax;
+  if deltaLeft > deltaRight then
+  begin // boundary on the left from object
+    delta := deltaLeft;
+    offset := AObjectMin;
+    s := -1;
+  end else
+  begin // boundary on the rigth from object
+    delta := deltaRight;
+    offset := AObjectMax;
+    s := 1;
+  end;
+
+  //if objectWidth <= FGranularity then
+  begin
+    if (delta > FGranularity200x) then
+      ABoundary := offset + s*FGranularity100x
+    else
+    if (delta > FGranularity100x) then
+      ABoundary := offset + s*FGranularity50x
+    else
+    if (delta > FGranularity50x) then
+      ABoundary := offset + s*FGranularity25x
+    else
+    if (delta > FGranularity25x) then
+      ABoundary := offset + s*FGranularity10x
+    else
+    if (delta > FGranularity10x) then
+      ABoundary := offset + s*FGranularity5x
+    else
+    if (delta > FGranularity2x) then
+      ABoundary := offset + s*FGranularity
+    else
+    if (delta > FGranularity) then
+      ABoundary := offset + s*FGranularityHalf
+    else
+    if (delta > FGranularityHalf) then
+      ABoundary := offset + s*FGranularityQuad
+    else
+      ABoundary := offset;// + s*delta*0.5;
+  end;// else
+//  if (delta > FGranularity100x) then
+//  begin
+//    if objectWidth < FGranularity2x then
+//      ABoundary := offset + s*FGranularity2x
+//    else
+//    if objectWidth < FGranularity10x then
+//      ABoundary := offset + s*FGranularity10x
+//    else
+//      ABoundary := offset + s*FGranularity100x;
+//  end else
+//  if (delta > FGranularity10x) then
+//  begin
+//    if objectWidth < FGranularity then
+//      ABoundary := offset + s*FGranularity
+//    else
+//    if objectWidth < FGranularity2x then
+//      ABoundary := offset + s*FGranularity2x
+//    else
+//      ABoundary := offset + s*FGranularity10x;
+//  end else
+//    ABoundary := offset + s*FGranularity2x;
+
+  ABoundary := round(ABoundary / FGranularityHalf) * FGranularityHalf;
+  Result := (FDimensionItems[ANode].Min < ABoundary) and (FDimensionItems[ANode].Max > ABoundary);
+
+end;
+
+procedure TBlackSharkKDTree<T>.SetGranularity(const Value: double);
+begin
+  if FGranularity = Value then
+    exit;
+  FGranularity := Value;
+  FGranularityQuad := FGranularity*0.25;
+  FGranularityHalf := FGranularity*0.5;
+  FGranularity2x := FGranularity*2;
+  FGranularity5x  := FGranularity*5;
+  FGranularity10x  := FGranularity*10;
+  FGranularity50x  := FGranularity*50;
+  FGranularity25x  := FGranularity*25;
+  FGranularity100x := FGranularity*100;
+  FGranularity200x := FGranularity100x*2;
+end;
+
+procedure TBlackSharkKDTree<T>.GrowCapacity(ANewCapacity: int32);
 var
   i: int32;
-  min, max: double;
-begin                                                                // min                                    // max
-  FDimensionItems[ANode].Left := GetDimensionItem(ANode, ADimension, FKeys[ANode*FDimensionDouble+ADimension], ABoundary);
-                                                                      // min     // max
-  FDimensionItems[ANode].Right := GetDimensionItem(ANode, ADimension, ABoundary, FKeys[ANode*FDimensionDouble+FDimension+ADimension]);
+  old: int32;
+begin
+  old := length(FDimensionItems);
+  SetLength(FDimensionItems, ANewCapacity);
+  CashDimItems.Count := ANewCapacity - old;
+  for i := ANewCapacity downto old + 1 do
+    CashDimItems.Items[ANewCapacity - i] := i - 1;
+end;
 
-  // take from parent other boundaries of Dimensions
-  for i := 0 to FDimension - 1 do
-  begin
-    if i = ADimension then
-      continue;
-    min := FKeys[ANode*FDimensionDouble+i];
-    max := FKeys[ANode*FDimensionDouble+FDimension+i];
-    FKeys[FDimensionItems[ANode].Left*FDimensionDouble+i] := min;
-    FKeys[FDimensionItems[ANode].Left*FDimensionDouble+FDimension+i] := max;
-    FKeys[FDimensionItems[ANode].Right*FDimensionDouble+i] := min;
-    FKeys[FDimensionItems[ANode].Right*FDimensionDouble+FDimension+i] := max;
-  end;
+procedure TBlackSharkKDTree<T>.SplitNode(ANode: int32; ADimension: int32; ABoundary: double; AMax, AMin: double);
+begin
+  FDimensionItems[ANode].Left := GetDimensionItem(ANode, ADimension);
+  FDimensionItems[ANode].Right := GetDimensionItem(ANode, ADimension);
+  FDimensionItems[ANode].Boundary := ABoundary;
+  FDimensionItems[FDimensionItems[ANode].Left].Min := AMin;
+  FDimensionItems[FDimensionItems[ANode].Left].Max := AMax;
+  FDimensionItems[FDimensionItems[ANode].Right].Min := AMin;
+  FDimensionItems[FDimensionItems[ANode].Right].Max := AMax;
   {$ifdef DEBUG_ST}
   if Assigned(OnSplitDimension) then
-    OnSplitDimension(ADimension, @FKeys[ANode*FDimensionDouble], ABoundary);
+    OnSplitDimension(ADimension, GetNodeBoundaries(ANode), ABoundary);
   {$endif}
 end;
 
 function TBlackSharkKDTree<T>.UpdatePositionBB(const AData: T; const AVectorMinMax: TBox3d; OldPosition: int32): int32;
 begin
+  //AlignKDMinMax(@AVectorMinMax.Min);
   Result := DoAdd(AData, @AVectorMinMax.Min, OldPosition);
 end;
 
@@ -3197,12 +3445,14 @@ var
 begin
   min_max[0] := AVectorMinMax.Min;
   min_max[1] := AVectorMinMax.Max;
+  //AlignKDMinMax(@min_max);
   Result := DoAdd(AData, @min_max, OldPosition);
 end;
 
-function TBlackSharkKDTree<T>.UpdatePositionBB(const AData: T; VectorMinMax: PBoxMinMax; OldPosition: int32): int32;
+function TBlackSharkKDTree<T>.UpdatePositionBB(const AData: T; AVectorMinMax: PKDMinMax; OldPosition: int32): int32;
 begin
-  Result := DoAdd(AData, VectorMinMax, OldPosition);
+  //AlignKDMinMax(AVectorMinMax);
+  Result := DoAdd(AData, AVectorMinMax, OldPosition);
 end;
 
 { TBlackSharkKDTree }

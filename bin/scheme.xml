@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?><<Scheme>
+<TreeComponents>
+<TBForm url="TBForm">
+<TBSpinEdit url="TBForm.TBSpinEdit">
+<props>
+<prop id="3" nm="Value" v="0"/>
+<prop id="8" nm="ParentColor" v="0"/>
+<prop id="3" nm="MinValue" v="-9223372036854775808"/>
+<prop id="3" nm="MaxValue" v="9223372036854775807"/>
+<prop id="9" nm="FontName" v="NotoSerif-Regular"/>
+<prop id="6" nm="Color" v="4280163870"/>
+<prop id="6" nm="ColorText" v="32768"/>
+<prop id="6" nm="ColorFrame" v="8421504"/>
+<prop id="6" nm="ColorCursor" v="15453831"/>
+</props>
+</TBSpinEdit>
+<props/>
+</TBForm>
+</TreeComponents>
+<Dic>
+<it id="0" name="TSTYLETVEC4F"/>
+<it id="1" name="TSTYLESTRING"/>
+<it id="2" name="TSTYLEINT8"/>
+<it id="3" name="TSTYLEINT64"/>
+<it id="4" name="TSTYLEINT32"/>
+<it id="5" name="TSTYLEINT16"/>
+<it id="6" name="TSTYLEGUICOLOR"/>
+<it id="7" name="TSTYLEFLOAT"/>
+<it id="8" name="TSTYLEBOOL"/>
+<it id="9" name="TSTYLEANSISTRING"/>
+</Dic>
+</Scheme>

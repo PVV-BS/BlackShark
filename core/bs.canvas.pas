@@ -365,6 +365,7 @@ type
     constructor Create(ACanvas: TBCanvas; AParent: TCanvasObject); override;
     destructor Destroy; override;
     function CreateCustomFont: IBlackSharkFont;
+
     property Text: string read GetText write SetText;
     property SceneTextData: TGraphicObjectText read GetSceneTextData;
     property ScalableModeToFontSize: boolean read FScalableModeToFontSize write FScalableModeToFontSize;
@@ -1091,6 +1092,7 @@ type
     FScale: BSFloat;
     FScaleInv: BSFloat;
     FScreenPerimeterScaleStartInv: BSFloat;
+    FOrthogonalProjection: boolean;
 
     procedure MoveFrustumEvent({%H-}const Data: BEmpty);
     procedure OnResizeViewport({%H-}const Data: BResizeEventData);
@@ -1142,6 +1144,7 @@ type
     { event set new font }
     property ModalLevel: int32 read GetModalLevel write SetModalLevel;
     property UpdatingOfOrientation: boolean read FUpdatingOfOrientation;
+    property OrthogonalProjection: boolean read FOrthogonalProjection write FOrthogonalProjection;
     { event of create canvas object (TCanvasObject) }
     property OnCreateObject: TCanvasEvent read GetOnCreateObject;
     property OnFreeObject: TCanvasEvent read GetOnFreeObject;
@@ -2628,6 +2631,7 @@ end;
 
 procedure TBCanvas.OnCreateCanvasObject(CanvasObject: TCanvasObject);
 begin
+  CanvasObject.Data.OrthogonalProjection := FOrthogonalProjection;
   if FStickOnScreen and not Assigned(ObsrvrMoveFrustum) then
     ObsrvrMoveFrustum := CreateEmptyObserver(Renderer.EventMoveFrustum, MoveFrustumEvent);
   if Assigned(FOnCreateObject) then

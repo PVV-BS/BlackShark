@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="12"/>
+    <ManyBuildModesSelection Value="Win32"/>
+    <BuildModes Active="Win32"/>
+    <Units Count="43">
+      <Unit0>
+        <Filename Value="BSTest.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="3" Y="22"/>
+        <UsageCount Value="351"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="mainwin.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="MainW"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="MainWin"/>
+        <TopLine Value="343"/>
+        <CursorPos X="15" Y="147"/>
+        <ExtraEditorCount Value="1"/>
+        <ExtraEditor1>
+          <EditorIndex Value="-1"/>
+          <WindowIndex Value="1"/>
+          <TopLine Value="462"/>
+          <CursorPos Y="481"/>
+        </ExtraEditor1>
+        <UsageCount Value="351"/>
+        <Bookmarks Count="1">
+          <Item0 X="15" Y="147" ID="2"/>
+        </Bookmarks>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="Layout4.inc"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="55" Y="8"/>
+        <UsageCount Value="204"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="D:\packages\BlackShark\core\bs.canvas.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="481"/>
+        <CursorPos X="15" Y="496"/>
+        <UsageCount Value="3"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="D:\VNITEP_CNC_4.x\layoutvisual.pas"/>
+        <UnitName Value="LayoutVisual"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="1"/>
+        <CursorPos X="18" Y="10"/>
+        <UsageCount Value="1"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="BlackShark2D.pas"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="1"/>
+        <TopLine Value="356"/>
+        <CursorPos X="6" Y="279"/>
+        <ExtraEditorCount Value="1"/>
+        <ExtraEditor1>
+          <EditorIndex Value="-1"/>
+          <TopLine Value="850"/>
+          <CursorPos Y="865"/>
+        </ExtraEditor1>
+        <UsageCount Value="95"/>
+        <Bookmarks Count="2">
+          <Item0 X="29" Y="389" ID="1"/>
+          <Item1 X="5" Y="320" ID="8"/>
+        </Bookmarks>
+      </Unit5>
+      <Unit6>
+        <Filename Value="Layout7.inc"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="14" Y="2"/>
+        <UsageCount Value="96"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="..\..\packages\BlackShark\core\bs.canvas.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="3552"/>
+        <CursorPos X="2" Y="3603"/>
+        <UsageCount Value="292"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="..\..\..\home\user\Projects\packages\BlackShark4.1\core\bs.canvas.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="3514"/>
+        <CursorPos X="50" Y="3557"/>
+        <UsageCount Value="1"/>
+        <Bookmarks Count="1">
+          <Item0 Y="3296" ID="3"/>
+        </Bookmarks>
+      </Unit8>
+      <Unit9>
+        <Filename Value="Layout3.inc"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="355"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="Layout6.inc"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="357"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="..\..\..\..\..\mnt\server\VNITEP_CNC_4.7\layoutstr.pas"/>
+        <UnitName Value="LayoutStr"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="1"/>
+        <TopLine Value="147"/>
+        <CursorPos X="32" Y="151"/>
+        <UsageCount Value="296"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="..\..\..\fpcupdeluxe\fpcsrc\rtl\objpas\sysutils\datih.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="14"/>
+        <CursorPos X="44" Y="40"/>
+        <UsageCount Value="287"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="..\..\packages\BlackShark\tests\bs.test.canvas.primitives.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="328"/>
+        <CursorPos X="14" Y="344"/>
+        <UsageCount Value="285"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="..\..\packages\BlackShark\core\bs.config.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="129"/>
+        <CursorPos X="47" Y="147"/>
+        <UsageCount Value="284"/>
+      </Unit14>
+      <Unit15>
+        <Filename Value="..\..\Q9HMI_4.8\MainWin3\editor3.inc"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="1"/>
+        <TopLine Value="62"/>
+        <CursorPos X="19" Y="92"/>
+        <UsageCount Value="2"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="..\..\Q9HMI_4.8\layoutmanager.pas"/>
+        <UnitName Value="LayoutManager"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="1"/>
+        <TopLine Value="61"/>
+        <UsageCount Value="56"/>
+      </Unit16>
+      <Unit17>
+        <Filename Value="..\..\packages\BlackShark\core\bs.shader.pas"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="1"/>
+        <TopLine Value="615"/>
+        <CursorPos X="20" Y="631"/>
+        <UsageCount Value="9"/>
+      </Unit17>
+      <Unit18>
+        <Filename Value="..\..\packages\BlackShark\core\bs.scene.objects.pas"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="1"/>
+        <TopLine Value="2330"/>
+        <CursorPos X="47" Y="2349"/>
+        <UsageCount Value="2"/>
+      </Unit18>
+      <Unit19>
+        <Filename Value="..\..\packages\BlackShark\core\bs.scene.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="364"/>
+        <CursorPos X="14" Y="386"/>
+        <UsageCount Value="48"/>
+      </Unit19>
+      <Unit20>
+        <Filename Value="..\..\packages\BlackShark\core\bs.basetypes.pas"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="1"/>
+        <TopLine Value="568"/>
+        <CursorPos X="3" Y="585"/>
+        <UsageCount Value="29"/>
+        <Bookmarks Count="1">
+          <Item0 Y="881" ID="9"/>
+        </Bookmarks>
+      </Unit20>
+      <Unit21>
+        <Filename Value="..\..\Q9HMI_4.8\layoutstr.pas"/>
+        <UnitName Value="LayoutStr"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="1"/>
+        <TopLine Value="16"/>
+        <CursorPos X="16" Y="16"/>
+        <UsageCount Value="56"/>
+      </Unit21>
+      <Unit22>
+        <Filename Value="..\..\..\fpcupdeluxe\lazarus\lcl\graphics.pp"/>
+        <UnitName Value="Graphics"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="259"/>
+        <CursorPos X="23" Y="275"/>
+        <UsageCount Value="4"/>
+      </Unit22>
+      <Unit23>
+        <Filename Value="..\..\..\fpcupdeluxe\fpcsrc\packages\rtl-objpas\src\inc\system.uitypes.pp"/>
+        <UnitName Value="System.UITypes"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="1"/>
+        <TopLine Value="29"/>
+        <CursorPos X="14" Y="29"/>
+        <UsageCount Value="2"/>
+      </Unit23>
+      <Unit24>
+        <Filename Value="Layout2.inc"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="1"/>
+        <CursorPos X="57" Y="5"/>
+        <UsageCount Value="4"/>
+      </Unit24>
+      <Unit25>
+        <Filename Value="Layout5.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1453"/>
+        <CursorPos X="16" Y="1463"/>
+        <UsageCount Value="4"/>
+      </Unit25>
+      <Unit26>
+        <Filename Value="..\..\packages\BlackShark\core\bs.viewport.pas"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="1"/>
+        <TopLine Value="399"/>
+        <CursorPos X="3" Y="399"/>
+        <UsageCount Value="0"/>
+        <Bookmarks Count="1">
+          <Item0 X="22" Y="149" ID="2"/>
+        </Bookmarks>
+      </Unit26>
+      <Unit27>
+        <Filename Value="..\..\packages\BlackShark\core\bs.renderer.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="343"/>
+        <CursorPos X="14" Y="343"/>
+        <UsageCount Value="46"/>
+      </Unit27>
+      <Unit28>
+        <Filename Value="..\..\packages\BlackShark\common\bs.collections.pas"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="1"/>
+        <TopLine Value="79"/>
+        <CursorPos X="18" Y="99"/>
+        <UsageCount Value="36"/>
+      </Unit28>
+      <Unit29>
+        <Filename Value="..\..\..\fpcupdeluxe\fpcsrc\rtl\objpas\sysutils\sysutilh.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="314"/>
+        <CursorPos X="13" Y="330"/>
+        <UsageCount Value="3"/>
+      </Unit29>
+      <Unit30>
+        <Filename Value="..\..\VNITEP_CNC_4.x-Dual\Primitives\primitives.pas"/>
+        <UnitName Value="Primitives"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="1"/>
+        <TopLine Value="509"/>
+        <CursorPos X="35" Y="535"/>
+        <UsageCount Value="27"/>
+      </Unit30>
+      <Unit31>
+        <Filename Value="..\..\..\fpcupdeluxe\fpcsrc\rtl\inc\systemh.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1317"/>
+        <CursorPos X="11" Y="1332"/>
+        <UsageCount Value="5"/>
+      </Unit31>
+      <Unit32>
+        <Filename Value="..\..\packages\BlackShark\core\bs.events.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="41"/>
+        <CursorPos X="3" Y="57"/>
+        <UsageCount Value="1"/>
+      </Unit32>
+      <Unit33>
+        <Filename Value="..\..\packages\BlackShark\core\bs.geometry.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="391"/>
+        <CursorPos X="109" Y="407"/>
+        <UsageCount Value="22"/>
+      </Unit33>
+      <Unit34>
+        <Filename Value="..\BlackSharkMaket3\BlackShark2D.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="240"/>
+        <CursorPos X="63" Y="266"/>
+        <UsageCount Value="19"/>
+      </Unit34>
+      <Unit35>
+        <Filename Value="..\BlackSharkMaket3\mainwin.pas"/>
+        <ComponentName Value="MainW"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="MainWin"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="1"/>
+        <TopLine Value="440"/>
+        <CursorPos Y="473"/>
+        <UsageCount Value="19"/>
+      </Unit35>
+      <Unit36>
+        <Filename Value="..\..\..\core\bs.basetypes.pas"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="2552"/>
+        <CursorPos X="30" Y="2566"/>
+        <UsageCount Value="38"/>
+        <Loaded Value="True"/>
+      </Unit36>
+      <Unit37>
+        <Filename Value="..\..\..\core\bs.gl.egl.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="651"/>
+        <CursorPos Y="674"/>
+        <UsageCount Value="25"/>
+      </Unit37>
+      <Unit38>
+        <Filename Value="..\..\..\core\bs.renderer.pas"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="1771"/>
+        <CursorPos X="3" Y="1786"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+      </Unit38>
+      <Unit39>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="1376"/>
+        <CursorPos X="59" Y="1406"/>
+        <UsageCount Value="19"/>
+        <Bookmarks Count="3">
+          <Item0 X="28" Y="1536" ID="3"/>
+          <Item1 X="23" Y="1479" ID="4"/>
+          <Item2 Y="1394" ID="1"/>
+        </Bookmarks>
+        <Loaded Value="True"/>
+      </Unit39>
+      <Unit40>
+        <Filename Value="..\..\..\core\bs.frustum.pas"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="94"/>
+        <CursorPos X="82" Y="111"/>
+        <UsageCount Value="16"/>
+        <Loaded Value="True"/>
+      </Unit40>
+      <Unit41>
+        <Filename Value="..\..\..\gui\bs.gui.base.pas"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="265"/>
+        <UsageCount Value="17"/>
+        <Loaded Value="True"/>
+      </Unit41>
+      <Unit42>
+        <Filename Value="..\..\..\core\bs.obj.pas"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="321"/>
+        <CursorPos Y="345"/>
+        <UsageCount Value="16"/>
+        <Loaded Value="True"/>
+      </Unit42>
+    </Units>
+    <Debugger>
+      <Backend Value="{349D251A-A1EE-4F6C-953F-2DD53F608293}"/>
+    </Debugger>
+    <JumpHistory Count="30" HistoryIndex="29">
+      <Position1>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="1552" TopLine="1513"/>
+      </Position1>
+      <Position2>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="1553" TopLine="1513"/>
+      </Position2>
+      <Position3>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="1535" TopLine="1517"/>
+      </Position3>
+      <Position4>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="1401" TopLine="1377"/>
+      </Position4>
+      <Position5>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="1410" Column="79" TopLine="1377"/>
+      </Position5>
+      <Position6>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="1395" Column="34" TopLine="1377"/>
+      </Position6>
+      <Position7>
+        <Filename Value="..\..\..\core\bs.renderer.pas"/>
+        <Caret Line="333" Column="14" TopLine="311"/>
+      </Position7>
+      <Position8>
+        <Filename Value="..\..\..\core\bs.renderer.pas"/>
+        <Caret Line="331" Column="25" TopLine="311"/>
+      </Position8>
+      <Position9>
+        <Filename Value="..\..\..\core\bs.renderer.pas"/>
+        <Caret Line="1710" Column="45" TopLine="1690"/>
+      </Position9>
+      <Position10>
+        <Filename Value="..\..\..\core\bs.renderer.pas"/>
+        <Caret Line="1784" Column="35" TopLine="1751"/>
+      </Position10>
+      <Position11>
+        <Filename Value="..\..\..\core\bs.renderer.pas"/>
+        <Caret Line="333" Column="14" TopLine="311"/>
+      </Position11>
+      <Position12>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="1395" Column="34" TopLine="1377"/>
+      </Position12>
+      <Position13>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="187" Column="53" TopLine="164"/>
+      </Position13>
+      <Position14>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="1390" Column="44" TopLine="1380"/>
+      </Position14>
+      <Position15>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="187" Column="44" TopLine="164"/>
+      </Position15>
+      <Position16>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="1395" Column="33" TopLine="1377"/>
+      </Position16>
+      <Position17>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="188" Column="84" TopLine="164"/>
+      </Position17>
+      <Position18>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="1393" Column="23" TopLine="1360"/>
+      </Position18>
+      <Position19>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="189" TopLine="164"/>
+      </Position19>
+      <Position20>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="202" Column="78" TopLine="164"/>
+      </Position20>
+      <Position21>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="1401" Column="40" TopLine="1375"/>
+      </Position21>
+      <Position22>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="190" Column="101" TopLine="165"/>
+      </Position22>
+      <Position23>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="1440" TopLine="1439"/>
+      </Position23>
+      <Position24>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="183" Column="63" TopLine="173"/>
+      </Position24>
+      <Position25>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="1095" Column="26" TopLine="1055"/>
+      </Position25>
+      <Position26>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="1147" Column="98" TopLine="1108"/>
+      </Position26>
+      <Position27>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="2634" Column="66" TopLine="2609"/>
+      </Position27>
+      <Position28>
+        <Filename Value="..\..\..\core\bs.basetypes.pas"/>
+        <Caret Line="4457" Column="16" TopLine="4449"/>
+      </Position28>
+      <Position29>
+        <Filename Value="..\..\..\core\bs.basetypes.pas"/>
+        <Caret Line="879" Column="56" TopLine="854"/>
+      </Position29>
+      <Position30>
+        <Filename Value="..\..\..\core\bs.canvas.pas"/>
+        <Caret Line="1082" Column="69" TopLine="1073"/>
+      </Position30>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+  <Debugging>
+    <Watches>
+      <Item>
+        <Expression Value="FData.FCaption"/>
+      </Item>
+      <Item ClassAutoCast="True">
+        <Expression Value="FData.Parent.ClassName"/>
+      </Item>
+    </Watches>
+  </Debugging>
+</CONFIG>

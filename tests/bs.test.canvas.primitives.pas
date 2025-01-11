@@ -292,9 +292,10 @@ constructor TBSTestCanvasPrimitive.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
   Allow3dManipulationByMouse := true;
+  AllowMoveCameraByKeyboard := true;
   // Renderer.Frustum.Angle := vec3(Renderer.Frustum.Angle.x, Renderer.Frustum.Angle.y + 90, Renderer.Frustum.Angle.z);
   FCanvas := TBCanvas.Create(renderer, Self);
-  FCanvas.StickOnScreen := false;
+  //FCanvas.StickOnScreen := false;
   // FCanvas.Scalable := true;
 end;
 
@@ -332,6 +333,7 @@ begin
 end;
 
 { TBSTestCanvasLine }
+
 constructor TBSTestCanvasLine.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited Create(ARenderer);
