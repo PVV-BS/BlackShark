@@ -65,6 +65,8 @@ type
     function GetTextAlign: TTextAlign;
     procedure SetTextAlign(const Value: TTextAlign);
     procedure SetAllowBreakWords(const Value: boolean);
+  protected
+    procedure SetVisible(const Value: boolean); override;
   public
     constructor Create(ACanvas: TBCanvas); override;
     procedure AfterConstruction; override;
@@ -159,6 +161,11 @@ procedure TBlackSharkHint.SetAllowBreakWords(const Value: boolean);
 begin
   FAllowBreakWords := Value;
   FHintData.TxtProcessor.AllowBreakWords := FAllowBreakWords;
+end;
+
+procedure TBlackSharkHint.SetVisible(const Value: boolean);
+begin
+  inherited SetVisible(Value);
 end;
 
 procedure TBlackSharkHint.SetText(const Value: string);

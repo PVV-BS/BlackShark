@@ -111,3 +111,5 @@
 *.res
 *.local
 /tests/lazarus/BSIntersect/lib/
+/tests/delphi/VCL/TestAVLTree/Win32/
+/tests/delphi/DUnit/Win32/

@@ -57,6 +57,7 @@ begin
   ViewPort.OnAfterCreateContext := AfterCreateContextEvent;
   ViewPort.Align := alClient;
   CommandLineParam := ParamStr(1);
+  ViewPort.SetFocus;
 end;
 
 procedure TFrmMain.FormClose(Sender: TObject; var CloseAction: TCloseAction);

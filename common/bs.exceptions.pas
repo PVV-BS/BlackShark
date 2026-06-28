@@ -36,6 +36,9 @@ type
   EBlackShark = class(Exception)
   end;
 
+  EWrongAlgorithm = class(EBlackShark)
+  end;
+
   ETODO = class(EBlackShark)
   end;
 

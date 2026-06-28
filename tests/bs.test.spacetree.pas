@@ -17,10 +17,12 @@ uses
   , bs.canvas
   , bs.scene.objects
   , bs.geometry
+  , bs.geometry.kdtree
   , bs.gui.scrollbox
   , bs.gui.forms
   , bs.gui.buttons
   , bs.gui.checkbox
+  , bs.gui.hint
   , bs.graphics
   , bs.animation
   ;
@@ -173,11 +175,94 @@ type
     class function TestName: string; override;
   end;
 
+  { TBSTestKDTreeIn2d }
+
+  TBSTestKDTreeIn2d = class(TBSTest)
+  private
+    const
+      csCountPrimitives = 1000;
+      csCountStreenInMap = 10;
+  private
+    Canvas: TBCanvas;
+    ViewPort2d: TTrapeze;
+    ViewPortAnimRotate: IBAnimationLinearFloat;
+    ViewPortAnimRotateObserver: IBAnimationLinearFloatObsrv;
+    ViewPortAnimMove: IBAnimationLinearFloat;
+    ViewPortAnimMoveObserver: IBAnimationLinearFloatObsrv;
+    ViewPortMoveDir: TVec2f;
+    RootMapCanvasObject: TRectangle;
+
+    DebugText: TCanvasText;
+    procedure GenerateScene;
+    procedure GenerateViewport;
+    procedure DoSetRenderViewPortPos;
+    procedure DoSetCanvasObjecPosition(ACanvasObject: TCanvasObject);
+  protected
+    procedure OnResizeViewport({%H-}const Data: BResizeEventData); override;
+    procedure OnKeyDown({%H-}const Data: BKeyData); override;
+    procedure OnKeyUp({%H-}const Data: BKeyData); override;
+    procedure OnRotateViewPort(const AValue: BSFloat); virtual;
+    procedure OnMoveViewPort(const AValue: BSFloat); virtual;
+  public
+    constructor Create(ARenderer: TBlackSharkRenderer); override;
+    destructor Destroy; override;
+    function Run: boolean; override;
+    class function TestName: string; override;
+  end;
+
+  { TBSTestKDTreeIn1d }
+
+  TBSTestKDTreeIn1d = class(TBSTest)
+  private
+    const
+      csCountPrimitives = 100;
+      csCountScreensInMap = 2;
+  private
+    Tree1d: TIntervalsTree;
+    Canvas: TBCanvas;
+    CanvasBillboard: TBCanvas;
+    FMap1d: TLine;
+    FViewPort1d: TLine;
+    ViewPortAnimMove: IBAnimationLinearFloat;
+    ViewPortAnimMoveObserver: IBAnimationLinearFloatObsrv;
+    ListResult: TListVec<Pointer>;
+    OriginalColors: THashTable<Pointer, TColor4f>;
+    Hint: TBlackSharkHint;
+    HintPosViewport: TBlackSharkHint;
+    Selected: TCanvasText;
+
+    btnSelect: TBButton;
+
+    BtnSelectClickObserver: IBMouseEventObserver;
+    MObjectEnterGroup: BObserversGroup<BMouseData>;
+    MObjectLeaveGroup: BObserversGroup<BMouseData>;
+
+    procedure DoSetRenderViewPortPos;
+    function DoSetCanvasObjecPosition: TVec2f;
+    procedure OnMoveViewPort(const AValue: BSFloat);
+    procedure GenerateObjects;
+    procedure SelectObjects;
+    procedure UpdateViewportHint;
+    procedure OnMouseObjectEnter(const AData: BMouseData);
+    procedure OnMouseObjectLeave(const AData: BMouseData);
+    procedure OnClickButtonSelect(const AData: BMouseData);
+  protected
+    procedure OnKeyDown({%H-}const Data: BKeyData); override;
+    procedure OnKeyUp({%H-}const Data: BKeyData); override;
+  public
+    constructor Create(ARenderer: TBlackSharkRenderer); override;
+    destructor Destroy; override;
+    function Run: boolean; override;
+    class function TestName: string; override;
+  end;
+
+
 implementation
 
 uses
     SysUtils
   , math
+  , bs.align
   , bs.math
   , bs.config
   , bs.thread
@@ -1054,9 +1139,560 @@ begin
   //CountSelectIter.Text := 'Select iterations: ' + IntToStr(Renderer.Scene.SelectIterations);
 end;
 
+{ TBSTestKDTreeIn2d }
+
+procedure TBSTestKDTreeIn2d.GenerateScene;
+
+  procedure CreateRectangle(IsFilled: boolean; const Color: TColor4f);
+  var
+    r: TRectangle;
+  begin
+    r := TRectangle.Create(Canvas, RootMapCanvasObject);
+    r.Size := vec2(max(10.0, random(50)), max(10.0, random(50)));
+    r.Fill := IsFilled;
+    r.Color := Color;
+    DoSetCanvasObjecPosition(r);
+    r.Angle := vec3(0.0, 0.0, random(360));
+    r.Build;
+  end;
+
+  procedure CreateTrapeze(IsFilled: boolean; const Color: TColor4f);
+  var
+    t: TTrapeze;
+  begin
+    t := TTrapeze.Create(Canvas, RootMapCanvasObject);
+    t.LowerBase := max(30, random(70));
+    t.UpperBase := t.LowerBase - 20.0;
+    t.HeightBwBases := t.UpperBase;
+    t.Fill := IsFilled;
+    t.Color := Color;
+    DoSetCanvasObjecPosition(t);
+    t.Angle := vec3(0.0, 0.0, random(360));
+    t.Build;
+  end;
+
+  procedure CreateCircule(IsFilled: boolean; const Color: TColor4f);
+  var
+    c: TCircle;
+  begin
+    c := TCircle.Create(Canvas, RootMapCanvasObject);
+    c.Radius := max(10.0, random(25));
+    c.Fill := IsFilled;
+    c.Color := Color;
+    DoSetCanvasObjecPosition(c);
+    c.Build;
+  end;
+
+var
+  i: Int32;
+begin
+  RootMapCanvasObject := TRectangle.Create(Canvas, nil);
+  RootMapCanvasObject.Fill := True;
+  RootMapCanvasObject.Size := vec2(csCountStreenInMap * Canvas.Renderer.WindowWidth, csCountStreenInMap * Canvas.Renderer.WindowHeight);
+  RootMapCanvasObject.Color := BS_CL_AQUA;
+  RootMapCanvasObject.Data.Opacity := 0.5;
+  RootMapCanvasObject.Build;
+  RootMapCanvasObject.Position2d := RootMapCanvasObject.Size / -2.0;
+
+  for i := 0 to csCountPrimitives - 1 do
+  begin
+    case Random(3) of
+      0: CreateRectangle(i mod 2 = 0, vec4(random(2), random(2), random(2), 1.0));
+      1: CreateTrapeze(i mod 2 = 0, vec4(random(2), random(2), random(2), 1.0));
+      2: CreateCircule(i mod 2 = 0, vec4(random(2), random(2), random(2), 1.0));
+    end;
+  end;
+  DebugText := TCanvasText.Create(Canvas, nil);
+  DebugText.Position2d := vec2(10, 30);
+  DebugText.Text := '0.0';
+  DebugText.Color := BS_CL_WHITE;
+
+  GenerateViewport;
+  DoSetRenderViewPortPos;
+  //Renderer.Render;
+end;
+
+procedure TBSTestKDTreeIn2d.GenerateViewport;
+begin
+  ViewPort2d := TTrapeze.Create(Canvas, RootMapCanvasObject);
+  ViewPort2d.LowerBase := 70;
+  ViewPort2d.UpperBase := 200;
+  ViewPort2d.HeightBwBases := 150;
+  ViewPort2d.Fill := false;
+  ViewPort2d.WidthLine := 3;
+  ViewPort2d.Color := BS_CL_WHITE;
+  //ViewPort2d.Angle := vec3(0.0, 0.0, random(360));
+  ViewPort2d.Anchors[TAnchor.aTop] := false;
+  ViewPort2d.Anchors[TAnchor.aLeft] := false;
+  ViewPort2d.Build;
+  DoSetCanvasObjecPosition(ViewPort2d);
+
+  ViewPortAnimRotate := CreateAniFloatLinear;
+  ViewPortAnimRotate.Duration := 5000;
+  ViewPortAnimRotate.Loop := true;
+  //ViewPortAnimRotate.LoopInverse := true;
+  { for max FPS }
+  ViewPortAnimRotate.IntervalUpdate := 0;
+  ViewPortAnimRotateObserver := CreateAniFloatLivearObsrv(ViewPortAnimRotate, OnRotateViewPort);
+
+  ViewPortAnimMove := CreateAniFloatLinear;
+  ViewPortAnimMove.Duration := 5000;
+  ViewPortAnimMove.Loop := true;
+  { for max FPS }
+  ViewPortAnimMove.IntervalUpdate := 0;
+  ViewPortAnimMoveObserver := CreateAniFloatLivearObsrv(ViewPortAnimMove, OnMoveViewPort);
+
+  ViewPortMoveDir := vec2(BS_Sin(ViewPort2d.Angle.z), -BS_Cos(ViewPort2d.Angle.z));
+
+end;
+
+procedure TBSTestKDTreeIn2d.DoSetCanvasObjecPosition(ACanvasObject: TCanvasObject);
+begin
+  ACanvasObject.Position2d := vec2(random(trunc(RootMapCanvasObject.Width)), random(trunc(RootMapCanvasObject.Height)));
+end;
+
+procedure TBSTestKDTreeIn2d.DoSetRenderViewPortPos;
+var
+  pos: TVec3f;
+begin
+  pos := ViewPort2d.Data.AbsolutePosition;
+  Canvas.Renderer.Frustum.Position := vec3(pos.x, pos.y, Canvas.Renderer.Frustum.Position.z);
+end;
+
+procedure TBSTestKDTreeIn2d.OnResizeViewport(const Data: BResizeEventData);
+begin
+  inherited OnResizeViewport(Data);
+end;
+
+procedure TBSTestKDTreeIn2d.OnKeyDown(const Data: BKeyData);
+begin
+  inherited OnKeyDown(Data);
+  if not ViewPortAnimRotate.IsRun then
+  begin
+    if Data.Key = 37 then
+    begin
+      ViewPortAnimRotate.StartValue := 360 + ViewPort2d.Angle.z;
+      ViewPortAnimRotate.StopValue := ViewPort2d.Angle.z;
+      ViewPortAnimRotate.Run;
+    end else
+    if Data.Key = 39 then
+    begin
+      ViewPortAnimRotate.StartValue := ViewPort2d.Angle.z;
+      ViewPortAnimRotate.StopValue := 360 + ViewPortAnimRotate.StartValue;
+      ViewPortAnimRotate.Run;
+    end;
+  end;
+  if not ViewPortAnimMove.IsRun then
+  begin
+    if Data.Key in [38] then // forward
+    begin
+      ViewPortAnimMove.StartValue := 1.0;
+      ViewPortAnimMove.StopValue := 0;
+      ViewPortAnimMove.Run;
+    end else
+    if Data.Key in [40] then // backward
+    begin
+      ViewPortAnimMove.StartValue := -1.0;
+      ViewPortAnimMove.StopValue := 0;
+      ViewPortAnimMove.Run;
+    end;
+  end;
+end;
+
+procedure TBSTestKDTreeIn2d.OnKeyUp(const Data: BKeyData);
+begin
+  inherited OnKeyUp(Data);
+  if (Data.Key in [37, 39]) and ViewPortAnimRotate.IsRun then
+    ViewPortAnimRotate.Stop;
+  if (Data.Key in [38, 40]) and ViewPortAnimMove.IsRun then
+    ViewPortAnimMove.Stop;
+end;
+
+procedure TBSTestKDTreeIn2d.OnRotateViewPort(const AValue: BSFloat);
+begin
+  ViewPort2d.Angle := vec3(0.0, 0.0, AValue);
+  ViewPortMoveDir := vec2(BS_Sin(ViewPort2d.Angle.z), -BS_Cos(ViewPort2d.Angle.z));
+end;
+
+procedure TBSTestKDTreeIn2d.OnMoveViewPort(const AValue: BSFloat);
+const
+  SPEED = 10;
+begin
+  ViewPort2d.Position2d := ViewPort2d.Position2d + ViewPortMoveDir * ViewPortAnimMove.StartValue * SPEED;
+  DoSetRenderViewPortPos;
+end;
+
+constructor TBSTestKDTreeIn2d.Create(ARenderer: TBlackSharkRenderer);
+begin
+  inherited Create(ARenderer);
+  Canvas := TBCanvas.Create(Renderer, Self);
+  Canvas.StickOnScreen := false;
+end;
+
+destructor TBSTestKDTreeIn2d.Destroy;
+begin
+  Canvas.Free;
+  inherited Destroy;
+end;
+
+function TBSTestKDTreeIn2d.Run: boolean;
+begin
+  GenerateScene;
+  Result := true;
+end;
+
+class function TBSTestKDTreeIn2d.TestName: string;
+begin
+  Result := 'KDTree test in 2d';
+end;
+
+{ TBSTestKDTreeIn1d }
+
+constructor TBSTestKDTreeIn1d.Create(ARenderer: TBlackSharkRenderer);
+begin
+  inherited Create(ARenderer);
+  Canvas := TBCanvas.Create(Renderer, Self);
+  Canvas.StickOnScreen := false;
+  CanvasBillboard := TBCanvas.Create(Renderer, Self);
+  Tree1d := TIntervalsTree.Create(csCountPrimitives*4);
+  ListResult := TListVec<Pointer>.Create;
+  OriginalColors := THashTable<Pointer, TColor4f>.Create(GetHashBlackSharkPointer, PtrCmpBool);
+  MObjectEnterGroup := BObserversGroup<BMouseData>.Create(OnMouseObjectEnter);
+  MObjectLeaveGroup := BObserversGroup<BMouseData>.Create(OnMouseObjectLeave);
+  Hint := TBlackSharkHint.Create(Canvas);
+  Hint.Text := '';
+  HintPosViewport := TBlackSharkHint.Create(CanvasBillboard);
+  HintPosViewport.Position2d := vec2(10, 50.0);
+  Selected := TCanvasText.Create(CanvasBillboard, nil);
+  Selected.Position2d := vec2(10, 100);
+  btnSelect := TBButton.Create(CanvasBillboard);
+  btnSelect.Position2d := vec2(10, 170);
+  btnSelect.Caption := 'Select';
+  BtnSelectClickObserver := btnSelect.OnClickEvent.CreateObserver(OnClickButtonSelect);
+end;
+
+destructor TBSTestKDTreeIn1d.Destroy;
+begin
+  MObjectEnterGroup.Free;
+  MObjectLeaveGroup.Free;
+  Tree1d.Free;
+  Canvas.Free;
+  CanvasBillboard.Free;
+  ListResult.Free;
+  OriginalColors.Free;
+  inherited Destroy;
+end;
+
+function TBSTestKDTreeIn1d.Run: boolean;
+begin
+  FMap1d := TLine.Create(Canvas, nil);
+  FMap1d.Color := BS_CL_AQUA;
+  FMap1d.Data.Opacity := 0.0;
+  FMap1d.Length := csCountScreensInMap * Canvas.Renderer.WindowHeight;
+  FMap1d.WidthLine := 5;
+  FMap1d.Build;
+  FMap1d.Position2d := vec2(Canvas.Renderer.WindowWidth / 2.0, -(FMap1d.Length - Canvas.Renderer.WindowHeight) / 2.0);
+  FViewPort1d := TLine.Create(Canvas, FMap1d);
+  FViewPort1d.Length := 200;
+  FViewPort1d.WidthLine := 30;
+  FViewPort1d.Data.Opacity := 0.2;
+  FViewPort1d.Color := BS_CL_RED;
+  FViewPort1d.Build;
+  FViewPort1d.Position2d := vec2(-(FViewPort1d.WidthLine - FMap1d.WidthLine) / 2.0, (FMap1d.Length - FViewPort1d.Length) / 2.0);
+
+  ViewPortAnimMove := CreateAniFloatLinear;
+  ViewPortAnimMove.Duration := 5000;
+  ViewPortAnimMove.Loop := true;
+  { for max FPS }
+  ViewPortAnimMove.IntervalUpdate := 0;
+  ViewPortAnimMoveObserver := CreateAniFloatLivearObsrv(ViewPortAnimMove, OnMoveViewPort);
+
+  //ViewPortMoveDir := vec2(BS_Sin(ViewPort2d.Angle.z), -BS_Cos(ViewPort2d.Angle.z));
+
+
+  //DoSetRenderViewPortPos;
+  GenerateObjects;
+  SelectObjects;
+  UpdateViewportHint;
+  Result := true;
+end;
+
+procedure TBSTestKDTreeIn1d.DoSetRenderViewPortPos;
+var
+  pos: TVec3f;
+begin
+  pos := FViewPort1d.Data.AbsolutePosition;
+  Canvas.Renderer.Frustum.Position := vec3(pos.x, pos.y, Canvas.Renderer.Frustum.Position.z);
+end;
+
+function TBSTestKDTreeIn1d.DoSetCanvasObjecPosition: TVec2f;
+begin
+  Result := vec2(0.0, random(trunc(FMap1d.Height)));
+end;
+
+procedure TBSTestKDTreeIn1d.OnMoveViewPort(const AValue: BSFloat);
+const
+  SPEED = 10;
+begin
+
+  FViewPort1d.Position2d := FViewPort1d.Position2d + vec2(0.0, ViewPortAnimMove.StartValue * SPEED);
+  DoSetRenderViewPortPos;
+  SelectObjects;
+  UpdateViewportHint;
+end;
+
+procedure TBSTestKDTreeIn1d.GenerateObjects;
+
+  procedure CreateLineObject2(len: bsfloat; const Pos: TVec2f; const Color: TColor4f);
+  var
+    l: TLine;
+  begin
+    l := TLine.Create(Canvas, FMap1d);
+    l.WidthLine := 3.0;
+    l.Length := len;
+    l.Color := Color;
+    l.Build;
+    l.Position2d := Pos;//vec2(0.0, random(trunc(FMap1d.Height)));
+    MObjectEnterGroup.CreateObserver(l.Data.EventMouseEnter);
+    MObjectLeaveGroup.CreateObserver(l.Data.EventMouseLeave);
+    l.Data.TagPtr := l;
+    l.Data.TagInt := Tree1d.Add(l.Position2d.y, l.Position2d.y + l.Length, l);
+    //Tree1d.Add(l.Position2d.y, l.Position2d.y + l.Length, Tree1d);
+  end;
+
+  procedure CreateLineObject(const Color: TColor4f);
+  begin
+    CreateLineObject2(max(10, random(70)), DoSetCanvasObjecPosition, Color);
+  end;
+
+//var
+//  i: int32;
+begin
+  Randomize;
+  //for i := 0 to csCountPrimitives - 1 do
+  //begin
+  //  CreateLineObject(vec4(random(2), random(2), random(2), 1.0));
+  //end;
+  //CreateLineObject2((133.0 - 67.0), vec2(0, 67.0), vec4(random(2), random(2), random(2), 1.0));
+  //CreateLineObject2((127.0 - 81), vec2(0, 81.0), vec4(random(2), random(2), random(2), 1.0));
+  //CreateLineObject2((515.0 - 470),  vec2(0, 470.0), vec4(random(2), random(2), random(2), 1.0));
+  //CreateLineObject2((179.0 - 165),  vec2(0, 165.0), vec4(random(2), random(2), random(2), 1.0));
+  //CreateLineObject2((174.0 - 164),  vec2(0, 164.0), vec4(random(2), random(2), random(2), 1.0));
+  //CreateLineObject2((107.0 - 62),  vec2(0, 62.0), vec4(random(2), random(2), random(2), 1.0));
+  //CreateLineObject2((253.0 - 243),  vec2(0, 243.0), vec4(random(2), random(2), random(2), 1.0));
+  //CreateLineObject2((272.0 - 262),  vec2(0, 262.0), vec4(random(2), random(2), random(2), 1.0));
+  //CreateLineObject2((550.0 - 493),  vec2(0, 493.0), vec4(random(2), random(2), random(2), 1.0));
+  //CreateLineObject2((43.0 - 12),  vec2(0, 12.0), vec4(random(2), random(2), random(2), 1.0));
+  //CreateLineObject2((184.0 - 174),  vec2(0, 174.0), vec4(random(2), random(2), random(2), 1.0));
+  //CreateLineObject2((397.0 - 373),  vec2(0, 373.0), vec4(random(2), random(2), random(2), 1.0));
+
+  CreateLineObject2(723 - 713, vec2(0, 713), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(795 - 785, vec2(0, 785), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(68 - 31, vec2(0, 31), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(683 - 673, vec2(0, 673), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(689 - 643, vec2(0, 643), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(770 - 726, vec2(0, 726), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(417 - 381, vec2(0, 381), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(73 - 10, vec2(0, 10), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(981 - 936, vec2(0, 936), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(558 - 544, vec2(0, 544), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(632 - 604, vec2(0, 604), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(217 - 182, vec2(0, 182), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(515 - 496, vec2(0, 496), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(716 - 677, vec2(0, 677), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(921 - 911, vec2(0, 911), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(1004 - 958, vec2(0, 958), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(397 - 335, vec2(0, 335), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(544 - 482, vec2(0, 482), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(867 - 850, vec2(0, 850), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(260 - 197, vec2(0, 197), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(432 - 386, vec2(0, 386), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(383 - 350, vec2(0, 350), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(317 - 282, vec2(0, 282), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(865 - 806, vec2(0, 806), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(1056 - 999, vec2(0, 999), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(459 - 406, vec2(0, 406), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(48 - 26, vec2(0, 26), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(838 - 812, vec2(0, 812), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(951 - 888, vec2(0, 888), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(765 - 755, vec2(0, 755), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(172 - 113, vec2(0, 113), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(804 - 742, vec2(0, 742), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(472 - 451, vec2(0, 451), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(739 - 715, vec2(0, 715), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(967 - 957, vec2(0, 957), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(741 - 676, vec2(0, 676), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(649 - 631, vec2(0, 631), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(81 - 71, vec2(0, 71), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(874 - 820, vec2(0, 820), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(122 - 76, vec2(0, 76), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(1009 - 955, vec2(0, 955), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(138 - 111, vec2(0, 111), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(597 - 541, vec2(0, 541), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(581 - 555, vec2(0, 555), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(688 - 652, vec2(0, 652), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(897 - 874, vec2(0, 874), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(981 - 937, vec2(0, 937), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(695 - 654, vec2(0, 654), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(656 - 624, vec2(0, 624), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(751 - 719, vec2(0, 719), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(813 - 803, vec2(0, 803), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(660 - 622, vec2(0, 622), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(958 - 943, vec2(0, 943), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(491 - 436, vec2(0, 436), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(730 - 679, vec2(0, 679), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(753 - 739, vec2(0, 739), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(194 - 184, vec2(0, 184), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(485 - 475, vec2(0, 475), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(169 - 145, vec2(0, 145), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(987 - 926, vec2(0, 926), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(443 - 433, vec2(0, 433), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(520 - 493, vec2(0, 493), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(94 - 58, vec2(0, 58), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(138 - 126, vec2(0, 126), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(814 - 745, vec2(0, 745), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(594 - 554, vec2(0, 554), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(504 - 467, vec2(0, 467), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(760 - 750, vec2(0, 750), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(556 - 531, vec2(0, 531), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(196 - 185, vec2(0, 185), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(693 - 650, vec2(0, 650), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(971 - 936, vec2(0, 936), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(222 - 153, vec2(0, 153), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(87 - 77, vec2(0, 77), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(1085 - 1027, vec2(0, 1027), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(609 - 557, vec2(0, 557), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(808 - 798, vec2(0, 798), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(212 - 183, vec2(0, 183), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(210 - 161, vec2(0, 161), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(166 - 156, vec2(0, 156), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(283 - 239, vec2(0, 239), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(1020 - 1010, vec2(0, 1010), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(845 - 805, vec2(0, 805), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(480 - 447, vec2(0, 447), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(1117 - 1053, vec2(0, 1053), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(703 - 668, vec2(0, 668), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(574 - 544, vec2(0, 544), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(430 - 395, vec2(0, 395), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(1035 - 996, vec2(0, 996), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(268 - 246, vec2(0, 246), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(632 - 622, vec2(0, 622), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(566 - 556, vec2(0, 556), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(81 - 45, vec2(0, 45), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(571 - 557, vec2(0, 557), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(554 - 543, vec2(0, 543), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(966 - 909, vec2(0, 909), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(824 - 814, vec2(0, 814), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(997 - 975, vec2(0, 975), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(496 - 471, vec2(0, 471), vec4(random(2), random(2), random(2), 1.0));
+  CreateLineObject2(774 - 764, vec2(0, 764), vec4(random(2), random(2), random(2), 1.0));
+
+  Tree1d.WriteTreeState;
+end;
+
+procedure TBSTestKDTreeIn1d.SelectObjects;
+var
+  i: Integer;
+  co: TLine;
+begin
+  for i := 0 to ListResult.Count - 1 do
+  begin
+    co := TLine(ListResult.Items[i]);
+    co.Color := OriginalColors.Items[co];
+  end;
+  ListResult.Count := 0;
+  OriginalColors.Clear();
+  Tree1d.Select(FViewPort1d.Position2d.y, FViewPort1d.Position2d.y + FViewPort1d.Length, ListResult);
+  Selected.Text := 'Selected: ' + IntToStr(ListResult.Count);
+  for i := 0 to ListResult.Count - 1 do
+  begin
+    co := TLine(ListResult.Items[i]);
+    if (co.Position2d.y = 622) and (co.Length = 10) then
+      co := co;
+    if not OriginalColors.Exists(co) then
+      OriginalColors.Items[co] := co.Color;
+
+    co.Color := BS_CL_ORANGE_2;
+  end;
+end;
+
+procedure TBSTestKDTreeIn1d.UpdateViewportHint;
+begin
+  HintPosViewport.Position2d := vec2(10, 50.0);
+  HintPosViewport.Text := IntToStr(trunc(FViewPort1d.Position2d.y)) + ', ' + IntToStr(trunc(FViewPort1d.Position2d.y + FViewPort1d.Height));
+end;
+
+procedure TBSTestKDTreeIn1d.OnMouseObjectEnter(const AData: BMouseData);
+var
+  l: TLine;
+  data: Pointer;
+  LMin, RMax: double;
+begin
+  l := TLine(PRendererGraphicInstance(AData.BaseHeader.Instance).Instance.Owner.TagPtr);
+  LMin := 0;
+  RMax := 0;
+  data := nil;
+  Tree1d.Select(l.Data.TagInt, LMin, RMax, data);
+  if (data <> l) or (data = nil) then
+  begin
+    Hint.Text := 'Error: ';
+    Hint.Color := TGuiColors.Red;
+  end else
+  begin
+    Hint.Text := 'min = ' + inttostr(trunc(LMin)) + ', max = ' + inttostr(trunc(RMax));
+    Hint.Color := TGuiColors.Green;
+  end;
+  Hint.Position2d := l.AbsolutePosition2d + vec2(10, 0.0);
+  //Hint.Visible := true;
+end;
+
+procedure TBSTestKDTreeIn1d.OnMouseObjectLeave(const AData: BMouseData);
+begin
+  //Hint.Visible := false;
+end;
+
+procedure TBSTestKDTreeIn1d.OnClickButtonSelect(const AData: BMouseData);
+begin
+  SelectObjects;
+end;
+
+procedure TBSTestKDTreeIn1d.OnKeyDown(const Data: BKeyData);
+begin
+  inherited OnKeyDown(Data);
+  if not ViewPortAnimMove.IsRun then
+  begin
+    if Data.Key in [38] then // forward
+    begin
+      ViewPortAnimMove.StartValue := -1.0;
+      ViewPortAnimMove.StopValue := 0;
+      ViewPortAnimMove.Run;
+    end else
+    if Data.Key in [40] then // backward
+    begin
+      ViewPortAnimMove.StartValue := 1.0;
+      ViewPortAnimMove.StopValue := 0;
+      ViewPortAnimMove.Run;
+    end;
+  end;
+end;
+
+procedure TBSTestKDTreeIn1d.OnKeyUp(const Data: BKeyData);
+begin
+  inherited OnKeyUp(Data);
+  if (Data.Key in [38, 40]) and ViewPortAnimMove.IsRun then
+    ViewPortAnimMove.Stop;
+end;
+
+class function TBSTestKDTreeIn1d.TestName: string;
+begin
+  Result := 'KDTree test in 1d';
+end;
+
 initialization
 
   RegisterTest(TBSTestScrollBoxSpaceTree);
   RegisterTest(TBSTestSceneKDTree);
+  RegisterTest(TBSTestKDTreeIn2d);
+  RegisterTest(TBSTestKDTreeIn1d);
 
 end.

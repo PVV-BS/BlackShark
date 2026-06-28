@@ -616,7 +616,6 @@ type
     class var FLastUsedShader: TBlackSharkShader;
     class var FLastUsedShaderAttrEnabled: boolean;
     class procedure Add(BSShader: TBlackSharkShader);
-    class function GetShaderByName(const Name: string; MvpAsUniform: boolean): TBlackSharkShader;
     class constructor Create;
     class destructor Destroy;
   public
@@ -632,7 +631,7 @@ type
     class procedure Restore;
     class procedure UseShader(AShader: TBlackSharkShader; AEnableAttrib: boolean);
     class procedure FreeShader(Shader: TBlackSharkShader);
-    class var property ShaderByName[const Name: string; MvpAsUniform: Boolean]: TBlackSharkShader read GetShaderByName;
+    class function ShaderByName(const Name: string; MvpAsUniform: boolean): TBlackSharkShader;
   end;
 
   procedure CreateVBO(var VBO: GlUInt; Taget { GL_ARRAY_BUFFER ...}: GLInt; Data: Pointer; SizeData: int32; ModeDraw: GLEnum = GL_STATIC_DRAW); //inline;
@@ -720,7 +719,7 @@ begin
   end;
 end;
 
-class function BSShaderManager.GetShaderByName(const Name: string; MvpAsUniform: boolean): TBlackSharkShader;
+class function BSShaderManager.ShaderByName(const Name: string; MvpAsUniform: boolean): TBlackSharkShader;
 begin
   FShadersName.Find(Name + BoolToStr(MvpAsUniform), Result);
 end;

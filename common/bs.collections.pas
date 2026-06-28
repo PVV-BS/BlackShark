@@ -172,13 +172,13 @@ TKeyComparatorEqual<K> = function (const Key1, Key2: K): boolean;
 
 { TBinTreeTemplate<K, V> }
 
-{   A tempalate balanced tree:
-    - after balancing (in case of adding or deleting) a node linked in key saved;
-    - for collect own values you MUST define and set a value comparator
-      (sorry, that pascal do not supports full paradigm a template as in C++);
-    - for enumeration items use an iterator: TBinTreeTemplate<K, V>.Iterator
-    - a highlight property this tree: the iterator gives automatically ordered
-      by key values;
+{   A template balanced binary tree:
+
+  - After balancing (following node insertion or deletion), the node linkage by key is preserved.
+  - To collect and compare values, you MUST define and set a value comparator.
+    (Note: Unlike C++, Pascal does not fully support generic templates.)
+  - To enumerate items, use the iterator: TBinTreeTemplate<K, V>.Iterator.
+  - A key feature of this tree: the iterator automatically provides elements in key-sorted order.
 
   TODO: parent node for quick delete by node }
 
@@ -258,8 +258,7 @@ private
   FTagInt: NativeInt;
   function CreateNode(const Key: K; const Value: V): PBinTreeItem; inline;
   procedure Del(var r: PBinTreeItem; var p: PBinTreeItem; deleting: PBinTreeItem; var h: boolean);
-  function Delete(Key: PBinTreeItem; var p: PBinTreeItem; var h: boolean
-    ): boolean;
+  function Delete(Key: PBinTreeItem; var p: PBinTreeItem; var h: boolean): boolean;
   function DeleteByKey(Key: K; var p: PBinTreeItem; var h: boolean): boolean;
   procedure BalLeftAfterDel(var p : PBinTreeItem; var h : boolean); inline;
   procedure BalRightAfterDel(var p : PBinTreeItem; var h : boolean); inline;
@@ -308,7 +307,7 @@ public
   property MinLen: uint32 read FMinLen;
   property Root: PBinTreeItem read FRoot;
   property DefaultValue: V read FDefaultValue write FDefaultValue;
-end;
+end{ deprecated 'use something other'};
 
 TValueBin = record
   Data: pByte;
@@ -4073,6 +4072,7 @@ begin
   end else
   begin
     index := -1;
+    hash := 0;
   end;
 
   if (FCount = FThresholdRehash) or (Length(FItems) = 0) then

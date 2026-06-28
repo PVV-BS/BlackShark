@@ -407,6 +407,7 @@ end;
 procedure TAniValueLawBase<T>.Update;
 begin
   CurrentDeltaTime := TBTimer.CurrentTime.Counter - TimeStart;
+
   FCurrentNormalizedTime := CurrentDeltaTime / FDuration;
   if FCurrentNormalizedTime > 1.0 then
     FCurrentNormalizedTime := 1.0;

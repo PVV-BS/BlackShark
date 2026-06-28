@@ -126,9 +126,9 @@ type
 implementation
 
 uses
-  	SysUtils
-  ,	bs.config
-	{$ifdef DEBUG_BS}
+    SysUtils
+  , bs.config
+  {$ifdef DEBUG_BS}
   , bs.log
   {$endif}
   ;

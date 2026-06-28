@@ -7,7 +7,7 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, umain, bs.test.switcher;
+  Forms, umain, bs.test.switcher, bs.geometry.kdtree;
 
 {$R *.res}
 

@@ -84,7 +84,7 @@ const
   BS_PI: fmath       = 3.141592654;
   BS_PI_HALF: fmath  = 1.570796327;
   // precision calculate trigonometric functions
-  PRECISION_GRAD = 60; // before one minute
+  PRECISION_GRAD = 60; // one minute
   BS_COUNT_SIN_COS_VALUES = 360 * PRECISION_GRAD;
   EPSILON = 0.0000001;
   PI_DIVIDED_180 = 0.01745329251994329576923690768489;

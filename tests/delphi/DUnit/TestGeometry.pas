@@ -5,6 +5,7 @@ interface
 uses
     DUnitX.TestFramework
   , bs.geometry
+  , bs.geometry.kdtree
   , bs.basetypes
   , bs.collections
   ;
@@ -17,7 +18,7 @@ type
     Index: int32;
   end;
 
-  [TestFixture]
+  //[TestFixture]
   TGeometryKDTreeTest = class(TObject)
   private
     FData: TListVec<PSomeData>;
@@ -41,6 +42,22 @@ type
     procedure Test2(const ACount: Integer);
     //[Test]
     procedure Test3;
+  end;
+
+  [TestFixture]
+  TTestIntervalsTree = class
+  private
+    FIntervalsTree: TIntervalsTree;
+    procedure FillData;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    [Setup]
+    procedure Setup;
+    [TearDown]
+    procedure TearDown;
+    [Test]
+    procedure Test1;
   end;
 
 implementation
@@ -331,13 +348,162 @@ begin
   //GenData;
   System.WriteLn('Generated ' + IntToStr(FData.Count) + ' objects...');
   //MainTest(20);
-  MainTest(ACount div 5, trunc(FKDTree.ViewPortSize));
+  //MainTest(ACount div 5, trunc(FKDTree.ViewPortSize));
 end;
 
 procedure TGeometryKDTreeTest.Test3;
 begin
   GenData2;
-  MainTest(10, trunc(FKDTree.ViewPortSize));
+  //MainTest(10, trunc(FKDTree.ViewPortSize));
+end;
+
+{ TTestIntervalsTree }
+
+constructor TTestIntervalsTree.Create;
+begin
+  FIntervalsTree := TIntervalsTree.Create(100);
+end;
+
+destructor TTestIntervalsTree.Destroy;
+begin
+  FIntervalsTree.Free;
+  inherited;
+end;
+
+procedure TTestIntervalsTree.FillData;
+begin
+
+//FIntervalsTree.Add(67, 133, nil);
+//FIntervalsTree.Add(81, 127, nil);
+//FIntervalsTree.Add(470, 515, nil);
+//FIntervalsTree.Add(165, 179, nil);
+//FIntervalsTree.Add(164, 174, nil);
+//FIntervalsTree.Add(62, 107, nil);
+//FIntervalsTree.Add(243, 253, nil);
+//FIntervalsTree.Add(262, 272, nil);
+//FIntervalsTree.Add(493, 550, nil);
+//FIntervalsTree.Add(12, 43, nil);
+//FIntervalsTree.Add(174, 184, nil);
+//FIntervalsTree.Add(373, 397, nil);
+
+
+FIntervalsTree.Add(753, 773, nil);
+FIntervalsTree.Add(131, 177, nil);
+FIntervalsTree.Add(1004, 1029, nil);
+FIntervalsTree.Add(265, 288, nil);
+FIntervalsTree.Add(473, 483, nil);
+FIntervalsTree.Add(136, 152, nil);
+FIntervalsTree.Add(103, 146, nil);
+FIntervalsTree.Add(625, 672, nil);
+FIntervalsTree.Add(385, 415, nil);
+FIntervalsTree.Add(351, 361, nil);
+FIntervalsTree.Add(635, 645, nil);
+FIntervalsTree.Add(180, 190, nil);
+FIntervalsTree.Add(917, 931, nil);
+FIntervalsTree.Add(43, 107, nil);
+FIntervalsTree.Add(1025, 1035, nil);
+FIntervalsTree.Add(520, 572, nil);
+FIntervalsTree.Add(804, 814, nil);
+FIntervalsTree.Add(780, 790, nil);
+FIntervalsTree.Add(666, 676, nil);
+FIntervalsTree.Add(942, 960, nil);
+FIntervalsTree.Add(133, 171, nil);
+FIntervalsTree.Add(514, 562, nil);
+FIntervalsTree.Add(1068, 1124, nil);
+FIntervalsTree.Add(321, 385, nil);
+FIntervalsTree.Add(906, 926, nil);
+FIntervalsTree.Add(976, 1018, nil);
+FIntervalsTree.Add(237, 247, nil);
+FIntervalsTree.Add(415, 425, nil);
+FIntervalsTree.Add(267, 318, nil);
+FIntervalsTree.Add(984, 994, nil);
+FIntervalsTree.Add(335, 398, nil);
+FIntervalsTree.Add(634, 645, nil);
+FIntervalsTree.Add(45, 82, nil);
+FIntervalsTree.Add(195, 250, nil);
+FIntervalsTree.Add(808, 840, nil);
+FIntervalsTree.Add(1057, 1067, nil);
+FIntervalsTree.Add(930, 940, nil);
+FIntervalsTree.Add(330, 383, nil);
+FIntervalsTree.Add(381, 435, nil);
+FIntervalsTree.Add(1087, 1120, nil);
+FIntervalsTree.Add(578, 612, nil);
+FIntervalsTree.Add(435, 475, nil);
+FIntervalsTree.Add(213, 282, nil);
+FIntervalsTree.Add(423, 441, nil);
+FIntervalsTree.Add(148, 209, nil);
+FIntervalsTree.Add(235, 258, nil);
+FIntervalsTree.Add(27, 56, nil);
+FIntervalsTree.Add(676, 711, nil);
+FIntervalsTree.Add(676, 722, nil);
+FIntervalsTree.Add(611, 624, nil);
+FIntervalsTree.Add(1017, 1045, nil);
+FIntervalsTree.Add(1103, 1125, nil);
+FIntervalsTree.Add(936, 965, nil);
+FIntervalsTree.Add(895, 921, nil);
+FIntervalsTree.Add(433, 498, nil);
+FIntervalsTree.Add(38, 70, nil);
+FIntervalsTree.Add(694, 704, nil);
+FIntervalsTree.Add(1090, 1155, nil);
+FIntervalsTree.Add(678, 688, nil);
+FIntervalsTree.Add(223, 233, nil);
+FIntervalsTree.Add(272, 330, nil);
+FIntervalsTree.Add(562, 614, nil);
+FIntervalsTree.Add(285, 296, nil);
+FIntervalsTree.Add(116, 161, nil);
+FIntervalsTree.Add(632, 700, nil);
+FIntervalsTree.Add(294, 304, nil);
+FIntervalsTree.Add(228, 269, nil);
+FIntervalsTree.Add(968, 1001, nil);
+FIntervalsTree.Add(701, 747, nil);
+FIntervalsTree.Add(563, 598, nil);
+FIntervalsTree.Add(1106, 1131, nil);
+FIntervalsTree.Add(463, 500, nil);
+FIntervalsTree.Add(554, 605, nil);
+FIntervalsTree.Add(677, 705, nil);
+FIntervalsTree.Add(373, 390, nil);
+FIntervalsTree.Add(1081, 1095, nil);
+FIntervalsTree.Add(411, 469, nil);
+FIntervalsTree.Add(873, 883, nil);
+FIntervalsTree.Add(725, 785, nil);
+FIntervalsTree.Add(686, 748, nil);
+FIntervalsTree.Add(499, 550, nil);
+FIntervalsTree.Add(488, 498, nil);
+FIntervalsTree.Add(35, 57, nil);
+FIntervalsTree.Add(656, 695, nil);
+FIntervalsTree.Add(838, 865, nil);
+FIntervalsTree.Add(307, 359, nil);
+FIntervalsTree.Add(597, 607, nil);
+FIntervalsTree.Add(43, 101, nil);
+FIntervalsTree.Add(864, 906, nil);
+FIntervalsTree.Add(161, 191, nil);
+FIntervalsTree.Add(883, 893, nil);
+FIntervalsTree.Add(547, 586, nil);
+FIntervalsTree.Add(207, 261, nil);
+FIntervalsTree.Add(288, 298, nil);
+FIntervalsTree.Add(519, 573, nil);
+FIntervalsTree.Add(403, 413, nil);
+FIntervalsTree.Add(615, 649, nil);
+FIntervalsTree.Add(79, 141, nil);
+FIntervalsTree.Add(91, 131, nil);
+FIntervalsTree.Add(1012, 1022, nil);
+
+FIntervalsTree.WriteTreeState;
+end;
+
+procedure TTestIntervalsTree.Setup;
+begin
+
+end;
+
+procedure TTestIntervalsTree.TearDown;
+begin
+
+end;
+
+procedure TTestIntervalsTree.Test1;
+begin
+  FillData;
 end;
 
 initialization

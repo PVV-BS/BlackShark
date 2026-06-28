@@ -134,7 +134,7 @@ begin
   Anim.Duration := 100;
   Anim.Loop := true;
   Anim.LoopInverse := true;
-  { for max FPC }
+  { for max FPS }
   Anim.IntervalUpdate := 0;
   AniObserver := CreateAniFloatLivearObsrv(Anim, OnMove);
 end;
