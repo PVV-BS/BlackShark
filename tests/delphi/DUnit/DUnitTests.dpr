@@ -25,7 +25,7 @@ var
   runner : ITestRunner;
   results : IRunResults;
   logger : ITestLogger;
-  nunitLogger : ITestLogger;
+  //nunitLogger : ITestLogger;
 begin
   {$ifdef DEBUG}
     ReportMemoryLeaksOnShutdown := true;
@@ -35,6 +35,7 @@ begin
   exit;
 {$ENDIF}
   try
+    TDUnitX.Options.ExitBehavior := TDUnitXExitBehavior.Pause;
     //Check command line options, will exit if invalid
     TDUnitX.CheckCommandLine;
     //Create the test runner
@@ -46,8 +47,8 @@ begin
     logger := TDUnitXConsoleLogger.Create(true);
     runner.AddLogger(logger);
     //Generate an NUnit compatible XML File
-    nunitLogger := TDUnitXXMLNUnitFileLogger.Create(TDUnitX.Options.XMLOutputFile);
-    runner.AddLogger(nunitLogger);
+    //nunitLogger := TDUnitXXMLNUnitFileLogger.Create(TDUnitX.Options.XMLOutputFile);
+    //runner.AddLogger(nunitLogger);
     runner.FailsOnNoAsserts := False; //When true, Assertions must be made during tests;
 
     //Run tests

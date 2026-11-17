@@ -48,6 +48,8 @@ type
     LblAllTextures: TLabel;
     LblSizeTextures: TLabel;
     btnCreateNewContext: TButton;
+    lblCamera: TLabel;
+    lblName: TLabel;
     procedure FormShow(Sender: TObject);
     procedure PanelScreenMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure cbAvailableTestsChange(Sender: TObject);
@@ -239,7 +241,6 @@ begin
         end;
         box := ViewPort.Renderer.BVH.GetNext;
       end;  }
-      //raise Exception.Create('Not all objects were released: ' + s);
     {$else}
     {$endif}
     raise Exception.Create('Not all objects released!');
@@ -363,21 +364,27 @@ begin
   pos_3d := ViewPort.Renderer.ScreenPositionToScene(vec2(X, Y))*BSConfig.VoxelSize;
   LblX.Caption := 'X: ' + IntToStr(X) + ' (' + Format('%f', [pos_3d.x]) + ')';
   LblY.Caption := 'Y: ' + IntToStr(Y) + ' (' + Format('%f', [pos_3d.y]) + ')';
+  pos_3d := ViewPort.Renderer.Frustum.Position;
+  lblCamera.Caption := 'Cam: ' + 'x = ' + FloatToStrF(pos_3d.x, TFloatFormat.ffGeneral, 4, 6) + '; y = ' + FloatToStrF(pos_3d.y, TFloatFormat.ffGeneral, 4, 6) + '; z = ' + FloatToStrF(pos_3d.x, TFloatFormat.ffGeneral, 4, 6);
   inst := ViewPort.Renderer.CurrentUnderMouseInstance;
   if Assigned(inst) then
   begin
     size_inst.x := inst.Instance.Owner.ServiceScale*inst.Instance.Owner.Mesh.FBoundingBox.x_max*2;
     size_inst.y := inst.Instance.Owner.ServiceScale*inst.Instance.Owner.Mesh.FBoundingBox.y_max*2;
     size_inst.z := inst.Instance.Owner.ServiceScale*inst.Instance.Owner.Mesh.FBoundingBox.z_max*2;
-    pos_3d := TVec3f(inst.Instance.ProdStackModelMatrix.M3)*inst.Instance.Owner.ServiceScale;
     lblSizeInstance.Caption := 'Size 3d: (' + Format('%f; %f; %f)', [size_inst.x, size_inst.y, size_inst.z]);
     size_2d := ViewPort.Renderer.SceneSizeToScreen(vec2(size_inst.x, size_inst.y));
     vblSize2d.Caption := 'Size 2d: (' + Format('%d; %d)', [round(size_2d.x), round(size_2d.y)]);
-    lblPos3d.Caption := 'Position 3d: (' + Format('%f; %f; %f)', [pos_3d.x, pos_3d.y, pos_3d.z]);
+    pos_3d := TVec3f(inst.Instance.ProdStackModelMatrix.M3);
+    lblPos3d.Caption := 'Position 3d: ' + FloatToStrF(pos_3d.x, TFloatFormat.ffGeneral, 4, 6) +
+      ', ' + FloatToStrF(pos_3d.y, TFloatFormat.ffGeneral, 4, 6) +
+      ', ' + FloatToStrF(pos_3d.z, TFloatFormat.ffGeneral, 4, 6);
+    pos_3d := pos_3d*inst.Instance.Owner.ServiceScale;
     pos := ViewPort.Renderer.ScenePositionToScreenf(pos_3d);
     lblPos2d.Caption := 'Position 2d (center): (' + Format('%d; %d)', [pos.x, pos.y]);
     lblPos2dLU.Caption := 'Position 2d (left,up): (' + Format('%d; %d)', [pos.x - round(size_2d.x/2), pos.y - round(size_2d.y/2)]);
     LblDistance.Caption := 'Distance to camera: ' + FloatToStr(inst.DistanceToScreen);
+    lblName.Caption := 'Name: ' + inst.Instance.Owner.Caption;
   end else
   begin
     lblSizeInstance.Caption := 'Size 3d: (0; 0)';
@@ -385,6 +392,7 @@ begin
     lblPos3d.Caption := 'Position 3d: (0; 0; 0)';
     lblPos2d.Caption := 'Position 2d (center): (0; 0)';
     lblPos2dLU.Caption := 'Position 2d (left,up): (0; 0)';
+    lblName.Caption := 'Name: ';
   end;
 end;
 

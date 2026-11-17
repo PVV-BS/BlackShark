@@ -48,6 +48,7 @@ type
     );
 
 function CheckErrorGL(const Caption: string; TypeCheck: TTypeCheckError; ID: GLint): boolean;
+function GetFromProgrammLogMessage(ProgrammID: GLint): AnsiString;
 
 function BufToHexA(buf: pByte; size: int32): AnsiString;
 function BufToHexS(buf: pByte; size: int32): string;
@@ -152,8 +153,7 @@ begin
     case TypeCheck of
       tcShader: msE := AnsiToString(GetFromShaderLogMessage(ID));
       tcProgramm: msE := AnsiToString(GetFromProgrammLogMessage(ID));
-      tcFrameBuffer: msE := AnsiToString(GetFromProgrammLogMessage(ID));//msE := AnsiToString()
-        //err := glCheckFramebufferStatus(ID);
+      tcFrameBuffer: msE := AnsiToString(GetFromProgrammLogMessage(ID));
     end;
 
     if msE = '' then

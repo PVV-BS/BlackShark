@@ -219,7 +219,7 @@ begin
   if GLESLib = 0 then
     exit;
 
-  SupportsVAO := Assigned(glGenVertexArrays);
+  SupportsVAO := {$ifdef ultibo}false{$else} Assigned(glGenVertexArrays); {$endif}
   {$ifdef DEBUG_BS}
   if SupportsVAO then
     BSWriteMsg('TSharedEglContext.CreateSharedContext', 'VAO is supported')
@@ -439,18 +439,18 @@ begin
     BSWriteMsg('TBlackSharkContext.CreateContext', 'eglContext FAILED!!!');
     {$endif}
     exit(false);
-end;
+  end;
 
   //eglSurfaceAttrib(TSharedEglContext.SharedDisplay, eglSurface, EGL_SWAP_BEHAVIOR, EGL_BUFFER_PRESERVED);
 
   // Make the context current
   if (eglMakeCurrent(TSharedEglContext.SharedDisplay, eglSurface, eglSurface, eglContext) = EGL_FALSE) then
-begin
+  begin
     {$ifdef DEBUG_BS}
     BSWriteMsg('TBlackSharkContext.CreateContext', 'eglMakeCurrent FAILED!!!');
     {$endif}
     exit(false);
-end;
+  end;
 
   eglDisplay := TSharedEglContext.SharedDisplay;
   {$ifdef DEBUG_BS}
@@ -463,10 +463,15 @@ end;
   FContextIsLost := false;
 
   if FContextCreated then
-begin
+  begin
+    {$ifdef DEBUG_BS}
+//    glEnable(GL_DEBUG_OUTPUT);
+//    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+//    glDebugMessageCallback(testDEBUGPROC, nil);
+    {$endif}
     { send event about create context }
     FOnCreateContextEvent.Send(Self);
-end;
+  end;
 
 end;
 

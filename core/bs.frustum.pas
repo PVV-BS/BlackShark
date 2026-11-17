@@ -51,7 +51,6 @@ type
   private
     FQuaternion: TQuaternion;
     FOnChangeFrustum: TOnChangeFrustumNotify;
-    FOnMoveFrustum: TOnChangeFrustumNotify;
     FScaleRatio: TVec2f;
     RealSize: TVec2f;
     RealSizeHalf: TVec2f;
@@ -192,7 +191,7 @@ type
     property OrthogonalProjection: boolean read FOrthogonalProjection write SetOrthogonalProjection;
     // event for optimization to find all objects hit into frustum
     property OnChangeFrustum: TOnChangeFrustumNotify read FOnChangeFrustum write FOnChangeFrustum;
-    property OnMoveFrustum: TOnChangeFrustumNotify read FOnMoveFrustum write FOnMoveFrustum;
+    //property OnMoveFrustum: TOnChangeFrustumNotify read FOnMoveFrustum write FOnMoveFrustum;
     property OnAdjustFrustum: TOnChangeFrustumNotify read FOnAdjustFrustum write FOnAdjustFrustum;
   end;
 
@@ -276,11 +275,7 @@ begin
   GenRotateMatrix;
   GenViewMatrix;
   if UpdateCount = 0 then
-  begin
     GenerateFrustum;
-    if Assigned(FOnMoveFrustum) then
-      FOnMoveFrustum;
-  end;
 end;
 
 procedure TBlackSharkFrustum.SetPosition(AValue: TVec3f);
@@ -289,11 +284,7 @@ begin
   FPosition := AValue;
   GenViewMatrix;
   if UpdateCount = 0 then
-  begin
     GenerateFrustum;
-    if Assigned(FOnMoveFrustum) then
-      FOnMoveFrustum;
-  end;
 end;
 
 procedure TBlackSharkFrustum.SetQuaternion(const Value: TQuaternion);
@@ -304,11 +295,7 @@ begin
   QuaternionToMatrix(FRotateMatrixInv, vec4(-FQuaternion.x, -FQuaternion.y, -FQuaternion.z, FQuaternion.w)); // ???
   GenViewMatrix;
   if UpdateCount = 0 then
-  begin
     GenerateFrustum;
-    if Assigned(FOnMoveFrustum) then
-      FOnMoveFrustum;
-  end;
 end;
 
 procedure TBlackSharkFrustum.SetScaleRatio(AValue: TVec2f);

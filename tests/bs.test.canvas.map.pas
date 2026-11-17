@@ -34,7 +34,7 @@ type
     AniLaw: IBAnimationLinearFloat;
     AniLawObsr: IBAnimationLinearFloatObsrv;
     Directions: TListVec<TVec2f>;
-    Velosity: TListVec<BSFloat>;
+    Velocity: TListVec<BSFloat>;
     LastTime: TTimeCounter;
     procedure OnUpdateValue(const Value: BSFloat);
   public
@@ -44,23 +44,20 @@ type
     class function TestName: string; override;
   end;
 
-  TBSTestStringMap = class(TBSTest)
+  TBSTest2dMap = class(TBSTest)
   private
-    FCanvas: TBCanvas;
     FMap: TCanvasObjectsMap;
-    //FStencilBackground: TRectangle;
-    FBackground: TPicture;
     FModels: TStringList;
     AniLaw: IBAnimationLinearFloat;
     AniLawObsr: IBAnimationLinearFloatObsrv;
-    FMethodStencilDraw: TDrawInstanceMethod;
-    procedure DrawStancilBack(Instance: PRendererGraphicInstance);
+    LastHolder: PModelHolder;
     procedure LoadBackground;
     procedure LoadBook;
     procedure LoadModels;
     procedure OnUpdateValue(const Value: BSFloat);
   protected
     procedure OnMouseWeel(const AData: BMouseData); override;
+    procedure OnResizeViewport({%H-}const Data: BResizeEventData); override;
   public
     constructor Create(ARenderer: TBlackSharkRenderer); override;
     destructor Destroy; override;
@@ -89,7 +86,7 @@ begin
   inherited;
   TBTimer.UpdateTimer(LastTime);
   Directions := TListVec<TVec2f>.Create;
-  Velosity := TListVec<BSFloat>.Create;
+  Velocity := TListVec<BSFloat>.Create;
   Canvas := TBCanvas.Create(ARenderer, Self);
   // Canvas.CreateEmptyCanvasObject;
   // Canvas.Position2d := vec2(0.0, 0.0);
@@ -109,7 +106,7 @@ begin
     AniLaw.Stop;
   AniLawObsr := nil;
   AniLaw := nil;
-  Velosity.Free;
+  Velocity.Free;
   Directions.Free;
   Canvas.Free;
   Canvas2.Free;
@@ -133,7 +130,7 @@ begin
   for i := 0 to CharsMap.Particles.CountParticle - 1 do
   begin
     pos := CharsMap.Particles.Position[i];
-    vel := Velosity.Items[i];
+    vel := Velocity.Items[i];
     dir := Directions.Items[i];
     pos := vec3(pos.x + (vel * dir.x), pos.y + (vel * dir.y), 0.0);
     // CharsMap.Particles.Position[i] := pos;
@@ -210,7 +207,7 @@ begin
 
       // vel := vel/100;
 
-      Velosity.Add(vel);
+      Velocity.Add(vel);
       inc(count);
 
       // break;
@@ -244,14 +241,13 @@ begin
   Result := 'The test Map Chars';
 end;
 
-{ TBSTestStringMap }
+{ TBSTest2dMap }
 
-constructor TBSTestStringMap.Create(ARenderer: TBlackSharkRenderer);
+constructor TBSTest2dMap.Create(ARenderer: TBlackSharkRenderer);
 begin
   inherited;
-  Renderer.Frustum.OrthogonalProjection := true;
-  FCanvas := TBCanvas.Create(Renderer, nil);
-  FMap := TCanvasObjectsMap.Create(FCanvas, nil);
+  ARenderer.Frustum.OrthogonalProjection := true;
+  FMap := TCanvasObjectsMap.Create(Renderer);
   FModels := TStringList.Create;
   AniLaw := CreateAniFloatLinear(NextExecutor);
   AniLawObsr := AniLaw.CreateObserver(OnUpdateValue);
@@ -259,98 +255,46 @@ begin
   AniLaw.Duration := 10000;
   AniLaw.StartValue := 0.0;
   AniLaw.StopValue := 1.0;
-  LoadModels;
 end;
 
-destructor TBSTestStringMap.Destroy;
+destructor TBSTest2dMap.Destroy;
 begin
   AniLaw := nil;
   AniLawObsr := nil;
   FMap.Free;
-  FBackground.Free;
-  //FStencilBackground.Free;
-  FCanvas.Free;
   FModels.Free;
   inherited;
 end;
 
-procedure TBSTestStringMap.DrawStancilBack(Instance: PRendererGraphicInstance);
+procedure TBSTest2dMap.LoadBackground;
+const
+  SCALE_MC_PIC = 0.6;
+  SCALE_SHIP_PIC = 0.5;
+  SCALE_ORNAMENT_PIC = 0.25;
 begin
-  { fill the shape Back as the stencil for ban draw outside him }
-  glClearStencil(0);
-  glStencilFunc(GL_ALWAYS, 1, $FF);
-  glStencilOp(GL_ZERO, GL_ZERO, GL_REPLACE);
-  FMethodStencilDraw(Instance);
-  glStencilFunc(GL_EQUAL, 1, $FF);
-  FMethodStencilDraw(Instance);
-end;
-
-procedure TBSTestStringMap.LoadBackground;
-//var
-//  monteCristo: TPicture;
-//  caption: TCanvasText;
-//  author: TCanvasText;
-begin
-  // for not full screen application need stencil
-//  FStencilBackground := TRectangle.Create(FCanvas, nil);
-//  FStencilBackground.Size := vec2(492, 605);
-//  FStencilBackground.Fill := true;
-//  FStencilBackground.Data.AsStencil := true;
-//  FStencilBackground.Data.Opacity := 0.5;
-//  FMethodStencilDraw := FStencilBackground.Data.DrawInstance;
-//  FStencilBackground.Data.DrawInstance := DrawStancilBack;
-//  FStencilBackground.Build;
-//  FStencilBackground.Position2d := vec2((Renderer.WindowWidth - FStencilBackground.Size.x)*0.5, Renderer.WindowHeight*0.05);
-
-  FBackground := TPicture.Create(FCanvas, nil);//FStencilBackground
-  FBackground.AutoFit := false;
-  FBackground.Data.Interactive := false;
-  FBackground.Data.Opacity := 0.1;
-  //FBackground.Size := vec2(Renderer.WindowWidth, Renderer.WindowHeight*0.9);
-  FBackground.Size := vec2(492, 605);//FStencilBackground.Size*1.1;
-  FBackground.LoadFromFile('/TestData/StringsMap/background.png');
-  FBackground.Position2d := vec2(0.0, 0.0);//-FStencilBackground.Size*0.05;
-
-  FMap.Parent := FBackground;
-  //FMap.ViewPortPosition := vec2(FBackground.Size.x*0.5, FBackground.Size.y*0.05);
-  FMap.ViewPortSize := FBackground.Size*0.95; //vec2(FBackground.Width*0.925, FBackground.Height*0.925);
-  FMap.ViewPortPosition := vec2(FBackground.Width*0.025, FBackground.Height*0.025);
+  FMap.DrawPicture('./TestData/StringsMap/background2.png', vec2(0.0, 0.0), FMap.ViewPortSize, 1.0);
+  LastHolder := FMap.DrawPicture('./TestData/StringsMap/face.png', vec2(0.0, 0.0), FMap.ViewPortSize, 0.8, 1);
   FMap.TextMapper.TextStyle.Wrap := true;
   FMap.TextMapper.TextStyle.Bold := true;
-  FMap.TextMapper.TextStyle.BoldWeightX := 0.1;
+  FMap.TextMapper.TextStyle.Italic := false;
+  FMap.TextMapper.TextStyle.Size := 14;
+  FMap.TextMapper.TextStyle.BoldWeightX := 0.2;
+  FMap.TextMapper.TextStyle.Color := BS_CL_GREEN;
+  LastHolder := FMap.DrawText('Alexandre Dumas', RectBS(0, 100.0, FMap.ViewPortSize.x, 0.0), TTextAlign.taCenter, 1);
 
-//  monteCristo := TPicture.Create(FCanvas, FBackground);
-//  monteCristo.AutoFit := false;
-//  monteCristo.LoadFromFile('/TestData/StringsMap/MONTE-CRISTO.png');
-//  monteCristo.Size := vec2(monteCristo.Image.Width * 0.6, monteCristo.Image.Height*0.6);
-//  monteCristo.Position2d := FBackground.Size*0.25 - monteCristo.Size*0.5;
-//  monteCristo.Data.Opacity := 0.8;
-//  monteCristo.Build;
-//
-//  caption := TCanvasText.Create(FCanvas, FBackground);
-//  caption.CreateCustomFont;
-//  //caption.SceneTextData.TxtProcessor.ViewportSize := vec2(monteCristo.Width, 0);
-//  caption.TextAlign := TTextAlign.taCenter;
-//  caption.Italic := true;
-//  caption.Bold := true;
-//  caption.Font.Size := 14;
-//  caption.TextAlign := TTextAlign.taCenter;
-//  caption.Text := 'LE COMTE' + sLineBreak + 'DE MONTE-CRISTO';
-//  caption.Color := ColorDec(BS_CL_GRAY, 0.25);
-//
-//  caption.Position2d := monteCristo.Position2d + vec2((monteCristo.Width - caption.Width) *0.5, monteCristo.Height + 20.0) ;
-//
-//  author := TCanvasText.Create(FCanvas, FBackground);
-//  author.CreateCustomFont;
-//  author.Font.Size := 14;
-//  //author.Bold := true;
-//  author.Text := 'Alexandre Dumas';
-//  author.Color :=  ColorDec(BS_CL_GRAY, 0.25);
-//
-//  author.Position2d := monteCristo.Position2d + vec2((monteCristo.Width - author.Width) *0.5, caption.Position2d.y + caption.Height  + 30.0) ;
+  LastHolder := FMap.DrawPicture('./TestData/StringsMap/ornament4.png', vec2((FMap.ViewPortSize.x - 1161*SCALE_ORNAMENT_PIC)*0.5, LastHolder.Rect.Y + LastHolder.Rect.Height + 15),
+    vec2(1161, 186)*SCALE_ORNAMENT_PIC, 1.0, 1);
+
+  FMap.TextMapper.TextStyle.Italic := true;
+  FMap.TextMapper.TextStyle.Size := 12;
+  FMap.TextMapper.TextStyle.BoldWeightX := 0.1;
+  LastHolder := FMap.DrawText('LE COMTE' + sLineBreak + 'DE MONTE-CRISTO', RectBS(0, (LastHolder.Rect.Y + LastHolder.Rect.Height + 20.0), FMap.ViewPortSize.x, 0.0), TTextAlign.taCenter, 1);
+
+  LastHolder := FMap.DrawPicture('./TestData/StringsMap/MONTE-CRISTO5.png', vec2((FMap.ViewPortSize.x - 140*SCALE_MC_PIC)*0.5, LastHolder.Rect.Y + LastHolder.Rect.Height + 20), vec2(140.0, 156.0)*SCALE_MC_PIC, 0.7, 5);
+  LastHolder := FMap.DrawPicture('./TestData/StringsMap/ship2.png', vec2((FMap.ViewPortSize.x - 365*SCALE_SHIP_PIC)*0.5, LastHolder.Rect.Y + LastHolder.Rect.Height + 15), vec2(365.0, 250.0)*SCALE_SHIP_PIC, 0.7, 5);
 end;
 
-procedure TBSTestStringMap.LoadBook;
+procedure TBSTest2dMap.LoadBook;
 type
   TMdTags = (None, Header0, Header1, Header2, Header3, Link, Picture);
 
@@ -422,23 +366,38 @@ const
 var
   i: int32;
   pos: TVec2d;
-  size: TVec2f;
+  h: BSFloat;
   mdTag: TMdTags;
-  str: string;
-  //pageOrd: int8;
+  str, remainder: string;
   pageCount: int32;
-  pageStartPos: TVec2d;
+  pageEndPos: BSFloat;
   padding: BSFloat;
-  model: PModelHolder;
+
+  procedure AddPage;
+  var
+    cornerSize: TVec2f;
+  begin
+    LastHolder := FMap.DrawPicture('./TestData/StringsMap/background2.png', vec2(0.0, pageEndPos + 10), FMap.ViewPortSize, 1.0);
+    cornerSize := vec2(350, 362)*0.28;
+    FMap.DrawPicture('./TestData/StringsMap/CornerRight.png', vec2(FMap.ViewPortSize.x - cornerSize.x - 2, pageEndPos + 12), cornerSize, 1.0, 1);
+    FMap.DrawPicture('./TestData/StringsMap/CornerLeft.png', vec2(2, pageEndPos + 10 + FMap.ViewPortSize.y - cornerSize.y - 2), cornerSize, 1.0, 1);
+    FMap.DrawPicture('./TestData/StringsMap/CornerRight.png', vec2(2, pageEndPos + 12), cornerSize, vec3(0.0, 180, 0.0), 1.0, 1);
+    FMap.DrawPicture('./TestData/StringsMap/CornerLeft.png', vec2(FMap.ViewPortSize.x - cornerSize.x - 2, pageEndPos + 10 + FMap.ViewPortSize.y - cornerSize.y - 2), cornerSize, vec3(0.0, 180, 0.0), 1.0, 1);
+    pageEndPos := LastHolder.Rect.Y + FMap.ViewPortSize.Height;
+    pos := vec2(padding, LastHolder.Rect.Y + padding);
+    inc(pageCount);
+  end;
+
 begin
-  FModels.LoadFromFile(GetFilePath(BOOK_PATH + 'test.txt')); //LE COMTE DE MONTE-CRISTO.md  surrogate2.txt
+  FModels.LoadFromFile(GetFilePath(BOOK_PATH + 'LE COMTE DE MONTE-CRISTO.md')); //LE COMTE DE MONTE-CRISTO.md  surrogate2.txt
   FMap.TextMapper.Trim := false;
+  FMap.TextMapper.TextStyle.Italic := false;
+  FMap.TextMapper.TextStyle.Size := 12;
   FMap.TextMapper.ApplyTextStyle(FMap.TextMapper.TextStyle, FMap.TextMapper.Prototype);
-  padding := FMap.ViewPortSize.Width*0.025;
-  pos := vec2(padding, FMap.ViewPortSize.Height * 0.5);
-  pageStartPos := pos;
-  //pageOrd := 0;
+  padding := FMap.ViewPortSize.Width*0.08;
+  pageEndPos := FMap.ViewPortSize.Height;
   pageCount := 0;
+  AddPage;
   i := 0;
   while i < FModels.Count do
   begin
@@ -451,12 +410,40 @@ begin
         None: begin
           FMap.TextMapper.TextStyle.Bold := false;
           FMap.TextMapper.TextStyle.Size := HEADER_SIZE[0];
-          FMap.DrawText(FModels.Strings[i], RectBSd(pos, vec2d(FMap.ViewPortSize.Width - padding, 0.0)), TTextAlign.taClient); //FMap.ViewPortSize.Height - (pos.y - pageStartPos.y)
-          pos.y := pos.y + FMap.TextMapper.Prototype.Height + 2;
-//          if FMap.TextMapper.Prototype.IndexLastStringInViewport < FMap.TextMapper.Prototype.SceneTextData.TxtProcessor.Lines.Count - 1 then
-//          begin
-//
-//          end;
+          remainder := '';
+          while str <> '' do
+          begin
+            LastHolder := FMap.DrawText(str, RectBSd(pos, vec2d(FMap.ViewPortSize.Width - padding*2, 0.0)), TTextAlign.taClient, 1);
+            if pos.y + LastHolder.Rect.Height > pageEndPos - padding then
+            begin
+              h := LastHolder.Rect.Height;
+              while (pos.y + h > pageEndPos - padding) and (FMap.TextMapper.Prototype.SceneTextData.TxtProcessor.AllowedLines > 1) do
+              begin
+                FMap.TextMapper.Prototype.SceneTextData.TxtProcessor.AllowedLines := FMap.TextMapper.Prototype.SceneTextData.TxtProcessor.AllowedLines - 1;
+                remainder := FMap.TextMapper.Prototype.SceneTextData.TextLine[FMap.TextMapper.Prototype.SceneTextData.TxtProcessor.AllowedLines] + remainder;
+                FMap.TextMapper.Prototype.Build;
+                h := FMap.TextMapper.Prototype.Height;
+              end;
+
+
+              if (pos.y + h > pageEndPos - padding) then
+              begin
+                FMap.TextMapper.Prototype.SceneTextData.TxtProcessor.AllowedLines := 0;
+                FMap.Delete(LastHolder);
+                AddPage;
+                continue;
+              end;
+
+              str := FMap.TextMapper.Prototype.SceneTextData.GetTextLines(0, FMap.TextMapper.Prototype.SceneTextData.TxtProcessor.AllowedLines - 1);
+              FMap.TextMapper.Prototype.SceneTextData.TxtProcessor.AllowedLines := 0;
+              FMap.Delete(LastHolder);
+              LastHolder := FMap.DrawText(str, RectBSd(pos, vec2d(FMap.ViewPortSize.Width - padding*2, 0.0)), TTextAlign.taClient, 1);
+              str := remainder;
+              AddPage;
+            end else
+              break;
+          end;
+          pos.y := pos.y + LastHolder.Rect.Height + 2;
         end;
         Header0,
         Header1,
@@ -464,8 +451,8 @@ begin
         Header3: begin
           FMap.TextMapper.TextStyle.Bold := true;
           FMap.TextMapper.TextStyle.Size := HEADER_SIZE[int32(mdTag)];
-          FMap.DrawText(trim(text), RectBSd(pos, vec2d(FMap.ViewPortSize.Width - padding, 0.0)), TTextAlign.taCenter); //FMap.ViewPortSize.Height - (pos.y - pageStartPos.y)
-          pos.y := pos.y + FMap.TextMapper.Prototype.Height + 2;
+          LastHolder := FMap.DrawText(trim(text), RectBSd(pos, vec2d(FMap.ViewPortSize.Width - padding*2, 0.0)), TTextAlign.taCenter, 1); //FMap.ViewPortSize.Height - (pos.y - pageStartPos.y)
+          pos.y := pos.y + LastHolder.Rect.Height + 2;
           //break;
         end;
         Link: ;
@@ -481,58 +468,52 @@ begin
     end else
       pos.y := pos.y + FMap.TextMapper.Prototype.Font.SizeInPixels + FMap.TextMapper.Prototype.SceneTextData.TxtProcessor.Interligne;
 
-    if round(pos.y) >= round((pageCount+ 1)*FMap.ViewPortSize.Height) then
+    if pos.y >= pageEndPos - padding then
     begin
-      inc(pageCount);
-//      if pageCount mod 2 > 0 then
-//      begin
-//        pos.x := listWidth + padding;
-//        pos.y := pageStartPos.y;
-//      end else
-      begin
-        pos := vec2(padding, pageCount*FMap.ViewPortSize.Height);
-        pageStartPos := pos;
-      end;
+      AddPage;
     end;
 
     inc(i);
   end;
 end;
 
-procedure TBSTestStringMap.LoadModels;
+procedure TBSTest2dMap.LoadModels;
 begin
   LoadBackground;
   LoadBook;
 end;
 
-procedure TBSTestStringMap.OnMouseWeel(const AData: BMouseData);
+procedure TBSTest2dMap.OnMouseWeel(const AData: BMouseData);
 begin
-  FMap.ViewPortPosition := vec2(FMap.ViewPortPosition.x, FMap.ViewPortPosition.y + AData.DeltaWeel);
+  FMap.ViewPortPosition := vec2(FMap.ViewPortPosition.x, FMap.ViewPortPosition.y - AData.DeltaWeel div 2);
+  Renderer.Render; // it not need do for apps with max fps
 end;
 
-procedure TBSTestStringMap.OnUpdateValue(const Value: BSFloat);
+procedure TBSTest2dMap.OnResizeViewport(const Data: BResizeEventData);
+begin
+  inherited;
+  //FMap.ViewPortPosition := FMap.ViewPortPosition (Renderer.ScreenSize - FMap.ViewPortSize) * 0.5;
+end;
+
+procedure TBSTest2dMap.OnUpdateValue(const Value: BSFloat);
 begin
 
 end;
 
-function TBSTestStringMap.Run: boolean;
+function TBSTest2dMap.Run: boolean;
+//var
+//  pos: TVec2f;
 begin
-  EventResizeRequest.Send(Self, 540, 700, 0.0, 0.0);
-
+  //EventResizeRequest.Send(Self, 540, 700, 0.0, 0.0);
+  FMap.ViewPortSize := vec2d(480, 580);
+  LoadModels;
+  //pos := (Renderer.ScreenSize - vec2d(380, 480)) * 0.5;
+  //FMap.ViewPortPosition := pos;
+  //FMap.UpdateViewCameraPosition;
   Result := true;
-//  FMap.TextMapper.TextStyle.BeginUpdate;
-//  FMap.TextMapper.TextStyle.Size := 10;
-//  FMap.TextMapper.Prototype.Color := ColorDec(BS_CL_GRAY, 0.3);
-//  FMap.TextMapper.TextStyle.EndUpdate;
-  //FMap.DrawText('ABCDEF', vec2(100.0, 200.0));
-
-//  FMap.TextStyle.BeginUpdate;
-//  FMap.TextStyle.Name := 'NotoSerif-Regular';
-//  FMap.TextStyle.EndUpdate;
-//  FMap.DrawText('ABCDF', vec2(100.0, 220.0));
 end;
 
-class function TBSTestStringMap.TestName: string;
+class function TBSTest2dMap.TestName: string;
 begin
   Result := 'Strings Map';
 end;

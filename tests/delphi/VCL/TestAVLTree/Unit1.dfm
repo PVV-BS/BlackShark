@@ -2,7 +2,7 @@ object AVLTreeViewer: TAVLTreeViewer
   Left = 0
   Top = 0
   Caption = 'AVLTreeViewer'
-  ClientHeight = 553
+  ClientHeight = 839
   ClientWidth = 661
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,7 +17,7 @@ object AVLTreeViewer: TAVLTreeViewer
     Left = 0
     Top = 81
     Width = 661
-    Height = 399
+    Height = 535
     Align = alClient
     HideSelection = False
     Indent = 19
@@ -28,7 +28,6 @@ object AVLTreeViewer: TAVLTreeViewer
     RowSelect = True
     TabOrder = 0
     OnClick = TreeViewClick
-    ExplicitHeight = 472
   end
   object Panel1: TPanel
     Left = 0
@@ -37,7 +36,6 @@ object AVLTreeViewer: TAVLTreeViewer
     Height = 81
     Align = alTop
     TabOrder = 1
-    ExplicitTop = -6
     object btnFillSamples: TBitBtn
       Left = 5
       Top = 13
@@ -65,14 +63,14 @@ object AVLTreeViewer: TAVLTreeViewer
       TabOrder = 2
       OnClick = btnInsKey35Click
     end
-    object btnDelRoot: TBitBtn
+    object btnDelRandom: TBitBtn
       Left = 468
       Top = 13
       Width = 62
       Height = 25
-      Caption = 'DelRoot'
+      Caption = 'Del random'
       TabOrder = 3
-      OnClick = btnDelRootClick
+      OnClick = btnDelRandomClick
     end
     object btnClear: TBitBtn
       Left = 536
@@ -85,7 +83,7 @@ object AVLTreeViewer: TAVLTreeViewer
     end
     object DelEdit: TEdit
       Left = 171
-      Top = 47
+      Top = 44
       Width = 72
       Height = 21
       TabOrder = 5
@@ -101,22 +99,13 @@ object AVLTreeViewer: TAVLTreeViewer
       Text = '0'
       OnKeyPress = IncertEditKeyPress
     end
-    object btnSelect: TBitBtn
-      Left = 400
-      Top = 13
-      Width = 62
-      Height = 25
-      Caption = 'Select'
-      TabOrder = 7
-      OnClick = btnSelectClick
-    end
     object BitFind: TBitBtn
       Left = 331
       Top = 13
       Width = 62
       Height = 25
       Caption = 'Find'
-      TabOrder = 8
+      TabOrder = 7
       OnClick = BitFindClick
     end
     object edtFindValue: TEdit
@@ -124,7 +113,7 @@ object AVLTreeViewer: TAVLTreeViewer
       Top = 47
       Width = 68
       Height = 21
-      TabOrder = 9
+      TabOrder = 8
       Text = '0'
       OnKeyPress = IncertEditKeyPress
     end
@@ -134,18 +123,47 @@ object AVLTreeViewer: TAVLTreeViewer
       Width = 75
       Height = 25
       Caption = 'Fill series'
-      TabOrder = 10
+      TabOrder = 9
       OnClick = btnFillSeriesClick
+    end
+    object edtRandomCount: TEdit
+      Left = 468
+      Top = 44
+      Width = 62
+      Height = 21
+      TabOrder = 10
+      Text = '15'
+      OnKeyPress = IncertEditKeyPress
+    end
+    object edtSeriesSize: TEdit
+      Left = 86
+      Top = 44
+      Width = 75
+      Height = 21
+      TabOrder = 11
+      Text = '30'
+      OnChange = DelEditChange
     end
   end
   object log: TMemo
     Left = 0
-    Top = 480
+    Top = 616
     Width = 661
-    Height = 73
+    Height = 204
     Align = alBottom
+    ScrollBars = ssVertical
     TabOrder = 2
-    ExplicitWidth = 471
+  end
+  object StatusBar: TStatusBar
+    Left = 0
+    Top = 820
+    Width = 661
+    Height = 19
+    Panels = <
+      item
+        Text = '0'
+        Width = 50
+      end>
   end
   object PopupMenu: TPopupMenu
     Left = 240
@@ -184,6 +202,17 @@ object AVLTreeViewer: TAVLTreeViewer
     object Save: TMenuItem
       Caption = 'Save'
       OnClick = SaveClick
+    end
+    object N4: TMenuItem
+      Caption = '-'
+    end
+    object miDeleteMemoSet: TMenuItem
+      Caption = 'Delete memo set'
+      OnClick = miDeleteMemoSetClick
+    end
+    object addFromMemoSet: TMenuItem
+      Caption = 'Add from memo set'
+      OnClick = addFromMemoSetClick
     end
   end
 end

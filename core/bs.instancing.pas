@@ -53,34 +53,36 @@ uses
 
 type
 
-  TInstance = record
-    Scale: BSFloat;
-    Opacity: BSFloat;
-    Angle: TVec3f;
-    Position: TVec3f;
+  TGPUInstanceAttributes = record
+    MVPMatrix: TMatrix4f;
     Color: TColor4f;
+  end;
+  PGPUInstanceAttributes = ^TGPUInstanceAttributes;
+
+  TCPUInstanceAttributes = record
+    Opacity: BSFloat;
+    Scale: BSFloat;
+    Angle: TVec3f;
     Distance: Double;
     IsVisible: boolean;
   end;
-  PInstance = ^TInstance;
+  PCPUInstanceAttributes = ^TCPUInstanceAttributes;
 
   { TBlackSharkInstancing
     The class implements Draw one mesh many times with different Position, Angle,
-    and so on... For evry instance invoke glDrawElements, so to fail in try
-    used pure instancing in GLES20... may be in future...
-  	TODO: implement pure instancing (glDrawElementsInstanced) }
+    and so on ... }
+
+  // TODO: sort instances
 
   TBlackSharkInstancing = class
   private
     FRenderer: TBlackSharkRenderer;
     FPrototype: TObjectVertexes;
-    FCountInstance: int32;
-    Instances: TListVec<TInstance>;
-    Matrixes: TListVec<TMatrix4f>;
-    {$ifndef ultibo}
-    MvpVBO: GLuint;
-    {$endif}
+    FGPUInstanceAttributes: TListVec<TGPUInstanceAttributes>;
+    FCPUInstanceAttributes: TListVec<TCPUInstanceAttributes>;
+    VBO: GLuint;
     MvpAttr: PShaderParametr;
+    ColorAttr: PShaderParametr;
     GIMethodDefault: TDrawInstanceMethod;
     UpdateCounter: int32;
     FUpdatedIndex: int32;
@@ -89,7 +91,7 @@ type
     ColorUniform: PShaderParametr;
     HandleCMVP: IBChangeMVPEventObserver;
 
-    procedure GenMatrix(AIndex: int32); inline;
+    procedure GenMatrix(AIndex: int32); //inline;
     procedure UpadateAllMatrix;
     procedure DrawProto(Inst: PRendererGraphicInstance);
     function GetAngle(AIndex: int32): TVec3f;
@@ -103,10 +105,13 @@ type
     function GetColor(AIndex: int32): TColor4f;
     procedure SetColor(AIndex: int32; const Value: TColor4f);
     procedure OnChangeMVP({%H}const Value: BTransformData); virtual;
-    //procedure TryCreateMvpVbo;
+    procedure ReloadVBO(AIndex: int32);
+    function GetCountInstance: int32; inline;
   protected
     procedure SetPrototype(const Value: TObjectVertexes); virtual;
     procedure SetCountInstance(const Value: int32); virtual;
+    property GPUInstanceAttributes: TListVec<TGPUInstanceAttributes> read FGPUInstanceAttributes;
+    property CPUInstanceAttributes: TListVec<TCPUInstanceAttributes> read FCPUInstanceAttributes;
   public
     constructor Create(ARenderer: TBlackSharkRenderer; APrototype: TObjectVertexes);
     destructor Destroy; override;
@@ -114,7 +119,7 @@ type
     procedure EndUpdate;
     procedure Remove(AIndex: int32);
     property Prototype: TObjectVertexes read FPrototype write SetPrototype;
-    property CountInstance: int32 read FCountInstance write SetCountInstance;
+    property CountInstance: int32 read GetCountInstance write SetCountInstance;
     property Opacity[index: int32]: BSFloat read GetOpacity write SetOpacity;
     property Scale[index: int32]: BSFloat read GetScale write SetScale;
     property Angle[index: int32]: TVec3f read GetAngle write SetAngle;
@@ -596,7 +601,7 @@ uses
   , bs.config
   ;
 
-function InstanceComparator(const A, B: TInstance): int8;
+function InstanceComparator(const A, B: TCPUInstanceAttributes): int8;
 var
   delta: double;
 begin
@@ -620,19 +625,17 @@ end;
 
 constructor TBlackSharkInstancing.Create(ARenderer: TBlackSharkRenderer; APrototype: TObjectVertexes);
 const
-  INST_DEF_VAL_TRANSF: TInstance = (Scale: 1.0;
+  INST_DEF_VAL_TRANSF: TCPUInstanceAttributes = (
     Opacity: 1.0;
+    Scale: 1.0;
     Angle: (x:0.0; y: 0.0; z: 0.0);
-    Position: (x:0.0; y: 0.0; z: 0.0);
-    Color: (x:1.0; y:0.5; z:0.0; a:1.0);
     IsVisible: false);
 begin
   FUpdatedIndex := -1;
   FRenderer := ARenderer;
-  Instances := TListVec<TInstance>.Create(InstanceComparator);
-  Instances.DefaultValue := INST_DEF_VAL_TRANSF;
-  Matrixes := TListVec<TMatrix4f>.Create;
-  Matrixes.DefaultValue := IDENTITY_MAT;
+  FGPUInstanceAttributes := TListVec<TGPUInstanceAttributes>.Create;
+  FCPUInstanceAttributes := TListVec<TCPUInstanceAttributes>.Create;
+  FCPUInstanceAttributes.DefaultValue := INST_DEF_VAL_TRANSF;
   Prototype := APrototype;
 end;
 
@@ -641,53 +644,45 @@ begin
   if Assigned(FPrototype) then
     FPrototype.DrawInstance := GIMethodDefault;
   HandleCMVP := nil;
-  Matrixes.Free;
-  {$ifndef ultibo}
-  if MvpVBO > 0 then
-    glDeleteBuffers(1, @MvpVBO);
-  {$endif}
-  Instances.Free;
+
+  if VBO > 0 then
+    glDeleteBuffers(1, @VBO);
+
+  FGPUInstanceAttributes.Free;
+  FCPUInstanceAttributes.Free;
   inherited;
 end;
 
 procedure TBlackSharkInstancing.DrawProto(Inst: PRendererGraphicInstance);
 var
   i: int32;
-  instData: PInstance;
+  instCPUData: PCPUInstanceAttributes;
+  instGPUData: PGPUInstanceAttributes;
 begin
 
-  {$ifndef ultibo}
-  if MvpVBO > 0 then
+  if VBO > 0 then
   begin
     { hardware Instansing }
-
-    if Assigned(OpacityUniform) then
-      glUniform1f(OpacityUniform^.Location, FPrototype.Opacity);
-
-    if Assigned(ColorUniform) then
-      glUniform4f(ColorUniform^.Location, FPrototype.Color.r, FPrototype.Color.g, FPrototype.Color.b, FPrototype.Color.a);
-
-    //glBindBuffer(GL_ARRAY_BUFFER, MvpVBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER , FPrototype.VBO_Indexes);
-    // it does not work
-    glDrawElementsInstanced(FPrototype.Mesh.DrawingPrimitive, FPrototype.Mesh.Indexes.Count, FPrototype.Mesh.Indexes.Kind, nil, 1);  //FCountInstance
+    glDrawElementsInstanced(FPrototype.Mesh.DrawingPrimitive, FPrototype.Mesh.Indexes.Count, FPrototype.Mesh.Indexes.Kind, nil, CountInstance);  //FCountInstance
+    if FPrototype.VAO > 0 then
+      glBindVertexArray(0);
   end else
-  {$endif}
   begin
     { software Instansing }
 
-    for i := 0 to FCountInstance - 1 do
+    for i := 0 to CountInstance - 1 do
     begin
-      instData := PInstance(Instances.ShiftData[i]);
-      if not instData.IsVisible then
+      instCPUData := CPUInstanceAttributes.ShiftData[i];
+      if not instCPUData.IsVisible then
         continue;
 
-      Inst.LastMVP := Matrixes.Items[i];
+      instGPUData := GPUInstanceAttributes.ShiftData[i];
+      Inst.LastMVP := instGPUData.MVPMatrix;
       if Assigned(OpacityUniform) then
-        glUniform1f(OpacityUniform^.Location, instData.Opacity*FPrototype.Opacity);
+        glUniform1f(OpacityUniform^.Location, instCPUData.Opacity*FPrototype.Opacity);
 
       if Assigned(ColorUniform) then
-        glUniform4fv(ColorUniform^.Location, 1, @instData.Color);
+        glUniform4fv(ColorUniform^.Location, 1, @instGPUData.Color);
 
       GIMethodDefault(Inst);
     end;
@@ -704,68 +699,78 @@ begin
       UpadateAllMatrix
     else
       GenMatrix(FUpdatedIndex);
+    ReloadVBO(FUpdatedIndex);
     FUpdatedIndex := -1;
   end;
 end;
 
 procedure TBlackSharkInstancing.GenMatrix(AIndex: int32);
 var
-  pinst: PInstance;
+  pinstGPU: PGPUInstanceAttributes;
+  pinstCPU: PCPUInstanceAttributes;
 begin
 
   if UpdateCounter > 0 then
     exit;
 
   { forming matrix transformations }
-  pinst := Instances.ShiftData[AIndex];
+  pinstGPU := GPUInstanceAttributes.ShiftData[AIndex];
+  pinstCPU := CPUInstanceAttributes.ShiftData[AIndex];
   FPrototype.BeginUpdateTransformations;
   // set orientation
-  FPrototype.Angle := pinst.Angle;
+  FPrototype.Angle := pinstCPU.Angle;
   // set scale
-  if not(pinst.Scale = 1.0) then
-    FPrototype.ScaleSimple := pinst.Scale;
+  FPrototype.ScaleSimple := pinstCPU.Scale;
   // set position
-  FPrototype.Position := pinst.Position;
-  FPrototype.EndUpdateTransformations;
-  pinst.IsVisible := ProtoRendererInstance.Visible;
+  FPrototype.Position := vec3(pinstGPU.MVPMatrix.M3.x, pinstGPU.MVPMatrix.M3.y, pinstGPU.MVPMatrix.M3.z);
+  FPrototype.EndUpdateTransformations(true);
+  pinstCPU.IsVisible := ProtoRendererInstance.Visible;
   // take out MVP matrix
-  Matrixes.Items[AIndex] := ProtoRendererInstance.LastMVP;
+  pinstGPU.MVPMatrix := ProtoRendererInstance.LastMVP;
 
 end;
 
 function TBlackSharkInstancing.GetAngle(AIndex: int32): TVec3f;
 begin
-  if AIndex >= FCountInstance then
+  if AIndex >= CountInstance then
     exit(vec3(0.0, 0.0, 0.0));
-  Result := PInstance(Instances.ShiftData[AIndex])^.Angle;
+  Result := PCPUInstanceAttributes(CPUInstanceAttributes.ShiftData[AIndex])^.Angle;
 end;
 
 function TBlackSharkInstancing.GetColor(AIndex: int32): TColor4f;
 begin
-  if AIndex >= FCountInstance then
+  if AIndex >= CountInstance then
     exit(BS_CL_BLACK);
-  Result := PInstance(Instances.ShiftData[AIndex])^.Color;
+  Result := PGPUInstanceAttributes(GPUInstanceAttributes.ShiftData[AIndex])^.Color;
+end;
+
+function TBlackSharkInstancing.GetCountInstance: int32;
+begin
+  Result := GPUInstanceAttributes.Count;
 end;
 
 function TBlackSharkInstancing.GetOpacity(AIndex: int32): BSFloat;
 begin
-  if AIndex >= FCountInstance then
+  if AIndex >= CountInstance then
     exit(0.0);
-  Result := PInstance(Instances.ShiftData[AIndex])^.Opacity;
+  Result := PCPUInstanceAttributes(CPUInstanceAttributes.ShiftData[AIndex])^.Opacity;
 end;
 
 function TBlackSharkInstancing.GetPosition(AIndex: int32): TVec3f;
+var
+  p: PGPUInstanceAttributes;
 begin
-  if AIndex >= FCountInstance then
+  if AIndex >= CountInstance then
     exit(vec3(0.0, 0.0, 0.0));
-  Result := PInstance(Instances.ShiftData[AIndex])^.Position;
+  p := PGPUInstanceAttributes(GPUInstanceAttributes.ShiftData[AIndex]);
+  Result := vec3(p.MVPMatrix.M3.x, p.MVPMatrix.M3.y, p.MVPMatrix.M3.z);
 end;
 
 function TBlackSharkInstancing.GetScale(AIndex: int32): BSFloat;
 begin
-  if AIndex >= FCountInstance then
+  if AIndex >= CountInstance then
     exit(0.0);
-  Result := PInstance(Instances.ShiftData[AIndex])^.Scale;
+  Result := PCPUInstanceAttributes(CPUInstanceAttributes.ShiftData[AIndex])^.Scale;
 end;
 
 procedure TBlackSharkInstancing.OnChangeMVP(const Value: BTransformData);
@@ -777,46 +782,47 @@ procedure TBlackSharkInstancing.Remove(AIndex: int32);
 var
   off_end: int32;
 begin
-  if AIndex >= FCountInstance then
+  if AIndex >= CountInstance then
     exit;
-  off_end := FCountInstance - 1;
-  if (AIndex < off_end) and (FCountInstance > 1) then
+  off_end := CountInstance - 1;
+  if (AIndex < off_end) and (CountInstance > 1) then
   begin
-    Instances.Items[AIndex] := Instances.Items[off_end];
-    Matrixes.Items[AIndex] := Matrixes.Items[off_end];
+    GPUInstanceAttributes.Items[AIndex] := GPUInstanceAttributes.Items[off_end];
+    CPUInstanceAttributes.Items[AIndex] := CPUInstanceAttributes.Items[off_end];
   end;
-  FCountInstance := off_end;
-  Instances.Count := FCountInstance;
+  GPUInstanceAttributes.Count := off_end;
+  CPUInstanceAttributes.Count := off_end;
 end;
 
 procedure TBlackSharkInstancing.SetAngle(AIndex: int32; const Value: TVec3f);
 begin
-  if AIndex >= FCountInstance then
+  if AIndex >= CountInstance then
     exit;
-  PInstance(Instances.ShiftData[AIndex]).Angle := AngleEulerClamp3d(Value);
-  if FUpdatedIndex < 0 then
-    GenMatrix(AIndex);
+  PCPUInstanceAttributes(CPUInstanceAttributes.ShiftData[AIndex]).Angle := AngleEulerClamp3d(Value);
+  //if FUpdatedIndex < 0 then
+  //  GenMatrix(AIndex);
 end;
 
 procedure TBlackSharkInstancing.SetColor(AIndex: int32; const Value: TColor4f);
 begin
-  if AIndex >= FCountInstance then
+  if AIndex >= CountInstance then
     exit;
-  PInstance(Instances.ShiftData[AIndex]).Color := Value;
+  PGPUInstanceAttributes(GPUInstanceAttributes.ShiftData[AIndex]).Color := Value;
 end;
 
 procedure TBlackSharkInstancing.SetCountInstance(const Value: int32);
 begin
-  if Value = FCountInstance then
+  if Value = CountInstance then
     exit;
 
-  FCountInstance := Value;
-  Instances.Count := Value;
-
-  Matrixes.Count := Value;
+  GPUInstanceAttributes.Count := Value;
+  CPUInstanceAttributes.Count := Value;
 end;
 
 procedure TBlackSharkInstancing.SetPrototype(const Value: TObjectVertexes);
+var
+  shaderNameInstanced: string;
+  shader: TBlackSharkShader;
 begin
   if FPrototype = Value then
     exit;
@@ -830,99 +836,140 @@ begin
   { remember default draw instanse method }
   if Assigned(FPrototype) then
   begin
+    FPrototype.SceneSpaceTreeClient := true;
     if Assigned(FPrototype.Parent) then
       HandleCMVP := FPrototype.Parent.EventChangeMVP.CreateObserver(OnChangeMVP)
     else
       HandleCMVP := nil;
+
     GIMethodDefault := FPrototype.DrawInstance;
     FPrototype.DrawInstance := DrawProto;
     ProtoRendererInstance := FRenderer.SceneInstanceToRenderInstance(FPrototype.BaseInstance);
 
-    // hardware instancing did not work, therefore it is commented
-    //if SupportsVAO and (FPrototype.VAO > 0) then
-    //  TryCreateMvpVbo;
+    if SupportsVAO then
+    begin
+      shaderNameInstanced := GetFilePath(FPrototype.Shader.Name + '.ins.vsh', 'Shaders');
 
+      if FileExists(shaderNameInstanced) then
+      begin
+        // set instanced shader, which accepts mvp as attribute of a vertex
+        shader := FPrototype.Shader;
+        try
+          FPrototype.Shader := BSShaderManager.Load(shaderNameInstanced, ExtractFilePath(shaderNameInstanced) + FPrototype.Shader.Name + '.ins.fsh', TBlackSharkShaderClass(FPrototype.Shader.InstancedObjectShaderClass), false);
+          if CheckErrorGL('TBlackSharkInstancing.SetPrototype', tcProgramm, FPrototype.Shader.ProgramID) then
+            SupportsVAO := false;
+        finally
+          if not SupportsVAO then
+            FPrototype.Shader := shader;
+        end;
+      end;
+    end;
+    MvpAttr := FPrototype.Shader.Attribute['MVP'];
     OpacityUniform := FPrototype.Shader.Uniform['Opacity'];
     ColorUniform := FPrototype.Shader.Uniform['Color'];
+    ColorAttr := FPrototype.Shader.Attribute['a_Color'];
+    ReloadVBO(-1);
   end;
 
 end;
 
 procedure TBlackSharkInstancing.SetOpacity(AIndex: int32; const Value: BSFloat);
 begin
-  if AIndex >= FCountInstance then
+  if AIndex >= CountInstance then
     exit;
-  PInstance(Instances.ShiftData[AIndex]).Opacity := Value;
-  if FUpdatedIndex < 0 then
-    GenMatrix(AIndex);
+  PCPUInstanceAttributes(CPUInstanceAttributes.ShiftData[AIndex]).Opacity := Value;
+  //if FUpdatedIndex < 0 then
+  //  GenMatrix(AIndex);
 end;
 
 procedure TBlackSharkInstancing.SetPosition(AIndex: int32; const Value: TVec3f);
+var
+  pGpu: PGPUInstanceAttributes;
+  pCpu: PCPUInstanceAttributes;
 begin
-  if AIndex >= FCountInstance then
+  if AIndex >= CountInstance then
     exit;
-  PInstance(Instances.ShiftData[AIndex]).Position := Value;
-  PInstance(Instances.ShiftData[AIndex]).Distance :=  VecLenSqr(Value - FRenderer.Frustum.Position);
-  if FUpdatedIndex < 0 then
-    GenMatrix(AIndex);
+  pGpu := GPUInstanceAttributes.ShiftData[AIndex];
+  pGpu.MVPMatrix.M3.x := Value.x;
+  pGpu.MVPMatrix.M3.y := Value.y;
+  pGpu.MVPMatrix.M3.z := Value.z;
+  pCpu := CPUInstanceAttributes.ShiftData[AIndex];
+  pCpu.Distance :=  VecLenSqr(Value - FRenderer.Frustum.Position);
+  //if FUpdatedIndex < 0 then
+  //  GenMatrix(AIndex);
 end;
 
 procedure TBlackSharkInstancing.SetScale(AIndex: int32; const Value: BSFloat);
 begin
-  if AIndex >= FCountInstance then
+  if AIndex >= CountInstance then
     exit;
-  PInstance(Instances.ShiftData[AIndex]).Scale := Value;
-  if FUpdatedIndex < 0 then
-    GenMatrix(AIndex);
+  PCPUInstanceAttributes(CPUInstanceAttributes.ShiftData[AIndex]).Scale := Value;
+  //if FUpdatedIndex < 0 then
+  //  GenMatrix(AIndex);
 end;
 
 
-//procedure TBlackSharkInstancing.TryCreateMvpVbo;
-//var
-//  shaderNameInstanced: string;
-//begin
-//  shaderNameInstanced := GetFilePath(FPrototype.Shader.Name + '.Ins.vsh', 'Shaders');
-//
-//  {$ifndef ultibo}
-//  if FileExists(shaderNameInstanced) then
-//  begin
-//    // set instanced shader, which accepts mvp as attribute of a vertex
-//    FPrototype.Shader := BSShaderManager.Load(shaderNameInstanced, ExtractFilePath(shaderNameInstanced) + FPrototype.Shader.Name + '.fsh', TBlackSharkShaderClass(FPrototype.Shader.ClassType), false);
-//    MvpAttr := FPrototype.Shader.Attribute['MVP'];
-//    CreateVBO(mvpVBO, GL_ARRAY_BUFFER, nil, 0);
-//
-//    glBindVertexArray(FPrototype.VAO);
-//    FPrototype.Shader.UseProgram(true);
-//    FPrototype.BindVBO;
-//    glBindBuffer(GL_ARRAY_BUFFER, MvpVBO);
-//    glEnableVertexAttribArray(MvpAttr.Location);
-//    glVertexAttribPointer( MvpAttr.Location, 16, GL_FLOAT, GL_FALSE, sizeof ( TMatrix4f ), nil);
-//    // One MVP per instance
-//    glVertexAttribDivisor(MvpAttr.Location, 1);
-//    glBindVertexArray(GL_NONE);
-//  end;
-//  {$endif}
-//end;
-//
+procedure TBlackSharkInstancing.ReloadVBO(AIndex: int32);
+var
+  fullReload: boolean;
+  i: Integer;
+begin
+  if not SupportsVAO or (FPrototype.VAO = 0) or (CountInstance = 0) or (MvpAttr = nil) or (ColorAttr = nil) then
+  begin
+    if VBO > 0 then
+    begin
+      glDeleteBuffers(1, @VBO);
+      VBO := 0;
+    end;
+    exit;
+  end;
+
+  glBindVertexArray(FPrototype.VAO);
+  FPrototype.Shader.UseProgram(true);
+
+  fullReload := (VBO = 0) or (AIndex < 0);
+  if fullReload then
+  begin
+    if VBO = 0 then
+    begin
+      CreateVBO(VBO, GL_ARRAY_BUFFER, FGPUInstanceAttributes.ShiftData[0], FGPUInstanceAttributes.Count * SizeOf(TGPUInstanceAttributes));
+    end else
+    begin
+      glBindBuffer(GL_ARRAY_BUFFER, VBO);
+      glBufferData(GL_ARRAY_BUFFER, FGPUInstanceAttributes.Count * SizeOf(TGPUInstanceAttributes), FGPUInstanceAttributes.ShiftData[0], GL_STATIC_DRAW);
+    end;
+
+    for i := 0 to 3 do
+    begin
+      glEnableVertexAttribArray(MvpAttr.Location + i);
+      glVertexAttribPointer(MvpAttr.Location + i, 4, GL_FLOAT, GL_FALSE, sizeof ( TGPUInstanceAttributes ), Pointer(i*sizeOf(TVec4f)));
+      // Enable instancing - one MVP per instance
+      glVertexAttribDivisor(MvpAttr.Location + i, 1);
+    end;
+
+    glEnableVertexAttribArray(ColorAttr.Location);
+    glVertexAttribPointer(ColorAttr.Location , 4, GL_FLOAT, GL_FALSE, sizeof ( TGPUInstanceAttributes ), Pointer(sizeof ( TMatrix4f )));
+    // Enable instancing - one color per instance
+    glVertexAttribDivisor(ColorAttr.Location, 1);
+  end else
+  begin
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferSubData(GL_ARRAY_BUFFER, AIndex * SizeOf(TGPUInstanceAttributes), SizeOf(TGPUInstanceAttributes), FGPUInstanceAttributes.ShiftData[AIndex]);
+  end;
+
+  glBindVertexArray(GL_NONE);
+
+  CheckErrorGL('TBlackSharkInstancing.TryCreateMvpVbo', tcProgramm, FPrototype.Shader.ProgramID);
+end;
+
 procedure TBlackSharkInstancing.UpadateAllMatrix;
 var
   i: int32;
 begin
-  Instances.Sort;
+  //Instances.Sort;
 
-  for i := 0 to FCountInstance - 1 do
+  for i := 0 to CountInstance - 1 do
     GenMatrix(i);
-
-  {$ifndef ultibo}
-  if (MvpVBO > 0) and (FCountInstance > 0) then
-  begin
-    glBindVertexArray(FPrototype.VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, MvpVBO);
-    glBufferData(MvpVBO, SizeOf(TMatrix4f)*FCountInstance, Matrixes.ShiftData[0], GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(GL_NONE);
-  end;
-  {$endif}
 
 end;
 
@@ -1468,8 +1515,8 @@ begin
           //Indexes.Exchange(i, j);
         end else
         begin
-          mul_i := i*6;
-          mul_j := j*6;
+//          mul_i := i*6;
+//          mul_j := j*6;
           {for k := 0 to 5 do
             Indexes.Exchange(mul_i + k, mul_j + k);}
           mul_i := i shl 2;
@@ -1996,6 +2043,7 @@ end;
 procedure TBlackSharkInstancing2d.SetPosition2d(AIndex: int32; const AValue: TVec2f);
 begin
   FPositions2d.Items[AIndex] := AValue;
+  PrototypeCanvasObject.Angle := GetAngle(AIndex);
   PrototypeCanvasObject.Position2d := AValue;
   Position[AIndex] := PrototypeCanvasObject.Data.Position;
 end;

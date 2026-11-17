@@ -39,8 +39,9 @@ uses
   , bs.instancing
   , bs.texture
   , bs.font
+  , bs.renderer
   , bs.strings
-  , bs.geometry
+  , bs.geometry.kdtree
   ;
 
 type
@@ -94,8 +95,9 @@ type
   TModelHolder = record
     Mapper: TObjectModelMapper;
     Rect: TRectBSd;
+    Layer: int32;
     Model: Pointer;
-    Index: Integer;
+    Angle: TVec3f;
     ListPos: TListDualModels.PListItem;
     View: TCanvasObject;
   end;
@@ -105,43 +107,49 @@ type
   TModelsMap = class
   private
     type
-      TCanvasObjectsKDTree = TBlackSharkKDTree<PModelHolder>;
+      TCanvasObjects2DTree = T2DTree<PModelHolder>;
       THashTableModels = THashTable<Integer, PModelHolder>;
       TListModels = TListVec<PModelHolder>;
 
   private
-    FMap: TCanvasObjectsKDTree;
+    FMap: TCanvasObjects2DTree;
     FOnShowModel: TModelEventNotify;
     FOnHideModel: TModelEventNotify;
-    FViewPortSize: TVec2d;
-    FViewPortPosition: TVec2d;
+    FViewPort: TBox2d;
     FViewPortRect: TRectBSd;
     FVisibleModels: array[boolean] of TListDualModels;
     FListIndex: boolean;
-    FSelectList: TListModels;
-    function Vec4d(const ARect: TRectBSd): TVec4d; overload; inline;
+    FUpdating: boolean;
+    FContentPadding: int32;
+    procedure SetContentPadding(const Value: int32);
+    function Vec4d(const ARect: TRectBSd): TBox2d; overload; inline;
     //function Box(const APosition, ASize: TVec2f): TBox3d; overload; inline;
     procedure ReloadViewport;
     //function IntersectViewport(const ABox: TBox3d): boolean; inline;
-    function DoAdd(AMapper: TObjectModelMapper; const AModel: Pointer; const ARect: TRectBSd): PModelHolder; inline;
+    function DoAdd(AMapper: TObjectModelMapper; const AModel: Pointer; const ARect: TRectBSd; ALayer: int32; const AAngle: TVec3f): PModelHolder; inline;
     procedure OnDelete(const AHolder: PModelHolder);
+    function GetViewPortPosition: TVec2d;
+    function GetViewPortSize: TVec2d;
+    procedure CheckVisibility(AHolder: PModelHolder);
   protected
     class function GetComparator: TKeyComparatorEqual<PModelHolder>; virtual;
-    procedure CheckVisibility(AHolder: PModelHolder);
     procedure DoUpdate(const ARect: TRectBSd; AHolder: PModelHolder); virtual;
     procedure DoShow(const AModelHolder: PModelHolder); virtual;
     procedure DoHide(const AModelHolder: PModelHolder); virtual;
     procedure DoDelete(const AModelHolder: PModelHolder); virtual;
     procedure SetViewPortPosition(const Value: TVec2d); virtual;
     procedure SetViewPortSize(const Value: TVec2d); virtual;
+    property ViewPort: TBox2d read FViewPort;
   public
     constructor Create; overload;
     destructor Destroy; override;
 
-    function Add(AMapper: TObjectModelMapper; const AModel: Pointer; const ARect: TRectBSf): PModelHolder; overload;
-    function Add(AMapper: TObjectModelMapper; const AModel: Pointer; const APosition, ASize: TVec2d): PModelHolder; overload;
-    function Add(AMapper: TObjectModelMapper; const AModel: Pointer; const ARect: TRectBSd): PModelHolder; overload;
-    function Add(AMapper: TObjectModelMapper; const AModel: Pointer; const APosition, ASize: TVec2f): PModelHolder; overload;
+    function Add(AMapper: TObjectModelMapper; const AModel: Pointer; const ARect: TRectBSf; ALayer: int32): PModelHolder; overload;
+    function Add(AMapper: TObjectModelMapper; const AModel: Pointer; const APosition, ASize: TVec2d; ALayer: int32): PModelHolder; overload;
+    function Add(AMapper: TObjectModelMapper; const AModel: Pointer; const APosition, ASize: TVec2d; const AAngle: TVec3f; ALayer: int32): PModelHolder; overload;
+    function Add(AMapper: TObjectModelMapper; const AModel: Pointer; const ARect: TRectBSd; ALayer: int32): PModelHolder; overload;
+    function Add(AMapper: TObjectModelMapper; const AModel: Pointer; const APosition, ASize: TVec2f; ALayer: int32): PModelHolder; overload;
+    function Add(AMapper: TObjectModelMapper; const AModel: Pointer; const ARect: TRectBSd; const AAngle: TVec3f; ALayer: int32): PModelHolder; overload;
     procedure Update(const ARect: TRectBSf; AHolder: PModelHolder); overload;
     procedure Update(const APosition, ASize: TVec2f; AHolder: PModelHolder); overload;
     procedure Update(const ARect: TRectBSd; AHolder: PModelHolder); overload;
@@ -149,8 +157,9 @@ type
     procedure Delete(AHolder: PModelHolder);
     procedure Clear; virtual;
 
-    property ViewPortSize: TVec2d read FViewPortSize write SetViewPortSize;
-    property ViewPortPosition: TVec2d read FViewPortPosition write SetViewPortPosition;
+    property ViewPortSize: TVec2d read GetViewPortSize write SetViewPortSize;
+    property ViewPortPosition: TVec2d read GetViewPortPosition write SetViewPortPosition;
+    property ContentPadding: int32 read FContentPadding write SetContentPadding;
 
     property OnShowModel: TModelEventNotify read FOnShowModel write FOnShowModel;
     property OnHideModel: TModelEventNotify read FOnHideModel write FOnHideModel;
@@ -164,7 +173,7 @@ type
   private
 
     FOwner: TObject;
-    FName: string;
+    FFontName: string;
     FSize: int32;
     FItalic: boolean;
     FBold: boolean;
@@ -184,7 +193,7 @@ type
 
     procedure SetBold(const Value: boolean);
     procedure SetItalic(const Value: boolean);
-    procedure SetName(const Value: string);
+    procedure SetFontName(const Value: string);
     procedure SetSize(const Value: int32);
     procedure SetStrikeout(const Value: boolean);
     procedure SetUnderline(const Value: boolean);
@@ -203,7 +212,7 @@ type
     procedure Assigne(ASource: TTextStyle);
     procedure BeginUpdate;
     procedure EndUpdate;
-    property Name: string read FName write SetName;
+    property FontName: string read FFontName write SetFontName;
     property Size: int32 read FSize write SetSize;
     property Wrap: boolean read FWrap write SetWrap;
     property Bold: boolean read FBold write SetBold;
@@ -234,9 +243,9 @@ type
 
   TObjectModelMapper = class
   private
-    FOwner: TCanvasObjectsMap;
+    FMap: TCanvasObjectsMap;
   public
-    constructor Create(AOwner: TCanvasObjectsMap);
+    constructor Create(AMap: TCanvasObjectsMap);
     destructor Destroy; override;
 
     procedure Hide(AModelHolder: PModelHolder); virtual; abstract;
@@ -245,7 +254,7 @@ type
     procedure Delete(AModelHolder: PModelHolder); virtual; abstract;
     procedure Clear; virtual; abstract;
 
-    property Owner: TCanvasObjectsMap read FOwner;
+    property Map: TCanvasObjectsMap read FMap;
   end;
 
   TCanvasTextMapper = class(TObjectModelMapper)
@@ -255,24 +264,20 @@ type
       TFontKeyCounter = record
         CountFontKeyUse: int32;
         Font: IBlackSharkFont;
-        //Style: TTextStyle;
       end;
       TFontsTable = THashTable<uint32, PFontKeyCounter>;
       TStylesTable = THashTable<uint32, TTextStyle>;
   private
     FFonts: TFontsTable;
-    //FFontStyles: TStylesTable;
     FStyles: TStylesTable;
     FTextStyle: TTextStyle;
     FPrototype: TCanvasText;
     FTrim: boolean;
     function GetFont(AFontKey: uint32): PFontKeyCounter;
-//    function GetFontStyle(var AStyleKey: uint32): TTextStyle;
     function GetTextStyle: TTextStyle;
     procedure ClearStyles;
     procedure ClearFonts;
     procedure DoApplyTextStyle(AStyle: TTextStyle; AText: TCanvasText); inline;
-    procedure UpdateViewportSize(AModelHolder: PModelHolder); inline;
   protected
     procedure OnChangeTextStyle(ATextStyle: TTextStyle); virtual;
   public
@@ -281,8 +286,8 @@ type
     function DrawText(const AText: string; const ARect: TRectBSd; AAlign: TTextAlign = TTextAlign.taLeft): PTextModel;
     procedure ApplyTextStyle(AStyle: TTextStyle; AText: TCanvasText);
     procedure Clear; override;
-    procedure Hide(AModelHolder: PModelHolder); override;
     procedure Show(AModelHolder: PModelHolder); override;
+    procedure Hide(AModelHolder: PModelHolder); override;
     procedure Update(AModelHolder: PModelHolder); override;
     procedure Delete(AModelHolder: PModelHolder); override;
 
@@ -313,10 +318,11 @@ type
     constructor Create(AOwner: TCanvasObjectsMap);
     destructor Destroy; override;
     procedure Clear; override;
-    procedure Hide(AModelHolder: PModelHolder); override;
     procedure Show(AModelHolder: PModelHolder); override;
+    procedure Hide(AModelHolder: PModelHolder); override;
     procedure Update(AModelHolder: PModelHolder); override;
     procedure Delete(AModelHolder: PModelHolder); override;
+    function DrawInstancedPicture(const AFileName: string; const ASize: TVec2f; AOpacity: BSFloat = 1.0): PPictureModel; overload;
     function Draw(const AFileName: string; const ASize: TVec2f; AOpacity: BSFloat = 1.0): PPictureModel; overload;
     function DrawParticle(const AFileName: string; const ASrcRect: TTextureRect): PPictureModel; overload;
   end;
@@ -325,13 +331,18 @@ type
   private
     class function Compare(const Model1, Model2: PModelHolder): boolean; static;
   private
+    ObsrvResizeVP: IBResizeWindowEventObserver;
+    FCanvasRoot: TCanvasObject;
+    FObjectsHolder: TRectangle;
     FTextMapper: TCanvasTextMapper;
     FPictureMapper: TCanvasPictureMapper;
-    FViewPort: TRectangle;
     FCanvas: TBCanvas;
-    procedure DrawViewPort(Instance: PRendererGraphicInstance);
-    function GetParent: TCanvasObject;
-    procedure SetParent(const Value: TCanvasObject);
+    FStencilBackground: TRectangle;
+    FMethodStencilDraw: TDrawInstanceMethod;
+    FBackground: TPicture;
+    procedure OnChangeBackground(ASender: TObject);
+    procedure OnResizeViewport({%H-}const Data: BResizeEventData);
+    procedure UpdateViewCameraPosition;
   protected
     class function GetComparator: TKeyComparatorEqual<PModelHolder>; override;
     procedure DoUpdate(const ARect: TRectBSd; AHolder: PModelHolder); override;
@@ -340,18 +351,23 @@ type
     procedure DoDelete(const AModelHolder: PModelHolder); override;
     procedure SetViewPortPosition(const Value: TVec2d); override;
     procedure SetViewPortSize(const Value: TVec2d); override;
+    procedure DrawStancilBack(Instance: PRendererGraphicInstance);
   public
-    constructor Create(ACanvas: TBCanvas; AParent: TCanvasObject); overload;
+    constructor Create(ARenderer: TBlackSharkRenderer); overload;
     destructor Destroy; override;
     procedure Clear; override;
-    function DrawText(const AText: string; const ARect: TRectBSd; AAlign: TTextAlign = TTextAlign.taLeft): PModelHolder; overload;
-    function DrawText(const AText: string; const APosition: TVec2d): PModelHolder; overload;
-    function DrawPicture(const AFileName: string; const APosition: TVec2f; const ASize: TVec2f; AOpacity: BSFloat = 1.0): PModelHolder;
+    function DrawText(const AText: string; const ARect: TRectBSd; AAlign: TTextAlign = TTextAlign.taLeft; ALayer: int32 = 0): PModelHolder; overload;
+    function DrawText(const AText: string; const APosition: TVec2d; ALayer: int32 = 0): PModelHolder; overload;
+    function DrawText(const AText: string; const APosition: TVec2d; AAlign: TTextAlign; ALayer: int32 = 0): PModelHolder; overload;
+    function DrawPicture(const AFileName: string; const ARelativeViewPortPosition: TVec2f; const ASize: TVec2f; AOpacity: BSFloat = 1.0; ALayer: int32 = 0): PModelHolder; overload;
+    function DrawPicture(const AFileName: string; const ARelativeViewPortPosition: TVec2f; const ASize: TVec2f; const AAngle: TVec3f; AOpacity: BSFloat = 1.0; ALayer: int32 = 0): PModelHolder; overload;
+    function DrawInstancedPicture(const AFileName: string; const ARelativeViewPortPosition: TVec2f; const ASize: TVec2f; AOpacity: BSFloat = 1.0; ALayer: int32 = 0): PModelHolder;
 
     property Canvas: TBCanvas read FCanvas write FCanvas;
-    property ViewPort: TRectangle read FViewPort;
-    property Parent: TCanvasObject read GetParent write SetParent;
     property TextMapper: TCanvasTextMapper read FTextMapper;
+    property Background: TPicture read FBackground;
+    property StencilBackground: TRectangle read FStencilBackground;
+    property ObjectsHolder: TRectangle read FObjectsHolder;
   end;
 
 implementation
@@ -549,52 +565,48 @@ end;
 
 constructor TModelsMap.Create;
 begin
-  FMap := TCanvasObjectsKDTree.Create(600, 2);
-  FMap.ComparatorForEquality := GetComparator();
-  FMap.OnDelete := OnDelete;
+  FMap := TCanvasObjects2DTree.Create;
+  FMap.OnDeleteValue := OnDelete;
   FVisibleModels[false] := TListDualModels.Create;
   FVisibleModels[true ] := TListDualModels.Create; //(GetHashBlackSharkInt32, Int32CmpBool)
-  FSelectList := TListModels.Create;
-  ViewPortSize := vec2(600.0, 600.0);
+  //ViewPortSize := vec2(600.0, 600.0);
 end;
 
-function TModelsMap.Add(AMapper: TObjectModelMapper; const AModel: Pointer; const ARect: TRectBSf): PModelHolder;
+function TModelsMap.Add(AMapper: TObjectModelMapper; const AModel: Pointer; const ARect: TRectBSf; ALayer: int32): PModelHolder;
 begin
-  Result := DoAdd(AMapper, AModel, ARect);
+  Result := DoAdd(AMapper, AModel, ARect, ALayer, vec3(0.0, 0.0, 0.0));
 end;
 
-function TModelsMap.Vec4d(const ARect: TRectBSd): TVec4d;
+function TModelsMap.Vec4d(const ARect: TRectBSd): TBox2d;
 begin
-  Result.v2f1 := vec2(ARect.Left, - ARect.Top - ARect.Height);
-  Result.v2f2 := vec2(ARect.Left + ARect.Width, - ARect.Top);
+  Result.Min := ARect.Position;
+  Result.Max := ARect.Position + ARect.Size;
 end;
 
-function TModelsMap.Add(AMapper: TObjectModelMapper; const AModel: Pointer; const APosition, ASize: TVec2f): PModelHolder;
+function TModelsMap.Add(AMapper: TObjectModelMapper; const AModel: Pointer; const APosition, ASize: TVec2f; ALayer: int32): PModelHolder;
 begin
-  Result := DoAdd(AMapper, AModel, RectBSd(APosition, ASize));
+  Result := DoAdd(AMapper, AModel, RectBSd(APosition, ASize), ALayer, vec3(0.0, 0.0, 0.0));
 end;
 
-function TModelsMap.Add(AMapper: TObjectModelMapper; const AModel: Pointer; const APosition, ASize: TVec2d): PModelHolder;
+function TModelsMap.Add(AMapper: TObjectModelMapper; const AModel: Pointer; const APosition, ASize: TVec2d; const AAngle: TVec3f; ALayer: int32): PModelHolder;
 begin
-  Result := DoAdd(AMapper, AModel, RectBSd(APosition, ASize));
+  Result := DoAdd(AMapper, AModel, RectBSd(APosition, ASize), ALayer, AAngle);
 end;
 
-function TModelsMap.Add(AMapper: TObjectModelMapper; const AModel: Pointer; const ARect: TRectBSd): PModelHolder;
+function TModelsMap.Add(AMapper: TObjectModelMapper; const AModel: Pointer; const ARect: TRectBSd; const AAngle: TVec3f; ALayer: int32): PModelHolder;
 begin
-  Result := DoAdd(AMapper, AModel, ARect);
+  Result := DoAdd(AMapper, AModel, ARect, ALayer, AAngle);
 end;
 
-//function TModelsMap.Box(const APosition, ASize: TVec2f): TBox3d;
-//begin
-//  Result.Min := vec3(APosition.x,  - APosition.y - ASize.Height, 0.0);
-//  Result.Max := vec3(APosition.x + ASize.Width, - APosition.Y, 0.0);
-//end;
+function TModelsMap.Add(AMapper: TObjectModelMapper; const AModel: Pointer; const APosition, ASize: TVec2d; ALayer: int32): PModelHolder;
+begin
+  Result := DoAdd(AMapper, AModel, RectBSd(APosition, ASize), ALayer, vec3(0.0, 0.0, 0.0));
+end;
 
-//function TModelsMap.Boxf(const ARect: TRectBSd): TBox3f;
-//begin
-//  Result.Min := vec3(ARect.Left, - ARect.Top - ARect.Height, 0.0);
-//  Result.Max := vec3(ARect.Left + ARect.Width, - ARect.Top, 0.0);
-//end;
+function TModelsMap.Add(AMapper: TObjectModelMapper; const AModel: Pointer; const ARect: TRectBSd; ALayer: int32): PModelHolder;
+begin
+  Result := DoAdd(AMapper, AModel, ARect, ALayer, vec3(0.0, 0.0, 0.0));
+end;
 
 procedure TModelsMap.CheckVisibility(AHolder: PModelHolder);
 var
@@ -622,71 +634,40 @@ begin
   FMap.Free;
   FVisibleModels[false].Free;
   FVisibleModels[true ].Free;
-  FSelectList.Free;
   inherited;
 end;
 
-function TModelsMap.DoAdd(AMapper: TObjectModelMapper; const AModel: Pointer; const ARect: TRectBSd): PModelHolder;
+function TModelsMap.DoAdd(AMapper: TObjectModelMapper; const AModel: Pointer; const ARect: TRectBSd; ALayer: int32; const AAngle: TVec3f): PModelHolder;
 var
-  box2d: TVec4d;
+  box2d: TBox2d;
 begin
   new(Result);
   FillChar(Result^, SizeOf(TModelHolder), 0);
   Result.Model := AModel;
   Result.Mapper := AMapper;
   Result.Rect := ARect;
+  Result.Layer := ALayer;
+  Result.Angle := AAngle;
   box2d := Vec4d(ARect);
-  Result.Index := FMap.AddBB(Result, PKDMinMax(@box2d));
-
+  FMap.Add(Result, box2d);
   CheckVisibility(Result);
 end;
 
 procedure TModelsMap.DoDelete(const AModelHolder: PModelHolder);
 begin
-  if Assigned(AModelHolder.ListPos) then
-    DoHide(AModelHolder);
-  Dispose(AModelHolder);
-end;
-
-procedure TCanvasObjectsMap.Clear;
-begin
-  inherited;
-  FTextMapper.Clear;
-  FPictureMapper.Clear;
-end;
-
-constructor TCanvasObjectsMap.Create(ACanvas: TBCanvas; AParent: TCanvasObject);
-begin
-  FCanvas := ACanvas;
-  FViewPort := TRectangle.Create(ACanvas, AParent);
-  FViewPort.Fill := true;
-  FViewPort.Data.AsStencil := true;
-  FViewPort.Data.DrawInstance := DrawViewPort;
-  FViewPort.Data.Opacity := 0.8;
-  FViewPort.Data.Interactive := false;
-  FViewPort.Color := BS_CL_GREEN;
-  inherited Create;
-  FTextMapper := TCanvasTextMapper.Create(Self);
-  FPictureMapper := TCanvasPictureMapper.Create(Self);
-end;
-
-destructor TCanvasObjectsMap.Destroy;
-begin
-  inherited;
-  FTextMapper.Free;
-  FPictureMapper.Free;
-  FViewPort.Free;
-end;
-
-procedure TCanvasObjectsMap.DoDelete(const AModelHolder: PModelHolder);
-begin
-  AModelHolder.Mapper.Delete(AModelHolder);
-  inherited;
+  if not FUpdating then
+  begin
+    if Assigned(AModelHolder.ListPos) then
+      DoHide(AModelHolder);
+    AModelHolder.Mapper.Delete(AModelHolder);
+    Dispose(AModelHolder);
+  end;
 end;
 
 procedure TModelsMap.DoHide(const AModelHolder: PModelHolder);
 begin
   FVisibleModels[FListIndex].Remove(AModelHolder.ListPos);
+  AModelHolder.ListPos := nil;
   if Assigned(FOnHideModel) then
     FOnHideModel(AModelHolder);
 end;
@@ -700,17 +681,34 @@ end;
 
 procedure TModelsMap.DoUpdate(const ARect: TRectBSd; AHolder: PModelHolder);
 var
-  box2d: TVec4d;
+  box2d: TBox2d;
+  box2dOld: TBox2d;
 begin
   box2d := Vec4d(ARect);
-  AHolder.Index := FMap.UpdatePositionBB(AHolder, PKDMinMax(@box2d), AHolder.Index);
-  AHolder.Rect := ARect;
+  box2dOld := Vec4d(AHolder.Rect);
+  FUpdating := true;
+  try
+    FMap.Update(AHolder, PKDMinMax(@box2d), PKDMinMax(@box2dOld));
+    AHolder.Rect := ARect;
+  finally
+    FUpdating := false;
+  end;
   CheckVisibility(AHolder);
 end;
 
 class function TModelsMap.GetComparator: TKeyComparatorEqual<PModelHolder>;
 begin
   Result := nil;
+end;
+
+function TModelsMap.GetViewPortPosition: TVec2d;
+begin
+  Result := FViewPortRect.Position;
+end;
+
+function TModelsMap.GetViewPortSize: TVec2d;
+begin
+  Result := FViewPortRect.Size;
 end;
 
 //function TModelsMap.IntersectViewport(const ABox: TBox3d): boolean;
@@ -729,23 +727,21 @@ procedure TModelsMap.ReloadViewport;
 var
   i: int32;
   holder: PModelHolder;
-  box: TVec4d;
+  selected: TListModels;
 begin
-  FSelectList.Count := 0;
-  box := Vec4d(FViewPortRect);
-  FMap.Select(PKDMinMax(@box), FSelectList);
+  selected := FMap.Select(FViewPort);
   FListIndex := not FListIndex;
-  for i := 0 to FSelectList.Count - 1 do
+  for i := 0 to selected.Count - 1 do
   begin
-    holder := FSelectList.Items[i];
+    holder := selected.Items[i];
     if Assigned(holder.ListPos) then
     begin
       FVisibleModels[not FListIndex].Remove(holder.ListPos);
       holder.ListPos := FVisibleModels[FListIndex].PushToEnd(holder);
-      CheckVisibility(holder);
       holder.Mapper.Update(holder);
     end else
-      CheckVisibility(holder);
+      DoShow(holder);
+      {CheckVisibility(holder)};
   end;
 
   while FVisibleModels[not FListIndex].Count > 0 do
@@ -758,20 +754,27 @@ end;
 
 procedure TModelsMap.Delete(AHolder: PModelHolder);
 begin
-  FMap.Remove(AHolder.Index, AHolder);
+  FMap.Delete(AHolder, Vec4d(AHolder.Rect));
+end;
+
+procedure TModelsMap.SetContentPadding(const Value: int32);
+begin
+  FContentPadding := Value;
+  ReloadViewport;
 end;
 
 procedure TModelsMap.SetViewPortPosition(const Value: TVec2d);
 begin
-  FViewPortPosition := Value;
   FViewPortRect.Position := Value;
+  FViewPort.Min := Value;
+  FViewPort.Max := Value + FViewPortRect.Size;
   ReloadViewport;
 end;
 
 procedure TModelsMap.SetViewPortSize(const Value: TVec2d);
 begin
-  FViewPortSize := Value;
   FViewPortRect.Size := Value;
+  FViewPort.Max := FViewPort.Min + Value;
   ReloadViewport;
 end;
 
@@ -844,12 +847,11 @@ end;
 constructor TCanvasTextMapper.Create(AOwner: TCanvasObjectsMap);
 begin
   inherited;
-  FFonts := TFontsTable.Create(GetHashBlackSharkUInt32, UInt32CmpBool);
-  //FFontStyles := TStylesTable.Create(GetHashBlackSharkUInt32, UInt32CmpBool);
-  FStyles := TStylesTable.Create(GetHashBlackSharkUInt32, UInt32CmpBool);
+  FFonts := TFontsTable.Create;
+  FStyles := TStylesTable.Create;
   FTextStyle := TTextStyle.Create(Self);
   FTextStyle.OnChangeStyle := OnChangeTextStyle;
-  FPrototype := TCanvasText.Create(Owner.Canvas, nil);
+  FPrototype := TCanvasText.Create(Map.Canvas, nil);
   FPrototype.Data.Hidden := true;
 end;
 
@@ -887,7 +889,6 @@ begin
   Clear;
   FPrototype.Free;
   FFonts.Free;
-  //FFontStyles.Free;
   FStyles.Free;
   FTextStyle.Free;
   inherited;
@@ -933,8 +934,6 @@ begin
 
   new(Result);
   Result.Text := AText;
-  //Result.Rect.Position := ARect.Position;
-  //Result.Rect.Size := vec2d(ARect.Width, FPrototype.Height);
   Result.StyleKey := FTextStyle.StyleKey;
   Result.Align := AAlign;
 end;
@@ -945,21 +944,10 @@ begin
   begin
     new(Result);
     Result.CountFontKeyUse := 0;
-    Result.Font := BSFontManager.GetFont(FTextStyle.Name, TTrueTypeRasterFont);
+    Result.Font := BSFontManager.GetFont(FTextStyle.FontName, TTrueTypeRasterFont);
     FFonts.Items[AFontKey] := Result;
   end;
 end;
-
-//function TCanvasTextMapper.GetFontStyle(var AStyleKey: uint32): TTextStyle;
-//begin
-////  if not FFontStyles.Find(AStyleKey, Result) and not FFontStyles.Find(FTextStyle.StyleKey, Result) then
-////  begin
-////    Result := TTextStyle.Create(Self);
-////    Result.Assigne(FTextStyle);
-////    FFontStyles.TryAdd(Result.StyleKey, Result);
-////    AStyleKey := Result.StyleKey;
-////  end;
-//end;
 
 function TCanvasTextMapper.GetTextStyle: TTextStyle;
 begin
@@ -984,9 +972,11 @@ var
   view: TCanvasText;
 begin
   model := AModelHolder.Model;
-  view := TCanvasText.Create(FOwner.Canvas, FOwner.ViewPort);
+  view := TCanvasText.Create(Map.Canvas, Map.ObjectsHolder);
   AModelHolder.View := view;
+  view.Data.StencilParent := Map.StencilBackground.Data;
   view.Data.StencilTest := true;
+  view.Layer2d := AModelHolder.Layer;
   style := FStyles.Items[model.StyleKey];
   fontKeyCounter := GetFont(style.FontKey);
   inc(fontKeyCounter.CountFontKeyUse);
@@ -996,9 +986,14 @@ begin
   DoApplyTextStyle(style, view);
   view.TextAlign := model.Align;
 
-  UpdateViewportSize(AModelHolder);
+  //UpdateViewportSize(AModelHolder);
+  view.ViewportSize := AModelHolder.Rect.Size;
   view.Text := model.Text;
   view.SceneTextData.EndChangeProp;
+
+  // TODO: remove
+  view.Data.Interactive := true;
+  view.Data.Caption := model.Text;
 
   view.Position2d := AModelHolder.Rect.Position;
 end;
@@ -1008,26 +1003,8 @@ begin
   if not Assigned(AModelHolder.View) then
     exit;
   //UpdateViewportSize(AModelHolder);
-  AModelHolder.View.Position2d := AModelHolder.Rect.Position;
-end;
-
-procedure TCanvasTextMapper.UpdateViewportSize(AModelHolder: PModelHolder);
-var
-  w, h: BSFloat;
-begin
-
-  //AModelHolder.Model.View.SceneTextData.TxtProcessor.ViewportWidth := AModelHolder.Model.Rect.Width;
-  if AModelHolder.Rect.X - FOwner.ViewPortPosition.x + AModelHolder.Rect.Width > FOwner.ViewPortSize.Width then
-    w := FOwner.ViewPortSize.Width - (AModelHolder.Rect.X - FOwner.ViewPortPosition.x)
-  else
-    w := AModelHolder.Rect.Width;
-
-  if AModelHolder.Rect.Y - FOwner.ViewPortPosition.y + AModelHolder.Rect.Height > FOwner.ViewPortSize.Height then
-    h := FOwner.ViewPortSize.Height - (AModelHolder.Rect.Y - FOwner.ViewPortPosition.y)
-  else
-    h := AModelHolder.Rect.Height;
-
-  TCanvasText(AModelHolder.View).ViewportSize := vec2(w, h);
+  if (AModelHolder.View.Position2d.x <> AModelHolder.Rect.Position.x) or (AModelHolder.View.Position2d.y <> AModelHolder.Rect.Position.y) then
+    AModelHolder.View.Position2d := AModelHolder.Rect.Position;
 end;
 
 procedure TCanvasTextMapper.OnChangeTextStyle(ATextStyle: TTextStyle);
@@ -1040,7 +1017,7 @@ end;
 procedure TTextStyle.Assigne(ASource: TTextStyle);
 begin
   FOwner := ASource.FOwner;
-  FName := ASource.Name;
+  FFontName := ASource.FontName;
   FSize := ASource.Size;
   FItalic := ASource.Italic;
   FBold := ASource.Bold;
@@ -1065,7 +1042,7 @@ begin
 
   FFontKey := GetHashBlackSharkS(
       IntToStr(FSize) +
-      FName + ':' +
+      FFontName + ':' +
       BoolToStr(FBold) + ':' +
       IntToStr(trunc(FBoldWeightX*100)) + ':' +
       IntToStr(trunc(FBoldWeightY*100)) + ':' +
@@ -1074,7 +1051,7 @@ begin
     );
 
   FStyleKey := FFontKey or GetHashBlackSharkS(
-      FName + ':' +
+      FFontName + ':' +
       VecToStr(FColor, 2) + ':' +
       VecToStr(FColorLine, 2) + ':' +
       BoolToStr(FWrap) + ':' +
@@ -1087,7 +1064,7 @@ end;
 constructor TTextStyle.Create(AOwner: TObject);
 begin
   FOwner := AOwner;
-  FName := BSFontManager.DEFAULT_FONT;
+  FFontName := BSFontManager.DEFAULT_FONT;
   FBoldWeightX := DEFAULT_BOLD_WEIGHT_X;
   FBoldWeightY := DEFAULT_BOLD_WEIGHT_Y;
   FItalicWeight := DEFAULT_ITALIC_WEIGHT;
@@ -1171,11 +1148,11 @@ begin
     BuildKeys;
 end;
 
-procedure TTextStyle.SetName(const Value: string);
+procedure TTextStyle.SetFontName(const Value: string);
 begin
-  if FName = Value then
+  if FFontName = Value then
     exit;
-  FName := Value;
+  FFontName := Value;
   FModified := true;
 end;
 
@@ -1213,6 +1190,74 @@ end;
 
 { TCanvasObjectsMap }
 
+procedure TCanvasObjectsMap.Clear;
+begin
+  inherited;
+  FTextMapper.Clear;
+  FPictureMapper.Clear;
+end;
+
+constructor TCanvasObjectsMap.Create(ARenderer: TBlackSharkRenderer);
+begin
+  ObsrvResizeVP := CreateResizeWindowObserver(ARenderer.EventResize, OnResizeViewport);
+  FCanvas := TBCanvas.Create(ARenderer, nil);
+  FCanvas.StickOnScreen := false;
+  FCanvasRoot := FCanvas.CreateEmptyCanvasObject;
+//  FCanvasRoot.Data.SceneSpaceTreeClient := true;
+//  FCanvasRoot.Size := ARenderer.ScreenSize;
+//  FCanvasRoot.Fill := true;
+//  FCanvasRoot.Data.Interactive := false;
+//  FCanvasRoot.Data.Opacity := 0.2;
+//  FCanvasRoot.Build;
+  FCanvasRoot.Data.Caption := 'CanvasObjectsMapRoot';
+  // for not full screen application need stencil
+  FStencilBackground := TRectangle.Create(FCanvas, FCanvasRoot);
+  FStencilBackground.Fill := true;
+  FStencilBackground.Data.AsStencil := true;
+  FStencilBackground.Data.Opacity := 0.0;
+  FStencilBackground.Data.Caption := 'StencilBackground';
+  FStencilBackground.Color := BS_CL_RED;
+  FStencilBackground.Data.SceneSpaceTreeClient := true;
+  FStencilBackground.Data.Interactive := false;
+  FMethodStencilDraw := FStencilBackground.Data.DrawInstance;
+  FStencilBackground.Data.DrawInstance := DrawStancilBack;
+
+  FBackground := TPicture.Create(FCanvas, FStencilBackground);
+  FBackground.AutoFit := false;
+  FBackground.Data.Interactive := false;
+  //FBackground.Data.DragResolve := false;
+  FBackground.Size := FStencilBackground.Size;
+  FBackground.Position2d := vec2(0.0, 0.0);
+  FBackground.OnChangeNotify := OnChangeBackground;
+  FBackground.Data.Caption := 'Background';
+  FBackground.Data.SceneSpaceTreeClient := true;
+
+  FObjectsHolder := TRectangle.Create(FCanvas, nil);
+  FObjectsHolder.Fill := true;
+  FObjectsHolder.Data.Interactive := false;
+  FObjectsHolder.Data.Opacity := 0.5;
+  //FObjectsHolder := FCanvas.CreateEmptyCanvasObject(FCanvasRoot);
+  FObjectsHolder.Layer2d := 5;
+  FObjectsHolder.Data.Caption := 'CanvasObjectsMapObjectsHolder';
+  FObjectsHolder.Data.SceneSpaceTreeClient := true;
+  inherited Create;
+  FTextMapper := TCanvasTextMapper.Create(Self);
+  FPictureMapper := TCanvasPictureMapper.Create(Self);
+end;
+
+destructor TCanvasObjectsMap.Destroy;
+begin
+  inherited;
+  FTextMapper.Free;
+  FPictureMapper.Free;
+  FCanvas.Free;
+end;
+
+procedure TCanvasObjectsMap.DoDelete(const AModelHolder: PModelHolder);
+begin
+  inherited;
+end;
+
 procedure TCanvasObjectsMap.DoHide(const AModelHolder: PModelHolder);
 begin
   inherited;
@@ -1231,36 +1276,61 @@ begin
   AHolder.Mapper.Update(AHolder);
 end;
 
-function TCanvasObjectsMap.DrawPicture(const AFileName: string; const APosition: TVec2f; const ASize: TVec2f; AOpacity: BSFloat = 1.0): PModelHolder;
+function TCanvasObjectsMap.DrawInstancedPicture(const AFileName: string; const ARelativeViewPortPosition, ASize: TVec2f; AOpacity: BSFloat; ALayer: int32): PModelHolder;
+var
+  model: PPictureModel;
+begin
+  model := FPictureMapper.DrawInstancedPicture(AFileName, ASize, AOpacity);
+  Result := Add(FPictureMapper, model, RectBS(ViewPortPosition + ARelativeViewPortPosition, model.Size.Width, model.Size.Height), ALayer);
+end;
+
+function TCanvasObjectsMap.DrawPicture(const AFileName: string; const ARelativeViewPortPosition, ASize: TVec2f; const AAngle: TVec3f; AOpacity: BSFloat;
+  ALayer: int32): PModelHolder;
 var
   model: PPictureModel;
 begin
   model := FPictureMapper.Draw(AFileName, ASize, AOpacity);
-  Result := Add(FPictureMapper, model, RectBS(APosition, model.Size.Width, model.Size.Height));
+  Result := Add(FPictureMapper, model, RectBS(ViewPortPosition + ARelativeViewPortPosition, model.Size.Width, model.Size.Height), AAngle, ALayer);
 end;
 
-function TCanvasObjectsMap.DrawText(const AText: string; const APosition: TVec2d): PModelHolder;
+function TCanvasObjectsMap.DrawPicture(const AFileName: string; const ARelativeViewPortPosition: TVec2f; const ASize: TVec2f; AOpacity: BSFloat = 1.0; ALayer: int32 = 0): PModelHolder;
+var
+  model: PPictureModel;
+begin
+  model := FPictureMapper.Draw(AFileName, ASize, AOpacity);
+  Result := Add(FPictureMapper, model, RectBS(ViewPortPosition + ARelativeViewPortPosition, model.Size.Width, model.Size.Height), ALayer);
+end;
+
+procedure TCanvasObjectsMap.DrawStancilBack(Instance: PRendererGraphicInstance);
+begin
+  { fill the shape Back as the stencil for ban draw outside him }
+  glClearStencil(0);
+  glStencilFunc(GL_ALWAYS, 1, $FF);
+  glStencilOp(GL_ZERO, GL_ZERO, GL_REPLACE);
+  FMethodStencilDraw(Instance);
+  glStencilFunc(GL_EQUAL, 1, $FF);
+  FMethodStencilDraw(Instance);
+end;
+
+function TCanvasObjectsMap.DrawText(const AText: string; const APosition: TVec2d; ALayer: int32): PModelHolder;
 begin
   Result := DrawText(AText, RectBSd(APosition, vec2d(ViewPortSize.Width, 0)));
 end;
 
-function TCanvasObjectsMap.DrawText(const AText: string; const ARect: TRectBSd; AAlign: TTextAlign): PModelHolder;
+function TCanvasObjectsMap.DrawText(const AText: string; const ARect: TRectBSd; AAlign: TTextAlign; ALayer: int32): PModelHolder;
 var
   model: PTextModel;
 begin
   model := FTextMapper.DrawText(AText, ARect, AAlign);
-  Result := Add(FTextMapper, model, RectBS(ARect.Position, ARect.Width, FTextMapper.Prototype.Height));
+  Result := Add(FTextMapper, model, RectBS(ARect.Position, ARect.Width, FTextMapper.Prototype.Height), ALayer);
 end;
 
-procedure TCanvasObjectsMap.DrawViewPort(Instance: PRendererGraphicInstance);
+function TCanvasObjectsMap.DrawText(const AText: string; const APosition: TVec2d; AAlign: TTextAlign; ALayer: int32): PModelHolder;
+var
+  model: PTextModel;
 begin
-  { fill the shape Back as the stencil for ban draw outside him }
-  //glClear ( GL_STENCIL_BUFFER_BIT );
-  glClearStencil(0);
-  glStencilFunc(GL_ALWAYS, 1, $FF);
-  glStencilOp(GL_ZERO, GL_ZERO, GL_REPLACE);
-  TObjectVertexes(Instance.Instance.Owner).DrawVertexs(Instance);
-  glStencilFunc(GL_EQUAL, 1, $FF);
+  model := FTextMapper.DrawText(AText, RectBSd(APosition, vec2d(ViewPortSize.Width, 0)), AAlign);
+  Result := Add(FTextMapper, model, RectBS(APosition, FTextMapper.Prototype.Width, FTextMapper.Prototype.Height), ALayer);
 end;
 
 class function TCanvasObjectsMap.Compare(const Model1, Model2: PModelHolder): boolean;
@@ -1273,34 +1343,47 @@ begin
   Result := Compare;
 end;
 
-function TCanvasObjectsMap.GetParent: TCanvasObject;
+procedure TCanvasObjectsMap.OnChangeBackground(ASender: TObject);
 begin
-  Result := FViewPort.Parent;
+  FBackground.Position2d := vec2(0.0, 0.0);
 end;
 
-procedure TCanvasObjectsMap.SetParent(const Value: TCanvasObject);
+procedure TCanvasObjectsMap.OnResizeViewport(const Data: BResizeEventData);
 begin
-  FViewPort.Parent := Value;
+  UpdateViewCameraPosition;
 end;
 
 procedure TCanvasObjectsMap.SetViewPortPosition(const Value: TVec2d);
 begin
+  FStencilBackground.Position2d := Value;
+  UpdateViewCameraPosition;
   inherited;
-  FViewPort.Position2d := Value;
 end;
 
 procedure TCanvasObjectsMap.SetViewPortSize(const Value: TVec2d);
 begin
   inherited;
-  FViewPort.Size := Value;
-  FViewPort.Build;
+  FStencilBackground.Size := Value;
+  FStencilBackground.Build;
+  FStencilBackground.Position2d := ViewPortPosition;
+  FBackground.Size := Value;
+  FBackground.Build;
+  UpdateViewCameraPosition;
+end;
+
+procedure TCanvasObjectsMap.UpdateViewCameraPosition;
+var
+  pos: TVec3f;
+begin
+  pos := FStencilBackground.Data.AbsolutePosition;
+  Canvas.Renderer.Frustum.Position := vec3(pos.x, pos.y, Canvas.Renderer.Frustum.Position.z);
 end;
 
 { TObjectModelMapper }
 
-constructor TObjectModelMapper.Create(AOwner: TCanvasObjectsMap);
+constructor TObjectModelMapper.Create(AMap: TCanvasObjectsMap);
 begin
-  FOwner := AOwner;
+  FMap := AMap;
 end;
 
 destructor TObjectModelMapper.Destroy;
@@ -1343,7 +1426,7 @@ var
 begin
   model := AModelHolder.Model;
   AModelHolder.Model := nil;
-  if model.Instancer.CountInstance = 0 then
+  if Assigned(model.Instancer) and (model.Instancer.CountInstance = 0) then
   begin
     proto := model.Instancer.PrototypeCanvasObject;
     model.Instancer.Prototype := nil;
@@ -1361,7 +1444,7 @@ begin
   FPictureMaps.Free;
 end;
 
-function TCanvasPictureMapper.Draw(const AFileName: string; const ASize: TVec2f; AOpacity: BSFloat = 1.0): PPictureModel;
+function TCanvasPictureMapper.DrawInstancedPicture(const AFileName: string; const ASize: TVec2f; AOpacity: BSFloat = 1.0): PPictureModel;
 var
   proto: TPicture;
 begin
@@ -1369,22 +1452,25 @@ begin
   Result.FileName := AFileName;
   Result.IsParticle := false;
   Result.Index := -1;
-  Result.Size := ASize;
   Result.Opacity := AOpacity;
 
   if not FPictureMaps.Find(AFileName, Result.Instancer) then
   begin
-    proto := TPicture.Create(Owner.Canvas, Owner.Parent);
+    proto := TPicture.Create(Map.Canvas, Map.ObjectsHolder);
+    proto.Size := ASize;
+    //proto.Layer2d := ALayer;
     proto.AutoFit := false;
     proto.Data.Interactive := false;
     proto.LoadFromFile(AFileName);
+    proto.Data.StencilParent := Map.StencilBackground.Data;
     proto.Data.StencilTest := true;
-    Result.Instancer := TBlackSharkInstancing2d.Create(Owner.Canvas.Renderer, proto);
+    //proto.Align := TObjectAlign.oaTop;
+    //proto.PaddingTop := 100;
+    Result.Instancer := TBlackSharkInstancing2d.Create(Map.Canvas.Renderer, proto);
     FPictureMaps.Items[AFileName] := Result.Instancer;
   end;
 
   Result.Size := vec2(Result.Instancer.PrototypeCanvasObject.Width, Result.Instancer.PrototypeCanvasObject.Height);
-  //ASize := vec2(inst.PrototypeCanvasObject.Width, inst.PrototypeCanvasObject.Height);
 end;
 
 function TCanvasPictureMapper.DrawParticle(const AFileName: string; const ASrcRect: TTextureRect): PPictureModel;
@@ -1393,6 +1479,18 @@ begin
   Result.FileName := AFileName;
   Result.IsParticle := true;
   Result.Index := -1;
+  Result.Instancer := nil;
+end;
+
+function TCanvasPictureMapper.Draw(const AFileName: string; const ASize: TVec2f; AOpacity: BSFloat): PPictureModel;
+begin
+  new(Result);
+  Result.FileName := AFileName;
+  Result.IsParticle := false;
+  Result.Index := -1;
+  Result.Size := ASize;
+  Result.Opacity := AOpacity;
+  Result.Instancer := nil;
 end;
 
 procedure TCanvasPictureMapper.Hide(AModelHolder: PModelHolder);
@@ -1406,7 +1504,13 @@ begin
   end else
   if Assigned(model.Instancer) then
   begin
-    model.Instancer.Remove(model.Index);
+    // TODO: it's wrong
+    //model.Instancer.Remove(model.Index);
+    //model.Index := -1;
+  end else
+  if Assigned(AModelHolder.View) then
+  begin
+    FreeAndNil(AModelHolder.View);
   end;
 end;
 
@@ -1414,12 +1518,14 @@ procedure TCanvasPictureMapper.Show(AModelHolder: PModelHolder);
 var
   model: PPictureModel;
   scale: TVec2f;
+  view: TPicture;
 begin
   model := AModelHolder.Model;
   if model.IsParticle then
   begin
     // todo
   end else
+  if Assigned(model.Instancer) then
   begin
     model.Index := model.Instancer.CountInstance;
     model.Instancer.CountInstance := model.Instancer.CountInstance + 1;
@@ -1430,22 +1536,47 @@ begin
         model.Instancer.Scale[model.Index] := scale.x
       else
         model.Instancer.Scale[model.Index] := scale.y;
-      model.Instancer.Position2d[model.Index] := AModelHolder.Rect.Position - FOwner.ViewPortPosition;
+      model.Instancer.Position2d[model.Index] := AModelHolder.Rect.Position;
       model.Instancer.Opacity[model.Index] := model.Opacity;
     finally
       model.Instancer.EndUpdate;
     end;
+    AModelHolder.View := model.Instancer.PrototypeCanvasObject;
+  end else
+  begin
+    view := TPicture.Create(Map.Canvas, Map.ObjectsHolder);
+    view.Size := model.Size;
+    view.Layer2d := AModelHolder.Layer;
+    view.AutoFit := false;
+    //view.Data.Interactive := false;
+    view.Data.StencilParent := Map.StencilBackground.Data;
+    view.Data.StencilTest := true;
+    view.Data.Opacity := model.Opacity;
+    view.LoadFromFile(model.FileName);
+    view.Data.Angle := AModelHolder.Angle;
+    view.Position2d := AModelHolder.Rect.Position;
+    AModelHolder.View := view;
   end;
-  AModelHolder.View := model.Instancer.PrototypeCanvasObject;
+
 end;
 
 procedure TCanvasPictureMapper.Update(AModelHolder: PModelHolder);
 var
+  pos: TVec2d;
   model: PPictureModel;
 begin
   model := AModelHolder.Model;
-  if Assigned(model.Instancer) then
-    model.Instancer.Position2d[model.Index] := AModelHolder.Rect.Position - FOwner.ViewPortPosition;
+  if Assigned(model.Instancer) and (model.Index >= 0) then
+  begin
+    pos := model.Instancer.Position2d[model.Index];
+    model.Instancer.BeginUpdate(model.Index);
+    try
+      if (pos.x <> AModelHolder.Rect.Position.x) or (pos.y <> AModelHolder.Rect.Position.y) then
+        model.Instancer.Position2d[model.Index] := AModelHolder.Rect.Position
+    finally
+      model.Instancer.EndUpdate;
+    end;
+  end;
 end;
 
 end.

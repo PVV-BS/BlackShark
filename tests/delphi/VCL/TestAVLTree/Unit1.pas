@@ -11,13 +11,15 @@ uses
   bs.collections;
 
 type
+
+  TAvlTree = TAvlTree<Int32, TTreeNode>;
   TAVLTreeViewer = class(TForm)
     TreeView: TTreeView;
     Panel1: TPanel;
     btnFillSamples: TBitBtn;
     btnDelNode: TBitBtn;
     btnInsKey35: TBitBtn;
-    btnDelRoot: TBitBtn;
+    btnDelRandom: TBitBtn;
     PopupMenu: TPopupMenu;
     FullExpand: TMenuItem;
     FullCollapse: TMenuItem;
@@ -29,18 +31,22 @@ type
     btnClear: TBitBtn;
     DelEdit: TEdit;
     IncertEdit: TEdit;
-    btnSelect: TBitBtn;
     BitFind: TBitBtn;
     edtFindValue: TEdit;
     log: TMemo;
     N3: TMenuItem;
     Save: TMenuItem;
     btnFillSeries: TBitBtn;
+    StatusBar: TStatusBar;
+    edtRandomCount: TEdit;
+    N4: TMenuItem;
+    miDeleteMemoSet: TMenuItem;
+    edtSeriesSize: TEdit;
+    addFromMemoSet: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure btnFillSamplesClick(Sender: TObject);
     procedure btnDelNodeClick(Sender: TObject);
     procedure btnInsKey35Click(Sender: TObject);
-    procedure btnDelRootClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FullExpandClick(Sender: TObject);
     procedure FullCollapseClick(Sender: TObject);
@@ -55,14 +61,18 @@ type
     procedure DelEditChange(Sender: TObject);
     procedure SaveClick(Sender: TObject);
     procedure btnFillSeriesClick(Sender: TObject);
+    procedure btnDelRandomClick(Sender: TObject);
+    procedure miDeleteMemoSetClick(Sender: TObject);
+    procedure addFromMemoSetClick(Sender: TObject);
   private
     { Private declarations }
-    FIntervalsTree: TIntervalsTree;
+    FAvlTree: TAvlTree;
     FViewSelectList: TListVec<Pointer>;
-    FHashIntervals: THashTable<int, TTreeNode>;
+    FHashIntervals: THashTable<int32, TTreeNode>;
 
     procedure OutToTreeView;
     procedure OnChangeSelection;
+    procedure UpdateStatusBar;
   public
     { Public declarations }
   end;
@@ -74,13 +84,30 @@ implementation
 
 {$R *.dfm}
 
+procedure TAVLTreeViewer.addFromMemoSetClick(Sender: TObject);
+var
+  i: Integer;
+  val: int32;
+begin
+  for i := 0 to log.Lines.Count - 1 do
+  begin
+
+    if TryStrToInt(log.Lines.Strings[i], val) then
+    begin
+      FAvlTree.Add(val, nil);
+    end;
+
+  end;
+  OutToTreeView;
+  FullExpandClick(Sender);
+  SaveClick(Sender);
+end;
+
 procedure TAVLTreeViewer.BitFindClick(Sender: TObject);
 var
-  avlNode: int;
   node: TTreeNode;
 begin
-  avlNode := FIntervalsTree.Find(StrToFloat(edtFindValue.Text));
-  if (avlNode >= 0) and FHashIntervals.Find(avlNode, node) then
+  if FAvlTree.Find(StrToInt(edtFindValue.Text), node) then
   begin
     node.Selected := true;
     OnChangeSelection;
@@ -89,78 +116,120 @@ end;
 
 procedure TAVLTreeViewer.btnClearClick(Sender: TObject);
 begin
-  FIntervalsTree.Clear;
+  FAvlTree.Clear;
+  log.Clear;
   OutToTreeView;
 end;
 
 procedure TAVLTreeViewer.btnDelNodeClick(Sender: TObject);
 var
-  avlNode: int;
   balance: int8;
-  NodeValue: double;
-  left, right: int;
-  intervals: TIntervals;
-  i: Integer;
-  min, max: double;
-  data: Pointer;
+  Key: int32;
+  left, right: Pointer;
+  n: TTreeNode;
 begin
-  if TreeView.Selected = nil then
-    exit;
-
-  avlNode := int(TreeView.Selected.Data);
-  FIntervalsTree.Select(avlNode, left, right, NodeValue, balance, intervals);
-  for i := length(intervals) - 1 downto 0 do
+  if TreeView.Selected <> nil then
   begin
-    FIntervalsTree.Select(intervals[i], min, max, data);
-    log.Lines.Add(inttostr(trunc(min)));
-    log.Lines.Add(inttostr(trunc(max)));
-    FIntervalsTree.Delete(intervals[i]);
+    FAvlTree.Select(TreeView.Selected.Data, left, right, Key, n, balance);
+    FAvlTree.Delete(Key);
+    OutToTreeView;
+    FullExpandClick(Sender);
+    log.Lines.Add(IntToStr(Key));
+    UpdateStatusBar;
   end;
-  OutToTreeView;
-  FullExpandClick(Sender);
+
 end;
 
-procedure TAVLTreeViewer.btnDelRootClick(Sender: TObject);
+procedure TAVLTreeViewer.btnDelRandomClick(Sender: TObject);
+var
+  count: Integer;
+  delta: Integer;
+  i: Integer;
+  key: Integer;
+  keys: TArray<Integer>;
+  ind: Integer;
+  keysDeleted: THashTable<int32, int32>;
 begin
-  //if FIntervalsTree.Root >= 0 then
-  //  FIntervalsTree.Delete(FIntervalsTree.Root.Key);
+  delta := FAvlTree.Count - 1;
+  keys := FAvlTree.Keys;
+  count := StrToInt(edtRandomCount.Text);
+  if count > FAvlTree.Count then
+    count := FAvlTree.Count;
+
+  log.Lines.Clear;
+  keysDeleted := THashTable<int32, int32>.Create;
+  for i := 0 to count - 1 do
+  begin
+    repeat
+      ind := Random(delta);
+    until not keysDeleted.Exists(keys[ind]);
+    keysDeleted.Items[keys[ind]] := ind;
+    key := keys[ind];
+    FAvlTree.Delete(key);
+    log.Lines.Add(IntToStr(key));
+  end;
+  keysDeleted.Free;
   OutToTreeView;
+  FullExpandClick(Sender);
+  UpdateStatusBar;
+  SaveClick(Sender);
+  //log.SelectAll;
+  //log.CopyToClipboard;
 end;
 
 procedure TAVLTreeViewer.btnFillSamplesClick(Sender: TObject);
 begin
-  //exit;
-  FIntervalsTree.Add(394, 440, Pointer(FIntervalsTree.Count));
-  FIntervalsTree.Add(386, 452, Pointer(FIntervalsTree.Count));
-  FIntervalsTree.Add(397, 447, Pointer(FIntervalsTree.Count));
-  FIntervalsTree.Add(430, 498, Pointer(FIntervalsTree.Count));
-  FIntervalsTree.Add(1, 38, Pointer(FIntervalsTree.Count));
-  FIntervalsTree.Add(58, 113, Pointer(FIntervalsTree.Count));
-  FIntervalsTree.Add(185, 215, Pointer(FIntervalsTree.Count));
-  FIntervalsTree.Add(388, 434, Pointer(FIntervalsTree.Count));
-  FIntervalsTree.Add(154, 175, Pointer(FIntervalsTree.Count));
-  FIntervalsTree.Add(34, 47, Pointer(FIntervalsTree.Count));
+  //btnFillSeriesClick(Sender);
+  //btnDelRandomClick(Sender);
+  //miDeleteMemoSetClick(Sender);
+  //DelEdit.Text := '85';
+  exit;
+  FAvlTree.Add(394, nil);
+  FAvlTree.Add(440, nil);
+  FAvlTree.Add(386, nil);
+  FAvlTree.Add(452, nil);
+  FAvlTree.Add(397, nil);
+  FAvlTree.Add(447, nil);
+  FAvlTree.Add(430, nil); FAvlTree.Add(498, nil);
+  FAvlTree.Add(1, nil); FAvlTree.Add(38, nil);
+  FAvlTree.Add(58, nil);
+  FAvlTree.Add(113, nil);
+  FAvlTree.Add(185, nil); FAvlTree.Add(215, nil);
+  FAvlTree.Add(388, nil); FAvlTree.Add(434, nil);
+  FAvlTree.Add(154, nil); FAvlTree.Add(175, nil);
+  FAvlTree.Add(34, nil); FAvlTree.Add(47, nil);
+
+  FAvlTree.Delete(113);
+  FAvlTree.Delete(394);
+  FAvlTree.Delete(58);
+  //FAvlTree.Delete(386);
 
   OutToTreeView;
 end;
 
 procedure TAVLTreeViewer.btnFillSeriesClick(Sender: TObject);
-const
-  csCount = 1000;
 var
-  count: Integer;
+  i, k, count: Integer;
   timeStart: uint64;
 begin
-  count := 0;
-  FIntervalsTree.Clear;
+  FAvlTree.Clear;
   timeStart := TThread.GetTickCount64;
-  while count < csCount do
+
+  count := StrToInt(edtSeriesSize.Text);
+  i := 0;
+  while i < count do
   begin
-    FIntervalsTree.Add(count, count+1, nil);
-    inc(count, 2);
+    k := random(1000000);
+    if FAvlTree.Exists(k) then
+      continue;
+    inc(i);
+    FAvlTree.Add(k, nil);
+    log.Lines.Add(IntToStr(k));
   end;
-  log.Lines.Add(IntToStr(TThread.GetTickCount64 - timeStart));
+  //log.Lines.Add(IntToStr(TThread.GetTickCount64 - timeStart));
   OutToTreeView;
+  FullExpandClick(Sender);
+  SaveClick(Sender);
 end;
 
 procedure TAVLTreeViewer.btnInsKey35Click(Sender: TObject);
@@ -171,7 +240,7 @@ end;
 procedure TAVLTreeViewer.btnSelectClick(Sender: TObject);
 begin
   FViewSelectList.Count := 0;
-  FIntervalsTree.Select(454, 654, FViewSelectList);
+  //FIntervalsTree.Select(454, 654, FViewSelectList);
 end;
 
 procedure TAVLTreeViewer.CollapseNode1Click(Sender: TObject);
@@ -183,11 +252,9 @@ end;
 
 procedure TAVLTreeViewer.DelEditChange(Sender: TObject);
 var
-  avlNode: int;
   node: TTreeNode;
 begin
-  avlNode := FIntervalsTree.Find(StrToFloat(DelEdit.Text));
-  if (avlNode >= 0) and FHashIntervals.Find(avlNode, node) then
+  if FHashIntervals.Find(StrToInt(DelEdit.Text), node) then
   begin
     node.Selected := true;
     OnChangeSelection;
@@ -204,9 +271,10 @@ end;
 
 procedure TAVLTreeViewer.FormCreate(Sender: TObject);
 begin
-  FIntervalsTree := TIntervalsTree.Create(100);
+  FAvlTree := TAvlTree.Create;
   FViewSelectList := TListVec<Pointer>.Create;
-  FHashIntervals := THashTable<int, TTreeNode>.Create(GetHashBlackSharkInt32, Int32CmpBool);
+  FHashIntervals := THashTable<int32, TTreeNode>.Create; //(GetHashBlackSharkInt32, Int32CmpBool)
+  Randomize;
 end;
 
 procedure TAVLTreeViewer.FormShow(Sender: TObject);
@@ -215,7 +283,6 @@ begin
   Top := 0;
   btnFillSamplesClick(Sender);
   FullExpandClick(Sender);
-  DelEdit.Text := '113';
 end;
 
 procedure TAVLTreeViewer.FullCollapseClick(Sender: TObject);
@@ -243,72 +310,57 @@ begin
   btnInsKey35.Caption := 'Ins key ' + IncertEdit.text;
 end;
 
+procedure TAVLTreeViewer.miDeleteMemoSetClick(Sender: TObject);
+var
+  i: Integer;
+  val: int32;
+begin
+  for i := 0 to log.Lines.Count - 1 do
+  begin
+
+    if TryStrToInt(log.Lines.Strings[i], val) then
+    begin
+      FAvlTree.Delete(val);
+    end;
+
+  end;
+  OutToTreeView;
+  SaveClick(Sender);
+end;
+
 procedure TAVLTreeViewer.OnChangeSelection;
 var
-  avlNode: int;
   balance: int8;
-  NodeValue: double;
-  left, right: int;
-  intervals: TIntervals;
-  i: Integer;
-  minIndex, maxIndex: int;
-  d: Pointer;
+  Key: int32;
+  left, right: Pointer;
   n: TTreeNode;
-  selected: TList;
 begin
   if TreeView.Selected <> nil then
   begin
-    TreeView.Items.BeginUpdate;
-    try
-      selected := TList.Create;
-      try
-        selected.Add(TreeView.Selected);
-        avlNode := int(TreeView.Selected.Data);
-        FIntervalsTree.Select(avlNode, left, right, NodeValue, balance, intervals);
-        DelEdit.Text := IntToStr(trunc(NodeValue));
-        for i := 0 to length(intervals) - 1 do
-        begin
-          FIntervalsTree.Select(intervals[i], minIndex, maxIndex, d);
-          if (minIndex <> avlNode) and FHashIntervals.Find(minIndex, n) then
-          begin
-            selected.Add(n);
-            n.MakeVisible;
-          end;
-          if (maxIndex <> avlNode) and FHashIntervals.Find(maxIndex, n) then
-          begin
-            selected.Add(n);
-            n.MakeVisible;
-          end;
-        end;
-        TreeView.Select(selected);
-      finally
-        selected.Free;
-      end;
-    finally
-      TreeView.Items.EndUpdate;
-    end;
+    FAvlTree.Select(TreeView.Selected.Data, left, right, Key, n, balance);
+    DelEdit.Text := IntToStr(Key);
   end;
 end;
 
 procedure TAVLTreeViewer.OutToTreeView;
 
-  procedure OutToNode(Parent: TTreeNode; Node: int; LR: string);
+  procedure OutToNode(Parent: TTreeNode; Node: Pointer; LR: string);
   var
     treeNode: TTreeNode;
     balance: int8;
-    NodeValue: double;
-    left, right: int;
-    intervals: TIntervals;
+    key: integer;
+    value: TTreeNode;
+    left, right: Pointer;
   begin
-    FIntervalsTree.Select(Node, left, right, NodeValue, balance, intervals);
+    FAvlTree.Select(Node, left, right, key, value, balance);
     treeNode := TreeView.Items.AddChild(Parent,
-      LR + ' = ' + inttostr(trunc(NodeValue)) + '; b=' +
+      LR + ' = ' + inttostr(key) + '; b = ' +
       inttostr(balance){ + '; i=' + inttostr(Node)});
     treeNode.Data := Pointer(Node);
-    FHashIntervals.Items[Node] := treeNode;
-    if right >= 0 then
+    FHashIntervals.Items[key] := treeNode;
+    if Assigned(right) then
       OutToNode(treeNode, right, 'R');
-    if left >= 0 then
+    if Assigned(left) then
       OutToNode(treeNode, left, 'L');
   end;
 
@@ -316,10 +368,11 @@ begin
   TreeView.Items.BeginUpdate;
   TreeView.Items.Clear;
   FHashIntervals.Clear();
-  if FIntervalsTree.Root >= 0 then
-    OutToNode(nil, FIntervalsTree.Root, 'ROOT');
+  if Assigned(FAvlTree.Root) then
+    OutToNode(nil, FAvlTree.Root, 'ROOT');
   TreeView.Items.EndUpdate;
-  Caption := 'AVLTreeViewer: CountKeys = ' + inttostr(FIntervalsTree.Count);
+  Caption := 'AVLTreeViewer: CountKeys = ' + inttostr(FAvlTree.Count);
+  UpdateStatusBar;
 end;
 
 procedure TAVLTreeViewer.SaveClick(Sender: TObject);
@@ -338,6 +391,11 @@ end;
 procedure TAVLTreeViewer.TreeViewClick(Sender: TObject);
 begin
   OnChangeSelection;
+end;
+
+procedure TAVLTreeViewer.UpdateStatusBar;
+begin
+  StatusBar.Panels.Items[0].Text := 'Count = ' + IntToStr(FAvlTree.Count);
 end;
 
 end.

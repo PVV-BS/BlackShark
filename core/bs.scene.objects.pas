@@ -339,7 +339,7 @@ type
     procedure CheckTextProcessor;
     procedure BeforeDraw({%H-}Item: TGraphicObject);
     procedure SetFont(const Value: IBlackSharkFont);
-    function SelectStartPos(PropLine: PLineProp): BSFloat; inline;
+    function SelectStartPos(PropLine: PLineProp): BSFloat; //inline;
     { select average width blank for oaClient align mode }
     function SelectBlankWidth(PropLine: PLineProp): BSFloat; inline;
     procedure OnChangeFontEvent({%H}const Value: BEmpty);
@@ -359,8 +359,10 @@ type
     procedure CalcLineThickness;
     procedure CreateLines;
     procedure SetColorLine(const Value: TColor4f);
-    procedure UpdateTextProcessorLineHeight;
+    procedure UpdateTextProcessorProperties;
     procedure SetAlign(const Value: TTextAlign);
+    function GetCountLines: int32;
+    function GetTextLine(Index: int32): string;
   protected
     FColor: TColor4f;
     procedure SetColor(const Value: TColor4f); override;
@@ -374,6 +376,7 @@ type
     procedure Build;
     procedure BeginChangeProp;
     procedure EndChangeProp;
+    function GetTextLines(IndexLineFirst, IndexLineLast: int32; BreakLines: boolean = false): string;
 
     property Text: string read GetText write SetText;
     property DefaultGlyph: string read FDefaultGlyph write FDefaultGlyph;
@@ -382,7 +385,7 @@ type
     property TxtProcessor: TTextProcessor read GetTxtProcessor write SetTxtProcessor;
     { drawed a font; assigned only outside }
     property Font: IBlackSharkFont read FFont write SetFont;
-    { after build it defines which row from array of strings was showed
+    { after build it defines which row from array of strings were showed last
       (array of strings see in TxtProcessor property) }
     property IndexLastStringInViewport: int32 read FIndexLastStringInViewport;
     property DiscardBlanks: boolean read FDiscardBlanks write SetDiscardBlanks;
@@ -398,6 +401,8 @@ type
     { color of Underline and Strikethrough }
     property ColorLine: TColor4f read FColorLine write SetColorLine;
     property Align: TTextAlign read FAlign write SetAlign;
+    property CountLines: int32 read GetCountLines;
+    property TextLine[Index: int32]: string read GetTextLine;
   end;
 
   { TColoredVertexesOrTextured }
@@ -561,46 +566,46 @@ begin
   inherited ChangedMesh;
   if StaticObject then
   begin
-    if Assigned(FMesh) then
+    if Assigned(FMesh) and (FMesh.CountVertex > 0) then
     begin
-      // create VBO for all vertex components
-      if (FMesh.CountVertex > 0) then
-      begin
-        CreateVBO(FVBO_Vertexes, GL_ARRAY_BUFFER, FMesh.VertexesData, FMesh.CountVertex * FMesh.SizeOfVertex);
-        {$ifdef DEBUG_BS}
-        //BSWriteMsg('TObjectVertexes.ChangedMesh after reload VBO_Vertexes "' + Caption +  '":', IntToStr(FVBO_Vertexes));
-        {$endif}
-      end;
-      // create VBO for indexes
-      if (FMesh.Indexes.Count > 0) then
-      begin
-        CreateVBO(FVBO_Indexes, GL_ELEMENT_ARRAY_BUFFER, FMesh.Indexes.ShiftData[0], FMesh.Indexes.Count * FMesh.Indexes.IndexSizeOf);
-        {$ifdef DEBUG_BS}
-        //BSWriteMsg('TObjectVertexes.ChangedMesh after reload VBO_Indexes "' + Caption +  '":', IntToStr(FVBO_Indexes));
-        {$endif}
-      end;
-
       {$ifndef ultibo}
-      if SupportsVAO and (FVBO_Indexes > 0) then
+      if SupportsVAO then
       begin
-        if (FVAO = 0) then
+        if FVAO > 0 then
         begin
-          glGenVertexArrays(1, @FVAO);
-          if FVAO = 0 then
-            SupportsVAO := false;
+          glDeleteVertexArrays(1, @FVAO);
+          FVAO := 0;
         end;
 
-        if (FVAO > 0) then
+        glGenVertexArrays(1, @FVAO);
+        if FVAO = 0 then
+          SupportsVAO := false;
+
+        if FVAO > 0 then
         begin
           glBindVertexArray(FVAO);
           Shader.UseProgram(true);
-          BindVBO;
-          glBindVertexArray(0);
         end;
       end;
       {$endif}
 
-      // Automticaly set visibility by depend at position Frustum
+      // create VBO for all vertex components
+      if (FMesh.CountVertex > 0) then
+        CreateVBO(FVBO_Vertexes, GL_ARRAY_BUFFER, FMesh.VertexesData, FMesh.CountVertex * FMesh.SizeOfVertex);
+
+      // create VBO for indexes
+      if (FMesh.Indexes.Count > 0) then
+        CreateVBO(FVBO_Indexes, GL_ELEMENT_ARRAY_BUFFER, FMesh.Indexes.ShiftData[0], FMesh.Indexes.Count * FMesh.Indexes.IndexSizeOf);
+
+      {$ifndef ultibo}
+      if SupportsVAO and (FVAO > 0) then
+      begin
+        BindVBO;
+        glBindVertexArray(0);
+      end;
+      {$endif}
+
+      // Automticaly set visibility by depend on position of Frustum
       if UpdateCount <= 0 then
         FScene.InstanceTransform(BaseInstance, true);
 
@@ -609,18 +614,12 @@ begin
   begin
     if VBO_Vertexes > 0 then
     begin
-      {$ifdef DEBUG_BS}
-      //BSWriteMsg('TObjectVertexes.BeforeChangedMesh before reload VBO_Vertexes "' + Caption +  '":', IntToStr(FVBO_Vertexes));
-      {$endif}
       glDeleteBuffers(1, @FVBO_Vertexes);
       FVBO_Vertexes := 0;
     end;
 
     if VBO_Indexes > 0 then
     begin
-      {$ifdef DEBUG_BS}
-      //BSWriteMsg('TObjectVertexes.BeforeChangedMesh before reload VBO_Indexes "' + Caption +  '":', IntToStr(FVBO_Indexes));
-      {$endif}
       glDeleteBuffers(1, @FVBO_Indexes);
       FVBO_Indexes := 0;
     end;
@@ -674,13 +673,14 @@ begin
 
   if StaticObject then
   begin
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VBO_Indexes );
     glDrawElements(FMesh.DrawingPrimitive, FMesh.Indexes.Count, FMesh.Indexes.Kind, nil);
   end else
   begin
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glDrawElements(FMesh.DrawingPrimitive, FMesh.Indexes.Count, FMesh.Indexes.Kind, FMesh.Indexes.ShiftData[0]); 
   end;
+  if FVAO > 0 then
+    glBindVertexArray(0);
 end;
 
 procedure TObjectVertexes.Restore;
@@ -755,10 +755,12 @@ begin
   {$ifndef ultibo}
   if FVAO > 0 then
   begin
-    glBindVertexArray(FVAO)
+    glBindVertexArray(FVAO);
   end else
   {$endif}
   begin
+    if VBO_Indexes > 0 then
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VBO_Indexes);
     BindVBO;
   end;
   if Assigned(OpacityUniform) then
@@ -1092,12 +1094,59 @@ begin
   Result := FColor;
 end;
 
+function TGraphicObjectText.GetCountLines: int32;
+begin
+  if Assigned(FTxtProcessor) then
+    Result := FTxtProcessor.Lines.Count
+  else
+    Result := 0;
+end;
+
 function TGraphicObjectText.GetText: string;
 begin
   if FText <> nil then
     Result := FText^
   else
     Result := '';
+end;
+
+function TGraphicObjectText.GetTextLine(Index: int32): string;
+begin
+  Result := GetTextLines(Index, Index);
+end;
+
+function TGraphicObjectText.GetTextLines(IndexLineFirst, IndexLineLast: int32; BreakLines: boolean = false): string;
+var
+  count: int32;
+  i, j, index: int32;
+  line: PLineProp;
+  src: string;
+begin
+  Result := '';
+  if not Assigned(FTxtProcessor) or (IndexLineFirst >= FTxtProcessor.Lines.Count) then
+    exit;
+
+  src := Text;
+  count := 1;
+  for index := IndexLineFirst to IndexLineLast do
+  begin
+    line := FTxtProcessor.Lines.ShiftData[Index];
+    SetLength(Result, Length(Result) + Line.CountChars);
+    j := line.IndexBegin;
+    for i := 0 to line.CountChars - 1 do
+    begin
+      Result[count] := src[j];
+      inc(j);
+      inc(count);
+    end;
+
+    if BreakLines and (index < IndexLineLast) then
+    begin
+      Result := Result + sLineBreak;
+      inc(count, Length(sLineBreak));
+    end;
+
+  end;
 end;
 
 function TGraphicObjectText.GetTxtProcessor: TTextProcessor;
@@ -1155,7 +1204,7 @@ begin
   CheckShaders;
 
   if Assigned(FTxtProcessor) then
-    UpdateTextProcessorLineHeight;
+    UpdateTextProcessorProperties;
 
   if FFont.IsVectoral then
   begin
@@ -1258,7 +1307,7 @@ begin
   if FTxtProcessor = nil then
   begin
     FTxtProcessor := TTextProcessor.Create(SelectorKey);
-    UpdateTextProcessorLineHeight;
+    UpdateTextProcessorProperties;
     CalcLineThickness;
     OwnTextProcessor := true;
   end;
@@ -1379,7 +1428,6 @@ var
   print_chars: int32;
   countPrintChars: int32;
   start_x: BSFloat;
-  offsetItalic: int32;
   firstEmptyStrings: int32;
   fullLineHeight: BSFloat;
   k: int8;
@@ -1441,7 +1489,7 @@ begin
     LineProp := FTxtProcessor.Lines.ShiftData[FIndexLastStringInViewport];
     x := SelectStartPos(LineProp);
 
-    if (FAlign = TTextAlign.taClient) and (FTxtProcessor.Lines.Count - FIndexLastStringInViewport > 1) then
+    if (FAlign = TTextAlign.taClient) and (FTxtProcessor.AllowedLines - FIndexLastStringInViewport > 1) then
       w_average := SelectBlankWidth(LineProp)
     else
       w_average := FTxtProcessor.BlankWidth;
@@ -1457,7 +1505,6 @@ begin
     if Assigned(FLines) then
       FLines.BeginUpdate;
 
-    offsetItalic := round(FFont.SizeInPixels*FFont.ItalicWeight);
     firstCharOffset := 0;
 
     { an adjusted empty shape for a right align on parent if will be not typed symbols }
@@ -1490,7 +1537,7 @@ begin
         chars := 1;
         firstCharOffset := 0;
 
-        if (FIndexLastStringInViewport >= FTxtProcessor.Lines.Count) or (y > h_parent) then
+        if (FIndexLastStringInViewport >= FTxtProcessor.AllowedLines) or (y > h_parent) then
           break;
 
         LineProp := FTxtProcessor.Lines.ShiftData[FIndexLastStringInViewport];
@@ -1498,7 +1545,7 @@ begin
         char_index := LineProp.IndexBegin;
         start_x := SelectStartPos(LineProp);
         x := start_x;
-        if (FAlign = TTextAlign.taClient) and (FTxtProcessor.Lines.Count - FIndexLastStringInViewport > 1) then
+        if (FAlign = TTextAlign.taClient) and (FTxtProcessor.AllowedLines - FIndexLastStringInViewport > 1) then
           w_average := SelectBlankWidth(LineProp)
         else
           w_average := FTxtProcessor.BlankWidth;  // last line
@@ -1547,7 +1594,7 @@ begin
         firstCharOffset := x - off_left;
 
       if FFont.Italic then
-        x := x + FTxtProcessor.Delta + AddKeyToShape(KeyInfo, Mesh, vec2(x - off_left, h_parent - y), FFont.IsVectoral).x - offsetItalic
+        x := x + FTxtProcessor.Delta + AddKeyToShape(KeyInfo, Mesh, vec2(x - off_left, h_parent - y), FFont.IsVectoral).x - FTxtProcessor.ItalicOffset
       else
         x := x + FTxtProcessor.Delta + AddKeyToShape(KeyInfo, Mesh, vec2(x - off_left, h_parent - y), FFont.IsVectoral).x;
 
@@ -1628,7 +1675,7 @@ begin
   if Assigned(FTxtProcessor) then
   begin
     FTxtProcessor.OnQueryKey := SelectorKey;
-    UpdateTextProcessorLineHeight;
+    UpdateTextProcessorProperties;
   end;
 end;
 
@@ -1646,11 +1693,15 @@ begin
     FreeAndNil(FLines);
 end;
 
-procedure TGraphicObjectText.UpdateTextProcessorLineHeight;
+procedure TGraphicObjectText.UpdateTextProcessorProperties;
 begin
   if not Assigned(FFont) then
     exit;
   FTxtProcessor.LineHeight := FFont.SizeInPixels;
+  if FFont.Italic then
+    FTxtProcessor.ItalicOffset := round(FFont.SizeInPixels*FFont.ItalicWeight)
+  else
+    FTxtProcessor.ItalicOffset := 0;
   FTxtProcessor.Interligne := round(FFont.SizeInPixels*0.2);
   if FTxtProcessor.Interligne < 1 then
     FTxtProcessor.Interligne := 1;

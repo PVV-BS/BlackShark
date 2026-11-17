@@ -16,6 +16,7 @@ uses
   , bs.animation
   , bs.canvas
   , bs.collections
+  , bs.thread
   ;
 
 type
@@ -38,12 +39,25 @@ type
   TBSTestInstancing2d = class(TBSTest)
   private
     const
-      COUNT_INSTANCES = 1000;
+      COUNT_INSTANCES = 150;
+      COUNT_MOVED = 30;
+    type
+      TInstanceAttr = record
+        Index: int32;
+        Dir: TVec2f;
+        Velocity: BSFloat;
+        constructor Create(AIndex: int32; const ADir: TVec2f; AVelocity: BSFloat);
+      end;
   private
     Instancing: TBlackSharkInstancing2d;
     Canvas: TBCanvas;
     TimeOut: TCanvasText;
     Proto: TArc;
+    AniLaw: IBAnimationLinearFloat;
+    AniLawObsr: IBAnimationLinearFloatObsrv;
+    LastTime: TTimeCounter;
+    InstanceAttrs: TListVec<TInstanceAttr>;
+    procedure OnUpdateValue(const Value: BSFloat);
   public
     constructor Create(ARenderer: TBlackSharkRenderer); override;
     destructor Destroy; override;
@@ -86,6 +100,9 @@ implementation
 
 uses
     SysUtils
+  {$ifndef FPC}
+  , System.Classes
+  {$endif}
   , bs.shader
   {$ifdef ultibo}
   , gles20
@@ -95,7 +112,6 @@ uses
   , bs.config
   , bs.mesh.primitives
   , bs.math
-  , bs.thread
   , bs.texture
   , bs.frustum
   ;
@@ -289,52 +305,137 @@ end;
 
 constructor TBSTestInstancing2d.Create(ARenderer: TBlackSharkRenderer);
 var
-  i: int32;
+  i, ind: int32;
   start: Cardinal;
   colorEnumerator: TColorEnumerator;
+  dir: TVec2f;
+  vel: BSFloat;
+  usedInd: THashTable<int32, int32>;
 begin
   inherited;
+  TBTimer.UpdateTimer(LastTime);
+  InstanceAttrs := TListVec<TInstanceAttr>.Create;
+  AniLaw := CreateAniFloatLinear(NextExecutor);
+  AniLawObsr := AniLaw.CreateObserver(GUIThread, OnUpdateValue);
+  AniLaw.Loop := true;
+  AniLaw.Duration := 10000;
+  AniLaw.StartValue := 0.0;
+  AniLaw.StopValue := 1.0;
   colorEnumerator := TColorEnumerator.Create([]);
   Canvas := TBCanvas.Create(ARenderer, nil);
   TimeOut := TCanvasText.Create(Canvas, nil);
   Proto := TArc.Create(Canvas, nil);
+  Proto.Data.Caption := 'Instanced prototype';
   Proto.Color := BS_CL_ORANGE;
   Proto.Radius := 20;
   Proto.Fill := false;
   Proto.Build;
   Instancing := TBlackSharkInstancing2d.Create(ARenderer, Proto);
-  start := TBTimer.CurrentTime.Low;
   Instancing.CountInstance := COUNT_INSTANCES;
   Instancing.BeginUpdate;
   for i := 0 to COUNT_INSTANCES - 1 do
   begin
-    Instancing.Position2d[i] := TVec2f(vec2(int32(random(Renderer.WindowWidth)), int32(random(Renderer.WindowHeight - 50))));
     Instancing.Angle[i] := vec3(0.0, 0.0, random(360));
+    Instancing.Position2d[i] := TVec2f(vec2(int32(random(Renderer.WindowWidth)), int32(random(Renderer.WindowHeight - 50))));
     Instancing.Color[i] := colorEnumerator.GetNextColor;
   end;
+  start := TBTimer.CurrentTime.Low;
   Instancing.EndUpdate;
   TimeOut.Text := 'Building of ' + IntToStr(COUNT_INSTANCES) + ' instances took ' + IntToStr(TBTimer.CurrentTime.Low - start) + ' ms..';
   TimeOut.Color := BS_CL_GREEN;
   TimeOut.Position2d := TVec2f(vec2(50.0, Renderer.WindowHeight - 20.0));
   colorEnumerator.Free;
+
+  usedInd := THashTable<int32, int32>.Create;
+  for i := 0 to COUNT_MOVED - 1 do
+  begin
+    dir := VecNormalize(vec2((Random(1000)/1000 - 0.5)/0.5, (Random(1000)/1000 - 0.5)/0.5));
+    vel := 0;
+    while vel = 0 do
+      vel := Random(20);
+    repeat
+      ind := Random(COUNT_INSTANCES);
+    until not usedInd.Exists(ind);
+
+    usedInd.Items[ind] := ind;
+    InstanceAttrs.Add(TInstanceAttr.Create(ind, dir, vel));
+  end;
+  usedInd.Free;
 end;
 
 destructor TBSTestInstancing2d.Destroy;
 begin
+  AniLaw.Stop;
+  AniLawObsr := nil;
+  AniLaw := nil;
   Instancing.Free;
   TimeOut.Free;
   Canvas.Free;
+  InstanceAttrs.Free;
   inherited;
+end;
+
+procedure TBSTestInstancing2d.OnUpdateValue(const Value: BSFloat);
+var
+  i: int32;
+  pos: TVec2f;
+  attr: TInstanceAttr;
+begin
+  //exit;
+  if LastTime.Counter - TBTimer.CurrentTime.Counter < 16 then
+    exit;
+  LastTime := TBTimer.CurrentTime;
+
+  for i := 0 to InstanceAttrs.Count - 1 do
+  begin
+    attr := InstanceAttrs.Items[i];
+    Instancing.BeginUpdate(attr.Index);
+    pos := Instancing.Position2d[attr.Index];
+    pos := vec2(pos.x + (attr.Velocity * attr.Dir.x), pos.y + (attr.Velocity * attr.Dir.y));
+    if (pos.x >= Renderer.WindowWidth) or (pos.x <= 0) or (pos.y <= 0) or (pos.y >= Renderer.WindowHeight) then
+    begin
+      if (pos.x >= Renderer.WindowWidth) or (pos.x <= 0) then
+      begin
+        attr.Dir.x := -attr.Dir.x;
+        if pos.x < 0 then
+          pos.x := 0.0
+        else
+          pos.x := Renderer.WindowWidth;
+      end else
+      begin
+        attr.Dir.y := -attr.Dir.y;
+        if pos.y < 0 then
+          pos.y := 0.0
+        else
+          pos.y := Renderer.WindowHeight;
+      end;
+      InstanceAttrs.Items[i] := attr;
+    end;
+    Instancing.Position2d[attr.Index] := pos;
+    Instancing.EndUpdate;
+  end;
+
 end;
 
 function TBSTestInstancing2d.Run: boolean;
 begin
   Result := true;
+  if not AniLaw.IsRun then
+    AniLaw.Run;
 end;
 
 class function TBSTestInstancing2d.TestName: string;
 begin
   Result := 'Test of 2d instansing';
+end;
+
+{ TBSTestInstancing2d.TInstanceAttr }
+
+constructor TBSTestInstancing2d.TInstanceAttr.Create(AIndex: int32; const ADir: TVec2f; AVelocity: BSFloat);
+begin
+  Index := AIndex;
+  Dir := ADir;
+  Velocity := AVelocity;
 end;
 
 end.

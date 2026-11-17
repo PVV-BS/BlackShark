@@ -168,12 +168,12 @@ type
     FCountFrame: uint16;
 
     {$region scene observers}
-    ObsrvInstanceTransform: TEventInstanceTransformObserver;
-    ObsrvInstanceSelect: TEventInstanceSelectObserver;
-    ObsrvInstanceBeforChangeKey: TEventInstanceBeforeChangeKeyObserver;
-    ObsrvInstanceAfterChangeKey: TEventInstanceAfterChangeKeyObserver;
-    ObsrvInstanceCreate: TEventInstanceCreateObserver;
-    ObsrvInstanceDelete: TEventInstanceDeleteObserver;
+    ObsrvInstanceTransform: IEventInstanceTransformObserver;
+    ObsrvInstanceSelect: IEventInstanceSelectObserver;
+    ObsrvInstanceBeforChangeKey: IEventInstanceBeforeChangeKeyObserver;
+    ObsrvInstanceAfterChangeKey: IEventInstanceAfterChangeKeyObserver;
+    ObsrvInstanceCreate: IEventInstanceCreateObserver;
+    ObsrvInstanceDelete: IEventInstanceDeleteObserver;
     ObsrvObjectChangeOrderDraw: IBEmptyEventObserver;
     ObsrvObjectIncStencilUse: IBEmptyEventObserver;
     ObsrvObjectDecStencilUse: IBEmptyEventObserver;
@@ -224,9 +224,12 @@ type
     FKeyMultiSelectAllows: byte;
     FLastCountSelectedByTree: uint32;
     FCountVisibleInstancesInSpaceTree: int32;
+    FSelectorConsumer: TValueConsumer<PGraphicInstance>;
+    FCurrentRenderInstanceDragOp: PRendererGraphicInstance;
     procedure DoEventInstanceBeforeKeyChange(Instance: PRendererGraphicInstance); inline;
     procedure DoEventInstanceAfterKeyChange(Instance: PRendererGraphicInstance); inline;
     function DoEventInstanceCreate(Instance: PGraphicInstance): PRendererGraphicInstance;
+    procedure DoEventInstanceDelete(Instance: PGraphicInstance);
     procedure DoEventInstanceTransform(AData: PRendererGraphicInstance); inline;
 
     {$region scene events }
@@ -241,12 +244,13 @@ type
     procedure EventObjectIncStencilUse(const AData: BData);
     procedure EventObjectDecStencilUse(const AData: BData);
     procedure LinkSceneEvents;
+    procedure UnlinkSceneEvents;
     {$endregion scene events}
-    procedure UpdateLastMVP(AInstance: PRendererGraphicInstance); inline;
     procedure UpdateAllLastMVP;
+    procedure UpdateLastMVP(AInstance: PRendererGraphicInstance); //inline;
     procedure CalcFPS; inline;
     procedure CheckUnderMouseInstance(ANewInstance: PRendererGraphicInstance; X, Y: int32; Shift: TBSShiftState; Buttons: TBSMouseButtons);
-    function StrictHitTest(const AData: PGraphicInstance): boolean;
+    procedure StrictHitTest(const AData: PGraphicInstance);
   private
     { common method for a pass rendering; invoke from public method
     	TBlackSharkRenderer.Render }
@@ -267,8 +271,6 @@ type
     function GetScreenSize: TVec2i;
     function GetCountVisibleGI: int32;
     function GetScreen2dCentre: TVec2i;
-    { enumerator graphic items on change frustum }
-    procedure EnumSingleVisibleObjectsByBVH(AInstance: PGraphicInstance; Distance: BSFloat);
     procedure SetSmoothMSAA(AValue: boolean);
  {$ifndef DEBUG_BS} inline; {$endif}
     procedure SetVisibleInstance(Instance: PRendererGraphicInstance; AValue: boolean); {$ifndef DEBUG_BS} inline; {$endif}
@@ -612,14 +614,12 @@ begin
   FEventBeginDrag     := CreateDragDropEvent;
   FEventEndDrag       := CreateDragDropEvent;
 
-  //FEventBeforRender := CreateEmptyEvent;
-
   FColor := vec4(0.1764, 0.1764, 0.1764, 0.598);
   FKernelSSAA := skOutLine;
   FBlendMode := bmAlpha;
   FScene := TBScene.Create;
-  FScene.StrictHitTest := StrictHitTest;
   FOwnScene := True;
+  FSelectorConsumer := StrictHitTest;
   LinkSceneEvents;
   RendererInit;
   {$ifdef DEBUG_BS}
@@ -698,6 +698,7 @@ var
   intersect: boolean;
   m: TMatrix3f;
   cur: int32;
+  index: int32;
 begin
   if NewMousePos = FMouseLastPos then
     exit;
@@ -705,52 +706,59 @@ begin
   m := FFrustum.ViewMatrixInv;
   r.Position := FFrustum.ViewMatrixInv * r.Position;
   r.Direction := m * r.Direction;
-  cur := 0;
+  cur := FDragInstances.Count - 1;
   { so, FDragInstances.Cursor never position >= FDragInstances.Count - 1 do it
     through var cur }
-  while (cur < FDragInstances.Count) do
+  while (cur >= 0) do
   begin
     FDragInstances.Cursor := cur;
     dd := FDragInstances.UnderCursorItem.Item;
-    inc(cur);
+    dec(cur);
 
     if dd^.ParentDrag then
       continue;
 
-    inst := dd^.Instance.Instance;
+    FCurrentRenderInstanceDragOp := dd.Instance;
+    inst := FCurrentRenderInstanceDragOp.Instance;
+    index := FCurrentRenderInstanceDragOp.Instance.Index;
     pln := FFrustum.Frustum.P[TBoxPlanes.bpNear];
     pln.w := pln.w - dd^.BeginDragDistance;
     v01 := PlaneCrossProduct(pln, dd^.Ray.Position, dd^.Ray.Direction, d, intersect);
     v02 := PlaneCrossProduct(pln, r.Position, r.Direction, d, intersect);
 
-      delta := v02 - v01;
-      if delta = vec3(0.0, 0.0, 0.0) then
-        continue;
+    delta := v02 - v01;
+    if delta = vec3(0.0, 0.0, 0.0) then
+      continue;
 
-      if Assigned(inst.Owner.Parent) then
-      begin
+    if Assigned(inst.Owner.Parent) then
+    begin
 
-        if (inst^.Owner.Parent.ServiceScaleInv <> 1.0) then
-        begin
-          m3parent := TMatrix3f(inst^.Owner.Parent.BaseInstance.ProdStackModelMatrix)*inst^.Owner.Parent.ServiceScaleInv;
-          //m3parent.M[0, 0] := m3parent.M[0, 0]*inst^.Owner.Parent.MeshSizeScaleInv;
-          //m3parent.M[1, 1] := m3parent.M[1, 1]*inst^.Owner.Parent.MeshSizeScaleInv;
-          //m3parent.M[2, 2] := m3parent.M[2, 2]*inst^.Owner.Parent.MeshSizeScaleInv;
-        end else
-          m3parent := inst^.Owner.Parent.BaseInstance.ProdStackModelMatrix;
+      if (inst^.Owner.Parent.ServiceScaleInv <> 1.0) then
+        m3parent := TMatrix3f(inst^.Owner.Parent.BaseInstance.ProdStackModelMatrix)*inst^.Owner.Parent.ServiceScaleInv
+      else
+        m3parent := inst^.Owner.Parent.BaseInstance.ProdStackModelMatrix;
 
-        MatrixInvert(m3parent);
-         { if multiply back into "delta" then in FPC accept bad value (bag inline operators),
-           therefor write to v01 }
-        v01 := m3parent * delta;
-      end else
-        v01 := delta;
+      MatrixInvert(m3parent);
+       { if multiply back into "delta" then in FPC accept bad value (bug of inline operators),
+         therefor write to v01 }
+      v01 := m3parent * delta;
+    end else
+      v01 := delta;
 
-      pos := dd^.BeginDragPos + v01;
-      inst^.Owner.SetPositionInstance(inst, pos);
-      inst^.Owner.DoDrag(inst, false);
-    end;
+    pos := dd^.BeginDragPos + v01;
+    inst^.Owner.SetPositionInstance(inst, pos);
+    // the object can be deleted when its position changes due to any application code with high-level logic;
+    // check it
+    if (FCurrentRenderInstanceDragOp = nil) then
+      continue;
+
+    inst^.Owner.DoDrag(inst, false);
+
+    if cur >= FDragInstances.Count then
+      cur := FDragInstances.Count - 1;
   end;
+  FCurrentRenderInstanceDragOp := nil;
+end;
 
 procedure TBlackSharkRenderer.DoBlendMode;
 begin
@@ -814,10 +822,39 @@ begin
   FInstances.Items[Instance.Index] := Result;
 end;
 
+procedure TBlackSharkRenderer.DoEventInstanceDelete(Instance: PGraphicInstance);
+var
+  data: PRendererGraphicInstance;
+begin
+  data := FInstances.Items[Instance.Index];
+
+  if data = nil then
+    Exit;
+
+  if (FCurrentUnderMouseInstance = data) then
+    FCurrentUnderMouseInstance := nil;
+
+  if (FCurrentRenderInstanceDragOp = data) then
+    FCurrentRenderInstanceDragOp := nil;
+
+  if FMouseDownInstance = data then
+    FMouseDownInstance := nil;
+
+  if Assigned(data.Selected) then
+    Scene.InstanceSetSelected(Instance, false);
+
+  if Assigned(data.Drag) then
+    DropDragInstance(data);
+
+  if data.Visible then
+    SetVisibleInstance(data, false);
+
+  FInstances.Items[Instance.Index] := nil;
+  dispose(data);
+end;
+
 procedure TBlackSharkRenderer.DoEventInstanceTransform(AData: PRendererGraphicInstance);
 begin
-  //if data.ChangeLastMVP = data.Instance.ChangeModelMatrix then
-  //  exit;
 
   AData.ChangeLastMVP := AData.Instance.ChangeModelMatrix;
 
@@ -962,20 +999,37 @@ end;
 
 procedure TBlackSharkRenderer.SetScene(const AScene: TBScene);
 var
+  i: int32;
   bucket: THashTableGraphicObjects.TBucket;
   inst: TListInstances.PListItem;
 begin
   if FScene = AScene then
     exit;
-  if Assigned(FScene) and FOwnScene then
-    FScene.Free;
+
+  if Assigned(FScene) then
+  begin
+    if FOwnScene then
+      FScene.Free
+    else
+    begin
+      for i := FInstances.Count -1 downto 0 do
+      begin
+        if FInstances.Items[i] = nil then
+          continue;
+        DoEventInstanceDelete(FInstances.Items[i].Instance);
+      end;
+      FInstances.Count := 0;
+      UnlinkSceneEvents;
+    end;
+  end;
 
   FOwnScene := false;
   FScene := AScene;
 
   if Assigned(FScene) then
   begin
-    FScene.StrictHitTest := StrictHitTest;
+    // TODO:
+    // FScene.StrictHitTest := StrictHitTest;
     OnAdjustFrustum;
     LinkSceneEvents;
   end;
@@ -1122,6 +1176,11 @@ begin
   DoEventInstanceCreate(PGraphicInstance(AData.Instance));
 end;
 
+procedure TBlackSharkRenderer.EventInstanceDelete(const AData: BData);
+begin
+  DoEventInstanceDelete(PGraphicInstance(AData.Instance));
+end;
+
 procedure TBlackSharkRenderer.EventInstanceBeforChangeKey(const AData: BData);
 begin
   DoEventInstanceBeforeKeyChange(FInstances.Items[PGraphicInstance(AData.Instance).Index]);
@@ -1132,57 +1191,30 @@ begin
   DoEventInstanceAfterKeyChange(FInstances.Items[PGraphicInstance(AData.Instance).Index]);
 end;
 
-procedure TBlackSharkRenderer.EventInstanceDelete(const AData: BData);
-var
-  data: PRendererGraphicInstance;
-begin
-
-  data := FInstances.Items[PGraphicInstance(AData.Instance).Index];
-
-  if (FCurrentUnderMouseInstance = data) then
-    FCurrentUnderMouseInstance := nil;
-
-  if FMouseDownInstance = data then
-    FMouseDownInstance := nil;
-
-  if Assigned(data.Selected) then
-    Scene.InstanceSetSelected(PGraphicInstance(AData.Instance), false);
-
-  if Assigned(data.Drag) then
-    DropDragInstance(data);
-
-  if data.Visible then
-    SetVisibleInstance(data, false);
-
-  FInstances.Items[PGraphicInstance(AData.Instance).Index] := nil;
-  dispose(data);
-
-end;
-
 procedure TBlackSharkRenderer.EventObjectChangeOrderDraw(const AData: BData);
 var
   it: TListInstances.PListItem;
   k: TKeySortInstance;
-  GraphicObject: TGraphicObject;
+  graphicObject: TGraphicObject;
   data: PRendererGraphicInstance;
 begin
-  GraphicObject := AData.Instance;
-  if Assigned(GraphicObject.Instances) then
+  graphicObject := AData.Instance;
+  if Assigned(graphicObject.Instances) then
   begin
-    it := GraphicObject.Instances.ItemListFirst;
+    it := graphicObject.Instances.ItemListFirst;
     while Assigned(it) do
     begin
       data := FInstances.Items[it.Item.Index];
       k := InstanceKey(data);
-      FListGIinFrustum[not GraphicObject.DrawAsTransparent].Remove(k, data);
-      FListGIinFrustum[GraphicObject.DrawAsTransparent].Add(k, data);
+      FListGIinFrustum[not graphicObject.DrawAsTransparent].Remove(k, data);
+      FListGIinFrustum[graphicObject.DrawAsTransparent].Add(k, data);
       it := it.Next;
     end;
   end;
-  data := FInstances.Items[GraphicObject.BaseInstance.Index];
-  FListGIinFrustum[not GraphicObject.DrawAsTransparent].Remove(InstanceKey(data), data);
+  data := FInstances.Items[graphicObject.BaseInstance.Index];
+  FListGIinFrustum[not graphicObject.DrawAsTransparent].Remove(InstanceKey(data), data);
   if data.Visible then
-    FListGIinFrustum[GraphicObject.DrawAsTransparent].Add(InstanceKey(data), data);
+    FListGIinFrustum[graphicObject.DrawAsTransparent].Add(InstanceKey(data), data);
 end;
 
 procedure TBlackSharkRenderer.Render;
@@ -1481,18 +1513,18 @@ begin
   inst := GetObject(x, y);
   if Assigned(inst) then
   begin
-    if (inst.Instance.Interactive) and FAutoSelect then
+    if (inst.Instance.Interactive) then
     begin
-      if not Assigned(inst^.Selected) then //  and inst^.SelectResolve
+      if not Assigned(inst^.Selected) and FAutoSelect then //  and inst^.SelectResolve
       begin
         if not FBanResetSelected and not (Keyboard[FKeyMultiSelectAllows]) then
           ResetSelected;
         Scene.InstanceSetSelected(inst.Instance, true);
       end;
-    end;
     FMouseDownInstance := inst;
     inst.Instance.Owner.DoMouseDown(MouseData(inst, X, Y, 0, [MouseButton], Shift));
     FEventMouseDown.Send(inst, X, Y, 0, [MouseButton], Shift);
+    end;
   end else
   begin
     if not FBanResetSelected then
@@ -1666,7 +1698,6 @@ begin
     begin
       if Result.Instance.Owner.StencilTest and (Result.Instance.Owner.StencilParent <> nil) then
       begin
-        { check a hit to box area }
         if not HitTestInstance(Ray, Result.Instance.Owner.StencilParent.BaseInstance, tmp_dst) then
         begin
           if Assigned(Result.Drag) then
@@ -1714,7 +1745,12 @@ var
   Shape: TMesh;
   Indexes: TListIndexes;
   v: TVec3f;
-begin                             //Frustum.DISTANCE_2D_SCREEN
+begin
+  if not Assigned(Instance^.Owner.Mesh) then
+  begin
+    raise Exception.Create('Error Message');
+    exit(false);
+  end;
   Indexes := Instance^.Owner.Mesh.Indexes;
   if (Indexes.Count < 3) then
     exit(false);
@@ -1899,10 +1935,6 @@ begin
     Scene.InstanceSetSelected(Instance.Instance, true);
   end;
 
-  {$ifdef DEBUG_BS}
-  //BSWriteMsg('TBlackSharkRenderer.BeginDragInstance', 'Max.x: ' + FloatToStr(Instance.Instance.Owner.Mesh.FBoundingBox.Max.x) + '; Max.y: ' + FloatToStr(Instance.Instance.Owner.Mesh.FBoundingBox.Max.x));
-  {$endif}
-
   new(Instance^.Drag);
   Instance^.Drag^.Instance := Instance;
   Instance^.Drag^.BeginDragPos := Instance.Instance.Position;
@@ -1981,21 +2013,52 @@ begin
   end;
 end;
 
-function TBlackSharkRenderer.StrictHitTest(const AData: PGraphicInstance): boolean;
+procedure TBlackSharkRenderer.StrictHitTest(const AData: PGraphicInstance);
 var
   d: BSFloat;
+  inst: PRendererGraphicInstance;
 begin
-  Result := FFrustum.BoxInFrustum(AData.BoundingBox);
-  if Result then
+  inc(FLastCountSelectedByTree);
+  if FExactMesureDistanceToBB then
+    { more exact }
+    d := PlaneMaxDistanceToBB(FFrustum.Frustum.P[TBoxPlanes.bpNear], @AData.BoundingBox)
+  else
+    d := PlaneDotProduct(FFrustum.Frustum.P[TBoxPlanes.bpNear], TVec3f(AData.BoundingBox.Middle));
+
+  inst := FInstances.Items[AData.Index];
+  // update ProdStackModelMatrix and LastMVP
+  UpdateLastMVP(inst);
+  inc(inst^.ChangeLastMVP);
+  if inst^.Visible then
   begin
-    inc(FLastCountSelectedByTree);
-    if FExactMesureDistanceToBB then
-      { more exact }
-      d := PlaneMaxDistanceToBB(FFrustum.Frustum.P[TBoxPlanes.bpNear], @AData.BoundingBox)
-    else
-      d := PlaneDotProduct(FFrustum.Frustum.P[TBoxPlanes.bpNear], TVec3f(AData.BoundingBox.Middle));
-    EnumSingleVisibleObjectsByBVH(AData, d);
+    DoEventInstanceBeforeKeyChange(inst);
+    inst.DistanceToScreen := d;
+    DoEventInstanceAfterKeyChange(inst);
+    // remove from FVisibleGI container; need for detect Hidden objects
+    FVisibleGI.Remove(inst^._VisibleNode);
+  end else
+  begin
+    inst.DistanceToScreen := d;
+    // new visible unit
+    if not inst.Instance.Hidden then
+      SetVisibleInstance(inst, true);
   end;
+
+end;
+
+procedure TBlackSharkRenderer.UnlinkSceneEvents;
+begin
+  ObsrvInstanceTransform := nil;
+  ObsrvInstanceSelect := nil;
+  ObsrvInstanceBeforChangeKey := nil;
+  ObsrvInstanceAfterChangeKey := nil;
+  ObsrvInstanceCreate := nil;
+  ObsrvInstanceDelete := nil;
+  ObsrvInstanceSceneSpaceTreeClientChanged := nil;
+
+  ObsrvObjectChangeOrderDraw := nil;
+  ObsrvObjectIncStencilUse := nil;
+  ObsrvObjectDecStencilUse := nil;
 end;
 
 procedure TBlackSharkRenderer.UpdateAllLastMVP;
@@ -2242,8 +2305,6 @@ begin
           inc(k);
         end;
       end;
-      { TODO: LINES }
-      //GL_LINES
     end;
   end;
 end;
@@ -2256,36 +2317,6 @@ end;
 function TBlackSharkRenderer.IsVisible(Instance: PGraphicInstance): boolean;
 begin
   Result := FInstances.Items[Instance.Index].Visible;
-end;
-
-procedure TBlackSharkRenderer.EnumSingleVisibleObjectsByBVH(AInstance: PGraphicInstance; Distance: BSFloat);
-var
-  inst: PRendererGraphicInstance;
-begin
-  //if Drawing then
-  //  raise Exception.Create('TBlackSharkRenderer.EnumSingleVisibleObjectsByBVH!');
-  //if IsNan(Distance) then
-  //  raise Exception.Create('Instance.DistanceToScreen to equal NAN! Check self an algorithm for calculate an object position!');
-  inst := FInstances.Items[AInstance.Index];
-  if inst^.Visible then
-  begin
-    DoEventInstanceBeforeKeyChange(inst);
-    inst.DistanceToScreen := Distance;
-    DoEventInstanceAfterKeyChange(inst);
-  end else
-    inst.DistanceToScreen := Distance;
-  // update ProdStackModelMatrix and LastMVP
-  UpdateLastMVP(inst);
-  inc(inst^.ChangeLastMVP);
-  if inst^.Visible then
-  begin // old visible object
-    // remove from FVisibleGI container; need for detect Hidden objects
-    FVisibleGI.Remove(inst^._VisibleNode);
-    exit;
-  end;
-  // new visible unit
-  if not inst.Instance.Hidden then
-    SetVisibleInstance(inst, true);
 end;
 
 procedure TBlackSharkRenderer.DrawAllInstances;
@@ -2641,7 +2672,7 @@ end;
 
 procedure TBlackSharkRenderer.OnAdjustFrustum;
 begin
-  FScene.Granularity := FFrustum.DistanceFarPlane - FFrustum.DistanceNearPlane;
+
 end;
 
 procedure TBlackSharkRenderer.OnChangeFrustum;
@@ -2653,7 +2684,7 @@ begin
     EnumSingleVisibleObjectsByOctTree, already visible objects remove from FVisibleGI }
 
   FLastCountSelectedByTree := 0;
-  FScene.Select(Frustum.BB);
+  FScene.Select(Frustum.BB, FSelectorConsumer);
 
   { now remained only objects which not hit into Frustum and to have property Visible = true;
     set Visible = false }

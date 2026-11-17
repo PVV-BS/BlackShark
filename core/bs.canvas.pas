@@ -80,6 +80,7 @@ type
     FPositionZ: BSFloat;
     { the bounding box given model matrix: FData.BaseInstance.ModelMatrix }
     FModelBB: TBox3f;
+    FBoundingBox: TBox2d;
     FTopLeft: TVec3f;
     FIndependent2dSizeFromMVP: boolean;
 
@@ -122,7 +123,8 @@ type
     { setter PGraphicInstance a position to 2d dimention; !!! CanvasObjectInstance
       MUST belong to self (TCanvasObject) !!! }
     procedure SetCanvasObjectPosition(X, Y: BSFloat; CanvasObjectInstance: PGraphicInstance); overload;
-    procedure CalcBB;
+    procedure CalcModelBB;
+    procedure UpdateBB; inline;
     procedure SetMarginBottom(const Value: BSFloat);
     procedure SetMarginLeft(const Value: BSFloat);
     procedure SetMarginRight(const Value: BSFloat);
@@ -139,6 +141,7 @@ type
     function GetMarginLeft: BSFloat;
     function GetMarginRight: BSFloat;
     function GetMarginTop: BSFloat;
+    function GetBoundingBox: TBox2d;
   protected
     FWidth: BSFloat;
     FHeight: BSFloat;
@@ -198,6 +201,7 @@ type
     function Center: TVec2f;
     procedure Hide(AReleaseGraphicsData: boolean);
     procedure Show;
+    function Intersects(CanvasObject: TCanvasObject): boolean;
 
     { a some object of Scene }
     property Data: TGraphicObject read FData;
@@ -247,6 +251,7 @@ type
     property MarginBottom: BSFloat read GetMarginBottom write SetMarginBottom;
 
     property ModelBB: TBox3f read FModelBB;
+    property BoundingBox: TBox2d read GetBoundingBox;
     { object align; take into account own margins and a parent paddings;
       ! note, not need to set before invoke method Build }
     property Align: TObjectAlign read FAlign write SetAlign;
@@ -262,6 +267,11 @@ type
   TCanvasObjectEmpty = class(TCanvasObject)
   protected
     function CreateGraphicObject(AParent: TGraphicObject): TGraphicObject; override;
+  end;
+
+  TCanvasObject<D: TGraphicObject> = class(TCanvasObject)
+  protected
+    function CreateGraphicObject(AParent: TGraphicObject): D; reintroduce;
   end;
 
   { TCanvasObjectP
@@ -354,6 +364,7 @@ type
     procedure SetTextAlign(const Value: TTextAlign);
     procedure SetWrap(const Value: Boolean);
     procedure UpdateWrapping;
+    procedure UpdatePositionWithAligning;
     function GetIndexLastStringInViewport: int32;
   protected
     procedure DoResize(AWidth, AHeight: BSFloat); override;
@@ -361,6 +372,7 @@ type
     function CreateGraphicObject(AParent: TGraphicObject): TGraphicObject; override;
     procedure AfterScaleModeChange; override;
     procedure DoBuild; override;
+    procedure SetPosition2d(const AValue: TVec2f); override;
   public
     constructor Create(ACanvas: TBCanvas; AParent: TCanvasObject); override;
     destructor Destroy; override;
@@ -907,15 +919,17 @@ type
   private
     FTrilinearFilter: boolean;
     FAutoFit: boolean;
-    FSize: TVec2f;
     FAsPartMap: boolean;
     FWrap: boolean;
     FWrapReapeated: boolean;
+    FOnChangeNotify: TNotifyEvent;
     procedure SetWrap(const Value: boolean);
     function GetImage: TBlackSharkPicture;
     procedure SetImage(const Value: TBlackSharkPicture);
     procedure SetWrapReapeated(const Value: boolean);
     procedure SetWrapOtions;
+    procedure SetSize(const Value: TVec2f);
+    function GetSize: TVec2f;
   protected
     procedure SetTexture(const Value: PTextureArea); override;
     procedure DoBuild; override;
@@ -923,8 +937,9 @@ type
     constructor Create(ACanvas: TBCanvas; AParent: TCanvasObject); override;
     procedure LoadFromFile(const FileName: string; AInsertToMap: boolean = false; TrilinearFilter: boolean = false);
     procedure LoadFromStream(Stream: TStream; const Name: string; AInsertToMap: boolean = false; TrilinearFilter: boolean = false);
+    procedure Build; override;
     property AutoFit: boolean read FAutoFit write FAutoFit;
-    property Size: TVec2f read FSize write FSize;
+    property Size: TVec2f read GetSize write SetSize;
     property AsPartMap: boolean read FAsPartMap;
     property Image: TBlackSharkPicture read GetImage write SetImage;
     { sets an option wrap to the GL_REPEAT }
@@ -932,6 +947,7 @@ type
     { if true then used the option wrap as the GL_REPEAT, else GL_MIRRORED_REPEAT }
     property WrapReapeated: boolean read FWrapReapeated write SetWrapReapeated;
     property TrilinearFilter: boolean read FTrilinearFilter write FTrilinearFilter;
+    property OnChangeNotify: TNotifyEvent read FOnChangeNotify write FOnChangeNotify;
   end;
 
   TGrid = class(TCanvasObjectP)
@@ -1171,6 +1187,7 @@ uses
   , bs.frustum
   , bs.utils
   , bs.strings
+  , bs.geometry
   ;
 
 function CreateCanvasEventObserver(const ACanvasEvent: TCanvasEvent; ObserverProc: TGenericRecieveProc<BEmpty>): TCanvasEventObserver;
@@ -1194,7 +1211,7 @@ begin
   inherited;
   FData.DragResolve := true;
   FData.DepthTest := false;
-  CalcBB;
+  CalcModelBB;
   FCanvas.OnCreateCanvasObject(Self);
 end;
 
@@ -1330,6 +1347,12 @@ begin
   Result := Data.Angle;
 end;
 
+function TCanvasObject.GetBoundingBox: TBox2d;
+begin
+  UpdateBB;
+  Result := FBoundingBox;
+end;
+
 function TCanvasObject.GetColor: TColor4f;
 begin
   Result := FData.Color;
@@ -1457,7 +1480,40 @@ begin
     FData.Hidden := true;
 end;
 
-procedure TCanvasObject.CalcBB;
+function TCanvasObject.Intersects(CanvasObject: TCanvasObject): boolean;
+var
+  i, j: int32;
+  tri1, tri2: TTriangle3f;
+  d: BSFloat;
+begin
+  if (FData.Mesh.TypePrimitive in [tpTriangles, tpTriangleFan, tpTriangleStrip])
+    and (CanvasObject.Data.Mesh.TypePrimitive in [tpTriangles, tpTriangleFan, tpTriangleStrip]) then
+  begin
+    for i := 0 to FData.Mesh.TrianglesCount - 1 do
+    begin
+      FData.Mesh.ReadTriangle(i, tri1);
+      tri1.A := FData.BaseInstance.ProdStackModelMatrix * tri1.A;
+      tri1.B := FData.BaseInstance.ProdStackModelMatrix * tri1.B;
+      tri1.C := FData.BaseInstance.ProdStackModelMatrix * tri1.C;
+      for j := 0 to CanvasObject.Data.Mesh.TrianglesCount - 1 do
+      begin
+        CanvasObject.Data.Mesh.ReadTriangle(j, tri2);
+        tri2.A := CanvasObject.Data.BaseInstance.ProdStackModelMatrix * tri2.A;
+        tri2.B := CanvasObject.Data.BaseInstance.ProdStackModelMatrix * tri2.B;
+        tri2.C := CanvasObject.Data.BaseInstance.ProdStackModelMatrix * tri2.C;
+        if IntersectTriangles(tri1, tri2, d) then
+          exit(true);
+      end;
+    end;
+  end else
+  begin
+
+  end;
+
+  Result := false;
+end;
+
+procedure TCanvasObject.CalcModelBB;
 var
   m: TMatrix4f;
 begin
@@ -1524,7 +1580,7 @@ begin
   if FCanvas.UpdatingOfOrientation then
     exit;
 
-  CalcBB;
+  CalcModelBB;
 
   if Setting2dPos or (Assigned(Parent) and Parent.Setting2dPos)then
     exit;
@@ -1706,7 +1762,7 @@ begin
   if FIndependent2dSizeFromMVP = Value then
     exit;
   FIndependent2dSizeFromMVP := Value;
-  CalcBB;
+  CalcModelBB;
   Position2d := FPosition2d;
 end;
 
@@ -1847,6 +1903,11 @@ begin
     else
       Canvas.RealignObjects;
   end;
+end;
+
+procedure TCanvasObject.UpdateBB;
+begin
+  FBoundingBox := Box2(FPosition2d, Width, Height);
 end;
 
 function TCanvasObject.ToScene(Value: BSFloat): BSFloat;
@@ -2316,6 +2377,12 @@ begin
   Font.ItalicWeight := Value;
 end;
 
+procedure TCanvasText.SetPosition2d(const AValue: TVec2f);
+begin
+  inherited;
+  UpdatePositionWithAligning;
+end;
+
 procedure TCanvasText.SetStrikethrough(const Value: boolean);
 begin
   TGraphicObjectText(Data).Strikethrough := Value;
@@ -2327,6 +2394,7 @@ var
 begin
   pos := FPosition2d;
   TGraphicObjectText(Data).Text := AValue;
+  UpdatePositionWithAligning;
   if Anchors[aRight] or Anchors[aBottom] then
     TryRealign
   else
@@ -2336,6 +2404,7 @@ end;
 procedure TCanvasText.SetTextAlign(const Value: TTextAlign);
 begin
   TGraphicObjectText(Data).Align := Value;
+  UpdatePositionWithAligning;
 end;
 
 procedure TCanvasText.SetUnderline(const Value: boolean);
@@ -2388,6 +2457,18 @@ begin
   end;
 end;
 
+procedure TCanvasText.UpdatePositionWithAligning;
+begin
+  exit;
+  case TGraphicObjectText(Data).Align of
+    taNone: begin if Align <> TObjectAlign.oaNone then PaddingTop := 0 else Align := TObjectAlign.oaNone; end;
+    taLeft: begin if Align <> TObjectAlign.oaLeft then PaddingTop := Position2d.Y else Align := TObjectAlign.oaLeft; end;
+    taCenter: begin if Align <> TObjectAlign.oaTop then PaddingTop := Position2d.Y else Align := TObjectAlign.oaTop; end;
+    taClient: begin if Align <> TObjectAlign.oaTop then PaddingTop := Position2d.Y else Align := TObjectAlign.oaTop; end;
+    taRight: begin if Align <> TObjectAlign.oaRight then PaddingTop := Position2d.Y else Align := TObjectAlign.oaRight; end;
+  end;
+end;
+
 procedure TCanvasText.UpdateWrapping;
 begin
   if FWrap then
@@ -2414,6 +2495,8 @@ begin
   FRenderer := ARenderer;
   FStickOnScreen := true;
   FRootObject := TGraphicObject.Create(nil, nil, ARenderer.Scene);
+  FRootObject.Interactive := false;
+  FRootObject.Caption := 'CavnasRootObject';
   FOnReplaceFont := CreateEmptyEvent;
   FOnChangeFont := CreateEmptyEvent;
 
@@ -3159,6 +3242,7 @@ begin
   Result.Layer2d := Layer2dAbsolute + 2;
   Result.BanScalableMode := true;
   Result.Data.TagInt := Index;
+  Result.Data.Caption := 'for TLinesSequence point ' + IntToStr(Index);
   Result.Build;
   SetLength(Obsers, FPointsG.Count);
   Obsers[Index] := Result.Data.EventDrag.CreateObserver(GUIThread, OnDrag);
@@ -3989,18 +4073,16 @@ end;
 
 procedure TPicture.DoBuild;
 var
-  pos, s_pix: TVec2f;
+  pos, s_pix, s: TVec2f;
 begin
   inherited;
-  if not Assigned(TTexturedVertexes(Data).Texture) then
-    exit;
-
-  if FAutoFit or (Size.X = 0) or (Size.Y = 0) then
+  s := Size;
+  if FAutoFit or (s.X = 0) or (s.Y = 0) then
   begin
     s_pix := TTexturedVertexes(Data).Texture.Rect.Size;
   end else
   begin
-    s_pix := Size;
+    s_pix := s;
   end;
 
   TBlackSharkFactoryShapesPT.GeneratePlane(Data.Mesh, s_pix);
@@ -4021,7 +4103,16 @@ begin
     // pos.y := s_pix.y / FTexture.Rect.Height;
     Data.Mesh.Write(3, TVertexComponent.vcTexture1, pos);
   end;
+  FWidth := s_pix.x;
+  FHeight := s_pix.y;
+  if Assigned(FOnChangeNotify) then
+    FOnChangeNotify(Self);
+end;
 
+procedure TPicture.Build;
+begin
+  if Assigned(TTexturedVertexes(Data).Texture) then
+    inherited;
 end;
 
 constructor TPicture.Create(ACanvas: TBCanvas; AParent: TCanvasObject);
@@ -4036,6 +4127,11 @@ begin
     Result := TTexturedVertexes(Data).Texture.Texture.Picture
   else
     Result := nil;
+end;
+
+function TPicture.GetSize: TVec2f;
+begin
+  Result := vec2(FWidth, FHeight);
 end;
 
 procedure TPicture.LoadFromFile(const FileName: string; AInsertToMap: boolean = false; TrilinearFilter: boolean = false);
@@ -4057,6 +4153,12 @@ begin
   TTexturedVertexes(Data).Texture := BSTextureManager.LoadTexture(Value, Value.Caption, FAsPartMap, FTrilinearFilter);
   SetWrapOtions;
   Build;
+end;
+
+procedure TPicture.SetSize(const Value: TVec2f);
+begin
+  FWidth := Value.x;
+  FHeight := Value.y;
 end;
 
 procedure TPicture.SetTexture(const Value: PTextureArea);
@@ -4283,7 +4385,7 @@ begin
   TGraphicObjectLines(FData).EndUpdate(true);
   Data.Mesh.FBoundingBox.z_min := 0;
   Data.Mesh.FBoundingBox.z_max := 0;
-  CalcBB;
+  CalcModelBB;
   if Data.Mesh.CountVertex = 0 then
     Position2d := RealPos
   else
@@ -5089,6 +5191,13 @@ end;
 constructor TBaseLine.Create(ACanvas: TBCanvas; AParent: TCanvasObject);
 begin
   inherited;
+end;
+
+{ TCanvasObject<D> }
+
+function TCanvasObject<D>.CreateGraphicObject(AParent: TGraphicObject): D;
+begin
+  Result := D.Create(Self, AParent, FCanvas.Renderer.Scene);
 end;
 
 end.

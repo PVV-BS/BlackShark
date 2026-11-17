@@ -1,10 +1,4 @@
-﻿  ![LE COMTE DE MONTE-CRISTO](/MONTE-CRISTO.png)
-
-	## LE COMTE DE MONTE-CRISTO 
-
-	### Alexandre Dumas
-
-	####Tome I
+﻿	####Tome I
 
 	I. Marseille. – L’arrivée.
 

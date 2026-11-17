@@ -61,7 +61,7 @@ initialization
   RegisterTest(TBSTestSelector);
   RegisterTest(TBSTestRotor);
   RegisterTest(TBSTestHint);
-  //RegisterTest(TBSTestMemo);
+  RegisterTest(TBSTestMemo);
   RegisterTest(TBSTestObjectInspector);
   RegisterTest(TBSTestWindows);
 
@@ -76,7 +76,7 @@ initialization
     RegisterTest(TBSTestTrueTypeFont);
     //RegisterTest(TBSTestTrueTypeSmiles);
     RegisterTest(TBSTestCanvasMap);
-    RegisterTest(TBSTestStringMap);
+    RegisterTest(TBSTest2dMap);
     RegisterTest(TBSTestCanvasLines);
 
   { Animation }

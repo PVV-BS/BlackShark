@@ -257,13 +257,12 @@ begin
   FText[Index] := WideChar(Value);
 end;
 
-class operator TString.Implicit (const v: string): TString;
+class operator TString.Implicit(const v: string): TString;
 begin
   Result.FText := StringToWide(v);
 end;
 
-class operator TString.Implicit(
-  const v: TString): string;
+class operator TString.Implicit(const v: TString): string;
 begin
   Result := WideToString(v.FText);
 end;

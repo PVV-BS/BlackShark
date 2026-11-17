@@ -29,7 +29,7 @@ type
     Canvas: TBCanvas;
     BtnPause: TBButton;
     BtnClickObsrver: IBMouseUpEventObserver;
-    ObsrvInstanceSelect: TEventInstanceSelectObserver;
+    ObsrvInstanceSelect: IEventInstanceSelectObserver;
     TxtPosition: TCanvasText;
     TxtPoint: TCanvasText;
     TxtTail: TCanvasText;

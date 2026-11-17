@@ -92,7 +92,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="3">
+    <Units Count="4">
       <Unit0>
         <Filename Value="LazTests.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -109,6 +109,10 @@
         <Filename Value="..\bs.test.switcher.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit2>
+      <Unit3>
+        <Filename Value="..\..\core\bs.geometry.kdtree.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit3>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -136,6 +140,10 @@
       <CompilerMessages>
         <IgnoredMessages idx6058="True" idx3104="True"/>
       </CompilerMessages>
+      <CustomOptions Value="-ddebug"/>
+      <OtherDefines Count="1">
+        <Define0 Value="debug"/>
+      </OtherDefines>
     </Other>
   </CompilerOptions>
   <Debugging>

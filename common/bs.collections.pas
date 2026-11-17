@@ -33,8 +33,9 @@ unit bs.collections;
 interface
 
 uses
-  Classes,
-  SysUtils
+    Classes
+  ,  SysUtils
+  , TypInfo
   ;
 
 type
@@ -307,7 +308,7 @@ public
   property MinLen: uint32 read FMinLen;
   property Root: PBinTreeItem read FRoot;
   property DefaultValue: V read FDefaultValue write FDefaultValue;
-end{ deprecated 'use something other'};
+end deprecated 'use TAvlTree<K, V> instead';
 
 TValueBin = record
   Data: pByte;
@@ -398,6 +399,7 @@ public
   function FindSoft(const Key: pByte; const LenKey: uint32; out Value: V): boolean; override;
 end;
 
+{ equal comparator }
 TValueComparator<V> = function (const V1, V2: V): boolean;
 
 { TBinTreeMultiValue<K, V> }
@@ -774,10 +776,11 @@ private
   procedure DoSetValue(const Key: K; const Value: V); overload; inline;
   procedure DoSetValue(Index, Hash: int32; const Key: K; const Value: V); overload; inline;
 public
-  constructor Create(AHashFunction: THashFunction<K>; AKeyComparator: TKeyComparatorEqual<K>; ACapacity: int32 = 32);
+  constructor Create(ACapacity: int32 = 32); overload;
+  constructor Create(AHashFunction: THashFunction<K>; AKeyComparator: TKeyComparatorEqual<K>; ACapacity: int32 = 32); overload;
   destructor Destroy; override;
   procedure Clear(FreeMemory: boolean = false);
-  procedure Delete(const Key: K);
+  procedure Delete(const Key: K); virtual;
   function Exists(const Key: K): boolean;
   function Find(const Key: K; out Value: V): boolean; overload;
   function TryAdd(const Key: K; const Value: V): boolean; inline;
@@ -787,6 +790,171 @@ public
   function GetNext(out Bucket: TBucket): boolean;
   property Items[const Key: K]: V read GetValue write SetValue;
   property Count: int32 read FCount;
+end;
+
+
+TValueConsumer<V> = procedure(const Value: V) of object;
+TValueAndKeyConsumer<K, V> = procedure(const Key: K; const Value: V) of object;
+TOnDeleteValue<V> = procedure(const Value: V) of object;
+
+TDir = boolean;
+
+const
+  NODE_LEFT: TDir = false;
+  NODE_RIGHT: TDir = true;
+  DIR_INC: array[TDir] of int8 = (-1, 1);
+
+type
+
+{ TAvlTree<K, V, S>
+
+  K - Key, V - Value, S - Storage }
+
+TAvlTree<K, V, S> = class
+protected
+  type
+
+    PAvlTreeNode = ^TAvlTreeNode;
+
+    { TTreeNode }
+
+    TAvlTreeNode = record
+      Key: K;
+      Value: S;
+      Balance: int8;
+      Nodes: array[TDir] of PAvlTreeNode;
+    end;
+
+private
+  type
+    TIterator = class
+    private
+      FAvlTree: TAvlTree<K, V, S>;
+      FStack: TListVec<PAvlTreeNode>;
+      {$ifdef debug}
+      FSelectIteration: int32;
+      {$endif}
+    public
+      constructor Create(AvlTree: TAvlTree<K, V, S>);
+      destructor Destroy; override;
+      function First: PAvlTreeNode; overload;
+      function Next: PAvlTreeNode; overload;
+      function First(const KeyLeftBoundary, KeyRightBoundary: K): PAvlTreeNode; overload;
+      function Next(const KeyLeftBoundary, KeyRightBoundary: K): PAvlTreeNode; overload;
+      {$ifdef debug}
+      property SelectIteration: int32 read FSelectIteration;
+      {$endif}
+    end;
+private
+  FKeyComparator: TKeyComparator<K>;
+  FDefaultValue: V;
+  FIterator: TIterator;
+  FOnDeleteValue: TOnDeleteValue<V>;
+
+  {.$define RECURSION_INSERT}
+
+  {$ifdef RECURSION_INSERT}
+  // insertion with recursion
+  function InsertKey(Key: K; var Node: PTreeNode; var NotBalanced: boolean; var NewNode: boolean): PTreeNode;
+  {$else}
+  // insertion without recursion
+  function InsertKey(const Key: K; var NewNode: boolean): PAvlTreeNode;
+  {$endif}
+
+  function CreateNode(const Key: K): PAvlTreeNode; inline;
+  procedure Balance(var Node: PAvlTreeNode; Dir: TDir; var NotBalanced: boolean; AfterDelete: boolean); inline;
+  procedure Rotate(var Node: PAvlTreeNode; Dir: TDir); inline;
+  procedure DoubleRotate(var Node: PAvlTreeNode; Dir: TDir);
+  function GetRoot: Pointer;
+  function GetValues: TArray<V>;
+  function GetKeys: TArray<K>;
+  {$ifdef debug}
+  function GetSelectIteration: int32;
+  {$endif}
+protected
+  FRoot: PAvlTreeNode;
+  FCount: int64;
+  FStack: TListVec<PAvlTreeNode>;
+  FStackSearch: TListVec<PAvlTreeNode>;
+protected
+  procedure DoInsertValue(Node: PAvlTreeNode; IsNewNode: boolean; const Value: V); virtual; abstract;
+  function FetchValue(Node: PAvlTreeNode): V; overload; virtual; abstract;
+  procedure FetchValue(Node: PAvlTreeNode; Consumer: TListVec<V>); overload; virtual; abstract;
+  procedure FetchValue(Node: PAvlTreeNode; const Consumer: TValueConsumer<V>); overload; virtual; abstract;
+  procedure FetchValue(Node: PAvlTreeNode; const Consumer: TValueAndKeyConsumer<K, V>); overload; virtual; abstract;
+  procedure ClearNode(Node: PAvlTreeNode); virtual; abstract;
+  procedure DoOnDeleteValue(const Value: V);
+  // return found by Key node
+  function DoFind(const Key: K): PAvlTreeNode;
+  // return found by Key node and path (StackSearch) to the node
+  function DoExists(const Key: K; StackSearch: TListVec<PAvlTreeNode>): PAvlTreeNode;
+  procedure DoDelete(Node: PAvlTreeNode; Stack: TListVec<PAvlTreeNode>);
+  property DefaultValue: V read FDefaultValue;
+public
+  constructor Create; overload;
+  constructor Create(KeyComparator: TKeyComparator<K>); overload;
+  destructor Destroy; override;
+
+  function Add(const Key: K; const Value: V): Pointer;
+  function Delete(const Key: K): boolean; virtual; abstract;
+  function Exists(const Key: K): boolean;
+  function Find(const Key: K; out Value: V): boolean; overload;
+  procedure Select(Node: Pointer; out Left, Right: Pointer; out Key: K; out Value: S; out Balance: int8); overload;
+  procedure Select(Node: Pointer; out Left, Right: Pointer; out Key: K; out Value: S); overload;
+  procedure Select(const KeyLeftBoundary, KeyRightBoundary: K; Values: TListVec<V>); overload;
+  procedure Select(const KeyLeftBoundary, KeyRightBoundary: K; const ValueConsumer: TValueConsumer<V>); overload;
+  procedure Select(const KeyLeftBoundary, KeyRightBoundary: K; const ValueKeyConsumer: TValueAndKeyConsumer<K, V>); overload;
+
+  procedure Clear;
+
+  function IterateFirst(out Key: K; out Value: S): boolean;
+  function IterateNext(out Key: K; out Value: S): boolean;
+
+  property Root: Pointer read GetRoot;
+  property Count: int64 read FCount;
+  property Values: TArray<V> read GetValues;
+  property Keys: TArray<K> read GetKeys;
+  property KeyComparator: TKeyComparator<K> read FKeyComparator;
+  property OnDeleteValue: TOnDeleteValue<V> read FOnDeleteValue write FOnDeleteValue;
+
+  {$ifdef debug}
+  property SelectIteration: int32 read GetSelectIteration;
+  {$endif}
+end;
+
+TAvlTree<K, V> = class(TAvlTree<K, V, V>)
+private
+  procedure DoInsertValue(Node: TAvlTree<K, V, V>.PAvlTreeNode; IsNewNode, NeedUpdate: boolean; const Value: V); overload;
+protected
+  procedure DoInsertValue(Node: TAvlTree<K, V, V>.PAvlTreeNode; IsNewNode: boolean; const Value: V); overload; override;
+  function FetchValue(Node: TAvlTree<K, V, V>.PAvlTreeNode): V; overload; override;
+  procedure FetchValue(Node: TAvlTree<K, V, V>.PAvlTreeNode; Consumer: TListVec<V>); overload; override;
+  procedure FetchValue(Node: TAvlTree<K, V, V>.PAvlTreeNode; const Consumer: TValueConsumer<V>); overload; override;
+  procedure FetchValue(Node: TAvlTree<K, V, V>.PAvlTreeNode; const Consumer: TValueAndKeyConsumer<K, V>); overload; override;
+  procedure ClearNode(Node: TAvlTree<K, V, V>.PAvlTreeNode); override;
+public
+  function Delete(const Key: K): boolean; overload; override;
+  procedure UpdateOrInsert(const Key: K; const NewValue: V);
+end;
+
+TAvlMultiTree<K, V> = class(TAvlTree<K, V, TArray<V>>)
+private
+  FValueComparator: TValueComparator<V>;
+  FRaiseExeptionOnRepeatedValueInsert: boolean;
+protected
+  procedure DoInsertValue(Node: TAvlTree<K, V, TArray<V>>.PAvlTreeNode; IsNewNode: boolean; const Value: V); override;
+  function FetchValue(Node: TAvlTree<K, V, TArray<V>>.PAvlTreeNode): V; overload; override;
+  procedure FetchValue(Node: TAvlTree<K, V, TArray<V>>.PAvlTreeNode; Consumer: TListVec<V>); overload; override;
+  procedure FetchValue(Node: TAvlTree<K, V, TArray<V>>.PAvlTreeNode; const Consumer: TValueConsumer<V>); overload; override;
+  procedure FetchValue(Node: TAvlTree<K, V, TArray<V>>.PAvlTreeNode; const Consumer: TValueAndKeyConsumer<K, V>); overload; override;
+  procedure ClearNode(Node: TAvlTree<K, V, TArray<V>>.PAvlTreeNode); override;
+public
+  constructor Create; overload;
+  constructor Create(ValueComparator: TValueComparator<V>); overload;
+  constructor Create(KeyComparator: TKeyComparator<K>); overload;
+  constructor Create(KeyComparator: TKeyComparator<K>; ValueComparator: TValueComparator<V>); overload;
+  function Delete(const Key: K; const Value: V): boolean; overload;
+  function Find(const Key: K; out Value: TArray<V>): boolean; overload;
 end;
 
 function GetHashSedgwick(Data: pByte; Len: int32; Capacity: uint32): uint32; overload; inline;
@@ -799,6 +967,7 @@ function GetHashBlackSharkInt64(const Key: int64): uint32; inline;
 function GetHashBlackSharkUInt32(const Key: uint32): uint32; inline;
 function GetHashBlackSharkInt32(const Key: int32): uint32; inline;
 function GetHashBlackSharkPointer(const Key: Pointer): uint32; inline;
+function GetHashBlackSharkDouble(const Key: double): uint32; inline;
 function GetHashBlackShark(Key: PByte; Len: int32): uint32; inline;
 { Default comparators }
 function Int32cmp(const Key1, Key2: int32): int8; inline;
@@ -809,12 +978,14 @@ function Int64cmp(const Key1, Key2: int64): int8; inline;
 function Int64cmpEqual(const Key1, Key2: int64): boolean; inline;
 function PtrCmp(const Key1, Key2: Pointer): int8; inline;
 function StrCmp(const Key1, Key2: string): int8; inline;
+function StrCmpA(const Key1, Key2: AnsiString): int8; inline;
+function DoubleCmp(const Key1, Key2: Double): int8; inline;
+function DoubleCmpBool(const Value1, Value2: Double): boolean; inline;
 function StrCmpBool(const Value1, Value2: string): boolean; inline;
 function StrCmpABool(const Value1, Value2: AnsiString): boolean; inline;
 function PtrCmpBool(const Value1, Value2: Pointer): boolean; inline;
 function UInt32CmpBool(const Value1, Value2: uint32): boolean; inline;
 function Int32CmpBool(const Value1, Value2: int32): boolean; inline;
-function StrCmpA(const Key1, Key2: AnsiString): int8; inline;
 
 { Comparator two memory blocks }
 function CompareBinKeys(
@@ -822,11 +993,71 @@ function CompareBinKeys(
   Key2: pByte; LenKey2:     // data binary tree
   uint8): int8; inline;
 
+function GetValueComparator(TI: PTypeInfo): Pointer;
+function GetValueComparatorEqual(TI: PTypeInfo): Pointer;
+function GetHashFunction(TI: PTypeInfo): Pointer;
+
 implementation
 
 uses
-  Math
+    Math
   ;
+
+function GetValueComparator(TI: PTypeInfo): Pointer;
+begin
+  case TI.Kind of
+    tkAnsiString: Result := @StrCmpA;
+    tkString: Result := @StrCmp;
+    tkFloat: Result := @DoubleCmp;
+    tkInteger: Result := @Int32Cmp;
+    tkInt64: Result := @Int64Cmp;
+    tkClass, tkInterface, tkClassRef, tkPointer: Result := @PtrCmp
+  else
+    raise Exception.Create('Unknown type to select a function for compare keys! Use custom function');
+  end;
+end;
+
+function GetValueComparatorEqual(TI: PTypeInfo): Pointer;
+begin
+  case TI.Kind of
+    tkAnsiString: Result := @StrCmpABool;
+    tkString: Result := @StrCmpBool;
+    tkFloat: Result := @DoubleCmpBool;
+    tkInteger: Result := @Int32CmpBool;
+    tkInt64: Result := @Int64cmpEqual;
+    tkClass, tkInterface, tkClassRef, tkPointer: Result := @PtrCmpBool
+  else
+    raise Exception.Create('Unknown type to select a function for compare values! Use custom function');
+  end;
+end;
+
+function GetHashFunction(TI: PTypeInfo): Pointer;
+begin
+  case TI.Kind of
+    tkAnsiString: Result := @GetHashBlackSharkSA;
+    tkString: Result := @GetHashBlackSharkS;
+    tkFloat: Result := @GetHashBlackSharkDouble;
+    tkInteger: Result := @GetHashBlackSharkInt32;
+    tkInt64: Result := @GetHashBlackSharkInt64;
+    tkClass, tkInterface, tkClassRef, tkPointer: Result := @GetHashBlackSharkPointer
+  else
+    raise Exception.Create('Unknown type to select a function for compare values! Use custom function');
+  end;
+end;
+
+function DoubleCmp(const Key1, Key2: Double): int8; inline;
+var
+  res: double;
+begin
+  res := Key1 - Key2;
+  if res > 0 then
+    Result := 1
+  else
+  if res < 0 then
+    Result := -1
+  else
+    Result := 0;
+end;
 
 function Int64cmp(const Key1, Key2: int64): int8;
 begin
@@ -937,6 +1168,11 @@ begin
 end;
 
 function StrCmpBool(const Value1, Value2: string): boolean;
+begin
+  Result := Value1 = Value2;
+end;
+
+function DoubleCmpBool(const Value1, Value2: Double): boolean; inline;
 begin
   Result := Value1 = Value2;
 end;
@@ -1442,6 +1678,11 @@ begin
   Result := GetHashBlackShark(@Key, sizeof(Key));
 end;
 
+function GetHashBlackSharkDouble(const Key: double): uint32; inline;
+begin
+  Result := GetHashBlackShark(@Key, sizeof(Key));
+end;
+
 function GetHashBlackSharkS(const Key: string): uint32;
 begin
   Result := GetHashBlackShark(@Key[1], length(Key)*SizeOf(Char));
@@ -1771,7 +2012,6 @@ function TVirtualTree<T>.SaveTo(const FileName: string): boolean;
 var
   f: TFileStream;
 begin
-  Result := true;
   try
     f := TFileStream.Create(FileName, fmCreate);
     try
@@ -4142,6 +4382,16 @@ begin
   end;
 end;
 
+constructor THashTable<K, V>.Create(ACapacity: int32);
+var
+  valueHashFunc: THashFunction<K>;
+  keyCmpFunc: TKeyComparatorEqual<K>;
+begin
+  valueHashFunc := GetHashFunction(TypeInfo(K));
+  keyCmpFunc := GetValueComparatorEqual(TypeInfo(K));
+  Create(valueHashFunc, keyCmpFunc, ACapacity);
+end;
+
 procedure THashTable<K, V>.Delete(const Key: K);
 var
   index: int32;
@@ -4255,7 +4505,6 @@ begin
     if BucketIndex = Length(FItems) then
       BucketIndex := 0;
   until false;
-  Result := false;
 end;
 
 function THashTable<K, V>.Find(const Key: K; out Value: V): boolean;
@@ -4395,6 +4644,919 @@ procedure THashTable<K, V>.SetValue(const Key: K; const Value: V);
 begin
   if not TryAdd(Key, Value) then
     raise Exception.Create('The Key already exists!');
+end;
+
+{ TAvlTree<K, V, S> }
+
+function TAvlTree<K, V, S>.Add(const Key: K; const Value: V): Pointer;
+var
+  isNewNode: boolean;
+  {$ifdef RECURSION_INSERT}
+  notBalanced: boolean;
+  {$endif}
+begin
+  isNewNode := false;
+  {$ifdef RECURSION_INSERT}
+  notBalanced := false;
+  {$endif}
+  Result := InsertKey(Key, {$ifdef RECURSION_INSERT} FRoot, notBalanced, {$endif} isNewNode);
+  DoInsertValue(Result, isNewNode, Value);
+end;
+
+procedure TAvlTree<K, V, S>.Rotate(var Node: PAvlTreeNode; Dir: TDir);
+var
+  n1: PAvlTreeNode;
+begin
+  n1 := Node.Nodes[not Dir];
+  Node.Nodes[not Dir] := n1.Nodes[Dir];
+  n1.Nodes[Dir] := Node;
+  if n1.Balance = 0 then
+  begin
+    Node.Balance := DIR_INC[not Dir];
+    n1.Balance := DIR_INC[Dir];
+  end else
+  begin
+    Node.Balance := 0;
+    n1.Balance := 0;
+  end;
+  Node := n1;
+end;
+
+procedure TAvlTree<K, V, S>.DoubleRotate(var Node: PAvlTreeNode; Dir: TDir);
+var
+  notDir: boolean;
+	n1, n2: PAvlTreeNode;
+begin
+  notDir := not Dir;
+  n1 := Node.Nodes[notDir];
+  n2 := n1.Nodes[Dir];
+  n1.Nodes[Dir] := n2.Nodes[notDir];
+  n2.Nodes[notDir] := n1;
+  Node.Nodes[notDir] := n2.Nodes[Dir];
+  n2.Nodes[Dir] := Node;
+
+  if n2.Balance = DIR_INC[notDir] then
+  begin
+    Node.Balance := DIR_INC[Dir];
+    n1.Balance := 0;
+  end else
+  begin
+    Node.Balance := 0;
+    if n2.Balance = DIR_INC[Dir] then
+      n1.Balance := DIR_INC[notDir]
+    else
+      n1.Balance := 0;
+  end;
+
+  Node := n2;
+  Node.Balance := 0;
+end;
+
+procedure TAvlTree<K, V, S>.Balance(var Node: PAvlTreeNode; Dir: TDir; var NotBalanced: boolean; AfterDelete: boolean);
+var
+  notDir: boolean;
+begin
+  notDir := not Dir;
+  if Node.Balance = 0 then
+    Node.Balance := DIR_INC[Dir]
+  else
+  if Node.Balance = DIR_INC[notDir] then
+    Node.Balance := 0
+  else  // new balancing
+  if (Node.Nodes[Dir].Balance = DIR_INC[Dir]) or (AfterDelete and (Node.Nodes[Dir].Balance = 0)) then
+    // single rotation
+    Rotate(Node, notDir)
+  else
+    // double rotation
+    DoubleRotate(node, notDir);
+
+  if AfterDelete then
+    NotBalanced := Node.Balance = 0
+  else
+    NotBalanced := Node.Balance <> 0;
+end;
+
+procedure TAvlTree<K, V, S>.Clear;
+var
+  node: PAvlTreeNode;
+begin
+  if not Assigned(FRoot) then
+    exit;
+  FStack.Count := 0;
+  FStack.Add(FRoot);
+  while (FStack.Count > 0) do
+  begin
+    node := FStack.Pop;
+    if Assigned(node.Nodes[NODE_LEFT]) then
+      FStack.Add(node.Nodes[NODE_LEFT]);
+    if Assigned(node.Nodes[NODE_RIGHT]) then
+      FStack.Add(node.Nodes[NODE_RIGHT]);
+    ClearNode(node);
+    dispose(node);
+  end;
+  System.Assert(FCount = 0);
+  FRoot := nil;
+end;
+
+constructor TAvlTree<K, V, S>.Create;
+var
+  keyCmp: TKeyComparator<K>;
+begin
+  keyCmp := GetValueComparator(TypeInfo(K));
+  Create(keyCmp);
+end;
+
+constructor TAvlTree<K, V, S>.Create(KeyComparator: TKeyComparator<K>);
+begin
+  FStack := TListVec<PAvlTreeNode>.Create;
+  FStackSearch := TListVec<PAvlTreeNode>.Create;
+  FKeyComparator := KeyComparator;
+end;
+
+function TAvlTree<K, V, S>.CreateNode(const Key: K): PAvlTreeNode;
+begin
+  new(Result);
+  Result.Key := Key;
+  Result.Nodes[NODE_LEFT] := nil;
+  Result.Nodes[NODE_RIGHT] := nil;
+  Result.Balance := 0;
+end;
+
+destructor TAvlTree<K, V, S>.Destroy;
+begin
+  Clear();
+  FStack.Free;
+  FStackSearch.Free;
+  FIterator.Free;
+  inherited;
+end;
+
+procedure TAvlTree<K, V, S>.DoDelete(Node: PAvlTreeNode; Stack: TListVec<PAvlTreeNode>);
+var
+  dir, dirPrev: TDir;
+  prevNode: PAvlTreeNode;
+  predecessor: PAvlTreeNode;
+  indexPredecessor: int32;
+  originalParent: PAvlTreeNode;
+  notBalanced: boolean;
+begin
+  if Stack.Count > 0 then
+    originalParent := Stack.Items[Stack.Count - 1]
+  else
+    originalParent := nil;
+
+  // --- Step 1: If both children are present → replace with the predecessor ---
+  if Assigned(Node.Nodes[NODE_LEFT]) and Assigned(Node.Nodes[NODE_RIGHT]) then
+  begin
+    predecessor := Node.Nodes[NODE_LEFT];
+    indexPredecessor := Stack.Count;
+    Stack.Add(Node);
+    prevNode := Node;
+    while Assigned(predecessor.Nodes[NODE_RIGHT]) do
+    begin
+      prevNode := predecessor;
+      Stack.Add(predecessor);
+      predecessor := predecessor.Nodes[NODE_RIGHT];
+    end;
+    dirPrev := not (prevNode.Nodes[NODE_RIGHT] = predecessor);
+    Stack.Items[indexPredecessor] := predecessor;
+
+    if (prevNode <> Node) then
+      prevNode.Nodes[NODE_RIGHT] := predecessor.Nodes[NODE_LEFT];
+
+    predecessor.Balance := Node.Balance;
+    if Node.Nodes[NODE_LEFT] <> predecessor then
+      predecessor.Nodes[NODE_LEFT] := Node.Nodes[NODE_LEFT]
+    else
+      predecessor.Nodes[NODE_LEFT] := predecessor.Nodes[NODE_LEFT];
+    if Node.Nodes[NODE_RIGHT] <> predecessor then
+      predecessor.Nodes[NODE_RIGHT] := Node.Nodes[NODE_RIGHT]
+    else
+      predecessor.Nodes[NODE_RIGHT] := nil;
+  end else
+  begin
+    predecessor := Node.Nodes[Assigned(Node.Nodes[NODE_RIGHT])];
+    dirPrev := Assigned(originalParent) and not (originalParent.Nodes[NODE_RIGHT] = Node);
+  end;
+
+  if Assigned(originalParent) then
+    originalParent.Nodes[originalParent.Nodes[NODE_RIGHT] = Node] := predecessor;
+
+  if Node = FRoot then
+    FRoot := predecessor;
+
+  // --- Step 2: Balancing ---
+  if (Stack.Count > 0) then
+  begin
+
+    prevNode := Stack.Pop;
+    notBalanced := true;
+    while (Stack.Count > 0) and notBalanced do
+    begin
+
+      predecessor := Stack.Pop;
+      dir := predecessor.Nodes[NODE_RIGHT] = prevNode;
+
+      Balance(predecessor.Nodes[dir], dirPrev, notBalanced, true);
+
+      prevNode := predecessor;
+      dirPrev := not dir;
+    end;
+
+    if (Stack.Count = 0) and notBalanced then
+      Balance(FRoot, dirPrev, notBalanced, true);
+
+  end;
+
+  Dispose(Node);
+end;
+
+function TAvlTree<K, V, S>.DoExists(const Key: K; StackSearch: TListVec<PAvlTreeNode>): PAvlTreeNode;
+var
+  node: PAvlTreeNode;
+  compResult: int8;
+begin
+  Result := nil;
+  if not Assigned(FRoot) then
+    exit;
+  FStack.Count := 0;
+  FStack.Add(FRoot);
+  StackSearch.Count := 0;
+  while (FStack.Count > 0) do
+  begin
+    node := FStack.Pop;
+    compResult := FKeyComparator(node.Key, Key);
+    if (compResult > 0) then
+    begin  // right
+      StackSearch.Add(node);
+      if Assigned(node.Nodes[NODE_RIGHT]) then
+        FStack.Add(node.Nodes[NODE_RIGHT]);
+    end else
+    if (compResult < 0) then
+    begin  // left
+      StackSearch.Add(node);
+      if Assigned(node.Nodes[NODE_LEFT]) then
+        FStack.Add(node.Nodes[NODE_LEFT]);
+    end else
+    begin  // hit
+      Result := node;
+      break;
+    end;
+  end;
+end;
+
+function TAvlTree<K, V, S>.DoFind(const Key: K): PAvlTreeNode;
+var
+  node: PAvlTreeNode;
+  compResult: int8;
+begin
+  if not Assigned(FRoot) then
+    exit(nil);
+  Result := nil;
+  FStack.Count := 0;
+  FStack.Add(FRoot);
+  while (FStack.Count > 0) do
+  begin
+    node := FStack.Pop;
+    compResult := FKeyComparator(node.Key, Key);
+    if (compResult > 0) then
+    begin  // right
+       if Assigned(node.Nodes[NODE_RIGHT]) then
+        FStack.Add(node.Nodes[NODE_RIGHT]);
+    end else
+    if (compResult < 0) then
+    begin  // left
+      if Assigned(node.Nodes[NODE_LEFT]) then
+        FStack.Add(node.Nodes[NODE_LEFT]);
+    end else
+    begin  // hit
+      Result := node;
+      break;
+    end;
+  end;
+end;
+
+procedure TAvlTree<K, V, S>.DoOnDeleteValue(const Value: V);
+begin
+  dec(FCount);
+  if Assigned(OnDeleteValue) then
+    OnDeleteValue(Value);
+end;
+
+function TAvlTree<K, V, S>.Exists(const Key: K): boolean;
+begin
+  Result := Assigned(DoExists(Key, FStackSearch));
+end;
+
+function TAvlTree<K, V, S>.Find(const Key: K; out Value: V): boolean;
+var
+  node: PAvlTreeNode;
+begin
+  if not Assigned(FRoot) then
+    exit(false);
+  node := DoFind(Key);
+  Result := Assigned(node);
+  if Result then
+    Value := FetchValue(node);
+end;
+
+function TAvlTree<K, V, S>.GetKeys: TArray<K>;
+var
+  node: PAvlTreeNode;
+  index: int32;
+begin
+  SetLength(Result, FCount);
+  if not Assigned(FRoot) then
+    exit;
+  if not Assigned(FIterator) then
+    FIterator := TIterator.Create(Self);
+  index := 0;
+  node := FIterator.First;
+  while Assigned(node) do begin
+    Result[index] := node.Key;
+    inc(index);
+    node := FIterator.Next;
+  end;
+end;
+
+function TAvlTree<K, V, S>.GetRoot: Pointer;
+begin
+  Result := FRoot;
+end;
+
+{$ifdef debug}
+function TAvlTree<K, V, S>.GetSelectIteration: int32;
+begin
+  if Assigned(FIterator) then
+    Result := FIterator.SelectIteration
+  else
+    Result := 0;
+end;
+{$endif}
+
+function TAvlTree<K, V, S>.GetValues: TArray<V>;
+var
+  node: PAvlTreeNode;
+  index: int32;
+begin
+  SetLength(Result, FCount);
+  if not Assigned(FRoot) then
+    exit;
+  if not Assigned(FIterator) then
+    FIterator := TIterator.Create(Self);
+  index := 0;
+  node := FIterator.First;
+  while Assigned(node) do begin
+    Result[index] := FetchValue(node);
+    inc(index);
+    node := FIterator.Next;
+  end;
+end;
+
+{$ifdef RECURSION_INSERT}
+function TAvlTree<K, V, S>.InsertKey(Key: K; var Node: PTreeNode; var NotBalanced: boolean; var NewNode: boolean): PTreeNode;
+var
+  dir: TDir;
+  cmpResult: int8;
+begin
+  if not Assigned(Node) then
+  begin // the value does not contained in the tree, insert it
+   	Node := CreateNode(Key);
+    NotBalanced := true;
+    NewNode := true;
+    exit(Node);
+  end;
+  cmpResult := FKeyComparator(Node.Key, Key);
+  if cmpResult = 0 then
+    Result := Node
+  else
+  begin
+    if (cmpResult > 0) then
+      dir := NODE_RIGHT
+    else
+      dir := NODE_LEFT;
+    Result := InsertKey(Key, Node.Nodes[dir], NotBalanced, NewNode);
+   	if NotBalanced then
+      Balance(Node, dir, NotBalanced, false);
+  end;
+end;
+{$else}
+function TAvlTree<K, V, S>.InsertKey(const Key: K; var NewNode: boolean): PAvlTreeNode;
+var
+  node, nodeParent: PAvlTreeNode;
+  notBalanced: boolean;
+  dir: TDir;
+  cmpResult: int8;
+begin
+  if not Assigned(FRoot) then
+  begin
+    FRoot := CreateNode(Key);
+    NewNode := true;
+    exit(FRoot);
+  end;
+
+  NewNode := false;
+  Result := FRoot;
+  FStack.Count := 0;
+  notBalanced := false;
+  // inserting
+  while true do
+  begin
+    cmpResult := FKeyComparator(Result.Key, Key);
+    if cmpResult = 0 then
+      break
+    else
+    begin
+
+      if cmpResult > 0 then
+        dir := NODE_RIGHT
+      else
+        dir := NODE_LEFT;
+
+      FStack.Add(Result);
+      if not Assigned(Result.Nodes[dir]) then
+      begin
+        Result.Nodes[dir] := CreateNode(Key);
+        //FixBalance(Result);
+        FStack.Add(Result.Nodes[dir]);
+        Result := Result.Nodes[dir];
+        notBalanced := true;
+        NewNode := true;
+        break;
+      end else
+      begin
+        Result := Result.Nodes[dir];
+      end;
+
+    end;
+  end;
+
+  // balancing
+  if (FStack.Count > 1) and notBalanced then
+  begin
+    node := FStack.Pop;
+    while (FStack.Count > 0) do begin // and notBalanced do
+      nodeParent := FStack.Pop;
+      if FKeyComparator(NodeParent.Key, Key) > 0 then
+        dir := NODE_RIGHT
+      else
+        dir := NODE_LEFT;
+
+      if (nodeParent.Nodes[dir] <> node) then
+        nodeParent.Nodes[dir] := node;
+
+      node := nodeParent;
+
+      // important! allows + 1 iteration after finish balancing
+      if not notBalanced then
+        break;
+
+      Balance(node, dir, notBalanced, false);
+    end;
+
+    if FStack.Count = 0 then
+      FRoot := node;
+  end;
+end;
+{$endif}
+
+function TAvlTree<K, V, S>.IterateFirst(out Key: K; out Value: S): boolean;
+var
+  node: PAvlTreeNode;
+begin
+  if not Assigned(FRoot) then
+    exit(false);
+  if not Assigned(FIterator) then
+    FIterator := TIterator.Create(Self);
+  node := FIterator.First;
+  Result := Assigned(node);
+  if Result then begin
+    Key := node.Key;
+    Value := node.Value;
+  end;
+end;
+
+function TAvlTree<K, V, S>.IterateNext(out Key: K; out Value: S): boolean;
+var
+  node: PAvlTreeNode;
+begin
+  if not Assigned(FRoot) or not Assigned(FIterator) then
+    exit(false);
+  node := FIterator.Next;
+  Result := Assigned(node);
+  if Result then begin
+    Key := node.Key;
+    Value := node.Value;
+  end;
+end;
+
+procedure TAvlTree<K, V, S>.Select(Node: Pointer; out Left, Right: Pointer; out Key: K; out Value: S; out Balance: int8);
+var
+  n: TAvlTree<K, V, S>.PAvlTreeNode;
+begin
+  Left := nil;
+  Right := nil;
+  if not Assigned(Node) then
+    exit;
+  n := Node;
+  Left := n.Nodes[NODE_LEFT];
+  Right := n.Nodes[NODE_RIGHT];
+  Key := n.Key;
+  Value := n.Value;
+  Balance := n.Balance;
+end;
+
+procedure TAvlTree<K, V, S>.Select(const KeyLeftBoundary, KeyRightBoundary: K; Values: TListVec<V>);
+var
+  node: PAvlTreeNode;
+begin
+  if not Assigned(FRoot) then
+    exit;
+
+  if not Assigned(FIterator) then
+    FIterator := TIterator.Create(Self);
+
+  node := FIterator.First(KeyLeftBoundary, KeyRightBoundary);
+  while Assigned(node) do
+  begin
+    FetchValue(node, Values);
+    node := FIterator.Next(KeyLeftBoundary, KeyRightBoundary);
+  end;
+end;
+
+procedure TAvlTree<K, V, S>.Select(Node: Pointer; out Left, Right: Pointer; out Key: K; out Value: S);
+var
+  n: TAvlTree<K, V, S>.PAvlTreeNode;
+begin
+  Left := nil;
+  Right := nil;
+  if not Assigned(Node) then
+    exit;
+  n := Node;
+  Left := n.Nodes[NODE_LEFT];
+  Right := n.Nodes[NODE_RIGHT];
+  Key := n.Key;
+  Value := n.Value;
+end;
+
+procedure TAvlTree<K, V, S>.Select(const KeyLeftBoundary, KeyRightBoundary: K; const ValueConsumer: TValueConsumer<V>);
+var
+  node: PAvlTreeNode;
+begin
+  if not Assigned(FRoot) then
+    exit;
+
+  if not Assigned(FIterator) then
+    FIterator := TIterator.Create(Self);
+
+  node := FIterator.First(KeyLeftBoundary, KeyRightBoundary);
+  while Assigned(node) do
+  begin
+    FetchValue(node, ValueConsumer);
+    node := FIterator.Next(KeyLeftBoundary, KeyRightBoundary);
+  end;
+end;
+
+procedure TAvlTree<K, V, S>.Select(const KeyLeftBoundary, KeyRightBoundary: K; const ValueKeyConsumer: TValueAndKeyConsumer<K, V>);
+var
+  node: PAvlTreeNode;
+begin
+  if not Assigned(FRoot) then
+    exit;
+
+  if not Assigned(FIterator) then
+    FIterator := TIterator.Create(Self);
+
+  node := FIterator.First(KeyLeftBoundary, KeyRightBoundary);
+  while Assigned(node) do
+  begin
+    FetchValue(node, ValueKeyConsumer);
+    node := FIterator.Next(KeyLeftBoundary, KeyRightBoundary);
+  end;
+end;
+
+{ TAvlTree<K, V> }
+
+procedure TAvlTree<K, V>.ClearNode(Node: TAvlTree<K, V, V>.PAvlTreeNode);
+begin
+  DoOnDeleteValue(Node.Value);
+  Node.Value := DefaultValue;
+end;
+
+function TAvlTree<K, V>.Delete(const Key: K): boolean;
+var
+  node: PAvlTreeNode;
+begin
+  node := DoExists(Key, FStackSearch);
+  Result := Assigned(node);
+  if Result then
+  begin
+    DoOnDeleteValue(node.Value);
+    DoDelete(node, FStackSearch);
+    dec(FCount);
+  end;
+end;
+
+procedure TAvlTree<K, V>.DoInsertValue(Node: TAvlTree<K, V, V>.PAvlTreeNode; IsNewNode: boolean; const Value: V);
+begin
+  DoInsertValue(Node, IsNewNode, false, Value);
+end;
+
+procedure TAvlTree<K, V>.FetchValue(Node: TAvlTree<K, V, V>.PAvlTreeNode; Consumer: TListVec<V>);
+begin
+  Consumer.Add(Node.Value);
+end;
+
+procedure TAvlTree<K, V>.DoInsertValue(Node: TAvlTree<K, V, V>.PAvlTreeNode; IsNewNode, NeedUpdate: boolean; const Value: V);
+begin
+  if IsNewNode or NeedUpdate then
+  begin
+    Node.Value := Value;
+    if not NeedUpdate then
+      inc(FCount);
+  end else
+    raise Exception.Create('The Key already exists');
+end;
+
+function TAvlTree<K, V>.FetchValue(Node: TAvlTree<K, V, V>.PAvlTreeNode): V;
+begin
+  Result := Node.Value;
+end;
+
+procedure TAvlTree<K, V>.UpdateOrInsert(const Key: K; const NewValue: V);
+var
+  node: TAvlTree<K, V, V>.PAvlTreeNode;
+  isNewNode: boolean;
+  {$ifdef RECURSION_INSERT}
+  notBalanced: boolean;
+  {$endif}
+begin
+  isNewNode := false;
+  {$ifdef RECURSION_INSERT}
+  notBalanced := false;
+  {$endif}
+  node := InsertKey(Key, {$ifdef RECURSION_INSERT} FRoot, notBalanced, {$endif} isNewNode);
+  DoInsertValue(node, IsNewNode, true, NewValue);
+end;
+
+procedure TAvlTree<K, V>.FetchValue(Node: TAvlTree<K, V, V>.PAvlTreeNode; const Consumer: TValueConsumer<V>);
+begin
+  Consumer(Node.Value);
+end;
+
+procedure TAvlTree<K, V>.FetchValue(Node: TAvlTree<K, V, V>.PAvlTreeNode; const Consumer: TValueAndKeyConsumer<K, V>);
+begin
+  Consumer(Node.Key, Node.Value);
+end;
+
+{ TAvlMultiTree<K, V> }
+
+constructor TAvlMultiTree<K, V>.Create(ValueComparator: TValueComparator<V>);
+begin
+  inherited Create;
+  FValueComparator := ValueComparator;
+end;
+
+constructor TAvlMultiTree<K, V>.Create;
+var
+  ptr: TValueComparator<V>;
+begin
+  ptr := GetValueComparatorEqual(TypeInfo(V));
+  Create(ptr);
+end;
+
+procedure TAvlMultiTree<K, V>.ClearNode(Node: TAvlTree<K, V, TArray<V>>.PAvlTreeNode);
+var
+  i: int32;
+begin
+  for i := 0 to length(Node.Value) - 1 do
+    DoOnDeleteValue(node.Value[i]);
+  SetLength(Node.Value, 0);
+end;
+
+constructor TAvlMultiTree<K, V>.Create(KeyComparator: TKeyComparator<K>; ValueComparator: TValueComparator<V>);
+begin
+  inherited Create(KeyComparator);
+  FValueComparator := ValueComparator;
+  FRaiseExeptionOnRepeatedValueInsert := true;
+end;
+
+constructor TAvlMultiTree<K, V>.Create(KeyComparator: TKeyComparator<K>);
+var
+  ptr: TValueComparator<V>;
+begin
+  ptr := GetValueComparatorEqual(TypeInfo(V));
+  Create(KeyComparator, ptr);
+end;
+
+function TAvlMultiTree<K, V>.Delete(const Key: K; const Value: V): boolean;
+var
+  i: Integer;
+  node: PAvlTreeNode;
+begin
+  node := DoExists(Key, FStackSearch);
+  Result := Assigned(node);
+  if Result then
+  begin
+    Result := false;
+    for i := 0 to length(node.Value) - 1 do
+    begin
+      if FValueComparator(node.Value[i], Value) then
+      begin
+        Result := true;
+        DoOnDeleteValue(node.Value[i]);
+        if i < length(node.Value) - 1 then
+          move(node.Value[i+1], node.Value[i], (length(node.Value) - i - 1) * sizeOf(V));
+        SetLength(node.Value, length(node.Value) - 1);
+        if length(node.Value) = 0 then
+          DoDelete(node, FStackSearch);
+      end;
+    end;
+  end;
+
+end;
+
+procedure TAvlMultiTree<K, V>.DoInsertValue(Node: TAvlTree<K, V, TArray<V>>.PAvlTreeNode; IsNewNode: boolean; const Value: V);
+var
+  i: Integer;
+begin
+  for i := 0 to length(Node.Value) - 1 do
+    if FValueComparator(Node.Value[i], Value) then
+      if FRaiseExeptionOnRepeatedValueInsert then
+        raise Exception.Create('The value was already inserted')
+      else
+        exit;
+  SetLength(Node.Value, length(Node.Value) + 1);
+  Node.Value[length(Node.Value)-1] := Value;
+  inc(FCount);
+end;
+
+function TAvlMultiTree<K, V>.FetchValue(Node: TAvlTree<K, V, TArray<V>>.PAvlTreeNode): V;
+begin
+  if length(Node.Value) > 0 then
+    Result := Node.Value[0]
+  else
+    Result := FDefaultValue;
+end;
+
+procedure TAvlMultiTree<K, V>.FetchValue(Node: TAvlTree<K, V, TArray<V>>.PAvlTreeNode; Consumer: TListVec<V>);
+var
+  i: Integer;
+begin
+  for i := 0 to length(Node.Value) - 1 do
+    Consumer.Add(Node.Value[i]);
+end;
+
+procedure TAvlMultiTree<K, V>.FetchValue(Node: TAvlTree<K, V, TArray<V>>.PAvlTreeNode; const Consumer: TValueConsumer<V>);
+var
+  i: Integer;
+begin
+  for i := 0 to length(Node.Value) - 1 do
+    Consumer(Node.Value[i]);
+end;
+
+function TAvlMultiTree<K, V>.Find(const Key: K; out Value: TArray<V>): boolean;
+var
+  node: PAvlTreeNode;
+begin
+  if not Assigned(FRoot) then
+    exit(false);
+  node := DoFind(Key);
+  Result := Assigned(node);
+  if Result then
+    Value := node.Value;
+end;
+
+procedure TAvlMultiTree<K, V>.FetchValue(Node: TAvlTree<K, V, TArray<V>>.PAvlTreeNode; const Consumer: TValueAndKeyConsumer<K, V>);
+var
+  i: Integer;
+begin
+  for i := 0 to length(Node.Value) - 1 do
+    Consumer(Node.Key, Node.Value[i]);
+
+end;
+
+{ TAvlTree<K, V, S>.TIterator }
+
+constructor TAvlTree<K, V, S>.TIterator.Create(AvlTree: TAvlTree<K, V, S>);
+begin
+  FStack := TListVec<PAvlTreeNode>.Create;
+  FAvlTree := AvlTree;
+end;
+
+destructor TAvlTree<K, V, S>.TIterator.Destroy;
+begin
+  FStack.Free;
+  inherited;
+end;
+
+function TAvlTree<K, V, S>.TIterator.First(const KeyLeftBoundary, KeyRightBoundary: K): PAvlTreeNode;
+var
+  node: PAvlTreeNode;
+  cmpResult: int8;
+begin
+  if not Assigned(FAvlTree.Root) then
+    exit(nil);
+  node := FAvlTree.Root;
+  FStack.Count := 0;
+  Result := nil;
+  {$ifdef debug}
+  FSelectIteration := 0;
+  {$endif}
+  while Assigned(node) do begin
+    {$ifdef debug}
+    inc(FSelectIteration);
+    {$endif}
+    cmpResult := FAvlTree.KeyComparator(KeyLeftBoundary, node.Key);
+    if cmpResult = 0 then
+    begin
+      FStack.Add(node);
+      break;
+    end;
+
+    if (cmpResult > 0) and (FAvlTree.KeyComparator(KeyRightBoundary, node.Key) <= 0) then
+      FStack.Add(node);
+
+    node := node.Nodes[cmpResult < 0];
+  end;
+
+  Result := Next(KeyLeftBoundary, KeyRightBoundary);
+end;
+
+function TAvlTree<K, V, S>.TIterator.First: PAvlTreeNode;
+var
+  node: PAvlTreeNode;
+begin
+  if not Assigned(FAvlTree.Root) then
+    exit(nil);
+  node := FAvlTree.Root;
+  FStack.Count := 0;
+  while Assigned(node) do begin
+    FStack.Add(node);
+    node := node.Nodes[NODE_LEFT];
+  end;
+  Result := Next;
+end;
+
+function TAvlTree<K, V, S>.TIterator.Next: PAvlTreeNode;
+var
+  node: PAvlTreeNode;
+begin
+  Result := nil;
+  if FStack.Count > 0 then
+  begin
+    Result := FStack.Pop;
+    if Assigned(Result.Nodes[NODE_RIGHT]) then
+    begin
+      FStack.Add(Result.Nodes[NODE_RIGHT]);
+      node := Result.Nodes[NODE_RIGHT].Nodes[NODE_LEFT];
+      while Assigned(node) do begin
+        FStack.Add(node);
+        node := node.Nodes[NODE_LEFT];
+      end;
+    end;
+  end;
+end;
+
+function TAvlTree<K, V, S>.TIterator.Next(const KeyLeftBoundary, KeyRightBoundary: K): PAvlTreeNode;
+var
+  node: PAvlTreeNode;
+  rightCmp: int8;
+begin
+  Result := nil;
+  if (FStack.Count > 0) then
+  begin
+    {$ifdef debug}
+    inc(FSelectIteration);
+    {$endif}
+    node := FStack.Pop;
+    Result := node;
+
+    if Assigned(node.Nodes[NODE_RIGHT]) then //and (FAvlTree.KeyComparator(KeyRightBoundary, node.Nodes[NODE_RIGHT].Key) <= 0)
+    begin
+      rightCmp := 1;
+      if FAvlTree.KeyComparator(KeyRightBoundary, node.Nodes[NODE_RIGHT].Key) <= 0 then
+      begin
+        rightCmp := -1;
+        FStack.Add(node.Nodes[NODE_RIGHT]);
+      end;
+      node := node.Nodes[NODE_RIGHT].Nodes[NODE_LEFT];
+
+      while Assigned(node) do begin
+
+        if (rightCmp < 0) or (FAvlTree.KeyComparator(KeyRightBoundary, node.Key) <= 0) then
+        begin
+          rightCmp := 1;
+          FStack.Add(node);
+        end;
+        node := node.Nodes[NODE_LEFT];
+        {$ifdef debug}
+        inc(FSelectIteration);
+        {$endif}
+      end;
+
+    end;
+  end;
 end;
 
 end.

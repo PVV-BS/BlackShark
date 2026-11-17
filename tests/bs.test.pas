@@ -1,4 +1,4 @@
-unit bs.test;
+﻿unit bs.test;
 
 {$I BlackSharkCfg.inc}
 
@@ -152,6 +152,7 @@ begin
   ObsrvMouseDown := nil;
   ObsrvMouseUp := nil;
   ObsrvMouseMove := nil;
+  Renderer.Scene.Clear;
   inherited;
 end;
 
@@ -218,7 +219,8 @@ end;
 
 procedure TBSTest.OnMouseWeel(const AData: BMouseData);
 begin
-  Renderer.Frustum.Position := Renderer.Frustum.Position + Renderer.Frustum.Direction*AData.DeltaWeel*0.01;
+  if Allow3dManipulationByMouse then
+    Renderer.Frustum.Position := Renderer.Frustum.Position + Renderer.Frustum.Direction*AData.DeltaWeel*0.01;
 end;
 
 procedure TBSTest.OnMove(const AValue: BSFloat);

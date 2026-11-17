@@ -214,6 +214,7 @@ type
     class operator Divide   (const v: TVec2i; const k: BSFloat): TVec2i; inline;
     class operator Equal    (const v1, v2: TVec2i): boolean; inline;
     class operator Implicit (const v: TVec2f): TVec2i; inline;
+    class operator Implicit (const v: TVec2i): TVec2d; inline;
     class operator Implicit (const v: TVec2i): TVec2f; inline;
     class operator Implicit (const v: TVec2i64): TVec2i; inline;
     case int8 of
@@ -431,6 +432,12 @@ type
 
   TDimension = Int8;
 
+  { for 1024 Dimensions }
+
+  TKDVector = array[0..1023] of double;
+  PKDVector = ^TKDVector;
+  PKDMinMax = PKDVector;
+
   TInterpolateSpline = (isNone, isBezier, isCubic, isCubicHermite);
 
   { TBox3f }
@@ -455,6 +462,7 @@ type
     IsPoint: boolean;
     TagPtr: Pointer;
     class operator Explicit (const B: TBox3d): TBox3f; inline;
+    class operator Implicit (const B: TBox3f): TBox3d; inline;
     case byte of
     0: (V0, V1, Middle: TVec3d);
     3: (x_min, y_min, z_min, x_max, y_max, z_max, x_mid, y_mid, z_mid: double);
@@ -467,6 +475,8 @@ type
     case byte of
     0: (Min, Max, Mid: TVec2d);
   end;
+
+  PBox2d = ^TBox2d;
 
   TCollisionObjects = (coInside, coOutside, coIntersect);
 
@@ -923,6 +933,7 @@ type
 
   function Box2Collision(const Box1, Box2: TBox2d): boolean; overload; inline;
   function Box2(const MinX, MinY, MaxX, MaxY: double): TBox2d; overload; inline;
+  function Box2(const Position: TVec2d; const Width, Height: double): TBox2d; overload; inline;
   function Box3(const MinV, MaxV: TVec3f): TBox3f; overload; inline;
   function Box3(const MinV, MaxV: TVec3d): TBox3d; overload; inline;
   function Box3(const Rect: TRectBSf): TBox3f; overload; inline;
@@ -1531,6 +1542,12 @@ end;
 class operator TVec2i.Equal (const v1, v2: TVec2i): boolean;
 begin
   Result := (v1.x = v2.x) and (v1.y = v2.y);
+end;
+
+class operator TVec2i.Implicit(const v: TVec2i): TVec2d;
+begin
+  Result.x := v.x;
+  Result.y := v.y;
 end;
 
 class operator TVec2i.Implicit(const v: TVec2f): TVec2i;
@@ -4567,6 +4584,12 @@ begin
   Result.Mid := vec2((MinX + MaxX)*0.5, (MinY + MaxY)*0.5);
 end;
 
+function Box2(const Position: TVec2d; const Width, Height: double): TBox2d;
+begin
+  Result.Min := Position;
+  Result.Max := vec2(Position.x + Width, Position.y + Height);
+end;
+
 function Box3(const MinV, MaxV: TVec3f): TBox3f;
 begin
   Result.Min := MinV;
@@ -5221,6 +5244,14 @@ begin
   Result.Max := TVec3f(B.Max);
   Result.Mid := TVec3f(B.Mid);
   Result.IsPoint := B.IsPoint;
+end;
+
+class operator TBox3d.Implicit(const B: TBox3f): TBox3d;
+begin
+  Result.IsPoint := B.IsPoint;
+  Result.Min := B.Min;
+  Result.Max := B.Max;
+  Result.Middle := B.Middle;
 end;
 
 { TColor4f }

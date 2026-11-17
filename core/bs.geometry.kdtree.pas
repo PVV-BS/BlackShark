@@ -31,6 +31,7 @@ interface
 uses
     SysUtils
   , Classes
+  , bs.basetypes
   , bs.collections
   , bs.math
   ;
@@ -40,104 +41,101 @@ type
   {.$define RECURSION_INSERT}
   {$define testTree}
 
-  int = int32;
-  TIntervals = array of int;
+  { TKDTree<T> }
 
-  { TIntervalsTree }
-
-  TIntervalsTree = class
-  protected
+  TKDTree<T> = class
+  private
     type
-      TDir = boolean;
-    const
-      NODE_LEFT: TDir = false;
-      NODE_RIGHT: TDir = true;
-      DIR_INC: array[TDir] of int8 = (-1, 1);
-    type
-      PTreeNode = ^TTreeNode;
-
-      PInterval = ^TInterval;
-      TInterval = record
-        MinIndex: int;
-        MaxIndex: int;
-        Value: Pointer;
+      PCounters = ^TCounters;
+      TCounters = record
+        SelectIteration: int32;
+        DimHits: uint8;
+        Dimensions: uint8;
+        MaskStoredDim: uint8;
+        Opposite: PCounters;
       end;
 
-      { TTreeNode }
-
-      TTreeNode = record
-        Index: int;
-        NodeValue: double;
-        { -1..1 - a balance of the vertex }
-        Balance: int8;
-        { it is balanced left and right branches }
-        Nodes: array[TDir] of int;
-        { references to FCacheSnipets }
-        Intervals: TIntervals;
-        {$ifdef testTree}
-        function toString: string;
-        {$endif}
+      TValueHolder = record
+        Value: T;
+        Counters: PCounters;
+        constructor ValueHolder(const AValue: T; Dimensions: int8);
+        class operator Equal(const v1, v2: TValueHolder): boolean; inline;
       end;
+      TAvlMultiTreeDouble = TAvlMultiTree<double, TValueHolder>;
 
   private
-    FCacheSize: int;
-    FRoot: int;
-    FValueComparator: TValueComparator<Pointer>;
-    FCacheNodes: TListVec<TTreeNode>;
-    FCacheNodesPtr: PTreeNode;
-    FFreeNodes: TListVec<int>;
-    FCacheIntervals: TListVec<TInterval>;
-    FFreeIntervals: TListVec<int>;
-    FCacheIntervalsPtr: PTreeNode;
-    FStack: TListVec<int>;
-    FStackSearch: TListVec<int>;
-    FCount: int;
-    {$ifdef testTree}
-    FTestFile: TFileStream;
-    FTestFileRoots: TFileStream;
+    FDimensions: uint8;
+    FMaskDimensions: uint8;
+    FListSelection: TListVec<T>;
+    FSelectionConsumer: TValueConsumer<TValueHolder>;
+    FFreeSelectors: TListVec<PInteger>;
+    FOnDeleteValue: TOnDeleteValue<T>;
+    FCustomValueConsumer: TValueConsumer<T>;
+    FUpdating: boolean;
+    FCurrentSelectedDim: uint8;
+  private
+    class function KeyCmp(const Key1, Key2: double): int8; static;
+    class function ValueCmp(const Value1, Value2: TValueHolder): boolean; static;
+  private
+    {$ifdef debug}
+    function GetSelectIteration: int32;
     {$endif}
-    procedure GrowCacheNodes(GrowSize: int);
-    procedure GrowCacheIntervals(GrowSize: int);
-    procedure Balance(var NodeInt: int; Dir: TDir; var NotBalanced: boolean; ConditionZeroIsBalanced: boolean);
-    function CreateNode(NodeValue: double; var Interval: int): PTreeNode; inline;
-    function CreateInterval: int;
-    procedure InsertInterval(Interval: int; Node: PTreeNode); overload; inline;
-    procedure InsertInterval(Interval: int; Node: int); overload; inline;
-    {$ifdef RECURSION_INSERT}
-    // insertion with recursion
-    function InsertValue(NodeValue: double; var Node: int; var NotBalanced: boolean; var Interval: int): int;
-    {$else}
-    // insertion without recursion
-    function InsertValue(NodeValue: double; var Interval: int): int;
-    {$endif}
-    function NodePtr(Node: int): PTreeNode; inline;
-    function IntervalPtr(Interval: int): PInterval; inline;
-    procedure CheckCache; inline;
-    function ContainsValue(Node: int; Value: Pointer): int;
-    function Exists(Value: double; Data: Pointer; StackSearch: TListVec<int>): int; overload;
-    function Delete(DeletingNode: PTreeNode; Stack: TListVec<int>): boolean; overload;
-    procedure RemoveInteval(Node: PTreeNode; Position: int); inline;
+
+    function GetCount: int32;
+    procedure SelectionConsumer(const Value: TValueHolder);
+    procedure DoSelect(AViewport: PKDMinMax); inline;
+    procedure OnValueDelete(const Value: TValueHolder);
+  protected
+    FAvlTree: array of TAvlMultiTreeDouble;
+    FSelectIteration: int32;
+    FCount: int32;
   public
-    constructor Create(CacheSize: int = 100000);
+    constructor Create(Dimensions: uint8);
     destructor Destroy; override;
-    function Add(Min, Max: double; Data: Pointer): int;
-    function Delete(Min, Max: double; Data: Pointer): boolean; overload;
-    function Delete(Interval: int): boolean; overload;
-    // return position >= 0 (interval index) if exists, otherwise -1
-    function Exists(Min, Max: double; Data: Pointer): int; overload;
-    // return node index
-    function Find(Value: double): int;
-    procedure Select(Min, Max: double; ListResult: TListVec<Pointer>); {$ifdef testTree} overload; {$endif}
-    procedure Clear;
-    property Count: int read FCount;
-    property Root: int read FRoot;
-    {$ifdef testTree}
-    procedure Select(Interval: int; var Min, Max: double; var Data: Pointer); overload;
-    procedure Select(Interval: int; var MinIndex, MaxIndex: int; var Data: Pointer); overload;
-    procedure Select(Node: int; var Left, Right: int; var NodeValue: double; var Balance: int8; var Intervals: TIntervals); overload;
-    procedure WriteTreeState;
+    procedure Add(const AData: T; AVectorMinMax: PKDMinMax); overload;
+    procedure Update(const AData: T; AOldMinMax, ANewMinMax: PKDMinMax); overload;
+    procedure Delete(const AData: T; AVectorMinMax: PKDMinMax); overload;
+    function Select(AViewport: PKDMinMax): TListVec<T>; overload;
+    procedure Select(AViewport: PKDMinMax; AConsumer: TValueConsumer<T>); overload;
+    procedure Clear; virtual;
+    property Count: int32 read GetCount;
+    property OnDeleteValue: TOnDeleteValue<T> read FOnDeleteValue write FOnDeleteValue;
+    {$ifdef debug}
+    property SelectIteration: int32 read GetSelectIteration;
     {$endif}
   end;
+
+  T1DTree<T> = class (TKDTree<T>)
+  public
+    constructor Create;
+    procedure Add(const AData: T; APoint: Double); overload;
+    function Select(AViewportMin, AViewportMax: double): TListVec<T>; overload;
+  end;
+
+  T2DTree<T> = class (TKDTree<T>)
+  public
+    constructor Create;
+    procedure Add(const AData: T; APoint: TVec2f); overload;
+    procedure Add(const AData: T; const ABox: TBox2d); overload;
+    procedure Delete(const AData: T; const ABox: TBox2d); overload;
+    function Select(const AViewport: TBox2d): TListVec<T>; overload;
+  end;
+
+  T3DTree<T> = class (TKDTree<T>)
+  public
+    constructor Create;
+    procedure Add(const AData: T; const APoint: TVec3f); overload;
+    procedure Add(const AData: T; const ABox: TBox3d); overload;
+    procedure Add(const AData: T; const ABox: TBox3f); overload;
+    procedure Update(const AData: T; const AOldBox, ANewBox: TBox3d); overload;
+    procedure Delete(const AData: T; const ABox: TBox3f); overload;
+    procedure Delete(const AData: T; const ABox: TBox3d); overload;
+    function Select(const AViewport: TBox3d): TListVec<T>; overload;
+    procedure Select(const AViewport: TBox3d; AConsumer: TValueConsumer<T>); overload;
+  end;
+
+const
+  DIMENSIONS_FLAGS: array[0..7] of uint8 = (1, 2, 4, 8, 16, 32, 64, 128);
 
 implementation
 
@@ -146,837 +144,383 @@ uses
   , bs.exceptions
   ;
 
-{ TIntervalsTree }
+{ TKDTree<T> }
 
-constructor TIntervalsTree.Create(CacheSize: int);
+class function TKDTree<T>.KeyCmp(const Key1, Key2: double): int8;
 begin
-  FRoot := -1;
-  FCacheSize := Max(int64(CacheSize), int64(4096));
-  FValueComparator := PtrCmpBool;
-  FCacheNodes := TListVec<TTreeNode>.Create;
-  FCacheIntervals := TListVec<TInterval>.Create;
-  FFreeNodes := TListVec<int>.Create;
-  FFreeIntervals := TListVec<int>.Create;
-  FStack := TListVec<int>.Create;
-  FStackSearch := TListVec<int>.Create;
-  GrowCacheNodes(FCacheSize);
-  GrowCacheIntervals(FCacheSize);
-  {$ifdef testTree}
-  FTestFile := TFileStream.Create('testSamples.txt', fmCreate);
-  FTestFileRoots := TFileStream.Create('testSampleRoots.txt', fmCreate);
-  //FTestData := TListVec<TVec2i>.Create;
-  {$endif}
+  if Key1 < Key2 then
+    exit(1)
+  else
+  if Key1 > Key2 then
+    exit(-1);
+  Result := 0;
 end;
 
-//procedure TIntervalsTree.BalanceLeft(var NodeInt: int; var NotBalanced: boolean);
-//var
-//  l1: PTreeNode;
-//  l2: PTreeNode;
-//  node: PTreeNode;
-//begin
-//  node := NodePtr(NodeInt);
-//  case node.Balance of
-//    1:begin
-//      node.Balance := 0;
-//      NotBalanced := false;
-//    end;
-//    0:begin
-//      node.Balance:= -1;
-//    end else
-//    begin   // new balancing
-//      l1 := NodePtr(node.left);
-//      if (l1.Balance = -1) then
-//      begin   // single ll rotation
-//        node.left := l1.right;
-//        l1.right := node.Index;
-//        node.Balance := 0;
-//        node := l1;
-//      end else
-//      begin //double lr rotation
-//        l2 := NodePtr(l1.right);
-//        l1.Right := l2.Left;
-//        l2.Left := l1.Index;
-//        node.Left := l2^.Right;
-//        l2.right := node.Index;
-//
-//        if l2.Balance < 0 then
-//          node.Balance := +1
-//        else
-//          node.Balance := 0;
-//
-//        if l2^.Balance > 0 then
-//          l1^.Balance := -1
-//        else
-//          l1^.Balance := 0;
-//
-//        node := l2;
-//      end;
-//      node.Balance := 0;
-//      NodeInt := node.Index;
-//      NotBalanced := false;
-//    end; { -1 }
-//  end; { case }
-//end;
-//
-//procedure TIntervalsTree.BalanceRight(var NodeInt: int; var NotBalanced: boolean);
-//var
-//	l1: PTreeNode;
-//  l2: PTreeNode;
-//  node: PTreeNode;
-//begin
-//  node := NodePtr(NodeInt);
-//  case node.Balance of
-//    -1: begin
-//       node.Balance := 0;
-//       NotBalanced := false;
-//    end;
-//    0: begin
-//       node.Balance := +1;
-//    end else
-//    begin    // new balancing
-//      l1 := NodePtr(node.right);
-//      if (l1.Balance = 1) then
-//      begin  // single rr rotation
-//        node.right := l1^.left;
-//        l1.left := node.Index;
-//        node.Balance := 0;
-//        node := l1;
-//      end else
-//      begin  // double rl rotation
-//        l2 := NodePtr(l1.left);
-//        l1.left := l2.right;
-//        l2.right := l1.Index;
-//        node.right := l2.left;
-//        l2.left := node.Index;
-//
-//        if l2.Balance > 0 then
-//          node.Balance := -1
-//        else
-//          node.Balance := 0;
-//
-//        if l2.Balance < 0 then
-//          l1.Balance := +1
-//        else
-//          l1.Balance := 0;
-//
-//        node := l2;
-//      end;
-//      node.Balance := 0;
-//      NodeInt := node.Index;
-//      NotBalanced := false;
-//    end; {+1: begin}
-// 	end;
-//end;
-
-procedure TIntervalsTree.Balance(var NodeInt: int; Dir: TDir; var NotBalanced: boolean; ConditionZeroIsBalanced: boolean);
+procedure TKDTree<T>.OnValueDelete(const Value: TValueHolder);
 var
-  l1: PTreeNode;
-  l2: PTreeNode;
-  node: PTreeNode;
+  lastCounter: boolean;
 begin
-  node := NodePtr(NodeInt);
-  if node.Balance = 0 then
-    node.Balance := DIR_INC[Dir]
-  else
-  if node.Balance = DIR_INC[not Dir] then begin
-    node.Balance := 0;
-  end
-  else
-  begin   // new balancing
-    l1 := NodePtr(node.Nodes[Dir]);
-    if (l1.Balance = DIR_INC[Dir]) then
-    begin // single rotation
-      node.Nodes[Dir] := l1.Nodes[not Dir];
-      l1.Nodes[not Dir] := node.Index;
-      node.Balance := 0;
-      node := l1;
-    end else
-    begin // double rotation
-      l2 := NodePtr(l1.Nodes[not Dir]);
-      l1.Nodes[not Dir] := l2.Nodes[Dir];
-      l2.Nodes[Dir] := l1.Index;
-      node.Nodes[Dir] := l2^.Nodes[not Dir];
-      l2.Nodes[not Dir] := node.Index;
-
-      if l2.Balance = DIR_INC[Dir] then
-        node.Balance := DIR_INC[not Dir]
-      else
-        node.Balance := 0;
-
-      if l2.Balance = DIR_INC[not Dir] then
-        l1.Balance := DIR_INC[Dir]
-      else
-        l1.Balance := 0;
-
-      node := l2;
-    end;
-    node.Balance := 0;
-    NodeInt := node.Index;
-  end;
-
-  if ConditionZeroIsBalanced then
-    NotBalanced := node.Balance = 0
-  else
-    NotBalanced := node.Balance <> 0;
-end;
-
-{$ifdef testTree}
-procedure TIntervalsTree.WriteTreeState;
-var
-  i: int;
-  rec: Ansistring;
-  s: TFileStream;
-begin
-  s := TFileStream.Create('treeState.txt', fmCreate);
-  try
-    for i := FCacheNodes.Count - 1 downto FCacheNodes.Count - FCount do
+  dec(Value.Counters^.Dimensions);
+   if Value.Counters^.Dimensions = 0 then
+  begin
+    if Assigned(Value.Counters.Opposite) then
     begin
-      rec := Ansistring(FCacheNodes.Items[i].toString);
-      s.Write(rec[1], length(rec));
+      Value.Counters.Opposite.Opposite := nil;
+      lastCounter := false;
+    end else
+      lastCounter := true;
+    dispose(Value.Counters);
+    if lastCounter then
+    begin
+      dec(FCount);
+      if not FUpdating and Assigned(OnDeleteValue) then
+        OnDeleteValue(Value.Value);
     end;
-  finally
-    s.Free;
   end;
-  FreeAndNil(FTestFile);
-  //FTestFile := TFileStream.Create('testSamples.txt', fmCreate);
+end;
+
+constructor TKDTree<T>.Create(Dimensions: uint8);
+var
+  i: Integer;
+begin
+  assert(Dimensions > 0);
+  FDimensions := Dimensions;
+  FMaskDimensions := trunc(Power(2, FDimensions)) - 1;
+  SetLength(FAvlTree, FDimensions);
+  for i := 0 to FDimensions - 1 do
+  begin
+    FAvlTree[i] := TAvlMultiTreeDouble.Create(KeyCmp, @ValueCmp);
+    FAvlTree[i].OnDeleteValue := OnValueDelete;
+  end;
+  FListSelection := TListVec<T>.Create;
+  FSelectionConsumer := SelectionConsumer;
+  FFreeSelectors := TListVec<PInteger>.Create;
+end;
+
+function TKDTree<T>.GetCount: int32;
+begin
+  Result := FCount;
+end;
+
+{$ifdef debug}
+function TKDTree<T>.GetSelectIteration: int32;
+begin
+  Result := FAvlTree[0].SelectIteration;
 end;
 {$endif}
 
-procedure TIntervalsTree.GrowCacheNodes(GrowSize: int);
+procedure TKDTree<T>.Delete(const AData: T; AVectorMinMax: PKDMinMax);
 var
-  i: int;
-  node: TTreeNode;
+  i: int8;
+  holder: TValueHolder;
 begin
-  i := FCacheNodes.Count;
-  FCacheNodes.Capacity := FCacheNodes.Capacity + GrowSize;
-  FFreeNodes.Capacity := FFreeNodes.Capacity + GrowSize;
-  FillChar(node{%H-}, sizeof(node), 0);
-  node.Nodes[NODE_LEFT] := -1;
-  node.Nodes[NODE_RIGHT] := -1;
-  for i := i to i + GrowSize - 1 do begin
-    node.Index := i;
-    FCacheNodes.Add(node);
-    FFreeNodes.Add(i);
+  holder.Value := AData;
+  for i := 0 to FDimensions - 1 do
+  begin
+    FAvlTree[i].Delete(AVectorMinMax[i], holder);
+    if AVectorMinMax[i] <> AVectorMinMax[FDimensions+i] then
+      FAvlTree[i].Delete(AVectorMinMax[FDimensions+i], holder);
   end;
-  FCacheNodesPtr := FCacheNodes.ShiftData[0];
 end;
 
-procedure TIntervalsTree.GrowCacheIntervals(GrowSize: int);
+destructor TKDTree<T>.Destroy;
 var
-  i: int;
+  i: int8;
 begin
-  i := FCacheIntervals.Count;
-  FFreeIntervals.Capacity := FFreeIntervals.Capacity + GrowSize;
-  FCacheIntervals.Count := FCacheIntervals.Count + GrowSize;
-  for i := i to FCacheIntervals.Count - 1 do begin
-    FFreeIntervals.Add(i);
+  Clear;
+  for i := 0 to FDimensions - 1 do
+  begin
+    FAvlTree[i].Free;
   end;
-  FCacheIntervalsPtr := FCacheIntervals.ShiftData[0];
-end;
-
-destructor TIntervalsTree.Destroy;
-begin
-  FCacheIntervals.Free;
-  FCacheNodes.Free;
-  FFreeNodes.Free;
-  FFreeIntervals.Free;
-  FStack.Free;
-  FStackSearch.Free;
-  {$ifdef testTree}
-  FTestFile.Free;
-  FTestFileRoots.Free;
-  {$endif}
+  FListSelection.Free;
+  FFreeSelectors.Free;
   inherited Destroy;
 end;
 
-{$ifdef RECURSION_INSERT}
-function TIntervalsTree.InsertValue(NodeValue: double; var Node: int; var NotBalanced: boolean; var Interval: int): int;
+procedure TKDTree<T>.DoSelect(AViewport: PKDMinMax);
 var
-  l: PTreeNode;
-  dir: TDir;
+  i: int16;
 begin
-  if Node < 0 then
-  begin // the value does not contained in the tree, insert it
-   	Node := CreateNode(NodeValue, Interval).Index;
-    NotBalanced := true;
-    exit(Node);
-  end;
-
-  l := NodePtr(Node);
-  if NodeValue = l.NodeValue then
-    Result := Node
-  else
+  FCurrentSelectedDim := 0;;
+  for i := 0 to FDimensions - 1 do
   begin
-    if (NodeValue > l.NodeValue) then
-      dir := NODE_RIGHT
-    else
-      dir := NODE_LEFT;
-    Result := InsertValue(NodeValue, l.Nodes[dir], NotBalanced, Interval);
-   	if NotBalanced then
-      Balance(Node, dir, NotBalanced, false);
+    FAvlTree[i].Select(AViewport[i], AViewport[FDimensions + i], FSelectionConsumer);
+    inc(FCurrentSelectedDim);
+  end;
+  inc(FSelectIteration);
+end;
+
+function TKDTree<T>.Select(AViewport: PKDMinMax): TListVec<T>;
+begin
+  FListSelection.Count := 0;
+  DoSelect(AViewport);
+  Result := FListSelection;
+end;
+
+procedure TKDTree<T>.Select(AViewport: PKDMinMax; AConsumer: TValueConsumer<T>);
+begin
+  FCustomValueConsumer := AConsumer;
+  try
+    DoSelect(AViewport);
+  finally
+    FCustomValueConsumer := nil;
   end;
 end;
-{$else}
-function TIntervalsTree.InsertValue(NodeValue: double; var Interval: int): int;
+
+procedure TKDTree<T>.SelectionConsumer(const Value: TValueHolder);
+const
+  SELECTED = 255;
 var
-  {$ifdef testTree}
-  i: int;
-  {$endif}
-  l: PTreeNode;
-  node, nodeParent: int;
-  notBalanced: boolean;
-  dir: TDir;
+  hit: boolean;
+  notMask: uint8;
 begin
-  if FRoot < 0 then
+  if Value.Counters^.SelectIteration <> FSelectIteration then
   begin
-    FRoot := CreateNode(NodeValue, Interval).Index;
-    exit(FRoot);
+    Value.Counters^.SelectIteration := FSelectIteration;
+    Value.Counters^.DimHits := 0;
   end;
-
-  Result := FRoot;
-  FStack.Count := 0;
-  notBalanced := false;
-  // inserting
-  while true do
+  Value.Counters^.DimHits := Value.Counters^.DimHits or DIMENSIONS_FLAGS[FCurrentSelectedDim];
+  if (Value.Counters^.DimHits = Value.Counters^.MaskStoredDim) then
   begin
-    l := NodePtr(Result);
-    if NodeValue = l.NodeValue then
-      break
-    else
+    // when some dimensions Min = Max, for example plane in 3d, then for Max Value.Counters^.Dimensions <> FDimensions
+    hit := Value.Counters^.Dimensions = FDimensions;
+    if not hit then  // if hit = false then next case is always true -> and Assigned(Value.Counters.Opposite)
     begin
-
-      if (NodeValue > l.NodeValue) then
-        dir := NODE_RIGHT
-      else
-        dir := NODE_LEFT;
-
-      {$ifdef testTree}
-      for i := FStack.Count - 2 downto 0 do
-        if FStack.Items[i] = Result then
-        begin
-          WriteTreeState;
-          raise EWrongAlgorithm.Create('TIntervalsTree.InsertValue');
-        end;
-      {$endif}
-      FStack.Add(Result);
-      if l.Nodes[dir] < 0 then
+      if (Value.Counters.Opposite.SelectIteration = FSelectIteration) and (Value.Counters.Opposite.DimHits <> SELECTED) then
       begin
-        l.Nodes[dir] := CreateNode(NodeValue, Interval).Index;
-        FStack.Add(l.Nodes[dir]);
-        Result := l.Nodes[dir];
-        notBalanced := true;
-        break;
-      end else
-      begin
-        Result := l.Nodes[dir];
+        notMask := (not Value.Counters^.MaskStoredDim) and FMaskDimensions;
+        hit := (Value.Counters^.Opposite.DimHits and notMask = notMask);
       end;
+    end
+    else
+    // check that the opposite side has not reported a hit
+    if Assigned(Value.Counters.Opposite) and (Value.Counters.Opposite.SelectIteration = FSelectIteration) then
+      hit := (Value.Counters.Opposite.DimHits <> SELECTED);
 
-    end;
-  end;
-
-  // balancing
-  if (FStack.Count > 1) and notBalanced then
-  begin
-    node := FStack.Pop;
-    while (FStack.Count > 0) do begin // and notBalanced do
-      nodeParent := FStack.Pop;
-      l := NodePtr(nodeParent);
-      if NodeValue > l.NodeValue then
-        dir := NODE_RIGHT
-      else
-        dir := NODE_LEFT;
-
-      if (l.Nodes[dir] <> node) then
-        l.Nodes[dir] := node;
-
-      node := nodeParent;
-
-      // important! allows + 1 iteration after finish balancing
-      if not notBalanced then
-        break;
-
-      Balance(node, dir, notBalanced, false);
-    end;
-
-    if FStack.Count = 0 then
-      FRoot := node;
+    if hit then
+      begin
+        Value.Counters^.DimHits := SELECTED;
+        if Assigned(FCustomValueConsumer) then
+          FCustomValueConsumer(Value.Value)
+        else
+          FListSelection.Add(Value.Value);
+      end;
   end;
 end;
-{$endif}
 
-function TIntervalsTree.CreateNode(NodeValue: double; var Interval: int): PTreeNode;
-var
-  node: int;
+procedure TKDTree<T>.Update(const AData: T; AOldMinMax, ANewMinMax: PKDMinMax);
 begin
-  node := FFreeNodes.Pop;
-  Result := NodePtr(node);
-  if Interval < 0 then
-    Interval := CreateInterval;
-  Result.NodeValue := NodeValue;
-  InsertInterval(Interval, Result);
-  Result.Nodes[NODE_LEFT] := -1;
-  Result.Nodes[NODE_RIGHT] := -1;
-  Result.Balance := 0;
+  FUpdating := true;
+  try
+    Delete(AData, AOldMinMax);
+    Add(AData, ANewMinMax);
+  finally
+    FUpdating := false;
+  end;
+end;
+
+class function TKDTree<T>.ValueCmp(const Value1, Value2: TValueHolder): boolean;
+begin
+  Result := (Value1.Value = Value2.Value);
+end;
+
+procedure TKDTree<T>.Add(const AData: T; AVectorMinMax: PKDMinMax);
+var
+  i: int8;
+  holderMin: TValueHolder;
+  holderMax: TValueHolder;
+begin
   inc(FCount);
-end;
+  holderMin := TValueHolder.ValueHolder(AData, FDimensions);
+  holderMin.Counters^.SelectIteration := FSelectIteration-1;
+  holderMin.Counters.MaskStoredDim := FMaskDimensions;
+  holderMax := TValueHolder.ValueHolder(AData, FDimensions);
+  holderMax.Counters^.SelectIteration := FSelectIteration-1;
 
-function TIntervalsTree.CreateInterval: int;
-begin
-  if FFreeIntervals.Count = 0 then
-    GrowCacheIntervals(FCacheIntervals.Count div 4);
-  Result := FFreeIntervals.Pop;
-end;
+  holderMin.Counters.Opposite := holderMax.Counters;
+  holderMax.Counters.Opposite := holderMin.Counters;
 
-procedure TIntervalsTree.InsertInterval(Interval: int; Node: PTreeNode);
-begin
-  SetLength(Node.Intervals, length(Node.Intervals) + 1);
-  Node.Intervals[length(Node.Intervals) - 1] := Interval;
-end;
-
-procedure TIntervalsTree.InsertInterval(Interval: int; Node: int);
-begin
-  InsertInterval(Interval, NodePtr(Node));
-end;
-
-function TIntervalsTree.NodePtr(Node: int): PTreeNode;
-begin
-  if Node < FCacheNodes.Count then
-    Result := PTreeNode(PByte(FCacheNodesPtr) + Node * SizeOf(TTreeNode))
-  else
-    raise EWrongAlgorithm.Create('TIntervalsTree.NodePtr');
-end;
-
-function TIntervalsTree.IntervalPtr(Interval: int): PInterval;
-begin
-  if Interval < FCacheIntervals.Count then
-    Result := PInterval(PByte(FCacheIntervalsPtr) + Interval * SizeOf(TInterval))
-  else
-    raise EWrongAlgorithm.Create('TIntervalsTree.IntervalPtr');
-end;
-
-procedure TIntervalsTree.CheckCache;
-begin
-  if FFreeNodes.Count = 0 then
+  for i := 0 to FDimensions - 1 do
   begin
-    if FCacheNodes.Count > 1024 then
-      GrowCacheNodes(FCacheNodes.Count div 4)
-    else
-      GrowCacheNodes(1024);
-  end;
-end;
-
-function TIntervalsTree.ContainsValue(Node: int; Value: Pointer): int;
-var
-  i: int;
-  nodeP: PTreeNode;
-  interval: PInterval;
-begin
-  nodeP := NodePtr(Node);
-  for i := 0 to length(nodeP.Intervals) - 1 do begin
-    interval := IntervalPtr(nodeP.Intervals[i]);
-    if interval.Value = Value then
-      exit(nodeP.Intervals[i]);
-  end;
-  Result := -1;
-end;
-
-function TIntervalsTree.Add(Min, Max: double; Data: Pointer): int;
-var
-  left, right: int;
-  interval: PInterval;
-  {$ifdef testTree}
-  rec: Ansistring;
-  {$endif}
-  {$ifdef RECURSION_INSERT}
-  notBalanced: boolean;
-  {$endif}
-begin
-  {$ifdef testTree}
-    rec := AnsiString('FIntervalsTree.Add(' + IntToStr(round(Min)) + ', ' + IntToStr(round(Max)) + ', nil);' + sLineBreak);
-    FTestFile.Write(rec[1], length(rec));
-  {$endif}
-  // In order to be sure that the memory block will not be changed if a new node appears
-  CheckCache;
-  Result := -1;
-  {$ifdef RECURSION_INSERT}
-  notBalanced := false;
-  left := InsertValue(Min, FRoot, notBalanced, Result);
-  notBalanced := false;
-  right := InsertValue(Max, FRoot, notBalanced, Result);
-  {$else}
-  left := InsertValue(Min, Result);
-  right := InsertValue(Max, Result);
-  {$endif}
-  if (Result < 0) then begin
-
-    Result := ContainsValue(left, Data);
-    if Result >= 0 then
-      exit;
-
-    Result := ContainsValue(right, Data);
-    if Result >= 0 then
-      exit;
-
-    Result := CreateInterval;
-    InsertInterval(Result, left);
-    InsertInterval(Result, right);
-  end;
-  interval := IntervalPtr(Result);
-  interval.MinIndex := left;
-  interval.MaxIndex := right;
-  interval.Value := Data;
-  {$ifdef testTree}
-    rec := AnsiString(IntToStr(FRoot) + sLineBreak);
-    FTestFileRoots.Write(rec[1], length(rec));
-  {$endif}
-end;
-
-function TIntervalsTree.Delete(DeletingNode: PTreeNode; Stack: TListVec<int>): boolean;
-var
-  parentIdx, childNodeBefore, nodeParent: int;
-  parent: PTreeNode;
-  predecessorIdx: int;
-  predecessor: PTreeNode;
-  dir: TDir;
-  notBalanced: boolean;
-  replacedIndx: int;
-  comparedValue: double;
-begin
-  if Stack.Count > 0 then
-    parentIdx := Stack.Items[Stack.Count - 1]
-  else
-    parentIdx := -1;
-  comparedValue := deletingNode.NodeValue;
-  // --- Step 1: If both children are present → replace with the predecessor ---
-  if (DeletingNode.Nodes[NODE_LEFT] >= 0) and (DeletingNode.Nodes[NODE_RIGHT] >= 0) then
-  begin
-    replacedIndx := Stack.Count;
-    Stack.Add(DeletingNode.Index);
-    predecessorIdx := DeletingNode.Nodes[NODE_LEFT];
-    predecessor := NodePtr(predecessorIdx);
-    while predecessor.Nodes[NODE_RIGHT] >= 0 do begin
-      Stack.Add(predecessorIdx);
-      predecessor := NodePtr(predecessorIdx);
-      predecessorIdx := predecessor.Nodes[NODE_RIGHT];
-    end;
-    predecessorIdx := Stack.Pop;
-    Stack.Items[replacedIndx] := predecessorIdx;
-    parent := NodePtr(Stack.Items[Stack.Count - 1]);
-    parent.Nodes[NODE_RIGHT] := -1;
-    childNodeBefore := -1;
-  end
-  else
-  begin
-    if DeletingNode.Nodes[NODE_LEFT] >= 0 then
-      predecessorIdx := DeletingNode.Nodes[NODE_LEFT]
-    else if DeletingNode.Nodes[NODE_RIGHT] >= 0 then
-      predecessorIdx := DeletingNode.Nodes[NODE_RIGHT]
-    else
-      predecessorIdx := -1;
-    childNodeBefore := predecessorIdx;
-  end;
-
-  if (predecessorIdx >= 0) then
-  begin
-    predecessor := NodePtr(predecessorIdx);
-    comparedValue := predecessor.NodeValue;
-    predecessor.Nodes[NODE_LEFT] := DeletingNode.Nodes[NODE_LEFT];
-    predecessor.Nodes[NODE_RIGHT] := DeletingNode.Nodes[NODE_RIGHT];
-    if predecessor.Nodes[NODE_LEFT] = predecessor.Index then
-      predecessor.Nodes[NODE_LEFT] := -1
-    else
-    if predecessor.Nodes[NODE_RIGHT] = predecessor.Index then
-      predecessor.Nodes[NODE_RIGHT] := -1
-    else
-      predecessor.Balance := DeletingNode.Balance;
-
-    if (parentIdx >= 0) then
+    FAvlTree[i].Add(AVectorMinMax[i], holderMin);
+    if AVectorMinMax[i] <> AVectorMinMax[FDimensions + i] then
     begin
-      parent := NodePtr(parentIdx);
-      if DeletingNode.NodeValue > parent.NodeValue then
-        parent.Nodes[NODE_RIGHT] := predecessor.Index
-      else
-        parent.Nodes[NODE_LEFT] := predecessor.Index;
-    end;
-
-    if DeletingNode.Index = FRoot then
-      FRoot := predecessorIdx;
-  end;
-
-  // --- Step 2: Balancing ---
-  nodeParent := FRoot;
-  if (Stack.Count > 0) then
-  begin
-    notBalanced := true;
-    while (Stack.Count > 0) and notBalanced do begin
-      nodeParent := Stack.Pop;
-      parent := NodePtr(nodeParent);
-
-      if comparedValue > parent.NodeValue then
-        dir := NODE_RIGHT
-      else
-        dir := NODE_LEFT;
-
-      if parent.Nodes[dir] <> childNodeBefore then
-        parent.Nodes[dir] := childNodeBefore;
-
-      parentIdx := nodeParent;
-      Balance(nodeParent, not dir, notBalanced, true);
-
-      if parentIdx = FRoot then
-        FRoot := nodeParent;
-
-      childNodeBefore := nodeParent;
-    end;
-  end;
-
-  FFreeNodes.Add(DeletingNode.Index);
-
-  Result := true;
-end;
-
-procedure TIntervalsTree.RemoveInteval(Node: PTreeNode; Position: int);
-var
-  i: int;
-begin
-  for i := 0 to length(Node.Intervals) - 1 do
-  begin
-    if (Node.Intervals[i] = Position) then
+      holderMax.Counters.MaskStoredDim := holderMax.Counters.MaskStoredDim or DIMENSIONS_FLAGS[i];
+      FAvlTree[i].Add(AVectorMinMax[FDimensions + i], holderMax);
+    end else
     begin
-      if i < length(Node.Intervals) - 1 then
-        move(Node.Intervals[i+1], Node.Intervals[i], length(Node.Intervals) - 1 - i);
-      SetLength(Node.Intervals, length(Node.Intervals) - 1);
-      break;
-    end;
-  end;
-end;
-
-procedure TIntervalsTree.Select(Interval: int; var MinIndex, MaxIndex: int; var Data: Pointer);
-var
-  intrvl: PInterval;
-begin
-  intrvl := IntervalPtr(Interval);
-  MinIndex := intrvl.MinIndex;
-  MaxIndex := intrvl.MaxIndex;
-  Data := intrvl.Value;
-end;
-
-procedure TIntervalsTree.Select(Node: int; var Left, Right: int; var NodeValue: double; var Balance: int8; var Intervals: TIntervals);
-var
-  l: PTreeNode;
-begin
-  l := NodePtr(Node);
-  NodeValue := l.NodeValue;
-  Left := l.Nodes[NODE_LEFT];
-  Right := l.Nodes[NODE_RIGHT];
-  Balance := l.Balance;
-  Intervals := l.Intervals;
-end;
-
-procedure TIntervalsTree.Select(Interval: int; var Min, Max: double; var Data: Pointer);
-var
-  intrvl: PInterval;
-begin
-  intrvl := IntervalPtr(Interval);
-  Min := NodePtr(intrvl.MinIndex).NodeValue;
-  Max := NodePtr(intrvl.MaxIndex).NodeValue;
-  Data := intrvl.Value;
-end;
-
-function TIntervalsTree.Delete(Interval: int): boolean;
-var
-  intrvl: PInterval;
-  Min, Max: double;
-  Data: Pointer;
-begin
-  intrvl := IntervalPtr(Interval);
-  Min := NodePtr(intrvl.MinIndex).NodeValue;
-  Max := NodePtr(intrvl.MaxIndex).NodeValue;
-  Data := intrvl.Value;
-  Result := Delete(Min, Max, Data);
-end;
-
-function TIntervalsTree.Delete(Min, Max: double; Data: Pointer): boolean;
-var
-  interval: PInterval;
-  posMin, posMax: int;
-  node: PTreeNode;
-begin
-  posMin := Exists(Min, Data, FStackSearch);
-  Result := posMin >= 0;
-  if Result then
-  begin
-    interval := IntervalPtr(posMin);
-    node := NodePtr(interval.MinIndex);
-    RemoveInteval(node, posMin);
-    if length(node.Intervals) = 0 then
-    begin
-      Delete(node, FStackSearch);
+      dec(holderMax.Counters.Dimensions);
     end;
   end;
 
-  posMax := Exists(Max, Data, FStack);
-  if (Result and (posMax < 0)) or (not Result and (posMax >= 0)) or (posMin <> posMax) then
-    raise EWrongAlgorithm.Create('TIntervalsTree.Delete');
-
-  if Result then
+  if holderMax.Counters.Dimensions = 0 then
   begin
-    interval := IntervalPtr(posMax);
-    node := NodePtr(interval.MaxIndex);
-    RemoveInteval(node, posMax);
-    if length(node.Intervals) = 0 then
-    begin
-      Delete(node, FStack);
-    end;
-    FFreeIntervals.Add(posMax);
-    dec(FCount);
+     dispose(holderMax.Counters);
+     holderMin.Counters.Opposite := nil;
   end;
 end;
 
-function TIntervalsTree.Exists(Value: double; Data: Pointer; StackSearch: TListVec<int>): int;
+procedure TKDTree<T>.Clear;
 var
-  node: PTreeNode;
+  i: int8;
 begin
-  Result := -1;
-  if (FRoot < 0) then
-    exit;
-  FStack.Count := 0;
-  FStack.Add(FRoot);
-  while (FStack.Count > 0) do
-  begin
-    node := NodePtr(FStack.Pop);
-    if (Value > node.NodeValue) then
-    begin  // right
-      StackSearch.Add(node.Index);
-      if node.Nodes[NODE_RIGHT] >= 0 then
-        FStack.Add(node.Nodes[NODE_RIGHT]);
-    end else
-    if (Value < node.NodeValue) then
-    begin  // left
-      StackSearch.Add(node.Index);
-      if node.Nodes[NODE_LEFT] >= 0 then
-        FStack.Add(node.Nodes[NODE_LEFT]);
-    end else
-    if (Value = node.NodeValue) then
-    begin  // hit
-      Result := ContainsValue(node.Index, Data);
-      if Result >= 0 then
-        exit;
-      if node.Nodes[NODE_LEFT] >= 0 then
-        FStack.Add(node.Nodes[NODE_LEFT]);
-      if node.Nodes[NODE_RIGHT] >= 0 then
-        FStack.Add(node.Nodes[NODE_RIGHT]);
-    end;
-  end;
+  for i := 0 to FDimensions - 1 do
+    FAvlTree[i].Clear;
 end;
 
+{ T1DTree<T> }
 
-
-function TIntervalsTree.Exists(Min, Max: double; Data: Pointer): int;
-begin
-  Result := Exists(Min, Max, Data);
-end;
-
-function TIntervalsTree.Find(Value: double): int;
+procedure T1DTree<T>.Add(const AData: T; APoint: Double);
 var
-  node: PTreeNode;
+  holder: TValueHolder;
 begin
-  if (FRoot < 0) then
-    exit(-1);
-  FStack.Count := 0;
-  FStack.Add(FRoot);
-  while (FStack.Count > 0) do
-  begin
-    node := NodePtr(FStack.Pop);
-    if (Value > node.NodeValue) then
-    begin  // right
-      if node.Nodes[NODE_RIGHT] >= 0 then
-        FStack.Add(node.Nodes[NODE_RIGHT]);
-    end else
-    if (Value < node.NodeValue) then
-    begin  // left
-      if node.Nodes[NODE_LEFT] >= 0 then
-        FStack.Add(node.Nodes[NODE_LEFT]);
-    end else
-    begin  // hit
-      Exit(node.Index);
-    end;
-  end;
-  Result := -1;
+  inc(FCount);
+  holder := TValueHolder.ValueHolder(AData, FDimensions);
+  holder.Counters^.SelectIteration := FSelectIteration-1;
+  FAvlTree[0].Add(APoint, holder);
 end;
 
-procedure TIntervalsTree.Select(Min, Max: double; ListResult: TListVec<Pointer>);
+constructor T1DTree<T>.Create;
+begin
+  inherited Create(1);
+end;
+
+function T1DTree<T>.Select(AViewportMin, AViewportMax: double): TListVec<T>;
 var
-  i: int;
-  node: PTreeNode;
+  vp: TVec2d;
 begin
-  if (FRoot < 0) then
-    exit;
-  FStack.Count := 0;
-  FStack.Add(FRoot);
-  while (FStack.Count > 0) do
-  begin
-    node := NodePtr(FStack.Pop);
-    if (Max > node.NodeValue) then
-    begin  // right
-      if node.Nodes[NODE_RIGHT] >= 0 then
-        FStack.Add(node.Nodes[NODE_RIGHT]);
-    end else
-    if (Min < node.NodeValue) then
-    begin  // left
-      if node.Nodes[NODE_LEFT] >= 0 then
-        FStack.Add(node.Nodes[NODE_LEFT]);
-    end else
-    begin  // hit
-      if node.Nodes[NODE_LEFT] >= 0 then
-        FStack.Add(node.Nodes[NODE_LEFT]);
-      if node.Nodes[NODE_RIGHT] >= 0 then
-        FStack.Add(node.Nodes[NODE_RIGHT]);
-      for i := 0 to length(node.Intervals) - 1 do
-        ListResult.Add(IntervalPtr(node.Intervals[i]).Value);
-    end;
-  end;
+  vp := vec2d(AViewportMin, AViewportMax);
+  Result := Select(@vp);
 end;
 
-procedure TIntervalsTree.Clear;
+{ T2DTree<T> }
+
+procedure T2DTree<T>.Add(const AData: T; APoint: TVec2f);
 var
-  i: int;
-  node: PTreeNode;
+  holder: TValueHolder;
 begin
-  if (FRoot < 0) then
-    exit;
-  FStack.Count := 0;
-  FStack.Add(FRoot);
-  while (FStack.Count > 0) do
-  begin
-    node := NodePtr(FStack.Pop);
-    if node.Nodes[NODE_LEFT] >= 0 then
-      FStack.Add(node.Nodes[NODE_LEFT]);
-    if node.Nodes[NODE_RIGHT] >= 0 then
-      FStack.Add(node.Nodes[NODE_RIGHT]);
-    for i := 0 to length(node.Intervals) - 1 do
-      FFreeIntervals.Add(node.Intervals[i]);
-    FFreeNodes.Add(node.Index);
-    SetLength(node.Intervals, 0);
-  end;
-  FRoot := -1;
+  inc(FCount);
+  holder := TValueHolder.ValueHolder(AData, FDimensions);
+  holder.Counters^.SelectIteration := FSelectIteration-1;
+  FAvlTree[0].Add(APoint.x, holder);
+  FAvlTree[1].Add(APoint.y, holder);
 end;
 
-{$ifdef testTree}
-{ TIntervalsTree.TTreeNode }
-
-function TIntervalsTree.TTreeNode.toString: string;
+procedure T2DTree<T>.Add(const AData: T; const ABox: TBox2d);
 begin
-  Result :=
-  '{' + sLineBreak +
-  '  Index: ' + IntToStr(Index) + ';'  + sLineBreak +
-  '  NodeValue: ' + IntToStr(trunc(NodeValue)) + ';'  + sLineBreak +
-  '  Balance: ' + IntToStr(Balance) + ';'  + sLineBreak +
-  '  Nodes: '  + IntToStr(Nodes[NODE_LEFT]) + ', ' + IntToStr(Nodes[NODE_RIGHT]) + ';' + sLineBreak +
-  '},' + sLineBreak;
-
+  Add(AData, @ABox.Min);
 end;
-{$endif}
+
+constructor T2DTree<T>.Create;
+begin
+  inherited Create(2);
+end;
+
+procedure T2DTree<T>.Delete(const AData: T; const ABox: TBox2d);
+begin
+  Delete(AData, @ABox.Min);
+end;
+
+function T2DTree<T>.Select(const AViewport: TBox2d): TListVec<T>;
+begin
+  Result := Select(@AViewport);
+end;
+
+{ T3DTree<T> }
+
+procedure T3DTree<T>.Add(const AData: T; const APoint: TVec3f);
+var
+  holder: TValueHolder;
+begin
+  inc(FCount);
+  holder := TValueHolder.ValueHolder(AData, FDimensions);
+  holder.Counters^.SelectIteration := FSelectIteration-1;
+  FAvlTree[0].Add(APoint.x, holder);
+  FAvlTree[1].Add(APoint.y, holder);
+  FAvlTree[2].Add(APoint.z, holder);
+end;
+
+procedure T3DTree<T>.Add(const AData: T; const ABox: TBox3d);
+begin
+  Add(AData, @ABox.Min);
+end;
+
+procedure T3DTree<T>.Add(const AData: T; const ABox: TBox3f);
+var
+  box: TBox3d;
+begin
+  box := ABox;
+  Add(AData, @box.Min);
+end;
+
+constructor T3DTree<T>.Create;
+begin
+  inherited Create(3);
+end;
+
+procedure T3DTree<T>.Delete(const AData: T; const ABox: TBox3d);
+var
+  holder: TValueHolder;
+begin
+  holder.Value := AData;
+  FAvlTree[0].Delete(ABox.x_min, holder);
+  if ABox.x_min <> ABox.x_max then
+    FAvlTree[0].Delete(ABox.x_max, holder);
+  FAvlTree[1].Delete(ABox.y_min, holder);
+  if ABox.y_min <> ABox.y_max then
+    FAvlTree[1].Delete(ABox.y_max, holder);
+  FAvlTree[2].Delete(ABox.z_min, holder);
+  if ABox.x_min <> ABox.z_max then
+    FAvlTree[2].Delete(ABox.z_max, holder);
+end;
+
+procedure T3DTree<T>.Delete(const AData: T; const ABox: TBox3f);
+var
+  holder: TValueHolder;
+begin
+  holder.Value := AData;
+  FAvlTree[0].Delete(ABox.x_min, holder);
+  if ABox.x_min <> ABox.x_max then
+    FAvlTree[0].Delete(ABox.x_max, holder);
+  FAvlTree[1].Delete(ABox.y_min, holder);
+  if ABox.y_min <> ABox.y_max then
+    FAvlTree[1].Delete(ABox.y_max, holder);
+  FAvlTree[2].Delete(ABox.z_min, holder);
+  if ABox.x_min <> ABox.z_max then
+    FAvlTree[2].Delete(ABox.z_max, holder);
+end;
+
+procedure T3DTree<T>.Select(const AViewport: TBox3d; AConsumer: TValueConsumer<T>);
+begin
+  Select(@AViewport.Min, AConsumer);
+end;
+
+function T3DTree<T>.Select(const AViewport: TBox3d): TListVec<T>;
+begin
+  Result := Select(@AViewport.Min);
+end;
+
+procedure T3DTree<T>.Update(const AData: T; const AOldBox, ANewBox: TBox3d);
+begin
+  Update(AData, @AOldBox.Min, @ANewBox.Min);
+end;
+
+{ TKDTree<T>.TValueHolder }
+
+class operator TKDTree<T>.TValueHolder.Equal(const v1, v2: TValueHolder): boolean;
+begin
+  Result := (v1.Value = v2.Value);
+end;
+
+constructor TKDTree<T>.TValueHolder.ValueHolder(const AValue: T; Dimensions: int8);
+begin
+  Value := AValue;
+  new(Counters);
+  Counters^.SelectIteration := -1;
+  Counters^.Dimensions := Dimensions;
+  Counters^.Opposite := nil;
+  Counters^.MaskStoredDim := 0;
+end;
 
 end.
 

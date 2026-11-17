@@ -18,7 +18,7 @@ type
     Index: int32;
   end;
 
-  //[TestFixture]
+  [TestFixture]
   TGeometryKDTreeTest = class(TObject)
   private
     FData: TListVec<PSomeData>;
@@ -35,19 +35,20 @@ type
     procedure Setup;
     [TearDown]
     procedure TearDown;
-    //[Test]
+    [Test]
     procedure Test1;
     // Test with TestCase Attribute to supply parameters.
     [TestCase('TestA','1000000')]
     procedure Test2(const ACount: Integer);
-    //[Test]
+    [Test]
     procedure Test3;
   end;
 
   [TestFixture]
-  TTestIntervalsTree = class
+  T1DTreeTest = class
   private
-    FIntervalsTree: TIntervalsTree;
+    FVecs: TListVec<TVec2d>;
+    F1dTree: T1DTree<Pointer>;
     procedure FillData;
   public
     constructor Create;
@@ -59,6 +60,59 @@ type
     [Test]
     procedure Test1;
   end;
+
+  [TestFixture]
+  T2DTreeTest = class
+  private
+    type
+      PBox2d = ^TBox2d;
+  private
+    Rects: TListVec<PBox2d>;
+    Tree2d: T2DTree<PBox2d>;
+    procedure FillData;
+    procedure OnDeleteBox(const Value: PBox2d);
+    procedure FillData2;
+    function Box(X, Y, Width, Height: int32): PBox2d;
+    procedure SetBoxPosition(var viewport: TBox2d; X, Y: double);
+    procedure SetBoxSize(var viewport: TBox2d; Width, Height: double);
+  public
+    constructor Create;
+    destructor Destroy; override;
+    [Setup]
+    procedure Setup;
+    [TearDown]
+    procedure TearDown;
+    [Test]
+    procedure Test1;
+    [Test]
+    procedure Test2;
+  end;
+
+  [TestFixture]
+  T3DTreeTest = class
+  private
+    type
+      PBox3d = ^TBox3d;
+  private
+    Boxes: TListVec<PBox3d>;
+    Tree3d: T3DTree<PBox3d>;
+    procedure OnDeleteBox(const Value: PBox3d);
+    function Box(X, Y, Z, Width, Height, Deep: Double): PBox3d;
+    procedure SetBoxPosition(var Box: TBox3d; X, Y, Z: double);
+    procedure SetBoxSize(var Box: TBox3d; Width, Height, Deep: double);
+  public
+    constructor Create;
+    destructor Destroy; override;
+    [TearDown]
+    procedure TearDown;
+    [Test]
+    procedure TestUpdateAndDelete;
+    [Test]
+    procedure TestDeleteNext;
+    [Test]
+    procedure TestSelectNext;
+  end;
+
 
 implementation
 
@@ -359,155 +413,264 @@ end;
 
 { TTestIntervalsTree }
 
-constructor TTestIntervalsTree.Create;
+constructor T1DTreeTest.Create;
 begin
-  FIntervalsTree := TIntervalsTree.Create(100);
+  F1dTree := T1DTree<Pointer>.Create;
+  FVecs := TListVec<TVec2d>.Create;
 end;
 
-destructor TTestIntervalsTree.Destroy;
+destructor T1DTreeTest.Destroy;
 begin
-  FIntervalsTree.Free;
+  F1dTree.Free;
+  FVecs.Free;
   inherited;
 end;
 
-procedure TTestIntervalsTree.FillData;
+procedure T1DTreeTest.FillData;
 begin
-
-//FIntervalsTree.Add(67, 133, nil);
-//FIntervalsTree.Add(81, 127, nil);
-//FIntervalsTree.Add(470, 515, nil);
-//FIntervalsTree.Add(165, 179, nil);
-//FIntervalsTree.Add(164, 174, nil);
-//FIntervalsTree.Add(62, 107, nil);
-//FIntervalsTree.Add(243, 253, nil);
-//FIntervalsTree.Add(262, 272, nil);
-//FIntervalsTree.Add(493, 550, nil);
-//FIntervalsTree.Add(12, 43, nil);
-//FIntervalsTree.Add(174, 184, nil);
-//FIntervalsTree.Add(373, 397, nil);
-
-
-FIntervalsTree.Add(753, 773, nil);
-FIntervalsTree.Add(131, 177, nil);
-FIntervalsTree.Add(1004, 1029, nil);
-FIntervalsTree.Add(265, 288, nil);
-FIntervalsTree.Add(473, 483, nil);
-FIntervalsTree.Add(136, 152, nil);
-FIntervalsTree.Add(103, 146, nil);
-FIntervalsTree.Add(625, 672, nil);
-FIntervalsTree.Add(385, 415, nil);
-FIntervalsTree.Add(351, 361, nil);
-FIntervalsTree.Add(635, 645, nil);
-FIntervalsTree.Add(180, 190, nil);
-FIntervalsTree.Add(917, 931, nil);
-FIntervalsTree.Add(43, 107, nil);
-FIntervalsTree.Add(1025, 1035, nil);
-FIntervalsTree.Add(520, 572, nil);
-FIntervalsTree.Add(804, 814, nil);
-FIntervalsTree.Add(780, 790, nil);
-FIntervalsTree.Add(666, 676, nil);
-FIntervalsTree.Add(942, 960, nil);
-FIntervalsTree.Add(133, 171, nil);
-FIntervalsTree.Add(514, 562, nil);
-FIntervalsTree.Add(1068, 1124, nil);
-FIntervalsTree.Add(321, 385, nil);
-FIntervalsTree.Add(906, 926, nil);
-FIntervalsTree.Add(976, 1018, nil);
-FIntervalsTree.Add(237, 247, nil);
-FIntervalsTree.Add(415, 425, nil);
-FIntervalsTree.Add(267, 318, nil);
-FIntervalsTree.Add(984, 994, nil);
-FIntervalsTree.Add(335, 398, nil);
-FIntervalsTree.Add(634, 645, nil);
-FIntervalsTree.Add(45, 82, nil);
-FIntervalsTree.Add(195, 250, nil);
-FIntervalsTree.Add(808, 840, nil);
-FIntervalsTree.Add(1057, 1067, nil);
-FIntervalsTree.Add(930, 940, nil);
-FIntervalsTree.Add(330, 383, nil);
-FIntervalsTree.Add(381, 435, nil);
-FIntervalsTree.Add(1087, 1120, nil);
-FIntervalsTree.Add(578, 612, nil);
-FIntervalsTree.Add(435, 475, nil);
-FIntervalsTree.Add(213, 282, nil);
-FIntervalsTree.Add(423, 441, nil);
-FIntervalsTree.Add(148, 209, nil);
-FIntervalsTree.Add(235, 258, nil);
-FIntervalsTree.Add(27, 56, nil);
-FIntervalsTree.Add(676, 711, nil);
-FIntervalsTree.Add(676, 722, nil);
-FIntervalsTree.Add(611, 624, nil);
-FIntervalsTree.Add(1017, 1045, nil);
-FIntervalsTree.Add(1103, 1125, nil);
-FIntervalsTree.Add(936, 965, nil);
-FIntervalsTree.Add(895, 921, nil);
-FIntervalsTree.Add(433, 498, nil);
-FIntervalsTree.Add(38, 70, nil);
-FIntervalsTree.Add(694, 704, nil);
-FIntervalsTree.Add(1090, 1155, nil);
-FIntervalsTree.Add(678, 688, nil);
-FIntervalsTree.Add(223, 233, nil);
-FIntervalsTree.Add(272, 330, nil);
-FIntervalsTree.Add(562, 614, nil);
-FIntervalsTree.Add(285, 296, nil);
-FIntervalsTree.Add(116, 161, nil);
-FIntervalsTree.Add(632, 700, nil);
-FIntervalsTree.Add(294, 304, nil);
-FIntervalsTree.Add(228, 269, nil);
-FIntervalsTree.Add(968, 1001, nil);
-FIntervalsTree.Add(701, 747, nil);
-FIntervalsTree.Add(563, 598, nil);
-FIntervalsTree.Add(1106, 1131, nil);
-FIntervalsTree.Add(463, 500, nil);
-FIntervalsTree.Add(554, 605, nil);
-FIntervalsTree.Add(677, 705, nil);
-FIntervalsTree.Add(373, 390, nil);
-FIntervalsTree.Add(1081, 1095, nil);
-FIntervalsTree.Add(411, 469, nil);
-FIntervalsTree.Add(873, 883, nil);
-FIntervalsTree.Add(725, 785, nil);
-FIntervalsTree.Add(686, 748, nil);
-FIntervalsTree.Add(499, 550, nil);
-FIntervalsTree.Add(488, 498, nil);
-FIntervalsTree.Add(35, 57, nil);
-FIntervalsTree.Add(656, 695, nil);
-FIntervalsTree.Add(838, 865, nil);
-FIntervalsTree.Add(307, 359, nil);
-FIntervalsTree.Add(597, 607, nil);
-FIntervalsTree.Add(43, 101, nil);
-FIntervalsTree.Add(864, 906, nil);
-FIntervalsTree.Add(161, 191, nil);
-FIntervalsTree.Add(883, 893, nil);
-FIntervalsTree.Add(547, 586, nil);
-FIntervalsTree.Add(207, 261, nil);
-FIntervalsTree.Add(288, 298, nil);
-FIntervalsTree.Add(519, 573, nil);
-FIntervalsTree.Add(403, 413, nil);
-FIntervalsTree.Add(615, 649, nil);
-FIntervalsTree.Add(79, 141, nil);
-FIntervalsTree.Add(91, 131, nil);
-FIntervalsTree.Add(1012, 1022, nil);
-
-FIntervalsTree.WriteTreeState;
+  FVecs.Add(vec2d(67, 133));
+  FVecs.Add(vec2d(81, 127));
+  F1dTree.Add(Pointer($1), FVecs.ShiftData[0]);
+  F1dTree.Add(Pointer($2), FVecs.ShiftData[1]);
 end;
 
-procedure TTestIntervalsTree.Setup;
-begin
-
-end;
-
-procedure TTestIntervalsTree.TearDown;
-begin
-
-end;
-
-procedure TTestIntervalsTree.Test1;
+procedure T1DTreeTest.Setup;
 begin
   FillData;
 end;
 
-initialization
-  TDUnitX.RegisterTestFixture(TGeometryKDTreeTest);
+procedure T1DTreeTest.TearDown;
+begin
+  FVecs.Clear;
+  F1dTree.Clear;
+end;
 
+procedure T1DTreeTest.Test1;
+var
+  viewport: TVec2d;
+  selected: TListVec<Pointer>;
+begin
+    viewport := vec2d(10.0, 60.0);
+    selected := F1dTree.Select(@viewport);
+    System.Assert(selected.Count = 0);
+
+    viewport := vec2d(50.0, 69.0);
+    selected := F1dTree.Select(@viewport);
+    System.Assert(selected.Count = 1);
+
+    viewport := vec2d(50.0, 90.0);
+    selected := F1dTree.Select(@viewport);
+    System.Assert(selected.Count = 2);
+
+    viewport := vec2d(128.0, 150.0);
+    selected := F1dTree.Select(@viewport);
+    System.Assert(selected.Count = 1);
+
+    viewport := vec2d(135.0, 150.0);
+    selected := F1dTree.Select(@viewport);
+    System.Assert(selected.Count = 0);
+
+end;
+
+{ TTest2DTree }
+
+constructor T2DTreeTest.Create;
+begin
+  Tree2d := T2DTree<PBox2d>.Create;
+  Tree2d.OnDeleteValue := OnDeleteBox;
+  Rects := TListVec<PBox2d>.Create;
+end;
+
+destructor T2DTreeTest.Destroy;
+begin
+  Rects.Free;
+  Tree2d.Free;
+  inherited;
+end;
+
+function T2DTreeTest.Box(X, Y, Width, Height: int32): PBox2d;
+begin
+  new(Result);
+  Result^ := Box2(X, Y, X + Width, Y + Height);
+  Rects.Add(Result);
+  Tree2d.Add(Result, PKDMinMax(Result));
+end;
+
+procedure T2DTreeTest.FillData;
+begin
+  Box(100, 150, 300, 350);
+  Box(10000, 15000, 30000, 35000);
+  Box(10, 15, 30, 35);
+  Box(1000, 1500, 3000, 3500);
+end;
+
+procedure T2DTreeTest.FillData2;
+begin
+  Box(226, 1399, 17, 28);
+end;
+
+procedure T2DTreeTest.OnDeleteBox(const Value: PBox2d);
+begin
+  dispose(Value);
+end;
+
+procedure T2DTreeTest.Setup;
+begin
+end;
+
+procedure T2DTreeTest.TearDown;
+begin
+  Rects.Clear;
+  Tree2d.Clear;
+  System.Assert(Tree2d.Count = 0);
+end;
+
+procedure T2DTreeTest.SetBoxPosition(var viewport: TBox2d; X, Y: double);
+var
+  size: TVec2d;
+begin
+  size := viewport.Max - viewport.Min;
+  viewport.Min := vec2(X, Y);
+  viewport.Max := viewport.Min + size;
+end;
+
+procedure T2DTreeTest.SetBoxSize(var viewport: TBox2d; Width, Height: double);
+begin
+  viewport.Max := viewport.Min + vec2d(Width, Height);
+end;
+
+procedure T2DTreeTest.Test1;
+var
+  viewport: TBox2d;
+  selected: TListVec<PBox2d>;
+begin
+  FillData;
+  viewport.Min := vec2(11.0, 12.0);
+  viewport.Max := vec2(21.0, 22.0);
+
+  selected := Tree2d.Select(@viewport);
+  System.Assert(selected.Count = 0);
+
+  SetBoxPosition(viewport, 10, 10);
+  selected := Tree2d.Select(@viewport);
+  System.Assert(selected.Count = 1);
+  System.Assert(selected.Items[0] = Rects.Items[2]);
+
+  SetBoxPosition(viewport, 40, 51);
+  selected := Tree2d.Select(@viewport);
+  System.Assert(selected.Count = 0);
+
+  SetBoxSize(viewport, 50000, 50000);
+  SetBoxPosition(viewport, 10, 50);
+  selected := Tree2d.Select(@viewport);
+  System.Assert(selected.Count = 4);
+
+//  SetBoxPosition(viewport, 1000, 1000);
+//  selected := Tree2d.Select(@viewport);
+//  System.Assert(selected.Count = 2);
+end;
+
+procedure T2DTreeTest.Test2;
+var
+  viewport: TBox2d;
+  selected: TListVec<PBox2d>;
+begin
+  FillData2;
+  viewport.Min := vec2(218.0, 3915.0);
+  viewport.Max := vec2(418.0, 4065.0);
+  selected := Tree2d.Select(@viewport);
+  System.Assert(selected.Count = 0);
+end;
+
+{ T3DTreeTest }
+
+function T3DTreeTest.Box(X, Y, Z, Width, Height, Deep: Double): PBox3d;
+begin
+  new(Result);
+  Result^ := Box3(vec3(X, Y, Z), vec3(X + Width, Y + Height, Z + Deep));
+  Boxes.Add(Result);
+  Tree3d.Add(Result, Result^);
+end;
+
+constructor T3DTreeTest.Create;
+begin
+  Boxes := TListVec<PBox3d>.Create;
+  Tree3d := T3DTree<PBox3d>.Create;
+  Tree3d.OnDeleteValue := OnDeleteBox;
+end;
+
+destructor T3DTreeTest.Destroy;
+begin
+  Boxes.Free;
+  Tree3d.Free;
+  inherited;
+end;
+
+procedure T3DTreeTest.OnDeleteBox(const Value: PBox3d);
+begin
+  dispose(Value);
+end;
+
+procedure T3DTreeTest.SetBoxPosition(var Box: TBox3d; X, Y, Z: double);
+var
+  size: TVec3d;
+begin
+  size := Box.Max - Box.Min;
+  Box.Min := vec3(X, Y, Z);
+  Box.Max := Box.Min + size;
+end;
+
+procedure T3DTreeTest.SetBoxSize(var Box: TBox3d; Width, Height, Deep: double);
+begin
+  Box.Max := Box.Min + vec3d(Width, Height, Deep);
+end;
+
+procedure T3DTreeTest.TearDown;
+begin
+  Boxes.Clear;
+  Tree3d.Clear;
+end;
+
+procedure T3DTreeTest.TestDeleteNext;
+var
+  b, next: PBox3d;
+begin
+  b := Box(10.0, 10.0, 10.0, 100.0, 100.0, 100.0);
+  next := Box(0.0, 10.0, 0.0, 100.0, 100.0, 110.0);
+  System.Assert(Tree3d.Count = 2);
+  Tree3d.Delete(next, next^);
+  System.Assert(Tree3d.Count = 1);
+end;
+
+procedure T3DTreeTest.TestSelectNext;
+var
+  next: PBox3d;
+  selected: TListVec<PBox3d>;
+begin
+  //b := Box(10.0, 10.0, 10.0, 100.0, 100.0, 100.0);
+  next := Box(50.0, 10.0, 50.0, 150.0, 0.0, 150.0);
+  selected := Tree3d.Select(Box3(vec3d(100, 100, 100), vec3d(250, 250, 250)));
+  System.Assert(selected.Count = 0);
+  selected := Tree3d.Select(Box3(vec3d(100, 5, 100), vec3d(250, 15, 250)));
+  System.Assert(selected.Count = 1);
+  selected := Tree3d.Select(Box3(vec3d(40, 5, 40), vec3d(60, 15, 60)));
+  System.Assert(selected.Count = 1);
+  selected := Tree3d.Select(Box3(vec3d(40, 5, 40), vec3d(250, 250, 250)));
+  System.Assert(selected.Count = 1);
+end;
+
+procedure T3DTreeTest.TestUpdateAndDelete;
+var
+  b, next: PBox3d;
+  oldB: TBox3d;
+begin
+  b := Box(10.0, 10.0, 10.0, 100.0, 100.0, 100.0);
+  oldB := b^;
+  SetBoxPosition(b^, 20.0, 20.0, 20.0);
+  Tree3d.Update(b, oldB, b^);
+  System.Assert(Tree3d.Count = 1);
+  Tree3d.Delete(b, b^);
+  System.Assert(Tree3d.Count = 0);
+end;
 
 end.

@@ -18,6 +18,9 @@
         <Projects Include="AutoTests\AutoTests.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="VCL\TestAVLTree\TestAVLTree.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -71,14 +74,23 @@
     <Target Name="AutoTests:Make">
         <MSBuild Projects="AutoTests\AutoTests.dproj" Targets="Make"/>
     </Target>
+    <Target Name="TestAVLTree">
+        <MSBuild Projects="VCL\TestAVLTree\TestAVLTree.dproj"/>
+    </Target>
+    <Target Name="TestAVLTree:Clean">
+        <MSBuild Projects="VCL\TestAVLTree\TestAVLTree.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TestAVLTree:Make">
+        <MSBuild Projects="VCL\TestAVLTree\TestAVLTree.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="AppTestVCL;BSApplication;TestFM;DUnitTests;AutoTests"/>
+        <CallTarget Targets="AppTestVCL;BSApplication;TestFM;DUnitTests;AutoTests;TestAVLTree"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="AppTestVCL:Clean;BSApplication:Clean;TestFM:Clean;DUnitTests:Clean;AutoTests:Clean"/>
+        <CallTarget Targets="AppTestVCL:Clean;BSApplication:Clean;TestFM:Clean;DUnitTests:Clean;AutoTests:Clean;TestAVLTree:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="AppTestVCL:Make;BSApplication:Make;TestFM:Make;DUnitTests:Make;AutoTests:Make"/>
+        <CallTarget Targets="AppTestVCL:Make;BSApplication:Make;TestFM:Make;DUnitTests:Make;AutoTests:Make;TestAVLTree:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

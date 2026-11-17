@@ -388,10 +388,13 @@ end;
 
 procedure TTemplateBEvent<T>.SendEvent(const Value: T);
 var
+  t: TBThread;
   arr: TArrayConnections;
   i: int32;
 begin
+  // saves the attributes of the event in case it is destroyed during the SendEvent call.
   arr := Observers.ArrCon;
+  t := FThreadContext;
   for i := 0 to Length(arr) - 1 do
   begin
     arr[i].SendEvent(Value);
@@ -399,7 +402,7 @@ begin
   end;
   if Length(arr) > 0 then
     TBTimer.UpdateTimer(TTimeProcessEvent.TimeProcessEvent);
-  FThreadContext.ResetWaiting;
+  t.ResetWaiting;
 end;
 
 function TTemplateBEvent<T>.ThreadContext: TBThread;

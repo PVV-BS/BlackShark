@@ -168,6 +168,8 @@ type
 
   TTableParams = THashTable<AnsiString, PShaderParametr>;
 
+  TBlackSharkShaderClass = class of TBlackSharkShader;
+
   { TBlackSharkShader }
 
   TBlackSharkShader = class abstract
@@ -195,6 +197,7 @@ type
     constructor Create(const AName: string; const ADataVertex, ADataFragment: PAnsiChar); virtual;
     destructor Destroy; override;
     class function DefaultName: string; virtual;
+    class function InstancedObjectShaderClass: TBlackSharkShaderClass; virtual;
     function LoadShader: boolean;
     procedure Unload;
     procedure Reset;
@@ -215,8 +218,6 @@ type
     property MVPasUniform: boolean read FMVPasUniform write FMVPasUniform;
   end;
 
-  TBlackSharkShaderClass = class of TBlackSharkShader;
-
   {
     TBlackSharkVertexOutShader
   }
@@ -233,6 +234,7 @@ type
     function LinkLocations: boolean; override;
     { input uniforms }
     property Opacity: PShaderParametr read FOpacity;
+    { input uniform or variable }
     property MVP: PShaderParametr read FMVP;
     { input variables }
     property PosCoord: PShaderParametr read FPosCoord;
@@ -423,15 +425,27 @@ type
 
   { The shader fills all vertexes a single color }
 
-  TBlackSharkVectorToSingleColorShader = class(TBlackSharkVertexOutShader)
-  private
-    { color uniform }
+  TBlackSharkVectorToSingleColorShaderBase = class(TBlackSharkVertexOutShader)
+  protected
+    { color }
     FColor: PShaderParametr;
+  public
+    { color }
+    property Color: PShaderParametr read FColor;
+  end;
+
+
+  TBlackSharkVectorToSingleColorShader = class(TBlackSharkVectorToSingleColorShaderBase)
   public
     constructor Create(const AName: string; const DataVertex, DataFragment: PAnsiChar); override;
     class function DefaultName: string; override;
-    { color uniform }
-    property Color: PShaderParametr read FColor;
+    class function InstancedObjectShaderClass: TBlackSharkShaderClass; override;
+  end;
+
+  TBlackSharkVectorToSingleColorInstancedShader = class(TBlackSharkVectorToSingleColorShaderBase)
+  public
+    constructor Create(const AName: string; const DataVertex, DataFragment: PAnsiChar); override;
+    class function DefaultName: string; override;
   end;
 
   TBlackSharkVectorToDoubleColorShader = class(TBlackSharkVectorToSingleColorShader)
@@ -691,10 +705,11 @@ begin
   if FMVPasUniform then
     FMVP := AddUniform('MVP', stMat4, tsVertex)
   else
-    FMVP := AddAttribute('MVP', stMat4, tsVertex);
+    FMVP := AddAttribute('MVP', stVec4, tsVertex);
 
   FPosCoord := AddAttribute('a_position', stVec3, tsVertex);
   FOpacity := AddUniform('Opacity', stFloat, tsFragment);
+
   Result := inherited LinkLocations;
   VertexComponentLocations[vcCoordinate] := FPosCoord^.Location;
   VertexComponentTypes[vcCoordinate] := FPosCoord^.DataTypeGL;
@@ -1231,6 +1246,8 @@ var
   FragmentShaderID: GLuint;
   ps: PAnsiChar;
   len: GLInt;
+  linked: GLInt;
+  err: AnsiString;
 begin
 
   // Create the shaders
@@ -1275,6 +1292,15 @@ begin
     glAttachShader(FProgramID, FragmentShaderID);
     glLinkProgram(FProgramID);
 
+    linked := 0;
+    glGetProgramiv(programId, GL_LINK_STATUS, @linked);
+    if linked = 0 then
+    begin
+      err := 'Shader ' + Name + ' linker error: ' + GetFromProgrammLogMessage(FProgramID);
+      BSWriteMsg('TBlackSharkShader.LoadShader', err);
+    end;
+
+
   	// Check the program
     if (CheckErrorGL('glLinkProgram: ', tcProgramm, FProgramID)) then
       exit(false);
@@ -1312,6 +1338,11 @@ end;
 function TBlackSharkShader.GetUniform(const NameUniform: AnsiString): PShaderParametr;
 begin
   Params.Find(NameUniform, Result);
+end;
+
+class function TBlackSharkShader.InstancedObjectShaderClass: TBlackSharkShaderClass;
+begin
+  Result := Self;
 end;
 
 function TBlackSharkShader.LinkUniformLocation(const UniformName: AnsiString): Glint;
@@ -1441,7 +1472,7 @@ var
   ts: TTypeShader;
   vc: TVertexComponent;
 begin
-
+  BSShaderManager.UseShader(Self, false);
   Result := true;
   for vc := low(TVertexComponent) to high(TVertexComponent) do
   begin
@@ -1839,6 +1870,24 @@ end;
 class function TBlackSharkVectorToSingleColorShader.DefaultName: string;
 begin
   Result := 'SingleColor';
+end;
+
+class function TBlackSharkVectorToSingleColorShader.InstancedObjectShaderClass: TBlackSharkShaderClass;
+begin
+  Result := TBlackSharkVectorToSingleColorInstancedShader;
+end;
+
+{ TBlackSharkVectorToSingleColorInstancedShader }
+
+constructor TBlackSharkVectorToSingleColorInstancedShader.Create(const AName: string; const DataVertex, DataFragment: PAnsiChar);
+begin
+  inherited;
+  FColor := AddAttribute('a_Color', stVec4, tsVertex);
+end;
+
+class function TBlackSharkVectorToSingleColorInstancedShader.DefaultName: string;
+begin
+  Result := 'SingleColor.ins';
 end;
 
 { TBlackSharkQUADShader }

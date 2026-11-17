@@ -72,12 +72,15 @@ type
     FCountChars: int32;
     FLineHeight: int32;
     FBlankWidth: BSFloat;
+    FItalicOffset: int8;
+    FAllowedLines: int32;
     procedure SetDelta(const Value: int8);
     procedure SetInterligne(const Value: int16);
     procedure SetAllowBreakWords(const Value: boolean);
     procedure SetCountChars(const Value: int32);
     procedure SetLineHeight(const Value: int32);
     procedure SetViewportWidth(const Value: BSFloat);
+    function GetAllowedLines: int32;
   public
     constructor Create(AKeySelector: TSelectorKey);
     destructor Destroy; override;
@@ -93,10 +96,12 @@ type
     property Delta: int8 read FDelta write SetDelta;
     { distance b/w lines }
     property Interligne: int16 read FInterligne write SetInterligne;
+    property ItalicOffset: int8 read FItalicOffset write FItalicOffset;
     property AllowBreakWords: boolean read FAllowBreakWords write SetAllowBreakWords;
     property OnQueryKey: TSelectorKey read FOnQueryKey write FOnQueryKey;
     property LineHeight: int32 read FLineHeight write SetLineHeight;
     property Lines: TListVec<TLineProp> read FLines;
+    property AllowedLines: int32 read GetAllowedLines write FAllowedLines;
     property ViewportWidth: BSFloat read FViewportWidth write SetViewportWidth;
     property BlankWidth: BSFloat read FBlankWidth write FBlankWidth;
   end;
@@ -181,10 +186,10 @@ begin
 
   for i := PositionBegin to FCountChars do
   begin
-    inc(prop.CountChars);
     KeyInfo := FOnQueryKey(i, code);
     if (code = $09) or (code = $20) then
     begin
+      inc(prop.CountChars);
       if word_reads then
       begin
         blanks_befor_word := 0;
@@ -207,10 +212,12 @@ begin
     end else
     if (KeyInfo = nil) then
     begin
+      // display tofu?
       continue;
     end else
-    if (code <> $0a) or (code <> $0d) then
+    if (code <> $0a) and (code <> $0d) then
     begin
+      inc(prop.CountChars);
       if (not word_reads) then
       begin
         inc(prop.Words);
@@ -219,16 +226,18 @@ begin
         //blanks := 0;
         word_width := 0;
         word_reads := true;
-        add := KeyInfo^.Rect.Width;
+        add := KeyInfo^.Rect.Width - FItalicOffset;
       end else
-        add := KeyInfo^.Rect.Width + FDelta;
+        add := KeyInfo^.Rect.Width + FDelta - FItalicOffset;
 
       first_word := false;
       word_width := word_width + add;
       prop.TrimWidth := prop.TrimWidth + add;
       inc(chars);
     end else
+    begin
       add := 0;
+    end;
 
     if (KeyInfo <> nil) and (KeyInfo.Rect.Height > prop.Height) then
       prop.Height := KeyInfo.Rect.Height;
@@ -322,6 +331,14 @@ destructor TTextProcessor.Destroy;
 begin
   FLines.Free;
   inherited;
+end;
+
+function TTextProcessor.GetAllowedLines: int32;
+begin
+  if (FAllowedLines = 0) or (FAllowedLines > FLines.Count) then
+    Result := FLines.Count
+  else
+    Result := FAllowedLines;
 end;
 
 function TTextProcessor.GetCharWidth(Key: PKeyInfo): int32;

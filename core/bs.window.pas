@@ -1353,8 +1353,8 @@ begin
     //  //FChildPass := FRenderer.AddPass(BSShaderManager.Load('QUAD', TBlackSharkQUADShader), FRenderer.DrawQUAD,
     //  //  FLeft, Application.MainWindow.Height - FTop - FHeight, FClientRect.Width, FClientRect.Height, false);
     //end;
-  FRenderer := TBlackSharkRenderer.Create;
-  FRenderer.ExactSelectObjects := true;
+      FRenderer := TBlackSharkRenderer.Create;
+      FRenderer.ExactSelectObjects := true;
       FRenderer.Caption := Caption;
     end
     {$ifdef SingleWinOnly}

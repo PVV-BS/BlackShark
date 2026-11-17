@@ -103,6 +103,8 @@ type
     function GetCapacityVertex: int32;
     procedure SetCapacityVertex(const Value: int32);
     procedure SetTypePrimitive(const Value: TTypePrimitive);
+    function GetTrianglesCount: int32;
+    function GetEdgesCount: int32;
   public
     FBoundingBox: TBox3f;
     Components: array of TVertexComponent;
@@ -132,17 +134,19 @@ type
     { use only if the mesh contains vcIndex component and consists of only vcVertex and vcIndex }
     function AddVertex(const Point: TVec4f): int32; overload;
 
-    procedure Read(Index: int32; Component: TVertexComponent; out Result: BSFloat);  overload;
-    procedure Read(Index: int32; Component: TVertexComponent; out Result: TVec2f);  overload;
-    procedure Read(Index: int32; Component: TVertexComponent; out Result: TVec3f);  overload;
-    procedure Read(Index: int32; Component: TVertexComponent; out Result: TVec4f);  overload;
-    procedure Read(Index: int32; Component: TVertexComponent; out Result: Pointer);  overload;
+    procedure Read(Index: int32; Component: TVertexComponent; out Result: BSFloat); overload;
+    procedure Read(Index: int32; Component: TVertexComponent; out Result: TVec2f); overload;
+    procedure Read(Index: int32; Component: TVertexComponent; out Result: TVec3f); overload;
+    procedure Read(Index: int32; Component: TVertexComponent; out Result: TVec4f); overload;
+    procedure Read(Index: int32; Component: TVertexComponent; out Result: Pointer); overload;
+    procedure ReadTriangle(Index: int32; out Result: TTriangle3f); overload;
+    procedure ReadEdge(Index: int32; out A, B: TVec3f); overload;
 
-    procedure Write(Index: int32; Component: TVertexComponent; const Value: BSFloat);overload;
-    procedure Write(Index: int32; Component: TVertexComponent; const Value: TVec2f);overload;
-    procedure Write(Index: int32; Component: TVertexComponent; const Value: TVec3f);overload;
-    procedure Write(Index: int32; Component: TVertexComponent; const Value: TVec4f);overload;
-    procedure Write(Index: int32; Component: TVertexComponent; const Value: Pointer);overload;
+    procedure Write(Index: int32; Component: TVertexComponent; const Value: BSFloat); overload;
+    procedure Write(Index: int32; Component: TVertexComponent; const Value: TVec2f); overload;
+    procedure Write(Index: int32; Component: TVertexComponent; const Value: TVec3f); overload;
+    procedure Write(Index: int32; Component: TVertexComponent; const Value: TVec4f); overload;
+    procedure Write(Index: int32; Component: TVertexComponent; const Value: Pointer); overload;
 
     procedure Delete(Index: int32; Count: int32);
     { beware use this methods, so BlackSharkGeometry.RayIntersectBox
@@ -172,6 +176,8 @@ type
     property CapacityVertex: int32 read GetCapacityVertex write SetCapacityVertex;
     { minimal limits of size the shape; take into account in time invoke TransformScale }
     property MinSize: TVec3f read FMinSize write FMinSize;
+    property TrianglesCount: int32 read GetTrianglesCount;
+    property EdgesCount: int32 read GetEdgesCount;
   end;
 
   { TMeshP
@@ -235,6 +241,21 @@ type
     constructor Create; override;
   end;
 
+TTriangleReader = procedure (Mesh: TMesh; Index: int32; out Result: TTriangle3f);
+TEdgeReader = procedure (Mesh: TMesh; Index: int32; out A, B: TVec3f);
+
+procedure ReadTriangleTriangle(Mesh: TMesh; Index: int32; out Result: TTriangle3f);
+procedure ReadTriangleFan(Mesh: TMesh; Index: int32; out Result: TTriangle3f);
+procedure ReadTriangleStrip(Mesh: TMesh; Index: int32; out Result: TTriangle3f);
+procedure ReadTriangleStub(Mesh: TMesh; Index: int32; out Result: TTriangle3f);
+
+procedure ReadEdgeTriangle(Mesh: TMesh; Index: int32; out A, B: TVec3f);
+procedure ReadEdgeFan(Mesh: TMesh; Index: int32; out A, B: TVec3f);
+procedure ReadEdgeStrip(Mesh: TMesh; Index: int32; out A, B: TVec3f);
+procedure ReadEdgeLine(Mesh: TMesh; Index: int32; out A, B: TVec3f);
+procedure ReadEdgeLineStrip(Mesh: TMesh; Index: int32; out A, B: TVec3f);
+procedure ReadEdgeStub(Mesh: TMesh; Index: int32; out A, B: TVec3f);
+
 const
   COMPONENTS_SIZE_OF: array[TVertexComponent] of int32 = (
     SizeOf(TVec3f), // vcCoordinate
@@ -258,6 +279,24 @@ const
     1  // vcIndex
   );
 
+  TRIANGLE_READERS: array[TTypePrimitive] of TTriangleReader = (
+    ReadTriangleTriangle, //tpTriangles
+    ReadTriangleFan,  // tpTriangleFan
+    ReadTriangleStrip, // tpTriangleStrip,
+    ReadTriangleStub, // tpQuad,
+    ReadTriangleStub, // tpLines,
+    ReadTriangleStub // tpLineStrip
+  );
+
+  EDGE_READERS: array[TTypePrimitive] of TEdgeReader = (
+    ReadEdgeTriangle, //tpTriangles
+    ReadEdgeFan,  // tpTriangleFan
+    ReadEdgeStrip, // tpTriangleStrip,
+    ReadEdgeStub, // tpQuad,
+    ReadEdgeLine, // tpLines,
+    ReadEdgeLineStrip // tpLineStrip
+  );
+
 implementation
 
 uses
@@ -265,6 +304,89 @@ uses
   , bs.math
   , bs.exceptions
   ;
+
+procedure ReadTriangleFan(Mesh: TMesh; Index: int32; out Result: TTriangle3f);
+begin
+  Result.A := Mesh.ReadPoint(0);
+  Result.B := Mesh.ReadPoint(Mesh.Indexes.Items[Index + 1]);
+  Result.C := Mesh.ReadPoint(Mesh.Indexes.Items[Index + 2]);
+end;
+
+procedure ReadTriangleStrip(Mesh: TMesh; Index: int32; out Result: TTriangle3f);
+begin
+  Result.A := Mesh.ReadPoint(Mesh.Indexes.Items[Index]);
+  Result.B := Mesh.ReadPoint(Mesh.Indexes.Items[Index + 1]);
+  Result.C := Mesh.ReadPoint(Mesh.Indexes.Items[Index + 2]);
+end;
+
+procedure ReadTriangleStub(Mesh: TMesh; Index: int32; out Result: TTriangle3f);
+begin
+  raise EBlackShark.Create('The mesh is not triangle type');
+end;
+
+procedure ReadTriangleTriangle(Mesh: TMesh; Index: int32; out Result: TTriangle3f);
+var
+  i: int32;
+begin
+  i := Index*3;
+  Result.A := Mesh.ReadPoint(Mesh.Indexes.Items[i]);
+  Result.B := Mesh.ReadPoint(Mesh.Indexes.Items[i + 1]);
+  Result.C := Mesh.ReadPoint(Mesh.Indexes.Items[i + 2]);
+end;
+
+procedure ReadEdgeTriangle(Mesh: TMesh; Index: int32; out A, B: TVec3f);
+begin
+  A := Mesh.ReadPoint(Mesh.Indexes.Items[Index]);
+  B := Mesh.ReadPoint(Mesh.Indexes.Items[Index + 1]);
+end;
+
+procedure ReadEdgeFan(Mesh: TMesh; Index: int32; out A, B: TVec3f);
+var
+  i: int32;
+begin
+  i := Index shr 1 - 1;
+  A := Mesh.ReadPoint(Mesh.Indexes.Items[i]);
+  if i mod 2 = 0 then
+    B := Mesh.ReadPoint(0)
+  else
+    B := Mesh.ReadPoint(Mesh.Indexes.Items[i + 1]);
+end;
+
+procedure ReadEdgeStrip(Mesh: TMesh; Index: int32; out A, B: TVec3f);
+var
+  i: int32;
+begin
+  i := Index shr 1 + 1;
+  if i mod 2 = 0 then
+  begin
+    A := Mesh.ReadPoint(Mesh.Indexes.Items[i - 1]);
+    B := Mesh.ReadPoint(Mesh.Indexes.Items[i]);
+  end else
+  begin
+    A := Mesh.ReadPoint(Mesh.Indexes.Items[i]);
+    B := Mesh.ReadPoint(Mesh.Indexes.Items[i + 1]);
+  end;
+end;
+
+procedure ReadEdgeLine(Mesh: TMesh; Index: int32; out A, B: TVec3f);
+var
+  i: int32;
+begin
+  i := Index shl 1;
+  A := Mesh.ReadPoint(Mesh.Indexes.Items[i]);
+  B := Mesh.ReadPoint(Mesh.Indexes.Items[i + 1]);
+end;
+
+procedure ReadEdgeLineStrip(Mesh: TMesh; Index: int32; out A, B: TVec3f);
+begin
+  A := Mesh.ReadPoint(Mesh.Indexes.Items[Index]);
+  B := Mesh.ReadPoint(Mesh.Indexes.Items[Index + 1]);
+end;
+
+procedure ReadEdgeStub(Mesh: TMesh; Index: int32; out A, B: TVec3f);
+begin
+  EBlackShark.Create('Do it!');
+end;
 
 { TMesh }
 
@@ -299,6 +421,11 @@ begin
     Result := TVec3f(PVec3f(@FVertexes.Data^[Index * SizeOfVertex + OffsetComponent[vcCoordinate]])^)
   else
     Result := vec3(0.0, 0.0, 0.0);
+end;
+
+procedure TMesh.ReadTriangle(Index: int32; out Result: TTriangle3f);
+begin
+  TRIANGLE_READERS[FTypePrimitive](Self, Index, Result);
 end;
 
 procedure TMesh.SetCapacityVertex(const Value: int32);
@@ -773,8 +900,6 @@ end;
 
 destructor TMesh.Destroy;
 begin
-  if FVertexes = nil then
-    raise Exception.Create('Error Message');
   FreeAndNil(FVertexes);
   FreeAndNil(FIndexes);
   inherited;
@@ -793,6 +918,31 @@ begin
   if SizeOfVertex = 0 then
     exit(0);
   Result := FVertexes.Capacity div SizeOfVertex;
+end;
+
+function TMesh.GetEdgesCount: int32;
+begin
+  case TypePrimitive of
+    tpTriangles: Result := Indexes.Count;
+    tpTriangleFan: Result := Indexes.Count * 2 - 1;
+    tpTriangleStrip: Result := Indexes.Count * 2 - 1;
+    tpQuad: raise EBlackShark.Create('Do it!');
+    tpLines: Result := Indexes.Count div 2;
+    tpLineStrip: Result := Indexes.Count - 1
+  else
+    Result := 0;
+  end;
+end;
+
+function TMesh.GetTrianglesCount: int32;
+begin
+  case TypePrimitive of
+    tpTriangles: Result := Indexes.Count div 3;
+    tpTriangleFan: Result := Indexes.Count - 2;
+    tpTriangleStrip: Result := Indexes.Count - 2
+  else
+    Result := 0;
+  end;
 end;
 
 function TMesh.GetVertexesData: pByte;
@@ -816,6 +966,11 @@ begin
     Result := @FVertexes.Data^[Index * SizeOfVertex + OffsetComponent[Component]]
   else
     Result := nil;
+end;
+
+procedure TMesh.ReadEdge(Index: int32; out A, B: TVec3f);
+begin
+  EDGE_READERS[FTypePrimitive](Self, Index, A, B);
 end;
 
 procedure TMesh.Read(Index: int32; Component: TVertexComponent; out Result: BSFloat);

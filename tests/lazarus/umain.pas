@@ -20,11 +20,13 @@ type
   TFrmMain = class(TForm)
     cbAvailableTests: TComboBox;
     Label1: TLabel;
+    lblCamera: TLabel;
     PanelScreen: TPanel;
     PnlTools: TPanel;
     procedure cbAvailableTestsChange(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormShow(Sender: TObject);
+    procedure PanelScreenMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
   private
     ViewPort: TBlackSharkViewPort;
     CurrentTest: TBSTest;
@@ -56,8 +58,17 @@ begin
   ViewPort.Left := PnlTools.Left + 1;
   ViewPort.OnAfterCreateContext := AfterCreateContextEvent;
   ViewPort.Align := alClient;
+  ViewPort.OnMouseMove := PanelScreenMouseMove;
   CommandLineParam := ParamStr(1);
   ViewPort.SetFocus;
+end;
+
+procedure TFrmMain.PanelScreenMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+var
+  pos_3d: TVec3f;
+begin
+  pos_3d := ViewPort.Renderer.Frustum.Position;
+  lblCamera.Caption := 'Camera: ' + Format('x = %f; y = %f; z = %f;', [pos_3d.x, pos_3d.x, pos_3d.z]);
 end;
 
 procedure TFrmMain.FormClose(Sender: TObject; var CloseAction: TCloseAction);

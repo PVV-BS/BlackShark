@@ -10,13 +10,11 @@ object frmMain: TfrmMain
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   Position = poDesigned
   OnActivate = FormActivate
   OnClose = FormClose
   OnCreate = FormCreate
   OnShow = FormShow
-  PixelsPerInch = 96
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 225
@@ -34,6 +32,7 @@ object frmMain: TfrmMain
     Align = alLeft
     TabOrder = 0
     OnClick = PanelInfoClick
+    ExplicitLeft = -3
     DesignSize = (
       225
       602)
@@ -47,7 +46,7 @@ object frmMain: TfrmMain
       ParentColor = False
     end
     object LblX: TLabel
-      Left = 22
+      Left = 10
       Top = 53
       Width = 13
       Height = 13
@@ -56,7 +55,7 @@ object frmMain: TfrmMain
       ParentColor = False
     end
     object LblY: TLabel
-      Left = 108
+      Left = 96
       Top = 53
       Width = 13
       Height = 13
@@ -93,6 +92,13 @@ object frmMain: TfrmMain
       Height = 13
       Caption = 'Size textures, reserved bytes: 0'
     end
+    object lblCamera: TLabel
+      Left = 5
+      Top = 72
+      Width = 67
+      Height = 13
+      Caption = 'Cam: 0.0, 0.0'
+    end
     object cbAvailableTests: TComboBox
       Left = 14
       Top = 24
@@ -116,7 +122,7 @@ object frmMain: TfrmMain
     end
     object GroupBox1: TGroupBox
       Left = 10
-      Top = 199
+      Top = 213
       Width = 202
       Height = 123
       Caption = 'Full screen anti-aliasing'
@@ -179,10 +185,10 @@ object frmMain: TfrmMain
       end
     end
     object GroupBox2: TGroupBox
-      Left = 10
-      Top = 68
+      Left = 6
+      Top = 86
       Width = 202
-      Height = 109
+      Height = 123
       Anchors = [akLeft, akTop, akRight]
       Caption = 'Instance property'
       Font.Charset = DEFAULT_CHARSET
@@ -233,6 +239,13 @@ object frmMain: TfrmMain
         Width = 99
         Height = 13
         Caption = 'Distance to camera: '
+      end
+      object lblName: TLabel
+        Left = 12
+        Top = 103
+        Width = 31
+        Height = 13
+        Caption = 'Name:'
       end
     end
     object btnStart: TBitBtn

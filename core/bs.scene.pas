@@ -41,7 +41,7 @@ uses
   , SysUtils
   , math
 
-  , bs.geometry
+  , bs.geometry.kdtree
   , bs.basetypes
   , bs.math
   , bs.events
@@ -78,10 +78,11 @@ type
     The record contains the properties instance of a mesh }
 
   TGraphicInstance = record
+  private
+    { BoundingBox = FMesh.FBoundingBox * FProdStackModelMatrix; }
+    FBoundingBox: TBox3f;
   public
     Owner: TGraphicObject;
-    { a data of space tree }
-    BVHNode: int32;
     { variables below describe current instance conditions }
     { transformations; all transformations to exert influence on children of Owner }
     { position relatively Parent }
@@ -92,8 +93,6 @@ type
     { quaternion for define space orientation }
     Quaternion: TQuaternion;
     /////////////////////
-    { BoundingBox = FMesh.FBoundingBox * FProdStackModelMatrix; }
-    BoundingBox: TBox3f;
     { autochange when change Position, Scale and Angle }
     ModelMatrix: TMatrix4f;
     { the matrix contains only local Position and orientation (Angle) }
@@ -117,6 +116,8 @@ type
     IsDrag: boolean;
 
     Index: int32;
+    { BoundingBox = FMesh.FBoundingBox * FProdStackModelMatrix; }
+    property BoundingBox: TBox3f read FBoundingBox;
   private
     { only for internal use }
     _ItemList: TListInstances.PListItem;    // in list instances
@@ -164,6 +165,7 @@ type
   end;
 
   TDrawInstanceMethod = procedure(Instance: PRendererGraphicInstance) of object;
+  TEventInstanceNotify = procedure(Instance: PGraphicInstance) of object;
 
   { TGraphicObject
     The base unit for draw in a scene; contains one or more PGraphicInstance;
@@ -273,6 +275,7 @@ type
     procedure SetPositionLimits(const Value: TBox3f);
     function GetLocalTransform: TMatrix4f;
     procedure SetLocalTransform(const Value: TMatrix4f);
+    procedure CalcActualBoundingBox(Instance: PGraphicInstance);
   protected
     FScene: TBScene;
     FShader: TBlackSharkShader;
@@ -324,9 +327,8 @@ type
     { an every descendant creates own kind of a mesh }
     class function CreateMesh: TMesh; virtual;
     procedure BeginUpdateTransformations;
-    procedure EndUpdateTransformations;
+    procedure EndUpdateTransformations(ASendEvent: boolean = true);
     procedure SetParentAllChildren(NewParent: TGraphicObject);
-    procedure CalcActualBoundingBox(Instance: PGraphicInstance);
     { an any object or ancestor can to add self a method invoked befor DrawInstance }
     procedure AddBeforeDrawMethod(const BeforeDrawMethod: TBeforeDrawMethod);
     procedure ClearBeforeDrawListMethods;
@@ -468,7 +470,7 @@ type
     property ModalLevel: int32 read FModalLevel write SetModalLevel;
     property StencilTest: boolean read FStencilTest write SetStensilTest;
     property AsStencil: boolean read FAsStencil write SetAsSencil;
-    property StencilParent: TGraphicObject read FStencilParent;
+    property StencilParent: TGraphicObject read FStencilParent write FStencilParent;
     property HasStencilParent: boolean read GetHasStencilParent;
     {
       Depth test switcher;
@@ -517,25 +519,25 @@ type
 
   THashTableGraphicObjects = THashTable<Pointer, TGraphicObject>;
 
-  TEventInstanceSelect = IBEmptyEvent;
-  TEventInstanceCreate = IBEmptyEvent;
-  TEventInstanceDelete = IBEmptyEvent;
-  TEventInstanceTransform = IBEmptyEvent;
-  TEventInstanceBeforeChangeKey = IBEmptyEvent;
-  TEventInstanceAfterChangeKey = IBEmptyEvent;
-  TEventInstanceBeginDrag = IBDragDropEvent;
+  IEventInstanceSelect = IBEmptyEvent;
+  IEventInstanceCreate = IBEmptyEvent;
+  IEventInstanceDelete = IBEmptyEvent;
+  IEventInstanceTransform = IBEmptyEvent;
+  IEventInstanceBeforeChangeKey = IBEmptyEvent;
+  IEventInstanceAfterChangeKey = IBEmptyEvent;
+  IEventInstanceBeginDrag = IBDragDropEvent;
 
-  TEventInstanceSelectObserver = IBEmptyEventObserver;
-  TEventInstanceCreateObserver = IBEmptyEventObserver;
-  TEventInstanceDeleteObserver = IBEmptyEventObserver;
-  TEventInstanceTransformObserver = IBEmptyEventObserver;
-  TEventInstanceBeforeChangeKeyObserver = IBEmptyEventObserver;
-  TEventInstanceAfterChangeKeyObserver = IBEmptyEventObserver;
-  TEventInstanceBeginDragObserver = IBEmptyEventObserver;
+  IEventInstanceSelectObserver = IBEmptyEventObserver;
+  IEventInstanceCreateObserver = IBEmptyEventObserver;
+  IEventInstanceDeleteObserver = IBEmptyEventObserver;
+  IEventInstanceTransformObserver = IBEmptyEventObserver;
+  IEventInstanceBeforeChangeKeyObserver = IBEmptyEventObserver;
+  IEventInstanceAfterChangeKeyObserver = IBEmptyEventObserver;
+  IEventInstanceBeginDragObserver = IBEmptyEventObserver;
 
   { TBScene }
 
-  TBScene = class(TBlackSharkKDTree<PGraphicInstance>)
+  TBScene = class(T3DTree<PGraphicInstance>)
   private
     StackGI: TListVecInstances;
     { all Graphics Items in scene }
@@ -545,17 +547,15 @@ type
     FEventObjectIncStencilUse: IBEmptyEvent;
     FEventObjectDecStencilUse: IBEmptyEvent;
 
-    FEventInstanceCreate: IBEmptyEvent;
-    FEventInstanceDelete: IBEmptyEvent;
+    FEventInstanceCreate: IEventInstanceCreate;
+    FEventInstanceDelete: IEventInstanceDelete;
     FEventInstanceSceneSpaceTreeClientChanged: IBEmptyEvent;
     FEventInstanceTransform: IBEmptyEvent;
-    FEventInstanceSelect: TEventInstanceSelect;
+    FEventInstanceSelect: IEventInstanceSelect;
     FEventInstanceBeforeChangeKey: IBEmptyEvent;
     FEventInstanceAfterChangeKey: IBEmptyEvent;
     FEventInstanceBeginDrag: IBDragDropEvent;
   protected
-    class function Compare(const Key1, Key2: PGraphicInstance): boolean; static;
-    class function GetComparator: TKeyComparatorEqual<PGraphicInstance>; override;
     procedure ObjectAdd(AItem: TGraphicObject); overload;
     procedure ObjectDelete(AItem: TGraphicObject);
     procedure ObjectIncStencilUse(AObject: TGraphicObject);
@@ -577,10 +577,10 @@ type
 
     property GraphicObjects: THashTableGraphicObjects read FGraphicObjects;
 
-    property EventInstanceSelect: TEventInstanceSelect read FEventInstanceSelect;
+    property EventInstanceSelect: IEventInstanceSelect read FEventInstanceSelect;
     property EventInstanceTransform: IBEmptyEvent read FEventInstanceTransform;
-    property EventInstanceCreate: IBEmptyEvent read FEventInstanceCreate;
-    property EventInstanceDelete: IBEmptyEvent read FEventInstanceDelete;
+    property EventInstanceCreate: IEventInstanceCreate read FEventInstanceCreate;
+    property EventInstanceDelete: IEventInstanceDelete read FEventInstanceDelete;
     property EventInstanceSceneSpaceTreeClientChanged: IBEmptyEvent read FEventInstanceSceneSpaceTreeClientChanged;
     property EventInstanceBeforeChangeKey: IBEmptyEvent read FEventInstanceBeforeChangeKey;
     property EventInstanceAfterChangeKey: IBEmptyEvent read FEventInstanceAfterChangeKey;
@@ -635,7 +635,6 @@ begin
   else
     new(Result);
   FillChar(Result^, SizeOf(TGraphicInstance), 0);
-  Result.BVHNode := -1;
   Result.Owner := Owner;
   Result.Angle := vec3(0.0, 0.0, 0.0);
   Result.Position := vec3(0.0, 0.0, 0.0);
@@ -647,7 +646,7 @@ begin
   Result.Interactive := true;
   Result.SelectResolve := true;
   Result.DragResolve := true;
-  Result.BoundingBox.TagPtr := Result;
+  Result.FBoundingBox.TagPtr := Result;
   Result.ModelMatrix := IDENTITY_MAT;
   //Result.ModelMatrixPosAngle := IDENTITY_MAT;
   Result.Quaternion := vec4(0.0, 0.0, 0.0, 1.0);
@@ -872,6 +871,8 @@ end;
 
 function TGraphicObject.GetStencilParent: TGraphicObject;
 begin
+  if Assigned(FStencilParent) and FStencilParent.AsStencil then
+    exit(FStencilParent);
   Result := FParent;
   while Assigned(Result) and (not Result.AsStencil) do
     Result := Result.Parent;
@@ -1396,7 +1397,6 @@ constructor TGraphicObject.Create(AOwner: TObject; AParent: TGraphicObject; ASce
 begin
   Assert(Assigned(AScene), 'Parametr "AScene" is not valid !!!');
   inherited Create;
-
   FDrawSides := dsAll;
 
   FPositionLimits.x_min := MinSingle;
@@ -1416,7 +1416,7 @@ begin
   FServiceScale := 1.0;
   FServiceScaleInv := 1.0;
   FBaseInstance := TInstanceManager.InstanceCreate(Self);
-  FBaseInstance.BoundingBox.TagPtr := BaseInstance;
+  FBaseInstance.FBoundingBox.TagPtr := BaseInstance;
   FEventBeginDrag := CreateDragDropEvent;
   FParent := AParent;
   FScene := AScene;
@@ -1538,7 +1538,7 @@ procedure TGraphicObject.EndUpdateTransformations;
 begin
   dec(UpdateCount);
   if UpdateCount <= 0 then
-    GenerateModelMatrixFromAllTransformations(BaseInstance, true);
+    GenerateModelMatrixFromAllTransformations(BaseInstance, ASendEvent);
 end;
 
 function TGraphicObject.FindObject(const ACaption: string; SelfInclude: boolean): TGraphicObject;
@@ -1604,7 +1604,6 @@ begin
   FEventDrag := nil;
   FEventDrop := nil;
   FEventDropChildren := nil;
-  TInstanceManager.InstanceFree(FBaseInstance);
 
   inherited Destroy;
 end;
@@ -1734,12 +1733,12 @@ procedure TGraphicObject.CalcActualBoundingBox(Instance: PGraphicInstance);
 begin
   if Assigned(FMesh) then
   begin
-    Instance^.BoundingBox.Max := FMesh.FBoundingBox.Max;
-    Instance^.BoundingBox.Min := FMesh.FBoundingBox.Min;
-    Box3Recalc(Instance^.BoundingBox, Instance^.ProdStackModelMatrix);
-    Instance^.BoundingBox.IsPoint := FMesh.FBoundingBox.IsPoint;
+    Instance^.FBoundingBox.Max := FMesh.FBoundingBox.Max;
+    Instance^.FBoundingBox.Min := FMesh.FBoundingBox.Min;
+    Box3Recalc(Instance^.FBoundingBox, Instance^.ProdStackModelMatrix);
+    Instance^.FBoundingBox.IsPoint := FMesh.FBoundingBox.IsPoint;
   end else
-    Instance^.BoundingBox.IsPoint := true;
+    Instance^.FBoundingBox.IsPoint := true;
 end;
 
 function TGraphicObject.GetCountParents: int32;
@@ -2080,12 +2079,12 @@ begin
       i := FInstances.ItemListLast;
       while Assigned(i) do
       begin
-        Scene.InstanceTransform(i.Item, false);
+        Scene.InstanceTransform(i.Item, false); // update location in KD-tree
         Scene.InstanceSceneSpaceTreeClientChanged(i.Item);
         i := i.Prev;
       end;
     end;
-    Scene.InstanceTransform(FBaseInstance, false);
+    Scene.InstanceTransform(FBaseInstance, false); // update location in KD-tree
     Scene.InstanceSceneSpaceTreeClientChanged(FBaseInstance);
   end else
   begin
@@ -2094,13 +2093,12 @@ begin
       i := FInstances.ItemListLast;
       while Assigned(i) do
       begin
-        Scene.Remove(i.Item.BVHNode, i.Item);
+        Scene.Delete(i.Item, i.Item.BoundingBox); // remove from KD-tree
         Scene.InstanceSceneSpaceTreeClientChanged(i.Item);
         i := i.Prev;
       end;
     end;
-    if FBaseInstance.BVHNode >= 0 then
-      Scene.Remove(FBaseInstance.BVHNode, FBaseInstance);
+    Scene.Delete(FBaseInstance, FBaseInstance.BoundingBox); // remove from KD-tree
     Scene.InstanceSceneSpaceTreeClientChanged(FBaseInstance);
   end;
 
@@ -2162,11 +2160,6 @@ begin
 end;
 
 { TBScene }
-
-class function TBScene.Compare(const Key1, Key2: PGraphicInstance): boolean;
-begin
-  Result := Key1 = Key2;
-end;
 
 constructor TBScene.Create;
 begin
@@ -2247,11 +2240,6 @@ begin
   inherited Destroy;
 end;
 
-class function TBScene.GetComparator: TKeyComparatorEqual<PGraphicInstance>;
-begin
-  Result := Compare;
-end;
-
 procedure TBScene.Clear;
 var
   bucket: THashTable<Pointer, TGraphicObject>.TBucket;
@@ -2279,7 +2267,8 @@ end;
 
 procedure TBScene.InstanceDelete(Instance: PGraphicInstance);
 begin
-  Remove(Instance.BVHNode, Instance);
+  if Instance.Owner.SceneSpaceTreeClient then
+    Delete(Instance, Instance.BoundingBox);
   FEventInstanceDelete.Send(Instance);
 end;
 
@@ -2290,6 +2279,7 @@ var
   it: TListInstances.PListItem;
   count_now: int32;
   is_mesh: boolean;
+  oldBB: TBox3f;
 begin
   count_now := 1;
   StackGI.Add(Instance);
@@ -2315,10 +2305,11 @@ begin
           it := it.Next;
         end;
       end;
+    oldBB := inst.BoundingBox;
     inst.Owner.GenerateProdStackMatrix(inst);
     inc(inst.ChangeModelMatrix);
     if inst.Owner.SceneSpaceTreeClient then
-      inst.BVHNode := UpdatePositionBB(inst, inst.BoundingBox, inst.BVHNode);
+      Update(inst, oldBB, inst.BoundingBox);
     FEventInstanceTransform.Send(inst);
     inst.Owner.DoChangeMVP(inst, is_mesh);
     is_mesh := false;

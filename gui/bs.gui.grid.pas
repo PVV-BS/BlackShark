@@ -140,7 +140,7 @@ type
         PPart = ^TPart;
         TPart = record
           Health: int32;
-          Velosity: BSFloat;
+          Velocity: BSFloat;
           Direction: TVec2f;
         end;
         PBomb = ^TBomb;
@@ -2683,7 +2683,7 @@ function TGridDataPresentation.TEasterEgg.AddPart(Velos: BSFloat;
 begin
   new(Result);
   Result.Health := MAX_HEALTH;
-  Result.Velosity := BSConfig.VoxelSize*Velos;
+  Result.Velocity := BSConfig.VoxelSize*Velos;
   Result.Direction := dir;
   //Result.NodeSt := nil;
 end;
@@ -2695,7 +2695,7 @@ begin
   Particles := TListVec<PPart>.Create;
   //Bombs := TListVec<PBomb>.Create(@PtrCmp);
   //Directions := TListVec<TVec2f>.Create;
-  //Velosity := TListVec<BSFloat>.Create;
+  //Velocity := TListVec<BSFloat>.Create;
   //Selector := TBlackSharkRTree.Create;
   EmptyTask := CreateEmptyTask(GUIThread);
   EmptyTaskObsrv := CreateEmptyTaskObserver(EmptyTask, OnUpdateValue, GUIThread);
@@ -2707,7 +2707,7 @@ var
 begin
   EmptyTaskObsrv := nil;
   EmptyTask := nil;
-  //Velosity.Free;
+  //Velocity.Free;
   //Directions.Free;
   for i := 0 to Particles.Count - 1 do
     dispose(Particles.Items[i]);
@@ -2759,8 +2759,8 @@ begin
     pos := FDataSrc.Instances.Position[i];
     part := Particles.Items[i];
 
-    pos := vec3(pos.x + (part.Velosity * part.Direction.x),
-      pos.y + (part.Velosity * part.Direction.y), 0.0);
+    pos := vec3(pos.x + (part.Velocity * part.Direction.x),
+      pos.y + (part.Velocity * part.Direction.y), 0.0);
     if (abs(pos.x - size_screen_half.x) > size_screen_half.x) or (abs(pos.y + size_screen_half.y) > size_screen_half.y) then
     begin
 
@@ -2829,8 +2829,8 @@ begin
             part.Direction := VecNormalize(TVec2f(part.NodeSt.BB.Middle - b.Area.Middle));
             end;
           dec(part.Health);
-          part.Velosity := part.Velosity + FDataSrc.Grid.Canvas.BSConfig.VoxelSize;
-          //if part.Velosity > 0 then
+          part.Velocity := part.Velocity + FDataSrc.Grid.Canvas.BSConfig.VoxelSize;
+          //if part.Velocity > 0 then
           //if part.Health = 0 then
           //  begin
             //part.Direction := vec2(0.0, -1.0);

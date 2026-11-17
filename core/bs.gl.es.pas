@@ -1,4 +1,4 @@
-{
+﻿{
 -- Begin License block --
   
   Copyright (C) 2019-2022 Pavlov V.V. (PVV)
@@ -971,7 +971,19 @@ type
   GL_MAP_FLUSH_EXPLICIT_BIT = $0010;
   GL_MAP_UNSYNCHRONIZED_BIT = $0020;
 
+  GL_DEBUG_OUTPUT = 37600;
+  GL_DEBUG_OUTPUT_SYNCHRONOUS = 33346;
+
+
+  ANGLE_instanced_arrays = 'ANGLE_instanced_arrays';
+
+type
+  DEBUGPROC = procedure (source: GLenum; tyype: GLenum; id: GLuint; severity: GLenum; length: GLsizei; message: PAnsichar; userParam: Pointer); {$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
+
 var
+
+  glGetExtension: procedure (); {$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
+
   // 3.0
   glGenVertexArrays: procedure(Count: GLsizei;   VAO_ArraysID: PGLuint); {$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
   glDeleteVertexArrays: procedure(n: GLsizei;  arrays: PGLuint); {$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
@@ -991,6 +1003,8 @@ var
   //glDrawArraysInstancedEXT: procedure (mode: GLenum; start: GLint; count: GLsizei; primcount: GLsizei); {$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
 
   //-------------------------------------------------------------------------//
+
+  glDebugMessageCallback: procedure(Callback: DEBUGPROC; UserParam: Pointer);  {$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
 
   // OpenGL Extension ARB framebuffer
 
@@ -1025,6 +1039,9 @@ var
   {$else}
   function glGetProcAddress(ahlib: System.THandle; ProcName: PWideChar; CountParamBytes: int8 = 0): Pointer;
   {$endif}
+
+  procedure testDEBUGPROC(source: GLenum; tyype: GLenum; id: GLuint; severity: GLenum; length: GLsizei; message: PAnsichar; userParam: Pointer); {$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
+
 
 var
   {$ifdef FPC}
@@ -1067,6 +1084,14 @@ begin
   end;
 end;
 {$endif}
+
+procedure testDEBUGPROC(source: GLenum; tyype: GLenum; id: GLuint; severity: GLenum; length: GLsizei; message: PAnsichar; userParam: Pointer); {$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
+begin
+  if id = 0 then
+  begin
+
+  end;
+end;
 
 procedure FreeGLESv2;
 begin
@@ -1439,6 +1464,8 @@ begin
   glFramebufferTexture3D := glGetProcAddress(GLESLib, 'glFramebufferTexture3D', 24);
   //glFramebufferTexture2D:
   glFramebufferTexture1D := glGetProcAddress(GLESLib, 'glFramebufferTexture1D', 20);
+
+  glDebugMessageCallback := glGetProcAddress(GLESLib, 'glDebugMessageCallback', 20);
 end;
 
 function InitGLES(const PathGL: string): boolean;
